@@ -69,6 +69,14 @@ export function Inventory() {
   const priceFloor = selectedItem ? selectedItem.marketPrice * 0.8 : 0;
   const priceCeiling = selectedItem ? selectedItem.marketPrice * 1.2 : 0;
 
+  const handlePostToMarket = () => {
+    // In a real app, you'd handle the logic to post the item to the market.
+    // For now, we'll just close the dialog.
+    console.log(`Selling ${quantity} of ${selectedItem?.item} at $${price} each.`);
+    setIsSellDialogOpen(false);
+  };
+
+
   return (
     <>
       <div className="flex flex-col gap-4 text-white">
@@ -180,6 +188,7 @@ export function Inventory() {
             <Button 
               className="bg-green-600 hover:bg-green-700 text-white"
               disabled={price < priceFloor || price > priceCeiling}
+              onClick={handlePostToMarket}
             >
               Post to Market
             </Button>
