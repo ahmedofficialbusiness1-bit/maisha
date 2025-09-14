@@ -4,11 +4,11 @@ import * as React from 'react';
 import type { View } from '@/app/page';
 import { Button } from '@/components/ui/button';
 import {
+  Archive,
   CandlestickChart,
   Cpu,
   Factory,
   LayoutDashboard,
-  Map,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -27,8 +27,8 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
     },
     {
       view: 'regions' as View,
-      label: 'Map',
-      icon: <Map />,
+      label: 'Inventory',
+      icon: <Archive />,
     },
     {
       view: 'market' as View,
