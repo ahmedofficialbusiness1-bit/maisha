@@ -36,24 +36,19 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { MoreHorizontal } from 'lucide-react';
 
-type InventoryItem = {
+export type InventoryItem = {
   item: string;
   quantity: number;
   marketPrice: number;
 };
 
-const inventoryItems: InventoryItem[] = [
-  { item: 'Corn', quantity: 15000, marketPrice: 150 },
-  { item: 'Sunflower Seeds', quantity: 8000, marketPrice: 320 },
-  { item: 'Eggs', quantity: 25000, marketPrice: 210 },
-  { item: 'Crude Oil', quantity: 1000, marketPrice: 700 },
-  { item: 'Gold', quantity: 500, marketPrice: 1800 },
-  { item: 'Corn Flour', quantity: 5000, marketPrice: 280 },
-  { item: 'Cooking Oil', quantity: 3000, marketPrice: 550 },
-  { item: 'Chicken Feed', quantity: 10000, marketPrice: 180 },
-];
+interface InventoryProps {
+  inventoryItems: InventoryItem[];
+  onPostToMarket: (item: InventoryItem, quantity: number, price: number) => void;
+}
 
-export function Inventory() {
+
+export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState<InventoryItem | null>(null);
   const [quantity, setQuantity] = React.useState(1);
@@ -69,11 +64,11 @@ export function Inventory() {
   const priceFloor = selectedItem ? selectedItem.marketPrice * 0.8 : 0;
   const priceCeiling = selectedItem ? selectedItem.marketPrice * 1.2 : 0;
 
-  const handlePostToMarket = () => {
-    // In a real app, you'd handle the logic to post the item to the market.
-    // For now, we'll just close the dialog.
-    console.log(`Selling ${quantity} of ${selectedItem?.item} at $${price} each.`);
-    setIsSellDialogOpen(false);
+  const handleConfirmPost = () => {
+    if (selectedItem) {
+      onPostToMarket(selectedItem, quantity, price);
+      setIsSellDialogOpen(false);
+    }
   };
 
 
@@ -116,7 +111,7 @@ export function Inventory() {
                     <TableCell className="text-right">
                        <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
+                          <Button variant="ghost" className="h-8 w-8 p-0" disabled={item.quantity <= 0}>
                             <span className="sr-only">Open menu</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
@@ -155,7 +150,7 @@ export function Inventory() {
                         id="quantity" 
                         type="number"
                         value={quantity}
-                        onChange={(e) => setQuantity(Math.min(Number(e.target.value), selectedItem.quantity))}
+                        onChange={(e) => setQuantity(Math.max(1, Math.min(Number(e.target.value), selectedItem.quantity)))}
                         min="1"
                         max={selectedItem.quantity}
                         className="col-span-3 bg-gray-800 border-gray-600"
@@ -187,8 +182,8 @@ export function Inventory() {
             <Button variant="outline" onClick={() => setIsSellDialogOpen(false)}>Cancel</Button>
             <Button 
               className="bg-green-600 hover:bg-green-700 text-white"
-              disabled={price < priceFloor || price > priceCeiling}
-              onClick={handlePostToMarket}
+              disabled={!selectedItem || quantity <= 0 || quantity > selectedItem.quantity || price < priceFloor || price > priceCeiling}
+              onClick={handleConfirmPost}
             >
               Post to Market
             </Button>

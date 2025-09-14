@@ -22,13 +22,13 @@ const marketData = [
   { commodity: 'Gold', price: 1805.50, change: -0.2, changeType: 'decrease' },
 ];
 
-const playerListings = [
-  { id: 1, commodity: 'Corn', seller: 'Mkulima Hodari', quantity: 5000, price: 151.00 },
-  { id: 2, commodity: 'Eggs', seller: 'Mfanyabiashara Mjanja', quantity: 10000, price: 209.50 },
-  { id: 3, commodity: 'Cooking Oil', seller: 'Wazalishaji wa Pwani', quantity: 1500, price: 545.00 },
-  { id: 4, commodity: 'Gold', seller: 'Mgodi wa Almasi', quantity: 100, price: 1800.00 },
-  { id: 5, commodity: 'Chicken Feed', seller: 'Mkulima Hodari', quantity: 8000, price: 181.25 },
-];
+export type PlayerListing = { 
+  id: number; 
+  commodity: string; 
+  seller: string; 
+  quantity: number; 
+  price: number; 
+};
 
 
 function PriceTicker() {
@@ -60,8 +60,11 @@ function PriceTicker() {
   );
 }
 
+interface TradeMarketProps {
+  playerListings: PlayerListing[];
+}
 
-export function TradeMarket() {
+export function TradeMarket({ playerListings }: TradeMarketProps) {
   return (
     <div className="flex flex-col gap-4 text-white">
       <PriceTicker />
