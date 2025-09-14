@@ -26,7 +26,7 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
       icon: <LayoutDashboard />,
     },
     {
-      view: 'regions' as View,
+      view: 'inventory' as View,
       label: 'Inventory',
       icon: <Archive />,
     },
