@@ -34,35 +34,35 @@ const availableBuildings: BuildingType[] = [
     name: 'Residential House', 
     icon: <Home className="mr-2" />, 
     description: 'Increases population capacity.',
-    image: 'https://picsum.photos/seed/house/200/200',
+    image: 'https://picsum.photos/seed/residence/200/200',
     imageHint: 'modern house'
   },
   { 
     name: 'Factory', 
     icon: <Factory className="mr-2" />, 
     description: 'Produces goods and materials.',
-    image: 'https://picsum.photos/seed/factory/200/200',
+    image: 'https://picsum.photos/seed/industrial-factory/200/200',
     imageHint: 'industrial factory'
   },
   { 
     name: 'Market', 
     icon: <Store className="mr-2" />, 
     description: 'Generates revenue from sales.',
-    image: 'https://picsum.photos/seed/market/200/200',
+    image: 'https://picsum.photos/seed/local-market/200/200',
     imageHint: 'outdoor market'
   },
   { 
     name: 'Office Building', 
     icon: <Building className="mr-2" />, 
     description: 'Unlocks corporate actions.',
-    image: 'https://picsum.photos/seed/office/200/200',
+    image: 'https://picsum.photos/seed/corporate-office/200/200',
     imageHint: 'office building'
   },
   { 
     name: 'Hospital', 
     icon: <Hospital className="mr-2" />, 
     description: 'Improves city health.',
-    image: 'https://picsum.photos/seed/hospital/200/200',
+    image: 'https://picsum.photos/seed/modern-hospital/200/200',
     imageHint: 'modern hospital'
   },
 ];
