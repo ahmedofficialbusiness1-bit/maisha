@@ -8,6 +8,8 @@ import { Inventory, type InventoryItem } from '@/components/app/inventory';
 import { CommoditySimulator } from '@/components/app/commodity-simulator';
 import { TradeMarket, type PlayerListing } from '@/components/app/trade-market';
 import { Production } from '@/components/app/production';
+import { Encyclopedia } from '@/components/app/encyclopedia';
+
 
 const initialInventoryItems: InventoryItem[] = [
   { item: 'Corn', quantity: 15000, marketPrice: 150 },
@@ -29,7 +31,7 @@ const initialPlayerListings: PlayerListing[] = [
 ];
 
 
-export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'production';
+export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'production' | 'encyclopedia';
 
 export default function Home() {
   const [view, setView] = React.useState<View>('dashboard');
@@ -69,6 +71,7 @@ export default function Home() {
         {view === 'market' && <TradeMarket playerListings={marketListings} />}
         {view === 'simulator' && <CommoditySimulator />}
         {view === 'production' && <Production />}
+        {view === 'encyclopedia' && <Encyclopedia />}
       </main>
       <AppFooter activeView={view} setView={setView} />
     </>

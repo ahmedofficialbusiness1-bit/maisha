@@ -5,6 +5,7 @@ import type { View } from '@/app/page';
 import { Button } from '@/components/ui/button';
 import {
   Archive,
+  BookOpen,
   CandlestickChart,
   Cpu,
   Factory,
@@ -40,6 +41,11 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
       label: 'Production',
       icon: <Factory />,
     },
+     {
+      view: 'encyclopedia' as View,
+      label: 'Encyclopedia',
+      icon: <BookOpen />,
+    },
     {
       view: 'simulator' as View,
       label: 'Simulator',
@@ -48,7 +54,7 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
   ];
 
   return (
-    <footer className="sticky bottom-0 z-10 flex items-center justify-around border-t bg-gray-900/95 p-2 backdrop-blur-sm md:hidden">
+    <footer className="sticky bottom-0 z-10 grid grid-cols-6 items-center justify-around border-t bg-gray-900/95 p-2 backdrop-blur-sm md:hidden">
       {navItems.map((item) => (
         <Button
             key={item.view}
