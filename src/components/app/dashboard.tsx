@@ -18,10 +18,12 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Building, Factory, Home, Hospital, PlusCircle, Store } from 'lucide-react';
+import { encyclopediaData } from '@/lib/encyclopedia-data';
 
 const BUILDING_SLOTS = 20;
 
-type BuildingType = {
+export type BuildingType = {
+  id: string;
   name: string;
   icon: React.ReactNode;
   description: string;
@@ -30,48 +32,54 @@ type BuildingType = {
 };
 
 const availableBuildings: BuildingType[] = [
-  { 
-    name: 'Residential House', 
-    icon: <Home className="mr-2" />, 
-    description: 'Increases population capacity.',
-    image: 'https://picsum.photos/seed/residence/200/200',
-    imageHint: 'modern house'
-  },
-  { 
-    name: 'Factory', 
-    icon: <Factory className="mr-2" />, 
-    description: 'Produces goods and materials.',
-    image: 'https://picsum.photos/seed/industrial-factory/200/200',
-    imageHint: 'industrial factory'
-  },
-  { 
-    name: 'Market', 
-    icon: <Store className="mr-2" />, 
-    description: 'Generates revenue from sales.',
-    image: 'https://picsum.photos/seed/local-market/200/200',
-    imageHint: 'outdoor market'
-  },
-  { 
-    name: 'Office Building', 
-    icon: <Building className="mr-2" />, 
-    description: 'Unlocks corporate actions.',
-    image: 'https://picsum.photos/seed/corporate-office/200/200',
-    imageHint: 'office building'
-  },
-  { 
-    name: 'Hospital', 
-    icon: <Hospital className="mr-2" />, 
-    description: 'Improves city health.',
-    image: 'https://picsum.photos/seed/modern-hospital/200/200',
-    imageHint: 'modern hospital'
-  },
+    { 
+        id: 'residential-house',
+        name: 'Residential House', 
+        icon: <Home className="mr-2" />, 
+        description: 'Increases population capacity.',
+        image: 'https://picsum.photos/seed/modern-house/200/200',
+        imageHint: 'modern house'
+    },
+    { 
+        id: 'maize_mill',
+        name: 'Maize Mill', 
+        icon: <Factory className="mr-2" />, 
+        description: 'Processes corn into corn flour.',
+        image: 'https://picsum.photos/seed/industrial-mill/200/200',
+        imageHint: 'industrial mill'
+    },
+    { 
+        id: 'market',
+        name: 'Market', 
+        icon: <Store className="mr-2" />, 
+        description: 'Generates revenue from sales.',
+        image: 'https://picsum.photos/seed/local-market/200/200',
+        imageHint: 'outdoor market'
+    },
+    { 
+        id: 'office-building',
+        name: 'Office Building', 
+        icon: <Building className="mr-2" />, 
+        description: 'Unlocks corporate actions.',
+        image: 'https://picsum.photos/seed/corporate-office/200/200',
+        imageHint: 'office building'
+    },
+    { 
+        id: 'hospital',
+        name: 'Hospital', 
+        icon: <Hospital className="mr-2" />, 
+        description: 'Improves city health.',
+        image: 'https://picsum.photos/seed/modern-hospital/200/200',
+        imageHint: 'modern hospital'
+    },
 ];
 
+interface DashboardProps {
+    buildings: (BuildingType | null)[];
+    setBuildings: React.Dispatch<React.SetStateAction<(BuildingType | null)[]>>;
+}
 
-export function Dashboard() {
-  const [buildings, setBuildings] = React.useState<(BuildingType | null)[]>(
-    Array(BUILDING_SLOTS).fill(null)
-  );
+export function Dashboard({ buildings, setBuildings }: DashboardProps) {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [selectedSlot, setSelectedSlot] = React.useState<number | null>(null);
 

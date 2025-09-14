@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
-import { Dashboard } from '@/components/app/dashboard';
+import { Dashboard, type BuildingType } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
 import { CommoditySimulator } from '@/components/app/commodity-simulator';
 import { TradeMarket, type PlayerListing } from '@/components/app/trade-market';
@@ -30,6 +30,7 @@ const initialPlayerListings: PlayerListing[] = [
     { id: 5, commodity: 'Chicken Feed', seller: 'Mkulima Hodari', quantity: 8000, price: 181.25 },
 ];
 
+const BUILDING_SLOTS = 20;
 
 export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'production' | 'encyclopedia';
 
@@ -37,6 +38,9 @@ export default function Home() {
   const [view, setView] = React.useState<View>('dashboard');
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialInventoryItems);
   const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialPlayerListings);
+  const [buildings, setBuildings] = React.useState<(BuildingType | null)[]>(
+    Array(BUILDING_SLOTS).fill(null)
+  );
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
     // 1. Update inventory
@@ -66,11 +70,11 @@ export default function Home() {
     <>
       <AppHeader />
       <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-gray-800/50">
-        {view === 'dashboard' && <Dashboard />}
+        {view === 'dashboard' && <Dashboard buildings={buildings} setBuildings={setBuildings} />}
         {view === 'inventory' && <Inventory inventoryItems={inventory} onPostToMarket={handlePostToMarket} />}
         {view === 'market' && <TradeMarket playerListings={marketListings} />}
         {view === 'simulator' && <CommoditySimulator />}
-        {view === 'production' && <Production />}
+        {view === 'production' && <Production buildings={buildings} />}
         {view === 'encyclopedia' && <Encyclopedia />}
       </main>
       <AppFooter activeView={view} setView={setView} />
