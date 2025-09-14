@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { runCommoditySimulation, type FormState } from '@/app/actions';
 
 import { Button } from '@/components/ui/button';
@@ -50,7 +51,7 @@ function SubmitButton() {
 }
 
 export function CommoditySimulator() {
-  const [formState, formAction] = useFormState(
+  const [formState, formAction] = useActionState(
     runCommoditySimulation,
     initialState
   );
