@@ -13,17 +13,17 @@ export function Regions() {
   const regions = PlaceHolderImages;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 text-white">
         <div>
             <h1 className="text-3xl font-bold tracking-tight">Geographical Regions</h1>
             <p className="text-muted-foreground">
                 Explore diverse regions, each with unique economic advantages.
             </p>
         </div>
-        <Separator />
+        <Separator className="bg-white/20" />
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
         {regions.map((region) => (
-          <Card key={region.id} className="overflow-hidden">
+          <Card key={region.id} className="overflow-hidden bg-gray-800/60 border-gray-700">
             <CardHeader className="p-0">
               <Image
                 src={region.imageUrl}
@@ -35,10 +35,10 @@ export function Regions() {
               />
             </CardHeader>
             <CardContent className="p-6">
-              <CardTitle className="capitalize mb-2">
+              <CardTitle className="capitalize mb-2 text-white">
                 {region.id.split('-')[0]}
               </CardTitle>
-              <CardDescription>{region.description}</CardDescription>
+              <CardDescription className="text-gray-400">{region.description}</CardDescription>
             </CardContent>
           </Card>
         ))}

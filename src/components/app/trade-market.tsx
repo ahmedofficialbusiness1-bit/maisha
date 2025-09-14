@@ -21,32 +21,32 @@ const marketData = [
 
 export function TradeMarket() {
   return (
-    <Card>
+    <Card className="bg-gray-800/60 border-gray-700 text-white">
       <CardHeader>
         <CardTitle>Spot Market</CardTitle>
-        <CardDescription>
+        <CardDescription className="text-gray-400">
           Buy and sell commodities in a real-time, player-driven market.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Commodity</TableHead>
-              <TableHead className="text-right">Price (USD)</TableHead>
-              <TableHead className="text-right">24h Change</TableHead>
-              <TableHead className="text-right">Volume</TableHead>
+            <TableRow className="border-gray-700 hover:bg-gray-700/50">
+              <TableHead className="text-white">Commodity</TableHead>
+              <TableHead className="text-right text-white">Price (USD)</TableHead>
+              <TableHead className="text-right text-white">24h Change</TableHead>
+              <TableHead className="text-right text-white">Volume</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {marketData.map((item) => (
-              <TableRow key={item.commodity}>
+              <TableRow key={item.commodity} className="border-gray-700 hover:bg-gray-700/50">
                 <TableCell className="font-medium">{item.commodity}</TableCell>
                 <TableCell className="text-right font-mono">${item.price.toFixed(2)}</TableCell>
                 <TableCell className="text-right">
                   <div
                     className={`flex items-center justify-end gap-1 font-mono ${
-                      item.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
+                      item.changeType === 'increase' ? 'text-green-400' : 'text-red-400'
                     }`}
                   >
                     {item.changeType === 'increase' ? (

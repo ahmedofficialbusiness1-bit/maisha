@@ -23,8 +23,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={cn('font-body antialiased')}>
-        {children}
+      <body className={cn('font-body antialiased bg-background text-foreground')}>
+        <div className="flex flex-col h-screen">
+          {children}
+        </div>
         <Toaster />
       </body>
     </html>

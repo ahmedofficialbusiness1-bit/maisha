@@ -60,9 +60,9 @@ const productionData = [
 
 export function Dashboard() {
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 text-white">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="bg-gray-800/60 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -72,7 +72,7 @@ export function Dashboard() {
             <p className="text-xs text-muted-foreground">+20.1% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800/60 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Revenue</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -82,7 +82,7 @@ export function Dashboard() {
             <p className="text-xs text-muted-foreground">+180.1% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800/60 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Cash Flow</CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
@@ -92,7 +92,7 @@ export function Dashboard() {
             <p className="text-xs text-muted-foreground">-15.3% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800/60 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Inventory Value</CardTitle>
             <Warehouse className="h-4 w-4 text-muted-foreground" />
@@ -105,7 +105,7 @@ export function Dashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 bg-gray-800/60 border-gray-700">
           <CardHeader>
             <CardTitle>Balance Sheet Overview</CardTitle>
             <CardDescription>
@@ -115,16 +115,18 @@ export function Dashboard() {
           <CardContent className="pl-2">
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <BarChart data={chartData} accessibilityLayer>
-                <CartesianGrid vertical={false} />
+                <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.2}/>
                 <XAxis
                   dataKey="month"
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
                   tickFormatter={(value) => value.slice(0, 3)}
+                  stroke="hsl(var(--muted-foreground))"
                 />
                  <YAxis 
                   tickFormatter={(value) => `$${Number(value) / 1000}k`}
+                  stroke="hsl(var(--muted-foreground))"
                 />
                 <ChartTooltip
                   cursor={false}
@@ -136,7 +138,7 @@ export function Dashboard() {
             </ChartContainer>
           </CardContent>
         </Card>
-        <Card className="lg:col-span-3">
+        <Card className="lg:col-span-3 bg-gray-800/60 border-gray-700">
           <CardHeader>
             <CardTitle>Active Production</CardTitle>
             <CardDescription>
@@ -146,7 +148,7 @@ export function Dashboard() {
           <CardContent>
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="border-gray-700">
                   <TableHead>Item</TableHead>
                   <TableHead className="text-right">Quantity</TableHead>
                   <TableHead className="text-right">Status</TableHead>
@@ -154,7 +156,7 @@ export function Dashboard() {
               </TableHeader>
               <TableBody>
                 {productionData.map((prod) => (
-                  <TableRow key={prod.id}>
+                  <TableRow key={prod.id} className="border-gray-700">
                     <TableCell className="font-medium">{prod.item}</TableCell>
                     <TableCell className="text-right">{prod.quantity.toLocaleString()}</TableCell>
                     <TableCell className="text-right">
@@ -167,7 +169,9 @@ export function Dashboard() {
                             : 'outline'
                         }
                         className={
-                          prod.status === 'Completed' ? 'bg-primary/80' : ''
+                           prod.status === 'Completed' ? 'bg-green-600/80 text-white' 
+                           : prod.status === 'In Progress' ? 'bg-blue-600/80 text-white' 
+                           : 'bg-gray-600/80 text-white'
                         }
                       >
                         {prod.status}
