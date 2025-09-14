@@ -9,180 +9,71 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import {
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Warehouse,
-} from 'lucide-react';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartConfig,
-} from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Building, Factory, Home, PlusCircle, Store } from 'lucide-react';
 
-const chartData = [
-  { month: 'January', assets: 18600, liabilities: 8000 },
-  { month: 'February', assets: 30500, liabilities: 12000 },
-  { month: 'March', assets: 23700, liabilities: 15000 },
-  { month: 'April', assets: 27300, liabilities: 19000 },
-  { month: 'May', assets: 40900, liabilities: 22000 },
-  { month: 'June', assets: 45900, liabilities: 25000 },
-];
+const BUILDING_SLOTS = 20;
 
-const chartConfig = {
-  assets: {
-    label: 'Assets',
-    color: 'hsl(var(--chart-1))',
-  },
-  liabilities: {
-    label: 'Liabilities',
-    color: 'hsl(var(--chart-2))',
-  },
-} satisfies ChartConfig;
-
-const productionData = [
-  { id: 'PROD-001', item: 'Corn Flour', quantity: 500, status: 'Completed' },
-  { id: 'PROD-002', item: 'Cooking Oil', quantity: 250, status: 'In Progress' },
-  { id: 'PROD-003', item: 'Chicken Feed', quantity: 1000, status: 'In Progress' },
-  { id: 'PROD-004', item: 'Eggs', quantity: 1200, status: 'Pending' },
+const availableBuildings = [
+  { name: 'Residential House', icon: <Home className="mr-2" />, description: 'Increases population capacity.' },
+  { name: 'Factory', icon: <Factory className="mr-2" />, description: 'Produces goods and materials.' },
+  { name: 'Market', icon: <Store className="mr-2" />, description: 'Generates revenue from sales.' },
+  { name: 'Office Building', icon: <Building className="mr-2" />, description: 'Unlocks corporate actions.' },
 ];
 
 export function Dashboard() {
-  return (
-    <div className="flex flex-col gap-8 text-white">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-gray-800/60 border-gray-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
-            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gray-800/60 border-gray-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$12,345.67</div>
-            <p className="text-xs text-muted-foreground">+180.1% from last month</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gray-800/60 border-gray-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cash Flow</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-$2,105.41</div>
-            <p className="text-xs text-muted-foreground">-15.3% from last month</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gray-800/60 border-gray-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inventory Value</CardTitle>
-            <Warehouse className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$8,750.00</div>
-            <p className="text-xs text-muted-foreground">Across 3 warehouses</p>
-          </CardContent>
-        </Card>
-      </div>
+  // TODO: In the future, this state will hold the building placed in each slot.
+  const [buildings, setBuildings] = React.useState<(string | null)[]>(
+    Array(BUILDING_SLOTS).fill(null)
+  );
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4 bg-gray-800/60 border-gray-700">
-          <CardHeader>
-            <CardTitle>Balance Sheet Overview</CardTitle>
-            <CardDescription>
-              A monthly summary of your company's assets and liabilities.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <BarChart data={chartData} accessibilityLayer>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.2}/>
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  tickMargin={10}
-                  axisLine={false}
-                  tickFormatter={(value) => value.slice(0, 3)}
-                  stroke="hsl(var(--muted-foreground))"
-                />
-                 <YAxis 
-                  tickFormatter={(value) => `$${Number(value) / 1000}k`}
-                  stroke="hsl(var(--muted-foreground))"
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent indicator="dot" />}
-                />
-                <Bar dataKey="assets" fill="var(--color-assets)" radius={4} />
-                <Bar dataKey="liabilities" fill="var(--color-liabilities)" radius={4} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-3 bg-gray-800/60 border-gray-700">
-          <CardHeader>
-            <CardTitle>Active Production</CardTitle>
-            <CardDescription>
-              A snapshot of your current factory production lines.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow className="border-gray-700">
-                  <TableHead>Item</TableHead>
-                  <TableHead className="text-right">Quantity</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {productionData.map((prod) => (
-                  <TableRow key={prod.id} className="border-gray-700">
-                    <TableCell className="font-medium">{prod.item}</TableCell>
-                    <TableCell className="text-right">{prod.quantity.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">
-                      <Badge
-                        variant={
-                          prod.status === 'Completed'
-                            ? 'default'
-                            : prod.status === 'In Progress'
-                            ? 'secondary'
-                            : 'outline'
-                        }
-                        className={
-                           prod.status === 'Completed' ? 'bg-green-600/80 text-white' 
-                           : prod.status === 'In Progress' ? 'bg-blue-600/80 text-white' 
-                           : 'bg-gray-600/80 text-white'
-                        }
-                      >
-                        {prod.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
+  return (
+    <div className="flex flex-col gap-4 text-white">
+       <div>
+        <h1 className="text-3xl font-bold tracking-tight">My City</h1>
+        <p className="text-muted-foreground">
+          Build your empire from the ground up. Click a plot to construct a new building.
+        </p>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {buildings.map((building, index) => (
+          <Dialog key={index}>
+            <DialogTrigger asChild>
+              <Card className="flex items-center justify-center h-32 bg-gray-800/60 border-2 border-dashed border-gray-700 hover:border-blue-500 hover:bg-gray-800/90 transition-all cursor-pointer">
+                <div className="text-center text-gray-500">
+                  <PlusCircle className="h-8 w-8 mx-auto" />
+                  <span className="text-xs font-semibold">Build</span>
+                </div>
+              </Card>
+            </DialogTrigger>
+            <DialogContent className="bg-gray-900 border-gray-700 text-white">
+              <DialogHeader>
+                <DialogTitle>Construct a Building</DialogTitle>
+                <DialogDescription>
+                  Select a building to construct on this plot.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-2 pt-4">
+                {availableBuildings.map((b) => (
+                    <Button key={b.name} variant="outline" className="w-full justify-start h-auto py-3 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white">
+                        {b.icon}
+                        <div className='text-left'>
+                            <p className='font-semibold'>{b.name}</p>
+                            <p className='text-xs text-gray-400'>{b.description}</p>
+                        </div>
+                    </Button>
                 ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              </div>
+            </DialogContent>
+          </Dialog>
+        ))}
       </div>
     </div>
   );
