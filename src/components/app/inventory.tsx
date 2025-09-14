@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import {
   Table,
   TableBody,
@@ -16,77 +17,175 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '../ui/separator';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { MoreHorizontal } from 'lucide-react';
 
-const inventoryItems = [
-  { item: 'Corn', quantity: 15000 },
-  {
-    item: 'Sunflower Seeds',
-    quantity: 8000,
-  },
-  { item: 'Eggs', quantity: 25000 },
-  {
-    item: 'Crude Oil',
-    quantity: 1000,
-  },
-  {
-    item: 'Gold',
-    quantity: 500,
-  },
-  {
-    item: 'Corn Flour',
-    quantity: 5000,
-  },
-  {
-    item: 'Cooking Oil',
-    quantity: 3000,
-  },
-  {
-    item: 'Chicken Feed',
-    quantity: 10000,
-  },
+type InventoryItem = {
+  item: string;
+  quantity: number;
+  marketPrice: number;
+};
+
+const inventoryItems: InventoryItem[] = [
+  { item: 'Corn', quantity: 15000, marketPrice: 150 },
+  { item: 'Sunflower Seeds', quantity: 8000, marketPrice: 320 },
+  { item: 'Eggs', quantity: 25000, marketPrice: 210 },
+  { item: 'Crude Oil', quantity: 1000, marketPrice: 700 },
+  { item: 'Gold', quantity: 500, marketPrice: 1800 },
+  { item: 'Corn Flour', quantity: 5000, marketPrice: 280 },
+  { item: 'Cooking Oil', quantity: 3000, marketPrice: 550 },
+  { item: 'Chicken Feed', quantity: 10000, marketPrice: 180 },
 ];
 
 export function Inventory() {
+  const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
+  const [selectedItem, setSelectedItem] = React.useState<InventoryItem | null>(null);
+  const [quantity, setQuantity] = React.useState(1);
+  const [price, setPrice] = React.useState(0);
+  
+  const handleOpenSellDialog = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setPrice(item.marketPrice);
+    setQuantity(1);
+    setIsSellDialogOpen(true);
+  };
+  
+  const priceFloor = selectedItem ? selectedItem.marketPrice * 0.8 : 0;
+  const priceCeiling = selectedItem ? selectedItem.marketPrice * 1.2 : 0;
+
   return (
-    <div className="flex flex-col gap-4 text-white">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Ghala (Inventory)</h1>
-        <p className="text-muted-foreground">
-          Tazama bidhaa zako zote ulizonunua na kuzalisha.
-        </p>
-      </div>
-      <Separator className="bg-white/20" />
-      <Card className="bg-gray-800/60 border-gray-700 text-white">
-        <CardHeader>
-          <CardTitle>Orodha ya Bidhaa</CardTitle>
-          <CardDescription className="text-gray-400">
-            Hizi ndizo bidhaa ulizonazo kwenye ghala lako.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-gray-700 hover:bg-gray-700/50">
-                <TableHead className="text-white">Bidhaa</TableHead>
-                <TableHead className="text-right text-white">Idadi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {inventoryItems.map(item => (
-                <TableRow
-                  key={item.item}
-                  className="border-gray-700 hover:bg-gray-700/50"
-                >
-                  <TableCell className="font-medium">{item.item}</TableCell>
-                  <TableCell className="text-right font-mono">
-                    {item.quantity.toLocaleString()}
-                  </TableCell>
+    <>
+      <div className="flex flex-col gap-4 text-white">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Ghala (Inventory)</h1>
+          <p className="text-muted-foreground">
+            Tazama bidhaa zako zote ulizonunua na kuzalisha.
+          </p>
+        </div>
+        <Separator className="bg-white/20" />
+        <Card className="bg-gray-800/60 border-gray-700 text-white">
+          <CardHeader>
+            <CardTitle>Orodha ya Bidhaa</CardTitle>
+            <CardDescription className="text-gray-400">
+              Hizi ndizo bidhaa ulizonazo kwenye ghala lako.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow className="border-gray-700 hover:bg-gray-700/50">
+                  <TableHead className="text-white">Bidhaa</TableHead>
+                  <TableHead className="text-right text-white">Idadi</TableHead>
+                  <TableHead className="text-right text-white">Vitendo</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+              </TableHeader>
+              <TableBody>
+                {inventoryItems.map(item => (
+                  <TableRow
+                    key={item.item}
+                    className="border-gray-700 hover:bg-gray-700/50"
+                  >
+                    <TableCell className="font-medium">{item.item}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      {item.quantity.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                       <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white">
+                          <DropdownMenuItem onClick={() => handleOpenSellDialog(item)}>
+                            Sell on Market
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            Create Contract
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Sell {selectedItem?.item} on the Market</DialogTitle>
+            <DialogDescription>
+              Set the quantity and price per unit. The total value will be calculated automatically.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedItem && (
+             <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="quantity" className="text-right">Quantity</Label>
+                    <Input 
+                        id="quantity" 
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => setQuantity(Math.min(Number(e.target.value), selectedItem.quantity))}
+                        min="1"
+                        max={selectedItem.quantity}
+                        className="col-span-3 bg-gray-800 border-gray-600"
+                    />
+                </div>
+                 <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="price" className="text-right">Price/Unit</Label>
+                    <Input 
+                        id="price" 
+                        type="number"
+                        value={price}
+                        onChange={(e) => setPrice(Number(e.target.value))}
+                        step="0.01"
+                        className="col-span-3 bg-gray-800 border-gray-600"
+                    />
+                </div>
+                <div className='col-span-4 text-xs text-center text-gray-400'>
+                    <p>Market Price: ${selectedItem.marketPrice.toFixed(2)}</p>
+                    <p>Allowed Range: ${priceFloor.toFixed(2)} - ${priceCeiling.toFixed(2)}</p>
+                </div>
+                <Separator className="my-2 bg-gray-700"/>
+                <div className='text-center'>
+                    <p className="text-lg font-bold">Total Sale Value</p>
+                    <p className='text-2xl font-mono text-green-400'>${(quantity * price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+             </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSellDialogOpen(false)}>Cancel</Button>
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={price < priceFloor || price > priceCeiling}
+            >
+              Post to Market
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
