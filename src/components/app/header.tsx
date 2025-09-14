@@ -7,7 +7,7 @@ import { Bell, Menu, Star, Coins } from 'lucide-react';
 
 export function AppHeader() {
   return (
-    <header className="sticky top-0 z-10 flex h-20 items-center gap-4 border-b border-gray-700/50 bg-gray-900/95 px-4 text-white backdrop-blur-sm sm:px-6">
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-2 border-b border-gray-700/50 bg-gray-900/95 px-2 text-white backdrop-blur-sm sm:h-20 sm:px-4">
       {/* App Logo and Name - kept for brand recognition */}
       <div className="hidden items-center gap-2 md:flex">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-700">
@@ -23,39 +23,39 @@ export function AppHeader() {
       </Button>
 
       {/* Player Stats - Right Aligned */}
-      <div className="flex flex-1 items-center justify-end gap-4 md:gap-6">
+      <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4 md:gap-6">
         {/* Money */}
-        <div className="flex items-center gap-2 rounded-full bg-green-500/20 p-1 pr-4 border border-green-500/50">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-600">
-             <Coins className="h-5 w-5 text-yellow-300"/>
+        <div className="flex items-center gap-1 rounded-full bg-green-500/20 p-1 pr-2 sm:gap-2 sm:pr-4 border border-green-500/50">
+          <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-green-600">
+             <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-300"/>
           </div>
-          <div className="text-lg font-bold text-white">$1,989,212</div>
+          <div className="text-sm sm:text-lg font-bold text-white">$1.9M</div>
         </div>
 
         {/* Player Profile & Level */}
-        <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12 border-2 border-yellow-400">
+        <div className="flex items-center gap-2">
+          <Avatar className="h-9 w-9 sm:h-12 sm:w-12 border-2 border-yellow-400">
             <AvatarImage src="https://picsum.photos/seed/player/100/100" data-ai-hint="player avatar" />
             <AvatarFallback>P</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col">
-            <span className="font-semibold">Mchezaji</span>
+          <div className="hidden sm:flex flex-col">
+            <span className="font-semibold text-sm">Mchezaji</span>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400">Level 5</span>
-              <Progress value={45} className="h-2 w-20 bg-gray-700" />
+              <span className="text-xs text-gray-400">Level 5</span>
+              <Progress value={45} className="h-1.5 w-16 bg-gray-700" />
             </div>
           </div>
         </div>
         
         {/* Star Boost */}
-        <div className="flex items-center gap-2 rounded-full bg-yellow-400/20 p-2 border border-yellow-400/50">
-            <Star className="h-6 w-6 text-yellow-400" />
-            <span className="font-bold text-white">x2</span>
+        <div className="flex items-center gap-1 rounded-full bg-yellow-400/20 p-1.5 sm:p-2 border border-yellow-400/50">
+            <Star className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" />
+            <span className="font-bold text-white text-sm sm:text-base">x2</span>
         </div>
 
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-6 w-6" />
+        <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10">
+          <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
           <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-red-500" />
           <span className="sr-only">Notifications</span>
         </Button>
