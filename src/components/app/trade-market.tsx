@@ -7,62 +7,105 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 
 const marketData = [
-  { commodity: 'Corn', price: 150.75, volume: '1.2M', change: 1.5, changeType: 'increase' },
-  { commodity: 'Sunflower Seeds', price: 320.50, volume: '800K', change: -0.8, changeType: 'decrease' },
-  { commodity: 'Eggs', price: 210.00, volume: '2.5M', change: 2.1, changeType: 'increase' },
-  { commodity: 'Corn Flour', price: 280.25, volume: '500K', change: 0.5, changeType: 'increase' },
-  { commodity: 'Cooking Oil', price: 550.00, volume: '300K', change: -1.2, changeType: 'decrease' },
-  { commodity: 'Chicken Feed', price: 180.90, volume: '950K', change: 0.2, changeType: 'increase' },
-  { commodity: 'Soybeans', price: 410.10, volume: '600K', change: -2.5, changeType: 'decrease' },
+  { commodity: 'Corn', price: 150.75, change: 1.5, changeType: 'increase' },
+  { commodity: 'Sunflower Seeds', price: 320.50, change: -0.8, changeType: 'decrease' },
+  { commodity: 'Eggs', price: 210.00, change: 2.1, changeType: 'increase' },
+  { commodity: 'Corn Flour', price: 280.25, change: 0.5, changeType: 'increase' },
+  { commodity: 'Cooking Oil', price: 550.00, change: -1.2, changeType: 'decrease' },
+  { commodity: 'Chicken Feed', price: 180.90, change: 0.2, changeType: 'increase' },
+  { commodity: 'Soybeans', price: 410.10, change: -2.5, changeType: 'decrease' },
+  { commodity: 'Crude Oil', price: 705.20, change: 1.1, changeType: 'increase' },
+  { commodity: 'Gold', price: 1805.50, change: -0.2, changeType: 'decrease' },
 ];
+
+const playerListings = [
+  { id: 1, commodity: 'Corn', seller: 'Mkulima Hodari', quantity: 5000, price: 151.00 },
+  { id: 2, commodity: 'Eggs', seller: 'Mfanyabiashara Mjanja', quantity: 10000, price: 209.50 },
+  { id: 3, commodity: 'Cooking Oil', seller: 'Wazalishaji wa Pwani', quantity: 1500, price: 545.00 },
+  { id: 4, commodity: 'Gold', seller: 'Mgodi wa Almasi', quantity: 100, price: 1800.00 },
+  { id: 5, commodity: 'Chicken Feed', seller: 'Mkulima Hodari', quantity: 8000, price: 181.25 },
+];
+
+
+function PriceTicker() {
+  const tickerItems = [...marketData, ...marketData]; // Duplicate for seamless loop
+
+  return (
+    <div className="relative flex w-full overflow-hidden bg-gray-900/80 border-y border-gray-700 py-2">
+      <div className="flex animate-ticker whitespace-nowrap">
+        {tickerItems.map((item, index) => (
+          <div key={index} className="flex items-center mx-4">
+            <span className="font-semibold text-white">{item.commodity}:</span>
+            <span className="ml-2 font-mono text-white">${item.price.toFixed(2)}</span>
+            <div
+              className={`flex items-center ml-1 ${
+                item.changeType === 'increase' ? 'text-green-400' : 'text-red-400'
+              }`}
+            >
+              {item.changeType === 'increase' ? (
+                <ArrowUp className="h-3 w-3" />
+              ) : (
+                <ArrowDown className="h-3 w-3" />
+              )}
+              <span className="ml-0.5 text-xs font-mono">{Math.abs(item.change)}%</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 export function TradeMarket() {
   return (
-    <Card className="bg-gray-800/60 border-gray-700 text-white">
-      <CardHeader>
-        <CardTitle>Spot Market</CardTitle>
-        <CardDescription className="text-gray-400">
-          Buy and sell commodities in a real-time, player-driven market.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow className="border-gray-700 hover:bg-gray-700/50">
-              <TableHead className="text-white">Commodity</TableHead>
-              <TableHead className="text-right text-white">Price (USD)</TableHead>
-              <TableHead className="text-right text-white">24h Change</TableHead>
-              <TableHead className="text-right text-white">Volume</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {marketData.map((item) => (
-              <TableRow key={item.commodity} className="border-gray-700 hover:bg-gray-700/50">
-                <TableCell className="font-medium">{item.commodity}</TableCell>
-                <TableCell className="text-right font-mono">${item.price.toFixed(2)}</TableCell>
-                <TableCell className="text-right">
-                  <div
-                    className={`flex items-center justify-end gap-1 font-mono ${
-                      item.changeType === 'increase' ? 'text-green-400' : 'text-red-400'
-                    }`}
-                  >
-                    {item.changeType === 'increase' ? (
-                      <ArrowUp className="h-4 w-4" />
-                    ) : (
-                      <ArrowDown className="h-4 w-4" />
-                    )}
-                    {Math.abs(item.change)}%
-                  </div>
-                </TableCell>
-                <TableCell className="text-right font-mono">{item.volume}</TableCell>
+    <div className="flex flex-col gap-4 text-white">
+      <PriceTicker />
+
+      <Card className="bg-gray-800/60 border-gray-700 text-white">
+        <CardHeader>
+          <CardTitle>Soko la Wachezaji</CardTitle>
+          <CardDescription className="text-gray-400">
+            Nunua bidhaa zilizowekwa sokoni na wachezaji wengine.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-gray-700 hover:bg-gray-700/50">
+                <TableHead className="text-white">Bidhaa</TableHead>
+                <TableHead className="text-white">Muuzaji</TableHead>
+                <TableHead className="text-right text-white">Idadi</TableHead>
+                <TableHead className="text-right text-white">Bei (kwa Kimoja)</TableHead>
+                <TableHead className="text-center text-white">Kitendo</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {playerListings.map((listing) => (
+                <TableRow key={listing.id} className="border-gray-700 hover:bg-gray-700/50">
+                  <TableCell className="font-medium">{listing.commodity}</TableCell>
+                  <TableCell className="text-gray-400">{listing.seller}</TableCell>
+                  <TableCell className="text-right font-mono">{listing.quantity.toLocaleString()}</TableCell>
+                  <TableCell className="text-right font-mono">${listing.price.toFixed(2)}</TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        className="bg-green-600 text-white hover:bg-green-700"
+                    >
+                      Nunua
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
