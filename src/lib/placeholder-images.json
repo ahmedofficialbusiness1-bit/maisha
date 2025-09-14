@@ -1,3 +1,23 @@
+
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "arusha-farm",
+      "description": "Arusha boasts fertile lands, ideal for agriculture, making it the breadbasket of the nation.",
+      "imageUrl": "https://picsum.photos/seed/arusha/600/400",
+      "imageHint": "agriculture farm"
+    },
+    {
+      "id": "dar-port",
+      "description": "Dar es Salaam is the logistical heart, with a major port facilitating regional and international trade.",
+      "imageUrl": "https://picsum.photos/seed/dar/600/400",
+      "imageHint": "port cargo"
+    },
+    {
+      "id": "mwanza-fishing",
+      "description": "Mwanza, on the shores of Lake Victoria, is a hub for the fishing industry and related processing.",
+      "imageUrl": "https://picsum.photos/seed/mwanza/600/400",
+      "imageHint": "fishing boat"
+    }
+  ]
 }
