@@ -1,3 +1,5 @@
+import { productionLines } from './production-data';
+
 export type EncyclopediaEntry = {
   id: string;
   name: string;
@@ -10,62 +12,71 @@ export type EncyclopediaEntry = {
     value: string;
   }[];
   recipe?: {
-    input: {
+    inputs: {
         name: string;
         quantity: number;
         imageUrl: string;
-    };
+    }[];
   };
 };
 
-export const encyclopediaData: EncyclopediaEntry[] = [
-  {
-    id: 'corn',
-    name: 'Corn',
-    category: 'Raw Material',
-    description: 'A staple crop, corn is a versatile grain used in many industries, primarily for food production and animal feed. It requires fertile land and significant water to grow.',
-    imageUrl: 'https://picsum.photos/seed/corn-item/200/200',
-    imageHint: 'corn kernels',
-    properties: [
-      { label: 'Average Market Price', value: '$150' },
-      { label: 'Transport Units', value: '1' },
-      { label: 'Volume', value: '1 m³' },
-      { label: 'Growth Time', value: '2 hours' },
-    ],
-  },
-  {
-    id: 'corn_flour',
-    name: 'Corn Flour',
-    category: 'Processed Good',
-    description: 'Fine flour produced by milling corn. It is a key ingredient for making popular food items like ugali, tortillas, and various pastries.',
-    imageUrl: 'https://picsum.photos/seed/flour-bag/200/200',
-    imageHint: 'bag of flour',
-    properties: [
-      { label: 'Average Market Price', value: '$280' },
-      { label: 'Transport Units', value: '1' },
-      { label: 'Volume', value: '1 m³' },
-      { label: 'Production Time', value: '20 mins' },
-    ],
-    recipe: {
-      input: {
-        name: 'Corn',
-        quantity: 1.5,
-        imageUrl: 'https://picsum.photos/seed/corn-item/200/200'
-      }
+const getImageUrl = (name: string) => `https://picsum.photos/seed/${name.toLowerCase().replace(/\s/g, '-')}/200/200`;
+const getImageHint = (name: string) => name.toLowerCase().split(' ').slice(0, 2).join(' ');
+
+
+const generatedEntries = productionLines.map(line => {
+    const entry: EncyclopediaEntry = {
+        id: line.output.name.toLowerCase().replace(/'/g, '').replace(/\s+/g, '_'),
+        name: line.output.name,
+        category: "Product",
+        description: `A product from the ${line.buildingId} facility. Used in various other production lines or sold for profit.`,
+        imageUrl: getImageUrl(line.output.name),
+        imageHint: getImageHint(line.output.name),
+        properties: [
+            { label: 'Production Cost', value: `$${line.cost}` },
+            { label: 'Production Time', value: line.duration },
+            { label: 'Output Quantity', value: `${line.output.quantity.toLocaleString()} units` },
+            { label: 'Building', value: line.buildingId.charAt(0).toUpperCase() + line.buildingId.slice(1).replace('_', ' ') }
+        ],
     }
-  },
-  {
-    id: 'maize_mill',
-    name: 'Maize Mill',
-    category: 'Production Building',
-    description: 'An industrial facility for milling raw corn into corn flour. It requires electricity and labor to operate efficiently.',
-    imageUrl: 'https://picsum.photos/seed/mill-building/200/200',
-    imageHint: 'industrial mill',
-    properties: [
-      { label: 'Construction Cost', value: '$100,000' },
-      { label: 'Construction Time', value: '45 mins' },
-      { label: 'Worker Capacity', value: '10' },
-      { label: 'Electricity Usage', value: '50 kWh' },
-    ],
-  },
-];
+    
+    if (line.inputs.length > 0) {
+        entry.recipe = {
+            inputs: line.inputs.map(input => ({
+                name: input.name,
+                quantity: input.quantity,
+                imageUrl: getImageUrl(input.name)
+            }))
+        }
+    }
+    
+    return entry;
+});
+
+// Create a set of all item names to avoid duplicates in encyclopedia
+const allItemNames = new Set<string>();
+productionLines.forEach(line => {
+    allItemNames.add(line.output.name);
+    line.inputs.forEach(input => allItemNames.add(input.name));
+});
+
+// Add entries for items that are inputs but not outputs
+allItemNames.forEach(itemName => {
+    if (!generatedEntries.some(entry => entry.name === itemName)) {
+        const entry: EncyclopediaEntry = {
+            id: itemName.toLowerCase().replace(/'/g, '').replace(/\s+/g, '_'),
+            name: itemName,
+            category: "Raw Material",
+            description: `A fundamental resource used in production. It may be produced or sourced from suppliers.`,
+            imageUrl: getImageUrl(itemName),
+            imageHint: getImageHint(itemName),
+            properties: [
+                { label: 'Type', value: 'Base Input' }
+            ],
+        };
+        generatedEntries.push(entry);
+    }
+});
+
+
+export const encyclopediaData: EncyclopediaEntry[] = generatedEntries.sort((a, b) => a.name.localeCompare(b.name));
