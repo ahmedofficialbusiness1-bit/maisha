@@ -4,8 +4,26 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Bell, Menu, Star, Coins } from 'lucide-react';
+import { useMemo } from 'react';
 
-export function AppHeader() {
+interface AppHeaderProps {
+    money: number;
+    stars: number;
+}
+
+function formatCurrency(value: number): string {
+    if (value >= 1_000_000) {
+        return `$${(value / 1_000_000).toFixed(1)}M`;
+    }
+    if (value >= 1_000) {
+        return `$${(value / 1_000).toFixed(1)}K`;
+    }
+    return `$${value}`;
+}
+
+export function AppHeader({ money, stars }: AppHeaderProps) {
+    const formattedMoney = useMemo(() => formatCurrency(money), [money]);
+  
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-2 border-b border-gray-700/50 bg-gray-900/95 px-2 text-white backdrop-blur-sm sm:h-20 sm:px-4">
       {/* App Logo and Name - kept for brand recognition */}
@@ -29,7 +47,7 @@ export function AppHeader() {
           <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-green-600">
              <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-300"/>
           </div>
-          <div className="text-sm sm:text-lg font-bold text-white">$1.9M</div>
+          <div className="text-sm sm:text-lg font-bold text-white">{formattedMoney}</div>
         </div>
 
         {/* Player Profile & Level */}
@@ -50,7 +68,7 @@ export function AppHeader() {
         {/* Star Boost */}
         <div className="flex items-center gap-1 rounded-full bg-yellow-400/20 p-1.5 sm:p-2 border border-yellow-400/50">
             <Star className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" />
-            <span className="font-bold text-white text-sm sm:text-base">x2</span>
+            <span className="font-bold text-white text-sm sm:text-base">{stars}</span>
         </div>
 
         {/* Notifications */}

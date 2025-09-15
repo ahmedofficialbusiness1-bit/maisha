@@ -45,6 +45,8 @@ export default function Home() {
     Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 }))
   );
   const { toast } = useToast();
+  const [money, setMoney] = React.useState(1900000);
+  const [stars, setStars] = React.useState(50); // Initial stars for testing
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
     const costs = buildingData[building.id].buildCost;
@@ -112,6 +114,18 @@ export default function Home() {
             return;
         }
     }
+    
+    // Check for money
+    const totalCost = recipe.cost * quantity;
+    if (money < totalCost) {
+        toast({
+            variant: "destructive",
+            title: "Pesa haitoshi",
+            description: `Huna pesa za kutosha kuanzisha uzalishaji. Unahitaji $${totalCost.toLocaleString()}.`,
+        });
+        return;
+    }
+
 
     const now = Date.now();
     
@@ -127,7 +141,8 @@ export default function Home() {
       return newInventory.filter(item => item.quantity > 0);
     });
 
-    // 3. TODO: Deduct cost from player's money
+    // 3. Deduct cost from player's money
+    setMoney(prevMoney => prevMoney - totalCost);
 
     // 4. Set production state on building
     setBuildingSlots(prev => {
@@ -171,6 +186,35 @@ export default function Home() {
     });
   };
   
+  const handleBoostConstruction = (slotIndex: number) => {
+      const boostCost = 20;
+      const timeReduction = 60 * 60 * 1000; // 1 hour
+
+      if (stars < boostCost) {
+          toast({
+              variant: "destructive",
+              title: "Star Boost Hazitoshi",
+              description: `Huna Star Boosts za kutosha. Unahitaji ${boostCost}.`,
+          });
+          return;
+      }
+      
+      setStars(prev => prev - boostCost);
+      setBuildingSlots(prev => {
+          const newSlots = [...prev];
+          const slot = newSlots[slotIndex];
+          if (slot?.construction) {
+              slot.construction.endTime -= timeReduction;
+          }
+          return newSlots;
+      });
+
+      toast({
+          title: "Umeharakisha Ujenzi!",
+          description: `Umetumia ${boostCost} Star Boosts kupunguza muda wa ujenzi kwa saa 1.`,
+      });
+  };
+  
    React.useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
@@ -182,7 +226,7 @@ export default function Home() {
         let slotsChanged = false;
         const newSlots = prevSlots.map(slot => {
           // Check for completed production
-          if (slot.production && now >= slot.production.endTime) {
+          if (slot && slot.production && now >= slot.production.endTime) {
             slotsChanged = true;
             inventoryUpdated = true;
             
@@ -190,7 +234,7 @@ export default function Home() {
             if (!recipe) return { ...slot, production: undefined };
 
             const { output } = recipe;
-            itemsProduced.push(`${output.quantity * slot.production!.quantity}x ${output.name}`);
+            itemsProduced.push(`${(output.quantity * slot.production!.quantity).toLocaleString()}x ${output.name}`);
             
             setInventory(prevInventory => {
               const newInventory = [...prevInventory];
@@ -213,7 +257,7 @@ export default function Home() {
           }
           
           // Check for completed construction
-          if (slot.construction && now >= slot.construction.endTime) {
+          if (slot && slot.construction && now >= slot.construction.endTime) {
             slotsChanged = true;
             if(slot.building) {
                 constructionCompleted.push(slot.building.name);
@@ -228,7 +272,10 @@ export default function Home() {
           return slot;
         });
 
-        return slotsChanged ? newSlots : prevSlots;
+        if (slotsChanged) {
+            return newSlots;
+        }
+        return prevSlots;
       });
 
       if(inventoryUpdated){
@@ -248,11 +295,11 @@ export default function Home() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [toast]);
+  }, [toast, stars]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
-      <AppHeader />
+      <AppHeader money={money} stars={stars} />
       <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-gray-800/50">
         {view === 'dashboard' && (
           <Dashboard 
@@ -260,6 +307,7 @@ export default function Home() {
             inventory={inventory}
             onBuild={handleBuild}
             onStartProduction={handleStartProduction}
+            onBoostConstruction={handleBoostConstruction}
           />
         )}
         {view === 'inventory' && <Inventory inventoryItems={inventory} onPostToMarket={handlePostToMarket} />}

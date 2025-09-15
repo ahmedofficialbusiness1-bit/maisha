@@ -13,18 +13,18 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
 import type { InventoryItem } from './inventory';
-import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
-import { buildingData, BuildingConfig } from '@/lib/building-data';
+import { buildingData } from '@/lib/building-data';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
@@ -154,6 +154,7 @@ interface DashboardProps {
     inventory: InventoryItem[];
     onBuild: (slotIndex: number, building: BuildingType) => void;
     onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
+    onBoostConstruction: (slotIndex: number) => void;
 }
 
 const formatTime = (ms: number) => {
@@ -168,9 +169,10 @@ const formatTime = (ms: number) => {
     return `${minutes}:${seconds}`;
 };
 
-export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction }: DashboardProps) {
+export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction, onBoostConstruction }: DashboardProps) {
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [isProductionDialogOpen, setIsProductionDialogOpen] = React.useState(false);
+  const [isBoostDialogOpen, setIsBoostDialogOpen] = React.useState(false);
   const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
   const [now, setNow] = React.useState(Date.now());
   const [selectedRecipe, setSelectedRecipe] = React.useState<Recipe | null>(null);
@@ -201,6 +203,11 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
     setIsProductionDialogOpen(true);
   };
   
+  const handleOpenBoostDialog = (index: number) => {
+    setSelectedSlotIndex(index);
+    setIsBoostDialogOpen(true);
+  };
+  
   const handleSelectRecipe = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
     setProductionQuantity(1);
@@ -209,15 +216,23 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
   const handleConfirmProduction = () => {
       if(selectedSlotIndex !== null && selectedRecipe && productionQuantity > 0) {
           const slot = buildingSlots[selectedSlotIndex];
-          const buildingInfo = buildingData[slot.building!.id];
-          const baseTimePerUnit = (3600 * 1000) / buildingInfo.productionRate; // Time in ms for 1 unit at level 1
-          // TODO: Adjust for level
+          if (!slot || !slot.building) return;
+          const buildingInfo = buildingData[slot.building.id];
+          const ratePerHr = buildingInfo.productionRate * (1 + (slot.level - 1) * 0.4);
+          const baseTimePerUnit = (3600 * 1000) / ratePerHr;
           const totalDurationMs = baseTimePerUnit * productionQuantity;
 
           onStartProduction(selectedSlotIndex, selectedRecipe, productionQuantity, totalDurationMs);
           setIsProductionDialogOpen(false);
           setSelectedRecipe(null);
       }
+  }
+  
+  const handleConfirmBoost = () => {
+      if (selectedSlotIndex !== null) {
+          onBoostConstruction(selectedSlotIndex);
+      }
+      setIsBoostDialogOpen(false);
   }
 
   const selectedSlot = selectedSlotIndex !== null ? buildingSlots[selectedSlotIndex] : null;
@@ -244,8 +259,7 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
   const getBuildingProductionRate = (slot: BuildingSlot | null): number => {
     if (!slot || !slot.building) return 0;
     const buildingInfo = buildingData[slot.building.id];
-    // Simple level logic for now, will be expanded with 1.4x factor later
-    return buildingInfo.productionRate * slot.level; 
+    return buildingInfo.productionRate * (1 + (slot.level -1) * 0.4);
   }
 
   const calculateProductionTime = (quantity: number): number => {
@@ -254,6 +268,15 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
       if (ratePerHr === 0) return Infinity;
       const hours = quantity / ratePerHr;
       return hours * 3600 * 1000; // time in ms
+  }
+  
+  const handleCardClick = (slot: BuildingSlot, index: number) => {
+    if (slot.construction) {
+        handleOpenBoostDialog(index);
+    } else if (!slot.production) {
+        handleOpenProductionDialog(index);
+    }
+    // If it's in production, do nothing.
   }
 
   const currentProductionRecipe = selectedSlot?.production 
@@ -273,10 +296,9 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
           slot.building ? (
             <Card
               key={index}
-              onClick={() => !slot.production && !slot.construction && handleOpenProductionDialog(index)}
+              onClick={() => handleCardClick(slot, index)}
               className={cn(
-                "flex flex-col items-center justify-center h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative",
-                !slot.production && !slot.construction ? "cursor-pointer" : "cursor-default"
+                "flex flex-col items-center justify-center h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer"
               )}
             >
                 <Image
@@ -309,7 +331,7 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
                     {slot.production && currentProductionRecipe ? (
                         <div className='text-xs font-mono text-yellow-300 flex items-center justify-center gap-2'>
                            <span>{formatTime(slot.production.endTime - now)}</span>
-                           <span>| {currentProductionRecipe.output.name}</span>
+                           <span>| {recipes.find(r=>r.id === slot.production?.recipeId)?.output.name}</span>
                         </div>
                     ) : slot.construction ? (
                         <div className='text-xs font-mono text-orange-300 flex items-center justify-center gap-2'>
@@ -403,25 +425,27 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
                 </DialogHeader>
                 <div className="grid grid-cols-3 gap-4 pt-4">
                   {/* Recipe List */}
-                  <div className="col-span-1 flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-2">
-                    {buildingRecipes.length > 0 ? (
-                        buildingRecipes.map((recipe) => (
-                            <Button
-                                key={recipe.id}
-                                variant="outline"
-                                className={cn(
-                                    "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
-                                    selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
-                                )}
-                                onClick={() => handleSelectRecipe(recipe)}
-                            >
-                                {recipe.output.name}
-                            </Button>
-                        ))
-                    ) : (
-                        <p className="text-sm text-gray-500">No recipes for this building.</p>
-                    )}
-                  </div>
+                  <ScrollArea className="col-span-1 max-h-[60vh]">
+                    <div className="flex flex-col gap-2 pr-2">
+                        {buildingRecipes.length > 0 ? (
+                            buildingRecipes.map((recipe) => (
+                                <Button
+                                    key={recipe.id}
+                                    variant="outline"
+                                    className={cn(
+                                        "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
+                                        selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
+                                    )}
+                                    onClick={() => handleSelectRecipe(recipe)}
+                                >
+                                    {recipe.output.name}
+                                </Button>
+                            ))
+                        ) : (
+                            <p className="text-sm text-gray-500">No recipes for this building.</p>
+                        )}
+                    </div>
+                  </ScrollArea>
                   {/* Production Details */}
                   <div className="col-span-2">
                     {selectedRecipe ? (
@@ -485,7 +509,7 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
 
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center h-full text-center text-gray-500">
+                        <div className="flex items-center justify-center h-full text-center text-gray-500 p-4 rounded-lg bg-gray-800/50">
                           <p>Select a recipe from the left to begin.</p>
                         </div>
                     )}
@@ -493,8 +517,32 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
                 </div>
             </DialogContent>
         </Dialog>
+        
+        {/* Boost Dialog */}
+        <Dialog open={isBoostDialogOpen} onOpenChange={setIsBoostDialogOpen}>
+            <DialogContent className="bg-gray-900 border-gray-700 text-white">
+                <DialogHeader>
+                    <DialogTitle>Harakisha Ujenzi</DialogTitle>
+                     <DialogDescription>
+                        Tumia Star Boosts kupunguza muda wa ujenzi.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className='py-4 space-y-4 text-center'>
+                    <p>Muda uliosalia: <span className='font-bold font-mono text-lg'>{selectedSlot?.construction ? formatTime(selectedSlot.construction.endTime - now) : '00:00'}</span></p>
+                    
+                    <div className='p-4 bg-gray-800 rounded-lg'>
+                        <p className='font-semibold'>Tumia 20 <Star className='inline-block h-4 w-4 text-yellow-400' /> kupunguza muda kwa <span className='font-bold'>saa 1</span>.</p>
+                    </div>
+
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsBoostDialogOpen(false)}>Ghairi</Button>
+                    <Button className='bg-blue-600 hover:bg-blue-700' onClick={handleConfirmBoost}>
+                        <Star className='mr-2' /> Tumia Boost
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
-
-    
