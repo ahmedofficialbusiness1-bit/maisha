@@ -67,7 +67,7 @@ export default function Home() {
 
 
   return (
-    <>
+    <div className="flex flex-col h-screen">
       <AppHeader />
       <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-gray-800/50">
         {view === 'dashboard' && <Dashboard buildings={buildings} setBuildings={setBuildings} />}
@@ -78,6 +78,6 @@ export default function Home() {
         {view === 'encyclopedia' && <Encyclopedia />}
       </main>
       <AppFooter activeView={view} setView={setView} />
-    </>
+    </div>
   );
 }
