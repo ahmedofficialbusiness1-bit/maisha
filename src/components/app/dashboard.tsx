@@ -17,12 +17,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, ArrowRight, Settings } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock } from 'lucide-react';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { productionLines, type ProductionLine } from '@/lib/production-data';
 import { Separator } from '../ui/separator';
-
-const BUILDING_SLOTS = 20;
 
 export type BuildingType = {
   id: string;
@@ -31,6 +29,15 @@ export type BuildingType = {
   description: string;
   image: string;
   imageHint: string;
+};
+
+export type BuildingSlot = {
+    building: BuildingType | null;
+    production?: {
+      line: ProductionLine;
+      startTime: number;
+      endTime: number;
+    };
 };
 
 const availableBuildings: BuildingType[] = [
@@ -53,38 +60,58 @@ const availableBuildings: BuildingType[] = [
 ];
 
 interface DashboardProps {
-    buildings: (BuildingType | null)[];
-    setBuildings: React.Dispatch<React.SetStateAction<(BuildingType | null)[]>>;
+    buildingSlots: BuildingSlot[];
+    onBuild: (slotIndex: number, building: BuildingType) => void;
+    onStartProduction: (slotIndex: number, line: ProductionLine) => void;
 }
 
-export function Dashboard({ buildings, setBuildings }: DashboardProps) {
+const formatTime = (ms: number) => {
+    if (ms <= 0) return '00:00';
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${minutes}:${seconds}`;
+};
+
+export function Dashboard({ buildingSlots, onBuild, onStartProduction }: DashboardProps) {
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [isProductionDialogOpen, setIsProductionDialogOpen] = React.useState(false);
-  const [selectedSlot, setSelectedSlot] = React.useState<number | null>(null);
-  const [selectedBuilding, setSelectedBuilding] = React.useState<BuildingType | null>(null);
+  const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
+  const [now, setNow] = React.useState(Date.now());
+
+  React.useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleOpenBuildDialog = (index: number) => {
-    setSelectedSlot(index);
+    setSelectedSlotIndex(index);
     setIsBuildDialogOpen(true);
   };
 
   const handleSelectBuildingToBuild = (building: BuildingType) => {
-    if (selectedSlot !== null) {
-      const newBuildings = [...buildings];
-      newBuildings[selectedSlot] = building;
-      setBuildings(newBuildings);
+    if (selectedSlotIndex !== null) {
+      onBuild(selectedSlotIndex, building);
     }
     setIsBuildDialogOpen(false);
-    setSelectedSlot(null);
+    setSelectedSlotIndex(null);
   };
 
-  const handleOpenProductionDialog = (building: BuildingType) => {
-    setSelectedBuilding(building);
+  const handleOpenProductionDialog = (index: number) => {
+    setSelectedSlotIndex(index);
     setIsProductionDialogOpen(true);
   };
+  
+  const handleSelectProductionLine = (line: ProductionLine) => {
+      if(selectedSlotIndex !== null) {
+          onStartProduction(selectedSlotIndex, line);
+      }
+      setIsProductionDialogOpen(false);
+  }
 
-  const buildingProductionLines = selectedBuilding
-    ? productionLines.filter((line) => line.buildingId === selectedBuilding.id)
+  const selectedSlot = selectedSlotIndex !== null ? buildingSlots[selectedSlotIndex] : null;
+  const buildingProductionLines = selectedSlot?.building
+    ? productionLines.filter((line) => line.buildingId === selectedSlot.building!.id)
     : [];
 
   return (
@@ -96,27 +123,39 @@ export function Dashboard({ buildings, setBuildings }: DashboardProps) {
         </p>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {buildings.map((building, index) =>
-          building ? (
+        {buildingSlots.map((slot, index) =>
+          slot.building ? (
             <Card
               key={index}
-              onClick={() => handleOpenProductionDialog(building)}
+              onClick={() => handleOpenProductionDialog(index)}
               className="flex flex-col items-center justify-center h-32 bg-gray-800/80 border-gray-700 overflow-hidden cursor-pointer group relative"
             >
                 <Image
-                    src={building.image}
-                    alt={building.name}
+                    src={slot.building.image}
+                    alt={slot.building.name}
                     width={200}
                     height={200}
-                    data-ai-hint={building.imageHint}
+                    data-ai-hint={slot.building.imageHint}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-black/50 group-hover:bg-black/70 transition-colors" />
-                 <div className="absolute top-2 right-2 p-1 bg-gray-900/80 rounded-full">
-                    <Settings className="h-4 w-4 text-white" />
-                </div>
+
+                {slot.production ? (
+                   <div className="absolute top-2 left-2 p-1 bg-yellow-500/80 rounded-full animate-pulse">
+                      <Clock className="h-4 w-4 text-white" />
+                   </div>
+                ) : (
+                   <div className="absolute top-2 right-2 p-1 bg-gray-900/80 rounded-full">
+                       <Settings className="h-4 w-4 text-white" />
+                   </div>
+                )}
                 <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
-                    <p className="text-xs font-bold truncate">{building.name}</p>
+                    <p className="text-xs font-bold truncate">{slot.building.name}</p>
+                    {slot.production && (
+                        <p className='text-xs font-mono text-yellow-300'>
+                            {formatTime(slot.production.endTime - now)}
+                        </p>
+                    )}
                 </div>
             </Card>
           ) : (
@@ -166,7 +205,7 @@ export function Dashboard({ buildings, setBuildings }: DashboardProps) {
         <Dialog open={isProductionDialogOpen} onOpenChange={setIsProductionDialogOpen}>
             <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Production: {selectedBuilding?.name}</DialogTitle>
+                    <DialogTitle>Production: {selectedSlot?.building?.name}</DialogTitle>
                     <DialogDescription>
                         Select a product to start production. Ensure you have the required inputs in your inventory.
                     </DialogDescription>
@@ -190,7 +229,8 @@ export function Dashboard({ buildings, setBuildings }: DashboardProps) {
                                     </div>
                                     <Button 
                                         className="bg-green-600 hover:bg-green-700 text-white"
-                                        onClick={() => setIsProductionDialogOpen(false)} // Placeholder action
+                                        onClick={() => handleSelectProductionLine(line)}
+                                        disabled={!!selectedSlot?.production}
                                     >
                                         Start Production
                                     </Button>

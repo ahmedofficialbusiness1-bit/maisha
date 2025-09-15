@@ -3,11 +3,13 @@
 import * as React from 'react';
 import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
-import { Dashboard, type BuildingType } from '@/components/app/dashboard';
+import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
 import { CommoditySimulator } from '@/components/app/commodity-simulator';
 import { TradeMarket, type PlayerListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
+import type { ProductionLine } from '@/lib/production-data';
+import { BuildingType } from '@/components/app/dashboard';
 
 
 const initialInventoryItems: InventoryItem[] = [
@@ -31,15 +33,55 @@ const initialPlayerListings: PlayerListing[] = [
 
 const BUILDING_SLOTS = 20;
 
+const parseDuration = (duration: string): number => {
+    const value = parseInt(duration.slice(0, -1));
+    const unit = duration.slice(-1);
+    switch (unit) {
+        case 'm': return value * 60 * 1000;
+        case 'h': return value * 60 * 60 * 1000;
+        case 's': return value * 1000;
+        default: return 0;
+    }
+}
+
 export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'encyclopedia';
 
 export default function Home() {
   const [view, setView] = React.useState<View>('dashboard');
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialInventoryItems);
   const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialPlayerListings);
-  const [buildings, setBuildings] = React.useState<(BuildingType | null)[]>(
-    Array(BUILDING_SLOTS).fill(null)
+  const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(
+    Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null }))
   );
+
+  const handleBuild = (slotIndex: number, building: BuildingType) => {
+    setBuildingSlots(prev => {
+        const newSlots = [...prev];
+        newSlots[slotIndex] = { building };
+        return newSlots;
+    });
+  };
+  
+  const handleStartProduction = (slotIndex: number, line: ProductionLine) => {
+    const durationMs = parseDuration(line.duration);
+    const now = Date.now();
+    
+    setBuildingSlots(prev => {
+      const newSlots = [...prev];
+      const slot = newSlots[slotIndex];
+      if(slot && slot.building && !slot.production) {
+        newSlots[slotIndex] = {
+          ...slot,
+          production: {
+            line,
+            startTime: now,
+            endTime: now + durationMs,
+          }
+        };
+      }
+      return newSlots;
+    });
+  };
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
     // 1. Update inventory
@@ -63,13 +105,38 @@ export default function Home() {
       return [newListing, ...prevListings];
     });
   };
+  
+   React.useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setBuildingSlots(prev => {
+        let changed = false;
+        const newSlots = prev.map(slot => {
+          if (slot.production && now >= slot.production.endTime) {
+            changed = true;
+            // TODO: Add produced item to inventory
+            return { ...slot, production: undefined };
+          }
+          return slot;
+        });
+        return changed ? newSlots : prev;
+      });
+    }, 1000);
 
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
       <AppHeader />
       <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-gray-800/50">
-        {view === 'dashboard' && <Dashboard buildings={buildings} setBuildings={setBuildings} />}
+        {view === 'dashboard' && (
+          <Dashboard 
+            buildingSlots={buildingSlots} 
+            onBuild={handleBuild}
+            onStartProduction={handleStartProduction}
+          />
+        )}
         {view === 'inventory' && <Inventory inventoryItems={inventory} onPostToMarket={handlePostToMarket} />}
         {view === 'market' && <TradeMarket playerListings={marketListings} />}
         {view === 'simulator' && <CommoditySimulator />}
