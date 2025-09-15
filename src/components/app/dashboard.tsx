@@ -538,7 +538,7 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsBoostDialogOpen(false)}>Ghairi</Button>
                     <Button className='bg-blue-600 hover:bg-blue-700' onClick={handleConfirmBoost}>
-                        <Star className='mr-2' /> Tumia Boost
+                        <Star className='mr-2' /> Tumia Star Boosts Kupunguza Muda
                     </Button>
                 </DialogFooter>
             </DialogContent>
