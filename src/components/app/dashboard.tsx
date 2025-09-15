@@ -317,10 +317,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     // If it's in production, do nothing (or maybe show progress details later).
   }
 
-  const currentProductionRecipe = selectedSlot?.production 
-    ? recipes.find(r => r.id === selectedSlot.production!.recipeId) 
-    : null;
-
   const timeReductionPerStar = 3 * 60 * 1000; // 3 minutes
   const timeReduction = boostAmount * timeReductionPerStar;
   const remainingTime = selectedSlot?.construction ? selectedSlot.construction.endTime - now : 0;
@@ -339,8 +335,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         </p>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {buildingSlots.map((slot, index) =>
-          slot.building ? (
+        {buildingSlots.map((slot, index) => {
+            const currentRecipe = slot.production ? recipes.find(r => r.id === slot.production!.recipeId) : null;
+            return slot.building ? (
             <Card
               key={index}
               onClick={() => handleCardClick(slot, index)}
@@ -375,10 +372,10 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                 )}
                 <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
                     <p className="text-xs font-bold truncate">{slot.building.name} (Lvl {slot.level || 0})</p>
-                    {slot.production && currentProductionRecipe ? (
+                    {slot.production && currentRecipe ? (
                         <div className='text-xs font-mono text-yellow-300 flex items-center justify-center gap-2'>
                            <span>{formatTime(slot.production.endTime - now)}</span>
-                           <span>| {recipes.find(r=>r.id === slot.production?.recipeId)?.output.name}</span>
+                           <span>| {currentRecipe.output.name}</span>
                         </div>
                     ) : slot.construction ? (
                         <div className='text-xs font-mono text-orange-300 flex items-center justify-center gap-2'>
@@ -402,7 +399,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
               </div>
             </Card>
           )
-        )}
+        })}
       </div>
 
       {/* Build Dialog */}
