@@ -7,7 +7,6 @@ import { Dashboard, type BuildingType } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
 import { CommoditySimulator } from '@/components/app/commodity-simulator';
 import { TradeMarket, type PlayerListing } from '@/components/app/trade-market';
-import { Production } from '@/components/app/production';
 import { Encyclopedia } from '@/components/app/encyclopedia';
 
 
@@ -32,7 +31,7 @@ const initialPlayerListings: PlayerListing[] = [
 
 const BUILDING_SLOTS = 20;
 
-export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'production' | 'encyclopedia';
+export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'encyclopedia';
 
 export default function Home() {
   const [view, setView] = React.useState<View>('dashboard');
@@ -74,7 +73,6 @@ export default function Home() {
         {view === 'inventory' && <Inventory inventoryItems={inventory} onPostToMarket={handlePostToMarket} />}
         {view === 'market' && <TradeMarket playerListings={marketListings} />}
         {view === 'simulator' && <CommoditySimulator />}
-        {view === 'production' && <Production buildings={buildings} />}
         {view === 'encyclopedia' && <Encyclopedia />}
       </main>
       <AppFooter activeView={view} setView={setView} />
