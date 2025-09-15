@@ -42,7 +42,7 @@ export default function Home() {
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialInventoryItems);
   const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialPlayerListings);
   const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(
-    Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 1 }))
+    Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 }))
   );
   const { toast } = useToast();
 
@@ -73,17 +73,28 @@ export default function Home() {
       }
       return newInventory.filter(item => item.quantity > 0);
     });
+    
+    const now = Date.now();
+    const constructionTimeMs = 15 * 60 * 1000; // 15 minutes
 
-    // 3. Place building
+    // 3. Place building into construction state
     setBuildingSlots(prev => {
         const newSlots = [...prev];
-        newSlots[slotIndex] = { building, level: 1 };
+        newSlots[slotIndex] = { 
+            building, 
+            level: 0, // It's at level 0 while constructing
+            construction: {
+                startTime: now,
+                endTime: now + constructionTimeMs,
+                targetLevel: 1
+            }
+        };
         return newSlots;
     });
 
     toast({
-        title: "Ujenzi Umekamilika!",
-        description: `Umefanikiwa kujenga ${building.name}.`,
+        title: "Ujenzi Umeanza!",
+        description: `${building.name} itakuwa tayari baada ya dakika 15.`,
     });
   };
   
@@ -165,10 +176,12 @@ export default function Home() {
       const now = Date.now();
       let inventoryUpdated = false;
       let itemsProduced: string[] = [];
+      let constructionCompleted: string[] = [];
 
       setBuildingSlots(prevSlots => {
         let slotsChanged = false;
         const newSlots = prevSlots.map(slot => {
+          // Check for completed production
           if (slot.production && now >= slot.production.endTime) {
             slotsChanged = true;
             inventoryUpdated = true;
@@ -198,6 +211,20 @@ export default function Home() {
             
             return { ...slot, production: undefined };
           }
+          
+          // Check for completed construction
+          if (slot.construction && now >= slot.construction.endTime) {
+            slotsChanged = true;
+            if(slot.building) {
+                constructionCompleted.push(slot.building.name);
+            }
+            return { 
+                ...slot, 
+                level: slot.construction.targetLevel,
+                construction: undefined 
+            };
+          }
+
           return slot;
         });
 
@@ -208,6 +235,13 @@ export default function Home() {
         toast({
             title: "Uzalishaji Umekamilika!",
             description: `Umeongeza ${itemsProduced.join(', ')} kwenye ghala lako.`,
+        })
+      }
+      
+      if(constructionCompleted.length > 0){
+        toast({
+            title: "Ujenzi Umekamilika!",
+            description: `${constructionCompleted.join(', ')} sasa inapatikana.`,
         })
       }
 

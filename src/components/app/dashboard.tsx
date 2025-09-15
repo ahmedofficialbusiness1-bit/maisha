@@ -45,10 +45,17 @@ export type ProductionInfo = {
     endTime: number;
 };
 
+export type ConstructionInfo = {
+    startTime: number;
+    endTime: number;
+    targetLevel: number;
+};
+
 export type BuildingSlot = {
     building: BuildingType | null;
     level: number;
     production?: ProductionInfo;
+    construction?: ConstructionInfo;
 };
 
 const availableBuildings: BuildingType[] = [
@@ -266,10 +273,10 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
           slot.building ? (
             <Card
               key={index}
-              onClick={() => !slot.production && handleOpenProductionDialog(index)}
+              onClick={() => !slot.production && !slot.construction && handleOpenProductionDialog(index)}
               className={cn(
                 "flex flex-col items-center justify-center h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative",
-                !slot.production ? "cursor-pointer" : "cursor-default"
+                !slot.production && !slot.construction ? "cursor-pointer" : "cursor-default"
               )}
             >
                 <Image
@@ -282,21 +289,32 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
                 />
                 <div className="absolute inset-0 bg-black/50 group-hover:bg-black/70 transition-colors" />
 
-                {slot.production ? (
+                {slot.production && (
                    <div className="absolute top-2 left-2 p-1 bg-yellow-500/80 rounded-full animate-pulse">
                       <Clock className="h-4 w-4 text-white" />
                    </div>
-                ) : (
+                )}
+                {slot.construction && (
+                   <div className="absolute top-2 left-2 p-1 bg-orange-500/80 rounded-full animate-pulse">
+                      <Hammer className="h-4 w-4 text-white" />
+                   </div>
+                )}
+                {!slot.production && !slot.construction && (
                    <div className="absolute top-2 right-2 p-1 bg-gray-900/80 rounded-full">
                        <Settings className="h-4 w-4 text-white" />
                    </div>
                 )}
                 <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
-                    <p className="text-xs font-bold truncate">{slot.building.name} (Lvl {slot.level})</p>
+                    <p className="text-xs font-bold truncate">{slot.building.name} (Lvl {slot.level || 0})</p>
                     {slot.production && currentProductionRecipe ? (
                         <div className='text-xs font-mono text-yellow-300 flex items-center justify-center gap-2'>
                            <span>{formatTime(slot.production.endTime - now)}</span>
                            <span>| {currentProductionRecipe.output.name}</span>
+                        </div>
+                    ) : slot.construction ? (
+                        <div className='text-xs font-mono text-orange-300 flex items-center justify-center gap-2'>
+                           <span>{formatTime(slot.construction.endTime - now)}</span>
+                           <span>| Inajengwa</span>
                         </div>
                     ) : (
                         <p className='text-xs text-green-400 font-semibold'>Available</p>
