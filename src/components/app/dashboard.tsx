@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { buildingData, BuildingConfig } from '@/lib/building-data';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
+import { ScrollArea } from '../ui/scroll-area';
 
 export type BuildingType = {
   id: string;
@@ -318,22 +319,24 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
                   Select a building to construct on this plot. Each building has unique benefits.
                 </DialogDescription>
               </DialogHeader>
-              <div className="flex flex-col gap-2 pt-4">
-                {availableBuildings.map((b) => (
-                    <Button
-                        key={b.id}
-                        variant="outline"
-                        className="w-full justify-start h-auto py-3 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white"
-                        onClick={() => handleSelectBuildingToBuild(b)}
-                    >
-                        {b.icon}
-                        <div className='text-left'>
-                            <p className='font-semibold'>{b.name}</p>
-                            <p className='text-xs text-gray-400'>{b.description}</p>
-                        </div>
-                    </Button>
-                ))}
-              </div>
+              <ScrollArea className="max-h-[70vh] pr-4">
+                <div className="flex flex-col gap-2 pt-4">
+                  {availableBuildings.map((b) => (
+                      <Button
+                          key={b.id}
+                          variant="outline"
+                          className="w-full justify-start h-auto py-3 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white"
+                          onClick={() => handleSelectBuildingToBuild(b)}
+                      >
+                          {b.icon}
+                          <div className='text-left'>
+                              <p className='font-semibold'>{b.name}</p>
+                              <p className='text-xs text-gray-400'>{b.description}</p>
+                          </div>
+                      </Button>
+                  ))}
+                </div>
+              </ScrollArea>
             </DialogContent>
         </Dialog>
 
