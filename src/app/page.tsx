@@ -186,20 +186,20 @@ export default function Home() {
     });
   };
   
-  const handleBoostConstruction = (slotIndex: number) => {
-      const boostCost = 20;
-      const timeReduction = 60 * 60 * 1000; // 1 hour
+  const handleBoostConstruction = (slotIndex: number, starsToUse: number) => {
+      const timeReductionPerStar = 3 * 60 * 1000; // 3 minutes per star
+      const timeReduction = starsToUse * timeReductionPerStar;
 
-      if (stars < boostCost) {
+      if (stars < starsToUse) {
           toast({
               variant: "destructive",
               title: "Star Boost Hazitoshi",
-              description: `Huna Star Boosts za kutosha. Unahitaji ${boostCost}.`,
+              description: `Huna Star Boosts za kutosha. Unahitaji ${starsToUse}.`,
           });
           return;
       }
       
-      setStars(prev => prev - boostCost);
+      setStars(prev => prev - starsToUse);
       setBuildingSlots(prev => {
           const newSlots = [...prev];
           const slot = newSlots[slotIndex];
@@ -209,9 +209,15 @@ export default function Home() {
           return newSlots;
       });
 
+      const hours = Math.floor(timeReduction / (60 * 60 * 1000));
+      const minutes = Math.floor((timeReduction % (60 * 60 * 1000)) / (60 * 1000));
+      let reductionText = "";
+      if(hours > 0) reductionText += `${hours} saa `;
+      if(minutes > 0) reductionText += `${minutes} dakika`;
+
       toast({
           title: "Umeharakisha Ujenzi!",
-          description: `Umetumia ${boostCost} Star Boosts kupunguza muda wa ujenzi kwa saa 1.`,
+          description: `Umetumia ${starsToUse} Star Boosts kupunguza muda wa ujenzi kwa ${reductionText.trim()}.`,
       });
   };
   
@@ -295,7 +301,7 @@ export default function Home() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [toast, stars]);
+  }, [toast]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
@@ -305,6 +311,7 @@ export default function Home() {
           <Dashboard 
             buildingSlots={buildingSlots} 
             inventory={inventory}
+            stars={stars}
             onBuild={handleBuild}
             onStartProduction={handleStartProduction}
             onBoostConstruction={handleBoostConstruction}

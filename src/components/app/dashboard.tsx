@@ -28,6 +28,7 @@ import { buildingData } from '@/lib/building-data';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
+import { Slider } from '../ui/slider';
 
 export type BuildingType = {
   id: string;
@@ -152,9 +153,10 @@ const availableBuildings: BuildingType[] = [
 interface DashboardProps {
     buildingSlots: BuildingSlot[];
     inventory: InventoryItem[];
+    stars: number;
     onBuild: (slotIndex: number, building: BuildingType) => void;
     onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
-    onBoostConstruction: (slotIndex: number) => void;
+    onBoostConstruction: (slotIndex: number, starsToUse: number) => void;
 }
 
 const formatTime = (ms: number) => {
@@ -169,7 +171,7 @@ const formatTime = (ms: number) => {
     return `${minutes}:${seconds}`;
 };
 
-export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction, onBoostConstruction }: DashboardProps) {
+export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onBoostConstruction }: DashboardProps) {
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [isProductionDialogOpen, setIsProductionDialogOpen] = React.useState(false);
   const [isBoostDialogOpen, setIsBoostDialogOpen] = React.useState(false);
@@ -177,6 +179,7 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
   const [now, setNow] = React.useState(Date.now());
   const [selectedRecipe, setSelectedRecipe] = React.useState<Recipe | null>(null);
   const [productionQuantity, setProductionQuantity] = React.useState(1);
+  const [boostAmount, setBoostAmount] = React.useState(0);
   
   React.useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
@@ -205,6 +208,7 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
   
   const handleOpenBoostDialog = (index: number) => {
     setSelectedSlotIndex(index);
+    setBoostAmount(0);
     setIsBoostDialogOpen(true);
   };
   
@@ -229,8 +233,8 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
   }
   
   const handleConfirmBoost = () => {
-      if (selectedSlotIndex !== null) {
-          onBoostConstruction(selectedSlotIndex);
+      if (selectedSlotIndex !== null && boostAmount > 0) {
+          onBoostConstruction(selectedSlotIndex, boostAmount);
       }
       setIsBoostDialogOpen(false);
   }
@@ -273,7 +277,7 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
   const handleCardClick = (slot: BuildingSlot, index: number) => {
     if (slot.construction) {
         handleOpenBoostDialog(index);
-    } else if (!slot.production) {
+    } else if (slot.building && !slot.production) {
         handleOpenProductionDialog(index);
     }
     // If it's in production, do nothing.
@@ -282,6 +286,11 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
   const currentProductionRecipe = selectedSlot?.production 
     ? recipes.find(r => r.id === selectedSlot.production!.recipeId) 
     : null;
+
+  const timeReductionPerStar = 3 * 60 * 1000; // 3 minutes
+  const timeReduction = boostAmount * timeReductionPerStar;
+  const remainingTime = selectedSlot?.construction ? selectedSlot.construction.endTime - now : 0;
+  const maxStarsToUse = Math.min(stars, Math.ceil(remainingTime / timeReductionPerStar));
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -524,21 +533,45 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
                 <DialogHeader>
                     <DialogTitle>Harakisha Ujenzi</DialogTitle>
                      <DialogDescription>
-                        Tumia Star Boosts kupunguza muda wa ujenzi.
+                        Tumia Star Boosts kupunguza muda wa ujenzi. Unapata dakika 3 kwa kila nyota.
                     </DialogDescription>
                 </DialogHeader>
-                <div className='py-4 space-y-4 text-center'>
-                    <p>Muda uliosalia: <span className='font-bold font-mono text-lg'>{selectedSlot?.construction ? formatTime(selectedSlot.construction.endTime - now) : '00:00'}</span></p>
-                    
-                    <div className='p-4 bg-gray-800 rounded-lg'>
-                        <p className='font-semibold'>Tumia 20 <Star className='inline-block h-4 w-4 text-yellow-400' /> kupunguza muda kwa <span className='font-bold'>saa 1</span>.</p>
+                <div className='py-4 space-y-6 text-center'>
+                    <div className='grid grid-cols-2 gap-4'>
+                        <div className='p-3 bg-gray-800 rounded-lg'>
+                           <p className='text-sm text-gray-400'>Muda Uliosalia</p>
+                           <p className='font-bold font-mono text-lg'>{selectedSlot?.construction ? formatTime(selectedSlot.construction.endTime - now) : '00:00'}</p>
+                        </div>
+                         <div className='p-3 bg-gray-800 rounded-lg'>
+                           <p className='text-sm text-gray-400'>Muda Utakaopungua</p>
+                           <p className='font-bold font-mono text-lg text-green-400'>{formatTime(timeReduction)}</p>
+                        </div>
                     </div>
-
+                    
+                    <div className='space-y-4'>
+                        <div className='flex justify-between items-center'>
+                            <Label htmlFor="boost-amount" className="text-left">Idadi ya Stars (Una: {stars})</Label>
+                            <span className='flex items-center gap-2 font-bold'>{boostAmount} <Star className='h-4 w-4 text-yellow-400' /></span>
+                        </div>
+                         <Slider
+                            id="boost-amount"
+                            min={0}
+                            max={maxStarsToUse}
+                            step={1}
+                            value={[boostAmount]}
+                            onValueChange={(value) => setBoostAmount(value[0])}
+                            disabled={maxStarsToUse === 0}
+                         />
+                    </div>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsBoostDialogOpen(false)}>Ghairi</Button>
-                    <Button className='bg-blue-600 hover:bg-blue-700' onClick={handleConfirmBoost}>
-                        <Star className='mr-2' /> Tumia Star Boosts Kupunguza Muda
+                    <Button 
+                        className='bg-blue-600 hover:bg-blue-700' 
+                        onClick={handleConfirmBoost}
+                        disabled={boostAmount === 0 || boostAmount > stars}
+                    >
+                        <Star className='mr-2' /> Tumia {boostAmount} Star Boosts
                     </Button>
                 </DialogFooter>
             </DialogContent>
