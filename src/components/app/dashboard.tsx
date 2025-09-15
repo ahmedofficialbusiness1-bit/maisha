@@ -17,8 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -29,6 +29,16 @@ import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 import { Slider } from '../ui/slider';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export type BuildingType = {
   id: string;
@@ -157,6 +167,8 @@ interface DashboardProps {
     onBuild: (slotIndex: number, building: BuildingType) => void;
     onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
     onBoostConstruction: (slotIndex: number, starsToUse: number) => void;
+    onUpgradeBuilding: (slotIndex: number) => void;
+    onDemolishBuilding: (slotIndex: number) => void;
 }
 
 const formatTime = (ms: number) => {
@@ -171,9 +183,11 @@ const formatTime = (ms: number) => {
     return `${minutes}:${seconds}`;
 };
 
-export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onBoostConstruction }: DashboardProps) {
+export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding }: DashboardProps) {
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [isProductionDialogOpen, setIsProductionDialogOpen] = React.useState(false);
+  const [isManagementDialogOpen, setIsManagementDialogOpen] = React.useState(false);
+  const [isDemolishDialogOpen, setIsDemolishDialogOpen] = React.useState(false);
   const [isBoostDialogOpen, setIsBoostDialogOpen] = React.useState(false);
   const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
   const [now, setNow] = React.useState(Date.now());
@@ -199,13 +213,19 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     setSelectedSlotIndex(null);
   };
 
-  const handleOpenProductionDialog = (index: number) => {
-    setSelectedSlotIndex(index);
+  const handleOpenProductionDialog = () => {
+    if (selectedSlotIndex === null) return;
+    setIsManagementDialogOpen(false);
     setSelectedRecipe(null);
     setProductionQuantity(1);
     setIsProductionDialogOpen(true);
   };
   
+  const handleOpenManagementDialog = (index: number) => {
+    setSelectedSlotIndex(index);
+    setIsManagementDialogOpen(true);
+  }
+
   const handleOpenBoostDialog = (index: number) => {
     setSelectedSlotIndex(index);
     setBoostAmount(0);
@@ -239,6 +259,21 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       setIsBoostDialogOpen(false);
   }
 
+  const handleConfirmDemolish = () => {
+      if(selectedSlotIndex !== null) {
+          onDemolishBuilding(selectedSlotIndex);
+      }
+      setIsDemolishDialogOpen(false);
+      setIsManagementDialogOpen(false);
+  }
+  
+  const handleTriggerUpgrade = () => {
+    if(selectedSlotIndex !== null) {
+        onUpgradeBuilding(selectedSlotIndex);
+    }
+    setIsManagementDialogOpen(false);
+  }
+
   const selectedSlot = selectedSlotIndex !== null ? buildingSlots[selectedSlotIndex] : null;
   const buildingRecipes = selectedSlot?.building
     ? recipes.filter((recipe) => recipe.buildingId === selectedSlot.building!.id)
@@ -252,8 +287,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     });
   }
 
-  const hasEnoughBuildMaterials = (buildingId: string): boolean => {
-      const costs = buildingData[buildingId].buildCost;
+  const hasEnoughMaterials = (costs: {name: string, quantity: number}[]): boolean => {
       return costs.every(cost => {
           const inventoryItem = inventory.find(item => item.item === cost.name);
           return inventoryItem && inventoryItem.quantity >= cost.quantity;
@@ -278,9 +312,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     if (slot.construction) {
         handleOpenBoostDialog(index);
     } else if (slot.building && !slot.production) {
-        handleOpenProductionDialog(index);
+        handleOpenManagementDialog(index);
     }
-    // If it's in production, do nothing.
+    // If it's in production, do nothing (or maybe show progress details later).
   }
 
   const currentProductionRecipe = selectedSlot?.production 
@@ -291,6 +325,10 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   const timeReduction = boostAmount * timeReductionPerStar;
   const remainingTime = selectedSlot?.construction ? selectedSlot.construction.endTime - now : 0;
   const maxStarsToUse = Math.min(stars, Math.ceil(remainingTime / timeReductionPerStar));
+  
+  const upgradeCosts = selectedSlot?.building ? buildingData[selectedSlot.building.id].upgradeCost(selectedSlot.level + 1) : [];
+  const canAffordUpgrade = hasEnoughMaterials(upgradeCosts);
+
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -345,7 +383,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                     ) : slot.construction ? (
                         <div className='text-xs font-mono text-orange-300 flex items-center justify-center gap-2'>
                            <span>{formatTime(slot.construction.endTime - now)}</span>
-                           <span>| Inajengwa</span>
+                           <span>| Inaboreshwa</span>
                         </div>
                     ) : (
                         <p className='text-xs text-green-400 font-semibold'>Available</p>
@@ -380,7 +418,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                 <div className="flex flex-col gap-2 pt-4">
                   {availableBuildings.map((b) => {
                       const costs = buildingData[b.id].buildCost;
-                      const canAfford = hasEnoughBuildMaterials(b.id);
+                      const canAfford = hasEnoughMaterials(costs);
                       return (
                         <div key={b.id} className='p-3 bg-gray-800/50 rounded-lg border border-gray-700'>
                             <div className='flex items-center justify-between'>
@@ -422,6 +460,64 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
               </ScrollArea>
             </DialogContent>
         </Dialog>
+        
+        {/* Management Dialog */}
+        <Dialog open={isManagementDialogOpen} onOpenChange={setIsManagementDialogOpen}>
+            <DialogContent className="bg-gray-900 border-gray-700 text-white">
+                <DialogHeader>
+                    <DialogTitle>Simamia {selectedSlot?.building?.name}</DialogTitle>
+                    <DialogDescription>
+                        Chagua kitendo cha kufanya kwenye jengo hili.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className='py-4 space-y-4'>
+                    <Button className='w-full justify-start' variant="outline" onClick={handleOpenProductionDialog}>
+                        <Tractor className='mr-2'/> Anza Uzalishaji
+                    </Button>
+                    <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
+                        <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
+                            <ChevronsUp className='mr-2'/> Boresha hadi Level { (selectedSlot?.level || 0) + 1}
+                        </Button>
+                        <Separator className='my-3 bg-gray-600'/>
+                        <div className='text-xs'>
+                            <p className='font-semibold mb-1'>Gharama ya Kuboresha:</p>
+                             <div className='flex flex-wrap gap-x-4 gap-y-1'>
+                                {upgradeCosts.map(cost => {
+                                    const invItem = inventory.find(i => i.item === cost.name);
+                                    const has = invItem?.quantity || 0;
+                                    return (
+                                        <span key={cost.name} className={cn(has >= cost.quantity ? 'text-gray-300' : 'text-red-400')}>
+                                            {cost.name}: {has.toLocaleString()}/{cost.quantity.toLocaleString()}
+                                        </span>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                     <Button className='w-full justify-start' variant="destructive" onClick={() => setIsDemolishDialogOpen(true)}>
+                        <Trash2 className='mr-2'/> Futa Jengo
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+
+        {/* Demolish Confirmation Dialog */}
+        <AlertDialog open={isDemolishDialogOpen} onOpenChange={setIsDemolishDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Una uhakika?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Kitendo hiki hakiwezi kutenduliwa. Ukifuta jengo hili, utapoteza maendeleo yote na rasilimali zilizotumika.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Ghairi</AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmDemolish} className={cn(buttonVariants({ variant: "destructive" }))}>
+                    Futa
+                </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
 
         {/* Production Dialog */}
         <Dialog open={isProductionDialogOpen} onOpenChange={setIsProductionDialogOpen}>

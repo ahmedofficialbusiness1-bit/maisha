@@ -100,6 +100,75 @@ export default function Home() {
     });
   };
   
+    const handleUpgradeBuilding = (slotIndex: number) => {
+    const slot = buildingSlots[slotIndex];
+    if (!slot || !slot.building) return;
+
+    const costs = buildingData[slot.building.id].upgradeCost(slot.level + 1);
+
+    // 1. Check for required upgrade materials
+    for (const cost of costs) {
+      const inventoryItem = inventory.find(i => i.item === cost.name);
+      if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
+        toast({
+          variant: "destructive",
+          title: "Uhaba wa Vifaa vya Uboreshaji",
+          description: `Huna ${cost.name} za kutosha kuboresha ${slot.building.name}.`,
+        });
+        return;
+      }
+    }
+
+    // 2. Deduct upgrade materials from inventory
+    setInventory(prevInventory => {
+      const newInventory = [...prevInventory];
+      for (const cost of costs) {
+        const itemIndex = newInventory.findIndex(i => i.item === cost.name);
+        if (itemIndex > -1) {
+          newInventory[itemIndex].quantity -= cost.quantity;
+        }
+      }
+      return newInventory.filter(item => item.quantity > 0);
+    });
+
+    const now = Date.now();
+    // Time doubles for each new level, based on the initial 15 minutes
+    const constructionTimeMs = (15 * 60 * 1000) * Math.pow(2, slot.level);
+
+    // 3. Place building into construction state for upgrade
+    setBuildingSlots(prev => {
+      const newSlots = [...prev];
+      newSlots[slotIndex] = {
+        ...slot,
+        construction: {
+          startTime: now,
+          endTime: now + constructionTimeMs,
+          targetLevel: slot.level + 1
+        }
+      };
+      return newSlots;
+    });
+
+    toast({
+      title: "Uboreshaji Umeanza!",
+      description: `${slot.building.name} itakuwa Level ${slot.level + 1} baada ya muda.`,
+    });
+  };
+
+  const handleDemolishBuilding = (slotIndex: number) => {
+    setBuildingSlots(prev => {
+        const newSlots = [...prev];
+        const buildingName = newSlots[slotIndex]?.building?.name || 'Jengo';
+        newSlots[slotIndex] = { building: null, level: 0 };
+        return newSlots;
+    });
+    toast({
+        title: "Jengo Limefutwa",
+        description: `${buildingName} limeondolewa kwenye kiwanja.`,
+    })
+  };
+
+
   const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
     const inputs = recipe.inputs || [];
     // 1. Check for required inputs
@@ -315,6 +384,8 @@ export default function Home() {
             onBuild={handleBuild}
             onStartProduction={handleStartProduction}
             onBoostConstruction={handleBoostConstruction}
+            onUpgradeBuilding={handleUpgradeBuilding}
+            onDemolishBuilding={handleDemolishBuilding}
           />
         )}
         {view === 'inventory' && <Inventory inventoryItems={inventory} onPostToMarket={handlePostToMarket} />}
