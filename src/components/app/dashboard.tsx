@@ -18,12 +18,15 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle } from 'lucide-react';
-import type { ProductionLine } from '@/lib/production-data';
+import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
-import { productionLines } from '@/lib/production-data';
+import { recipes } from '@/lib/recipe-data';
 import type { InventoryItem } from './inventory';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
+import { buildingData, BuildingConfig } from '@/lib/building-data';
+import { Label } from '../ui/label';
+import { Input } from '../ui/input';
 
 export type BuildingType = {
   id: string;
@@ -34,13 +37,17 @@ export type BuildingType = {
   imageHint: string;
 };
 
+export type ProductionInfo = {
+    recipeId: string;
+    quantity: number;
+    startTime: number;
+    endTime: number;
+};
+
 export type BuildingSlot = {
     building: BuildingType | null;
-    production?: {
-      line: ProductionLine;
-      startTime: number;
-      endTime: number;
-    };
+    level: number;
+    production?: ProductionInfo;
 };
 
 const availableBuildings: BuildingType[] = [
@@ -66,14 +73,18 @@ interface DashboardProps {
     buildingSlots: BuildingSlot[];
     inventory: InventoryItem[];
     onBuild: (slotIndex: number, building: BuildingType) => void;
-    onStartProduction: (slotIndex: number, line: ProductionLine) => void;
+    onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
 }
 
 const formatTime = (ms: number) => {
     if (ms <= 0) return '00:00';
     const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+    const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+    const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
     const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+    if (parseInt(hours) > 0) {
+        return `${hours}:${minutes}:${seconds}`;
+    }
     return `${minutes}:${seconds}`;
 };
 
@@ -82,7 +93,9 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
   const [isProductionDialogOpen, setIsProductionDialogOpen] = React.useState(false);
   const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
   const [now, setNow] = React.useState(Date.now());
-
+  const [selectedRecipe, setSelectedRecipe] = React.useState<Recipe | null>(null);
+  const [productionQuantity, setProductionQuantity] = React.useState(1);
+  
   React.useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
@@ -103,28 +116,61 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
 
   const handleOpenProductionDialog = (index: number) => {
     setSelectedSlotIndex(index);
+    setSelectedRecipe(null);
+    setProductionQuantity(1);
     setIsProductionDialogOpen(true);
   };
   
-  const handleSelectProductionLine = (line: ProductionLine) => {
-      if(selectedSlotIndex !== null) {
-          onStartProduction(selectedSlotIndex, line);
+  const handleSelectRecipe = (recipe: Recipe) => {
+    setSelectedRecipe(recipe);
+    setProductionQuantity(1);
+  }
+
+  const handleConfirmProduction = () => {
+      if(selectedSlotIndex !== null && selectedRecipe && productionQuantity > 0) {
+          const slot = buildingSlots[selectedSlotIndex];
+          const buildingInfo = buildingData[slot.building!.id];
+          const baseTimePerUnit = (3600 * 1000) / buildingInfo.productionRate; // Time in ms for 1 unit at level 1
+          // TODO: Adjust for level
+          const totalDurationMs = baseTimePerUnit * productionQuantity;
+
+          onStartProduction(selectedSlotIndex, selectedRecipe, productionQuantity, totalDurationMs);
+          setIsProductionDialogOpen(false);
+          setSelectedRecipe(null);
       }
-      setIsProductionDialogOpen(false);
   }
 
   const selectedSlot = selectedSlotIndex !== null ? buildingSlots[selectedSlotIndex] : null;
-  const buildingProductionLines = selectedSlot?.building
-    ? productionLines.filter((line) => line.buildingId === selectedSlot.building!.id)
+  const buildingRecipes = selectedSlot?.building
+    ? recipes.filter((recipe) => recipe.buildingId === selectedSlot.building!.id)
     : [];
 
-  const hasEnoughInputs = (line: ProductionLine) => {
-    return line.inputs.every(input => {
+  const hasEnoughInputs = (recipe: Recipe, quantity: number) => {
+    if (!recipe.inputs) return true;
+    return recipe.inputs.every(input => {
         const inventoryItem = inventory.find(item => item.item === input.name);
-        return inventoryItem && inventoryItem.quantity >= input.quantity;
+        return inventoryItem && inventoryItem.quantity >= (input.quantity * quantity);
     });
   }
 
+  const getBuildingProductionRate = (slot: BuildingSlot | null): number => {
+    if (!slot || !slot.building) return 0;
+    const buildingInfo = buildingData[slot.building.id];
+    // Simple level logic for now, will be expanded with 1.4x factor later
+    return buildingInfo.productionRate * slot.level; 
+  }
+
+  const calculateProductionTime = (quantity: number): number => {
+      if (!selectedSlot) return 0;
+      const ratePerHr = getBuildingProductionRate(selectedSlot);
+      if (ratePerHr === 0) return Infinity;
+      const hours = quantity / ratePerHr;
+      return hours * 3600 * 1000; // time in ms
+  }
+
+  const currentProductionRecipe = selectedSlot?.production 
+    ? recipes.find(r => r.id === selectedSlot.production!.recipeId) 
+    : null;
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -165,11 +211,11 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
                    </div>
                 )}
                 <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
-                    <p className="text-xs font-bold truncate">{slot.building.name}</p>
-                    {slot.production ? (
+                    <p className="text-xs font-bold truncate">{slot.building.name} (Lvl {slot.level})</p>
+                    {slot.production && currentProductionRecipe ? (
                         <div className='text-xs font-mono text-yellow-300 flex items-center justify-center gap-2'>
                            <span>{formatTime(slot.production.endTime - now)}</span>
-                           <span>| {slot.production.line.output.name}</span>
+                           <span>| {currentProductionRecipe.output.name}</span>
                         </div>
                     ) : (
                         <p className='text-xs text-green-400 font-semibold'>Available</p>
@@ -221,57 +267,95 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
 
         {/* Production Dialog */}
         <Dialog open={isProductionDialogOpen} onOpenChange={setIsProductionDialogOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-lg">
+            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>Production: {selectedSlot?.building?.name}</DialogTitle>
+                    <DialogTitle>Production: {selectedSlot?.building?.name} (Lvl {selectedSlot?.level})</DialogTitle>
                     <DialogDescription>
-                        Select a product to start production. Ensure you have the required inputs in your inventory.
+                        Select a product, enter quantity, and start production.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="flex flex-col gap-3 pt-4 max-h-[60vh] overflow-y-auto pr-2">
-                    {buildingProductionLines.length > 0 ? (
-                        buildingProductionLines.map((line) => {
-                            const canProduce = hasEnoughInputs(line);
-                            return (
-                                <div key={line.output.name} className="p-3 bg-gray-800/70 rounded-lg border border-gray-700">
-                                    <div className="flex justify-between items-center">
-                                        <div className='flex flex-col'>
-                                           <div className='flex items-center gap-2'>
-                                            <p className='text-lg font-bold'>{line.output.name}</p>
-                                            <Badge variant="secondary">${line.cost.toLocaleString()}</Badge>
-                                           </div>
-                                           <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
-                                                {line.inputs.length > 0 ? (
-                                                    line.inputs.map(input => (
-                                                        <span key={input.name}>{input.quantity.toLocaleString()}x {input.name}</span>
-                                                    )).reduce((prev, curr, i) => [prev, <span key={`sep-${i}`}>+</span>, curr] as any)
-                                                ) : (
-                                                    <span className='italic'>Hakuna pembejeo zinazohitajika</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <Button 
-                                            className="bg-green-600 hover:bg-green-700 text-white"
-                                            onClick={() => handleSelectProductionLine(line)}
-                                            disabled={!!selectedSlot?.production || !canProduce}
-                                        >
-                                            <CheckCircle className='mr-2'/>
-                                            Start
-                                        </Button>
-                                    </div>
-                                    <Separator className='my-2 bg-gray-600/50' />
-                                    <div className="text-xs text-muted-foreground flex justify-between">
-                                        <span>Time: {line.duration}</span>
-                                        <span>Output: {line.output.quantity.toLocaleString()} units</span>
-                                    </div>
-                                </div>
-                            )
-                        })
+                <div className="grid grid-cols-3 gap-4 pt-4">
+                  {/* Recipe List */}
+                  <div className="col-span-1 flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-2">
+                    {buildingRecipes.length > 0 ? (
+                        buildingRecipes.map((recipe) => (
+                            <Button
+                                key={recipe.id}
+                                variant="outline"
+                                className={cn(
+                                    "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
+                                    selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
+                                )}
+                                onClick={() => handleSelectRecipe(recipe)}
+                            >
+                                {recipe.output.name}
+                            </Button>
+                        ))
                     ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            <p>No production lines available for this building.</p>
+                        <p className="text-sm text-gray-500">No recipes for this building.</p>
+                    )}
+                  </div>
+                  {/* Production Details */}
+                  <div className="col-span-2">
+                    {selectedRecipe ? (
+                        <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
+                            <h3 className='text-xl font-bold'>{selectedRecipe.output.name}</h3>
+                            
+                            {/* Inputs */}
+                            <div>
+                                <h4 className='font-semibold mb-2'>Inputs Required</h4>
+                                {selectedRecipe.inputs.length > 0 ? (
+                                    <ul className='text-sm space-y-1 text-gray-300 list-disc list-inside'>
+                                      {selectedRecipe.inputs.map(input => (
+                                          <li key={input.name}>{input.quantity * productionQuantity}x {input.name}</li>
+                                      ))}
+                                    </ul>
+                                ) : <p className='text-sm text-gray-400 italic'>No inputs required.</p>}
+                            </div>
+
+                            {/* Quantity */}
+                            <div className='space-y-2'>
+                               <Label htmlFor='quantity'>Production Quantity</Label>
+                               <Input 
+                                  id="quantity"
+                                  type="number"
+                                  min="1"
+                                  value={productionQuantity}
+                                  onChange={(e) => setProductionQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                  className='bg-gray-700 border-gray-600'
+                               />
+                            </div>
+                            
+                            <Separator className='my-4 bg-gray-600'/>
+
+                            {/* Summary & Action */}
+                            <div className='space-y-3'>
+                                <div className='flex justify-between items-center'>
+                                  <span className='text-gray-400'>Total Cost:</span>
+                                  <span className='font-bold'>${(selectedRecipe.cost * productionQuantity).toLocaleString()}</span>
+                                </div>
+                                <div className='flex justify-between items-center'>
+                                  <span className='text-gray-400'>Est. Time:</span>
+                                  <span className='font-bold'>{formatTime(calculateProductionTime(productionQuantity))}</span>
+                                </div>
+                                <Button
+                                  className='w-full bg-green-600 hover:bg-green-700'
+                                  disabled={!hasEnoughInputs(selectedRecipe, productionQuantity)}
+                                  onClick={handleConfirmProduction}
+                                >
+                                  <CheckCircle className='mr-2'/>
+                                  Start Production
+                                </Button>
+                                {!hasEnoughInputs(selectedRecipe, productionQuantity) && <p className='text-xs text-center text-red-400'>Not enough resources in inventory.</p>}
+                            </div>
+
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-center text-gray-500">
+                          <p>Select a recipe from the left to begin.</p>
                         </div>
                     )}
+                  </div>
                 </div>
             </DialogContent>
         </Dialog>

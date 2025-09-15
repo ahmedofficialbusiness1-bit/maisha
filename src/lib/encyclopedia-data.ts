@@ -1,4 +1,5 @@
-import { productionLines } from './production-data';
+import { recipes, type Recipe } from './recipe-data';
+import { buildingData } from './building-data';
 
 export type EncyclopediaEntry = {
   id: string;
@@ -24,25 +25,28 @@ const getImageUrl = (name: string) => `https://picsum.photos/seed/${name.toLower
 const getImageHint = (name: string) => name.toLowerCase().split(' ').slice(0, 2).join(' ');
 
 
-const generatedEntries = productionLines.map(line => {
+const generatedEntries = recipes.map(recipe => {
+    const buildingInfo = buildingData[recipe.buildingId];
+    const baseTimePerUnit = (3600) / buildingInfo.productionRate; // Time in seconds for 1 unit at level 1
+
     const entry: EncyclopediaEntry = {
-        id: line.output.name.toLowerCase().replace(/'/g, '').replace(/\s+/g, '_'),
-        name: line.output.name,
+        id: recipe.id,
+        name: recipe.output.name,
         category: "Product",
-        description: `A product from the ${line.buildingId} facility. Used in various other production lines or sold for profit.`,
-        imageUrl: getImageUrl(line.output.name),
-        imageHint: getImageHint(line.output.name),
+        description: `A product from the ${recipe.buildingId} facility. Used in various other production lines or sold for profit.`,
+        imageUrl: getImageUrl(recipe.output.name),
+        imageHint: getImageHint(recipe.output.name),
         properties: [
-            { label: 'Production Cost', value: `$${line.cost}` },
-            { label: 'Production Time', value: line.duration },
-            { label: 'Output Quantity', value: `${line.output.quantity.toLocaleString()} units` },
-            { label: 'Building', value: line.buildingId.charAt(0).toUpperCase() + line.buildingId.slice(1).replace('_', ' ') }
+            { label: 'Production Cost', value: `$${recipe.cost}` },
+            { label: 'Base Production Time', value: `${baseTimePerUnit.toFixed(2)}s / unit` },
+            { label: 'Output Quantity', value: `${recipe.output.quantity.toLocaleString()} unit(s)` },
+            { label: 'Building', value: recipe.buildingId.charAt(0).toUpperCase() + recipe.buildingId.slice(1).replace('_', ' ') }
         ],
     }
     
-    if (line.inputs.length > 0) {
+    if (recipe.inputs.length > 0) {
         entry.recipe = {
-            inputs: line.inputs.map(input => ({
+            inputs: recipe.inputs.map(input => ({
                 name: input.name,
                 quantity: input.quantity,
                 imageUrl: getImageUrl(input.name)
@@ -55,9 +59,9 @@ const generatedEntries = productionLines.map(line => {
 
 // Create a set of all item names to avoid duplicates in encyclopedia
 const allItemNames = new Set<string>();
-productionLines.forEach(line => {
-    allItemNames.add(line.output.name);
-    line.inputs.forEach(input => allItemNames.add(input.name));
+recipes.forEach(recipe => {
+    allItemNames.add(recipe.output.name);
+    recipe.inputs.forEach(input => allItemNames.add(input.name));
 });
 
 // Add entries for items that are inputs but not outputs

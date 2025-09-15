@@ -3,48 +3,31 @@
 import * as React from 'react';
 import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
-import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
+import { Dashboard, type BuildingSlot, type BuildingType } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
 import { CommoditySimulator } from '@/components/app/commodity-simulator';
 import { TradeMarket, type PlayerListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
-import type { ProductionLine } from '@/lib/production-data';
-import { BuildingType } from '@/components/app/dashboard';
+import type { Recipe } from '@/lib/recipe-data';
+import { recipes } from '@/lib/recipe-data';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 
 
 const initialInventoryItems: InventoryItem[] = [
-  { item: 'Corn', quantity: 15000, marketPrice: 150 },
-  { item: 'Sunflower Seeds', quantity: 8000, marketPrice: 320 },
-  { item: 'Eggs', quantity: 25000, marketPrice: 210 },
-  { item: 'Crude Oil', quantity: 1000, marketPrice: 700 },
-  { item: 'Gold', quantity: 500, marketPrice: 1800 },
-  { item: 'Corn Flour', quantity: 5000, marketPrice: 280 },
-  { item: 'Cooking Oil', quantity: 3000, marketPrice: 550 },
-  { item: 'Chicken Feed', quantity: 10000, marketPrice: 180 },
+  { item: 'Maji', quantity: 15000, marketPrice: 10 },
+  { item: 'Mbegu', quantity: 8000, marketPrice: 15 },
+  { item: 'Yai', quantity: 25000, marketPrice: 210 },
+  { item: 'Bwawa', quantity: 10, marketPrice: 700 },
+  { item: 'Boat', quantity: 5, marketPrice: 1800 },
 ];
 
 const initialPlayerListings: PlayerListing[] = [
-    { id: 1, commodity: 'Corn', seller: 'Mkulima Hodari', quantity: 5000, price: 151.00 },
-    { id: 2, commodity: 'Eggs', seller: 'Mfanyabiashara Mjanja', quantity: 10000, price: 209.50 },
-    { id: 3, commodity: 'Cooking Oil', seller: 'Wazalishaji wa Pwani', quantity: 1500, price: 545.00 },
-    { id: 4, commodity: 'Gold', seller: 'Mgodi wa Almasi', quantity: 100, price: 1800.00 },
-    { id: 5, commodity: 'Chicken Feed', seller: 'Mkulima Hodari', quantity: 8000, price: 181.25 },
+    { id: 1, commodity: 'Maji', seller: 'Mkulima Hodari', quantity: 5000, price: 11.00 },
+    { id: 2, commodity: 'Yai', seller: 'Mfanyabiashara Mjanja', quantity: 10000, price: 209.50 },
 ];
 
 const BUILDING_SLOTS = 20;
-
-const parseDuration = (duration: string): number => {
-    const value = parseInt(duration.slice(0, -1));
-    const unit = duration.slice(-1);
-    switch (unit) {
-        case 'm': return value * 60 * 1000;
-        case 'h': return value * 60 * 60 * 1000;
-        case 's': return value * 1000;
-        default: return 0;
-    }
-}
 
 export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'encyclopedia';
 
@@ -53,23 +36,24 @@ export default function Home() {
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialInventoryItems);
   const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialPlayerListings);
   const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(
-    Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null }))
+    Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 1 }))
   );
   const { toast } = useToast();
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
     setBuildingSlots(prev => {
         const newSlots = [...prev];
-        newSlots[slotIndex] = { building };
+        newSlots[slotIndex] = { building, level: 1 };
         return newSlots;
     });
   };
   
-  const handleStartProduction = (slotIndex: number, line: ProductionLine) => {
-    // Check for required inputs
-    for (const input of line.inputs) {
+  const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
+    const inputs = recipe.inputs || [];
+    // 1. Check for required inputs
+    for (const input of inputs) {
         const inventoryItem = inventory.find(i => i.item === input.name);
-        if (!inventoryItem || inventoryItem.quantity < input.quantity) {
+        if (!inventoryItem || inventoryItem.quantity < (input.quantity * quantity)) {
             toast({
                 variant: "destructive",
                 title: "Uhaba wa Rasilimali",
@@ -79,23 +63,23 @@ export default function Home() {
         }
     }
 
-    const durationMs = parseDuration(line.duration);
     const now = Date.now();
     
-    // Deduct inputs from inventory
+    // 2. Deduct inputs from inventory
     setInventory(prevInventory => {
       const newInventory = [...prevInventory];
-      for (const input of line.inputs) {
+      for (const input of inputs) {
         const itemIndex = newInventory.findIndex(i => i.item === input.name);
         if (itemIndex > -1) {
-          newInventory[itemIndex].quantity -= input.quantity;
+          newInventory[itemIndex].quantity -= (input.quantity * quantity);
         }
       }
       return newInventory.filter(item => item.quantity > 0);
     });
 
-    // TODO: Deduct cost from player's money
+    // 3. TODO: Deduct cost from player's money
 
+    // 4. Set production state on building
     setBuildingSlots(prev => {
       const newSlots = [...prev];
       const slot = newSlots[slotIndex];
@@ -103,7 +87,8 @@ export default function Home() {
         newSlots[slotIndex] = {
           ...slot,
           production: {
-            line,
+            recipeId: recipe.id,
+            quantity: quantity,
             startTime: now,
             endTime: now + durationMs,
           }
@@ -140,6 +125,7 @@ export default function Home() {
     const interval = setInterval(() => {
       const now = Date.now();
       let inventoryUpdated = false;
+      let itemsProduced: string[] = [];
 
       setBuildingSlots(prevSlots => {
         let slotsChanged = false;
@@ -148,21 +134,25 @@ export default function Home() {
             slotsChanged = true;
             inventoryUpdated = true;
             
-            const { output } = slot.production.line;
+            const recipe = recipes.find(r => r.id === slot.production!.recipeId);
+            if (!recipe) return { ...slot, production: undefined };
+
+            const { output } = recipe;
+            itemsProduced.push(`${output.quantity * slot.production!.quantity}x ${output.name}`);
             
             setInventory(prevInventory => {
               const newInventory = [...prevInventory];
               const itemIndex = newInventory.findIndex(i => i.item === output.name);
               
               if (itemIndex > -1) {
-                newInventory[itemIndex].quantity += output.quantity;
+                newInventory[itemIndex].quantity += (output.quantity * slot.production!.quantity);
               } else {
                  const encyclopediaEntry = encyclopediaData.find(e => e.name === output.name);
                  const marketPrice = encyclopediaEntry 
-                    ? parseFloat(encyclopediaEntry.properties.find(p => p.label.includes("Price"))?.value.replace('$', '') || '100')
+                    ? parseFloat(encyclopediaEntry.properties.find(p => p.label.includes("Cost"))?.value.replace('$', '') || '100')
                     : 100;
 
-                newInventory.push({ item: output.name, quantity: output.quantity, marketPrice });
+                newInventory.push({ item: output.name, quantity: (output.quantity * slot.production!.quantity), marketPrice });
               }
               return newInventory;
             });
@@ -178,7 +168,7 @@ export default function Home() {
       if(inventoryUpdated){
         toast({
             title: "Uzalishaji Umekamilika!",
-            description: "Bidhaa mpya zimeongezwa kwenye ghala lako.",
+            description: `Umeongeza ${itemsProduced.join(', ')} kwenye ghala lako.`,
         })
       }
 
