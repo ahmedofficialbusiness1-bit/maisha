@@ -43,8 +43,8 @@ export default function Home() {
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
     // 1. Update inventory
-    setInventory(prevInventory => 
-      prevInventory.map(invItem => 
+    setInventory(prevInventory =>
+      prevInventory.map(invItem =>
         invItem.item === item.item
           ? { ...invItem, quantity: invItem.quantity - quantity }
           : invItem
@@ -66,7 +66,7 @@ export default function Home() {
 
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-900">
       <AppHeader />
       <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-gray-800/50">
         {view === 'dashboard' && <Dashboard buildings={buildings} setBuildings={setBuildings} />}
