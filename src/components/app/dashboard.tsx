@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -62,10 +62,82 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_samaki',
         name: 'Kiwanda cha Samaki',
-        icon: <Factory className="mr-2" />,
+        icon: <Droplets className="mr-2" />,
         description: 'Husindika samaki na bidhaa za baharini.',
         image: 'https://picsum.photos/seed/fish-factory/200/200',
         imageHint: 'fish factory'
+    },
+    {
+        id: 'uchimbaji_mawe',
+        name: 'Uchimbaji Mawe (Quarry)',
+        icon: <Mountain className="mr-2" />,
+        description: 'Huchimba mawe na kokoto.',
+        image: 'https://picsum.photos/seed/quarry/200/200',
+        imageHint: 'stone quarry'
+    },
+    {
+        id: 'uchimbaji_mchanga',
+        name: 'Uchimbaji Mchanga',
+        icon: <Mountain className="mr-2" />,
+        description: 'Huchimba mchanga.',
+        image: 'https://picsum.photos/seed/sand-pit/200/200',
+        imageHint: 'sand pit'
+    },
+    {
+        id: 'uchimbaji_chuma',
+        name: 'Uchimbaji Chuma',
+        icon: <Gem className="mr-2" />,
+        description: 'Huchimba madini ya chuma.',
+        image: 'https://picsum.photos/seed/iron-mine/200/200',
+        imageHint: 'iron mine'
+    },
+    {
+        id: 'kiwanda_cha_umeme',
+        name: 'Kiwanda cha Umeme',
+        icon: <Zap className="mr-2" />,
+        description: 'Huzalisha umeme.',
+        image: 'https://picsum.photos/seed/power-plant/200/200',
+        imageHint: 'power plant'
+    },
+    {
+        id: 'kiwanda_cha_maji',
+        name: 'Kiwanda cha Maji',
+        icon: <Droplets className="mr-2" />,
+        description: 'Huzalisha maji safi.',
+        image: 'https://picsum.photos/seed/water-plant/200/200',
+        imageHint: 'water plant'
+    },
+    {
+        id: 'kiwanda_cha_mbao',
+        name: 'Kiwanda cha Mbao',
+        icon: <Hammer className="mr-2" />,
+        description: 'Husindika miti kuwa mbao.',
+        image: 'https://picsum.photos/seed/lumber-mill/200/200',
+        imageHint: 'lumber mill'
+    },
+    {
+        id: 'kiwanda_cha_saruji',
+        name: 'Kiwanda cha Saruji',
+        icon: <Factory className="mr-2" />,
+        description: 'Huzalisha saruji.',
+        image: 'https://picsum.photos/seed/cement-factory/200/200',
+        imageHint: 'cement factory'
+    },
+    {
+        id: 'kiwanda_cha_matofali',
+        name: 'Kiwanda cha Matofali',
+        icon: <ToyBrick className="mr-2" />,
+        description: 'Huzalisha matofali na zege.',
+        image: 'https://picsum.photos/seed/brick-factory/200/200',
+        imageHint: 'brick factory'
+    },
+     {
+        id: 'kiwanda_cha_chuma',
+        name: 'Kiwanda cha Chuma',
+        icon: <Factory className="mr-2" />,
+        description: 'Huzalisha nondo za chuma.',
+        image: 'https://picsum.photos/seed/steel-mill/200/200',
+        imageHint: 'steel mill'
     },
 ];
 
@@ -362,3 +434,5 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
     </div>
   );
 }
+
+    
