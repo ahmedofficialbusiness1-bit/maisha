@@ -179,9 +179,13 @@ export function Dashboard({ buildings, setBuildings }: DashboardProps) {
                                     <div className='flex flex-col'>
                                        <p className='text-lg font-bold'>{line.output.name}</p>
                                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                                            {line.inputs.map(input => (
-                                                <span key={input.name}>{input.quantity}x {input.name}</span>
-                                            )).reduce((prev, curr, i) => [prev, <span key={`sep-${i}`}>+</span>, curr] as any)}
+                                            {line.inputs.length > 0 ? (
+                                                line.inputs.map(input => (
+                                                    <span key={input.name}>{input.quantity}x {input.name}</span>
+                                                )).reduce((prev, curr, i) => [prev, <span key={`sep-${i}`}>+</span>, curr] as any)
+                                            ) : (
+                                                <span className='italic'>Hakuna pembejeo zinazohitajika</span>
+                                            )}
                                         </div>
                                     </div>
                                     <Button 
