@@ -226,6 +226,14 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
     });
   }
 
+  const hasEnoughBuildMaterials = (buildingId: string): boolean => {
+      const costs = buildingData[buildingId].buildCost;
+      return costs.every(cost => {
+          const inventoryItem = inventory.find(item => item.item === cost.name);
+          return inventoryItem && inventoryItem.quantity >= cost.quantity;
+      });
+  };
+
   const getBuildingProductionRate = (slot: BuildingSlot | null): number => {
     if (!slot || !slot.building) return 0;
     const buildingInfo = buildingData[slot.building.id];
@@ -311,30 +319,56 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
       </div>
 
       {/* Build Dialog */}
-      <Dialog open={isBuildDialogOpen} onOpenChange={setIsBuildDialogOpen}>
+        <Dialog open={isBuildDialogOpen} onOpenChange={setIsBuildDialogOpen}>
             <DialogContent className="bg-gray-900 border-gray-700 text-white">
               <DialogHeader>
                 <DialogTitle>Construct a Building</DialogTitle>
                 <DialogDescription>
-                  Select a building to construct on this plot. Each building has unique benefits.
+                  Select a building to construct on this plot. Each building has unique benefits and costs.
                 </DialogDescription>
               </DialogHeader>
               <ScrollArea className="max-h-[70vh] pr-4">
                 <div className="flex flex-col gap-2 pt-4">
-                  {availableBuildings.map((b) => (
-                      <Button
-                          key={b.id}
-                          variant="outline"
-                          className="w-full justify-start h-auto py-3 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white"
-                          onClick={() => handleSelectBuildingToBuild(b)}
-                      >
-                          {b.icon}
-                          <div className='text-left'>
-                              <p className='font-semibold'>{b.name}</p>
-                              <p className='text-xs text-gray-400'>{b.description}</p>
-                          </div>
-                      </Button>
-                  ))}
+                  {availableBuildings.map((b) => {
+                      const costs = buildingData[b.id].buildCost;
+                      const canAfford = hasEnoughBuildMaterials(b.id);
+                      return (
+                        <div key={b.id} className='p-3 bg-gray-800/50 rounded-lg border border-gray-700'>
+                            <div className='flex items-center justify-between'>
+                                <div className='flex items-center'>
+                                  {b.icon}
+                                  <div className='text-left'>
+                                      <p className='font-semibold'>{b.name}</p>
+                                      <p className='text-xs text-gray-400'>{b.description}</p>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="secondary"
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                  disabled={!canAfford}
+                                  onClick={() => handleSelectBuildingToBuild(b)}
+                                >
+                                  Build
+                                </Button>
+                            </div>
+                             <Separator className='my-2 bg-gray-600'/>
+                             <div className='text-xs'>
+                                <p className='font-semibold mb-1'>Gharama:</p>
+                                <div className='flex flex-wrap gap-x-4 gap-y-1'>
+                                    {costs.map(cost => {
+                                        const invItem = inventory.find(i => i.item === cost.name);
+                                        const has = invItem?.quantity || 0;
+                                        return (
+                                           <span key={cost.name} className={cn(has >= cost.quantity ? 'text-gray-300' : 'text-red-400')}>
+                                               {cost.name}: {has.toLocaleString()}/{cost.quantity.toLocaleString()}
+                                           </span>
+                                        )
+                                    })}
+                                </div>
+                             </div>
+                        </div>
+                      )
+                  })}
                 </div>
               </ScrollArea>
             </DialogContent>
@@ -381,9 +415,16 @@ export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction
                                 <h4 className='font-semibold mb-2'>Inputs Required</h4>
                                 {selectedRecipe.inputs.length > 0 ? (
                                     <ul className='text-sm space-y-1 text-gray-300 list-disc list-inside'>
-                                      {selectedRecipe.inputs.map(input => (
-                                          <li key={input.name}>{input.quantity * productionQuantity}x {input.name}</li>
-                                      ))}
+                                      {selectedRecipe.inputs.map(input => {
+                                        const invItem = inventory.find(i => i.item === input.name);
+                                        const has = invItem?.quantity || 0;
+                                        const needed = input.quantity * productionQuantity;
+                                        return (
+                                          <li key={input.name} className={cn(has < needed ? 'text-red-400' : '')}>
+                                            {needed.toLocaleString()}x {input.name} (Una: {has.toLocaleString()})
+                                          </li>
+                                        )
+                                      })}
                                     </ul>
                                 ) : <p className='text-sm text-gray-400 italic'>No inputs required.</p>}
                             </div>

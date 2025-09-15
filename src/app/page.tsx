@@ -12,6 +12,7 @@ import type { Recipe } from '@/lib/recipe-data';
 import { recipes } from '@/lib/recipe-data';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
+import { buildingData } from '@/lib/building-data';
 
 
 const initialInventoryItems: InventoryItem[] = [
@@ -20,6 +21,11 @@ const initialInventoryItems: InventoryItem[] = [
   { item: 'Yai', quantity: 25000, marketPrice: 210 },
   { item: 'Bwawa', quantity: 10, marketPrice: 700 },
   { item: 'Boat', quantity: 5, marketPrice: 1800 },
+  // Add initial construction materials for testing
+  { item: 'Mbao', quantity: 500, marketPrice: 60 },
+  { item: 'Matofali', quantity: 1000, marketPrice: 120 },
+  { item: 'Nondo', quantity: 200, marketPrice: 350 },
+  { item: 'Zege', quantity: 100, marketPrice: 250 },
 ];
 
 const initialPlayerListings: PlayerListing[] = [
@@ -41,10 +47,43 @@ export default function Home() {
   const { toast } = useToast();
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
+    const costs = buildingData[building.id].buildCost;
+    
+    // 1. Check for required build materials
+    for (const cost of costs) {
+        const inventoryItem = inventory.find(i => i.item === cost.name);
+        if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
+            toast({
+                variant: "destructive",
+                title: "Uhaba wa Vifaa vya Ujenzi",
+                description: `Huna ${cost.name} za kutosha kujenga ${building.name}.`,
+            });
+            return;
+        }
+    }
+
+    // 2. Deduct build materials from inventory
+    setInventory(prevInventory => {
+      const newInventory = [...prevInventory];
+      for (const cost of costs) {
+        const itemIndex = newInventory.findIndex(i => i.item === cost.name);
+        if (itemIndex > -1) {
+          newInventory[itemIndex].quantity -= cost.quantity;
+        }
+      }
+      return newInventory.filter(item => item.quantity > 0);
+    });
+
+    // 3. Place building
     setBuildingSlots(prev => {
         const newSlots = [...prev];
         newSlots[slotIndex] = { building, level: 1 };
         return newSlots;
+    });
+
+    toast({
+        title: "Ujenzi Umekamilika!",
+        description: `Umefanikiwa kujenga ${building.name}.`,
     });
   };
   
