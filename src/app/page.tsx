@@ -10,6 +10,8 @@ import { TradeMarket, type PlayerListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { ProductionLine } from '@/lib/production-data';
 import { BuildingType } from '@/components/app/dashboard';
+import { useToast } from '@/hooks/use-toast';
+import { encyclopediaData } from '@/lib/encyclopedia-data';
 
 
 const initialInventoryItems: InventoryItem[] = [
@@ -53,6 +55,7 @@ export default function Home() {
   const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(
     Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null }))
   );
+  const { toast } = useToast();
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
     setBuildingSlots(prev => {
@@ -63,9 +66,36 @@ export default function Home() {
   };
   
   const handleStartProduction = (slotIndex: number, line: ProductionLine) => {
+    // Check for required inputs
+    for (const input of line.inputs) {
+        const inventoryItem = inventory.find(i => i.item === input.name);
+        if (!inventoryItem || inventoryItem.quantity < input.quantity) {
+            toast({
+                variant: "destructive",
+                title: "Uhaba wa Rasilimali",
+                description: `Huna ${input.name} za kutosha kuanzisha uzalishaji.`,
+            });
+            return;
+        }
+    }
+
     const durationMs = parseDuration(line.duration);
     const now = Date.now();
     
+    // Deduct inputs from inventory
+    setInventory(prevInventory => {
+      const newInventory = [...prevInventory];
+      for (const input of line.inputs) {
+        const itemIndex = newInventory.findIndex(i => i.item === input.name);
+        if (itemIndex > -1) {
+          newInventory[itemIndex].quantity -= input.quantity;
+        }
+      }
+      return newInventory.filter(item => item.quantity > 0);
+    });
+
+    // TODO: Deduct cost from player's money
+
     setBuildingSlots(prev => {
       const newSlots = [...prev];
       const slot = newSlots[slotIndex];
@@ -90,7 +120,7 @@ export default function Home() {
         invItem.item === item.item
           ? { ...invItem, quantity: invItem.quantity - quantity }
           : invItem
-      )
+      ).filter(item => item.quantity > 0)
     );
 
     // 2. Add to market listings
@@ -109,22 +139,53 @@ export default function Home() {
    React.useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
-      setBuildingSlots(prev => {
-        let changed = false;
-        const newSlots = prev.map(slot => {
+      let inventoryUpdated = false;
+
+      setBuildingSlots(prevSlots => {
+        let slotsChanged = false;
+        const newSlots = prevSlots.map(slot => {
           if (slot.production && now >= slot.production.endTime) {
-            changed = true;
-            // TODO: Add produced item to inventory
+            slotsChanged = true;
+            inventoryUpdated = true;
+            
+            const { output } = slot.production.line;
+            
+            setInventory(prevInventory => {
+              const newInventory = [...prevInventory];
+              const itemIndex = newInventory.findIndex(i => i.item === output.name);
+              
+              if (itemIndex > -1) {
+                newInventory[itemIndex].quantity += output.quantity;
+              } else {
+                 const encyclopediaEntry = encyclopediaData.find(e => e.name === output.name);
+                 const marketPrice = encyclopediaEntry 
+                    ? parseFloat(encyclopediaEntry.properties.find(p => p.label.includes("Price"))?.value.replace('$', '') || '100')
+                    : 100;
+
+                newInventory.push({ item: output.name, quantity: output.quantity, marketPrice });
+              }
+              return newInventory;
+            });
+            
             return { ...slot, production: undefined };
           }
           return slot;
         });
-        return changed ? newSlots : prev;
+
+        return slotsChanged ? newSlots : prevSlots;
       });
+
+      if(inventoryUpdated){
+        toast({
+            title: "Uzalishaji Umekamilika!",
+            description: "Bidhaa mpya zimeongezwa kwenye ghala lako.",
+        })
+      }
+
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [toast]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
@@ -133,6 +194,7 @@ export default function Home() {
         {view === 'dashboard' && (
           <Dashboard 
             buildingSlots={buildingSlots} 
+            inventory={inventory}
             onBuild={handleBuild}
             onStartProduction={handleStartProduction}
           />

@@ -17,10 +17,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock } from 'lucide-react';
-import { encyclopediaData } from '@/lib/encyclopedia-data';
-import { productionLines, type ProductionLine } from '@/lib/production-data';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle } from 'lucide-react';
+import type { ProductionLine } from '@/lib/production-data';
 import { Separator } from '../ui/separator';
+import { productionLines } from '@/lib/production-data';
+import type { InventoryItem } from './inventory';
+import { Badge } from '../ui/badge';
+import { cn } from '@/lib/utils';
 
 export type BuildingType = {
   id: string;
@@ -61,6 +64,7 @@ const availableBuildings: BuildingType[] = [
 
 interface DashboardProps {
     buildingSlots: BuildingSlot[];
+    inventory: InventoryItem[];
     onBuild: (slotIndex: number, building: BuildingType) => void;
     onStartProduction: (slotIndex: number, line: ProductionLine) => void;
 }
@@ -73,7 +77,7 @@ const formatTime = (ms: number) => {
     return `${minutes}:${seconds}`;
 };
 
-export function Dashboard({ buildingSlots, onBuild, onStartProduction }: DashboardProps) {
+export function Dashboard({ buildingSlots, inventory, onBuild, onStartProduction }: DashboardProps) {
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [isProductionDialogOpen, setIsProductionDialogOpen] = React.useState(false);
   const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
@@ -114,6 +118,14 @@ export function Dashboard({ buildingSlots, onBuild, onStartProduction }: Dashboa
     ? productionLines.filter((line) => line.buildingId === selectedSlot.building!.id)
     : [];
 
+  const hasEnoughInputs = (line: ProductionLine) => {
+    return line.inputs.every(input => {
+        const inventoryItem = inventory.find(item => item.item === input.name);
+        return inventoryItem && inventoryItem.quantity >= input.quantity;
+    });
+  }
+
+
   return (
     <div className="flex flex-col gap-4 text-white">
        <div>
@@ -127,8 +139,11 @@ export function Dashboard({ buildingSlots, onBuild, onStartProduction }: Dashboa
           slot.building ? (
             <Card
               key={index}
-              onClick={() => handleOpenProductionDialog(index)}
-              className="flex flex-col items-center justify-center h-32 bg-gray-800/80 border-gray-700 overflow-hidden cursor-pointer group relative"
+              onClick={() => !slot.production && handleOpenProductionDialog(index)}
+              className={cn(
+                "flex flex-col items-center justify-center h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative",
+                !slot.production ? "cursor-pointer" : "cursor-default"
+              )}
             >
                 <Image
                     src={slot.building.image}
@@ -151,10 +166,13 @@ export function Dashboard({ buildingSlots, onBuild, onStartProduction }: Dashboa
                 )}
                 <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
                     <p className="text-xs font-bold truncate">{slot.building.name}</p>
-                    {slot.production && (
-                        <p className='text-xs font-mono text-yellow-300'>
-                            {formatTime(slot.production.endTime - now)}
-                        </p>
+                    {slot.production ? (
+                        <div className='text-xs font-mono text-yellow-300 flex items-center justify-center gap-2'>
+                           <span>{formatTime(slot.production.endTime - now)}</span>
+                           <span>| {slot.production.line.output.name}</span>
+                        </div>
+                    ) : (
+                        <p className='text-xs text-green-400 font-semibold'>Available</p>
                     )}
                 </div>
             </Card>
@@ -212,36 +230,43 @@ export function Dashboard({ buildingSlots, onBuild, onStartProduction }: Dashboa
                 </DialogHeader>
                 <div className="flex flex-col gap-3 pt-4 max-h-[60vh] overflow-y-auto pr-2">
                     {buildingProductionLines.length > 0 ? (
-                        buildingProductionLines.map((line) => (
-                            <div key={line.output.name} className="p-3 bg-gray-800/70 rounded-lg border border-gray-700">
-                                <div className="flex justify-between items-center">
-                                    <div className='flex flex-col'>
-                                       <p className='text-lg font-bold'>{line.output.name}</p>
-                                       <div className="flex items-center gap-2 text-xs text-gray-400">
-                                            {line.inputs.length > 0 ? (
-                                                line.inputs.map(input => (
-                                                    <span key={input.name}>{input.quantity}x {input.name}</span>
-                                                )).reduce((prev, curr, i) => [prev, <span key={`sep-${i}`}>+</span>, curr] as any)
-                                            ) : (
-                                                <span className='italic'>Hakuna pembejeo zinazohitajika</span>
-                                            )}
+                        buildingProductionLines.map((line) => {
+                            const canProduce = hasEnoughInputs(line);
+                            return (
+                                <div key={line.output.name} className="p-3 bg-gray-800/70 rounded-lg border border-gray-700">
+                                    <div className="flex justify-between items-center">
+                                        <div className='flex flex-col'>
+                                           <div className='flex items-center gap-2'>
+                                            <p className='text-lg font-bold'>{line.output.name}</p>
+                                            <Badge variant="secondary">${line.cost.toLocaleString()}</Badge>
+                                           </div>
+                                           <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
+                                                {line.inputs.length > 0 ? (
+                                                    line.inputs.map(input => (
+                                                        <span key={input.name}>{input.quantity.toLocaleString()}x {input.name}</span>
+                                                    )).reduce((prev, curr, i) => [prev, <span key={`sep-${i}`}>+</span>, curr] as any)
+                                                ) : (
+                                                    <span className='italic'>Hakuna pembejeo zinazohitajika</span>
+                                                )}
+                                            </div>
                                         </div>
+                                        <Button 
+                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                            onClick={() => handleSelectProductionLine(line)}
+                                            disabled={!!selectedSlot?.production || !canProduce}
+                                        >
+                                            <CheckCircle className='mr-2'/>
+                                            Start
+                                        </Button>
                                     </div>
-                                    <Button 
-                                        className="bg-green-600 hover:bg-green-700 text-white"
-                                        onClick={() => handleSelectProductionLine(line)}
-                                        disabled={!!selectedSlot?.production}
-                                    >
-                                        Start Production
-                                    </Button>
+                                    <Separator className='my-2 bg-gray-600/50' />
+                                    <div className="text-xs text-muted-foreground flex justify-between">
+                                        <span>Time: {line.duration}</span>
+                                        <span>Output: {line.output.quantity.toLocaleString()} units</span>
+                                    </div>
                                 </div>
-                                <Separator className='my-2 bg-gray-600/50' />
-                                <div className="text-xs text-muted-foreground flex justify-between">
-                                    <span>Time: {line.duration}</span>
-                                    <span>Cost: ${line.cost.toLocaleString()}</span>
-                                </div>
-                            </div>
-                        ))
+                            )
+                        })
                     ) : (
                         <div className="text-center py-8 text-gray-500">
                             <p>No production lines available for this building.</p>
