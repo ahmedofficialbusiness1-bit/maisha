@@ -54,7 +54,7 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
   ];
 
   return (
-    <footer className="sticky bottom-0 z-10 grid grid-cols-6 items-center justify-around border-t bg-gray-900/95 p-2 backdrop-blur-sm md:hidden">
+    <footer className="sticky bottom-0 z-10 grid grid-cols-6 items-center justify-around border-t bg-gray-900/95 p-2 backdrop-blur-sm">
       {navItems.map((item) => (
         <Button
             key={item.view}
