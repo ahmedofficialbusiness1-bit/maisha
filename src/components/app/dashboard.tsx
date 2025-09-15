@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Building, Factory, Home, Hospital, PlusCircle, Store } from 'lucide-react';
+import { Factory, Leaf, PlusCircle } from 'lucide-react';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 
 const BUILDING_SLOTS = 20;
@@ -33,44 +33,20 @@ export type BuildingType = {
 
 const availableBuildings: BuildingType[] = [
     { 
-        id: 'residential-house',
-        name: 'Residential House', 
-        icon: <Home className="mr-2" />, 
-        description: 'Increases population capacity.',
-        image: 'https://picsum.photos/seed/modern-house/200/200',
-        imageHint: 'modern house'
+        id: 'shamba',
+        name: 'Shamba', 
+        icon: <Leaf className="mr-2" />, 
+        description: 'Huzalisha mazao ya kilimo na mifugo.',
+        image: 'https://picsum.photos/seed/farm-land/200/200',
+        imageHint: 'fertile farm'
     },
     { 
-        id: 'maize_mill',
-        name: 'Maize Mill', 
+        id: 'kiwanda_cha_samaki',
+        name: 'Kiwanda cha Samaki', 
         icon: <Factory className="mr-2" />, 
-        description: 'Processes corn into corn flour.',
-        image: 'https://picsum.photos/seed/industrial-mill/200/200',
-        imageHint: 'industrial mill'
-    },
-    { 
-        id: 'market',
-        name: 'Market', 
-        icon: <Store className="mr-2" />, 
-        description: 'Generates revenue from sales.',
-        image: 'https://picsum.photos/seed/local-market/200/200',
-        imageHint: 'outdoor market'
-    },
-    { 
-        id: 'office-building',
-        name: 'Office Building', 
-        icon: <Building className="mr-2" />, 
-        description: 'Unlocks corporate actions.',
-        image: 'https://picsum.photos/seed/corporate-office/200/200',
-        imageHint: 'office building'
-    },
-    { 
-        id: 'hospital',
-        name: 'Hospital', 
-        icon: <Hospital className="mr-2" />, 
-        description: 'Improves city health.',
-        image: 'https://picsum.photos/seed/modern-hospital/200/200',
-        imageHint: 'modern hospital'
+        description: 'Husindika samaki na bidhaa za baharini.',
+        image: 'https://picsum.photos/seed/fish-factory/200/200',
+        imageHint: 'fish factory'
     },
 ];
 
