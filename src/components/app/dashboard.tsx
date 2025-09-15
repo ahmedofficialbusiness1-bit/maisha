@@ -124,7 +124,7 @@ export function Dashboard({ buildings, setBuildings }: DashboardProps) {
               <div className="flex flex-col gap-2 pt-4">
                 {availableBuildings.map((b) => (
                     <Button 
-                        key={b.name} 
+                        key={b.id} 
                         variant="outline" 
                         className="w-full justify-start h-auto py-3 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white"
                         onClick={() => handleSelectBuilding(b)}
