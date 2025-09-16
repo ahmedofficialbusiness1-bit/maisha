@@ -239,6 +239,18 @@ export default function Home() {
         return;
     }
 
+    // Check for required workers
+    for (const req of recipe.requiredWorkers) {
+        const availableSpecialists = hiredWorkers.filter(w => w.specialty === req.specialty).length;
+        if (availableSpecialists < req.count) {
+            toast({
+                variant: "destructive",
+                title: "Uhaba wa Wafanyakazi",
+                description: `Unahitaji ${req.count} ${req.specialty} lakini una ${availableSpecialists} pekee.`,
+            });
+            return;
+        }
+    }
 
     const now = Date.now();
     
@@ -488,6 +500,7 @@ export default function Home() {
           <Dashboard 
             buildingSlots={buildingSlots} 
             inventory={inventory}
+            hiredWorkers={hiredWorkers}
             stars={stars}
             onBuild={handleBuild}
             onStartProduction={handleStartProduction}
