@@ -128,4 +128,35 @@ export const buildingData: Record<string, BuildingConfig> = {
         ],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
+    // New Mining Buildings
+    uchimbaji_almasi: {
+        productionRate: 5,
+        buildCost: [{ name: 'Zege', quantity: 500 }, { name: 'Nondo', quantity: 200 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    uchimbaji_dhahabu: {
+        productionRate: 8,
+        buildCost: [{ name: 'Zege', quantity: 450 }, { name: 'Nondo', quantity: 180 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    uchimbaji_silver: {
+        productionRate: 15,
+        buildCost: [{ name: 'Zege', quantity: 300 }, { name: 'Nondo', quantity: 120 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    uchimbaji_ruby: {
+        productionRate: 10,
+        buildCost: [{ name: 'Zege', quantity: 400 }, { name: 'Nondo', quantity: 150 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    uchimbaji_tanzanite: {
+        productionRate: 12,
+        buildCost: [{ name: 'Zege', quantity: 350 }, { name: 'Nondo', quantity: 140 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    uchimbaji_shaba: {
+        productionRate: 25,
+        buildCost: [{ name: 'Zege', quantity: 250 }, { name: 'Nondo', quantity: 100 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
 };

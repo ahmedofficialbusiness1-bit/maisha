@@ -1,8 +1,8 @@
 
-import { Factory, Leaf, Fish, User, LucideIcon } from 'lucide-react';
+import { Factory, Leaf, Fish, User, LucideIcon, Hammer } from 'lucide-react';
 import type React from 'react';
 
-export type WorkerSpecialty = 'Kilimo' | 'Uvuvi' | 'Uzalishaji' | 'Usimamizi';
+export type WorkerSpecialty = 'Kilimo' | 'Uvuvi' | 'Uzalishaji' | 'Usimamizi' | 'Uchimbaji';
 
 export type Worker = {
     id: string;
@@ -46,6 +46,15 @@ export const workerData: Worker[] = [
         icon: <Factory />,
     },
     {
+        id: 'mchimba_madini_basic',
+        name: 'Mchimba Madini',
+        specialty: 'Uchimbaji',
+        description: 'Ana uzoefu wa msingi wa uchimbaji madini.',
+        salary: 120,
+        effect: { type: 'PRODUCTION_BOOST', value: 5 }, // 5% boost
+        icon: <Hammer />,
+    },
+    {
         id: 'msimamizi_basic',
         name: 'Msimamizi',
         specialty: 'Usimamizi',
@@ -55,4 +64,5 @@ export const workerData: Worker[] = [
         icon: <User />,
     },
 ];
+
 

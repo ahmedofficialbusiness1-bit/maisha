@@ -119,6 +119,54 @@ const availableBuildings: BuildingType[] = [
         image: 'https://picsum.photos/seed/iron-mine/200/200',
         imageHint: 'iron mine'
     },
+     {
+        id: 'uchimbaji_almasi',
+        name: 'Uchimbaji Almasi',
+        icon: <Gem className="mr-2 h-6 w-6 text-cyan-400" />,
+        description: 'Huchimba Almasi.',
+        image: 'https://picsum.photos/seed/diamond-mine/200/200',
+        imageHint: 'diamond mine'
+    },
+    {
+        id: 'uchimbaji_dhahabu',
+        name: 'Uchimbaji Dhahabu',
+        icon: <Gem className="mr-2 h-6 w-6 text-yellow-400" />,
+        description: 'Huchimba Dhahabu.',
+        image: 'https://picsum.photos/seed/gold-mine/200/200',
+        imageHint: 'gold mine'
+    },
+    {
+        id: 'uchimbaji_silver',
+        name: 'Uchimbaji Silver',
+        icon: <Gem className="mr-2 h-6 w-6 text-slate-400" />,
+        description: 'Huchimba Silver.',
+        image: 'https://picsum.photos/seed/silver-mine/200/200',
+        imageHint: 'silver mine'
+    },
+     {
+        id: 'uchimbaji_ruby',
+        name: 'Uchimbaji Ruby',
+        icon: <Gem className="mr-2 h-6 w-6 text-red-500" />,
+        description: 'Huchimba Ruby.',
+        image: 'https://picsum.photos/seed/ruby-mine/200/200',
+        imageHint: 'ruby mine'
+    },
+    {
+        id: 'uchimbaji_tanzanite',
+        name: 'Uchimbaji Tanzanite',
+        icon: <Gem className="mr-2 h-6 w-6 text-purple-400" />,
+        description: 'Huchimba Tanzanite.',
+        image: 'https://picsum.photos/seed/tanzanite-mine/200/200',
+        imageHint: 'tanzanite mine'
+    },
+    {
+        id: 'uchimbaji_shaba',
+        name: 'Uchimbaji Shaba',
+        icon: <Gem className="mr-2 h-6 w-6 text-orange-400" />,
+        description: 'Huchimba Shaba.',
+        image: 'https://picsum.photos/seed/copper-mine/200/200',
+        imageHint: 'copper mine'
+    },
     {
         id: 'kiwanda_cha_umeme',
         name: 'Kiwanda cha Umeme',

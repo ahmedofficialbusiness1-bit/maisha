@@ -83,11 +83,28 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Mashine A3': <Factory />,
     'Mashine A4': <Component />,
     'Mashine A5': <Component />,
+    'Mashine B1': <Wrench />,
+    'Mashine B2': <Wrench />,
+    'Mashine B3': <Wrench />,
+    'Mashine B4': <Wrench />,
+    'Mashine B5': <Wrench />,
+    'Mashine B6': <Wrench />,
     'Mashine B7': <Wrench />,
     'Mashine C1': <Wrench />,
     'Mashine C2': <Wrench />,
+    'Leseni B1': <FileText />,
+    'Leseni B2': <FileText />,
+    'Leseni B3': <FileText />,
+    'Leseni B4': <FileText />,
+    'Leseni B5': <FileText />,
+    'Leseni B6': <FileText />,
     'Leseni B7': <FileText />,
     'Shaba': <Gem />,
+    'Almasi': <Gem />,
+    'Dhahabu': <Gem />,
+    'Silver': <Gem />,
+    'Ruby': <Gem />,
+    'Tanzanite': <Gem />,
     'Mabati': <Building />,
     'Default': <Package />
 };
@@ -114,7 +131,7 @@ const generatedEntries = recipes.map(recipe => {
             { label: 'Market Cost', value: `$${Math.ceil(recipe.cost * 1.25)}`},
             { label: 'Base Production Time', value: `${baseTimePerUnit.toFixed(2)}s / unit` },
             { label: 'Output Quantity', value: `${recipe.output.quantity.toLocaleString()} unit(s)` },
-            { label: 'Building', value: recipe.buildingId.charAt(0).toUpperCase() + recipe.buildingId.slice(1).replace('_', ' ') }
+            { label: 'Building', value: recipe.buildingId.charAt(0).toUpperCase() + recipe.buildingId.slice(1).replace(/_/g, ' ') }
         ],
     }
     
@@ -182,11 +199,12 @@ allItemNames.forEach(itemName => {
 
 
 // Group items by category for the market view
-const categoryOrder = ['Construction', 'Vifaa', 'Raw Material', 'Agriculture', 'Food', 'Product'];
+const categoryOrder = ['Construction', 'Vifaa', 'Madini', 'Raw Material', 'Agriculture', 'Food', 'Product'];
 const itemCategorization: Record<string, string> = {
     'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction', 'Mabati': 'Construction',
     'Saruji': 'Construction', 'Mchanga': 'Construction', 'Mawe': 'Construction', 'Kokoto': 'Construction',
-    'Miti': 'Raw Material', 'Madini ya chuma': 'Raw Material', 'Chuma': 'Construction', 'Shaba': 'Raw Material',
+    'Miti': 'Raw Material', 'Madini ya chuma': 'Raw Material', 'Chuma': 'Construction',
+    'Almasi': 'Madini', 'Dhahabu': 'Madini', 'Silver': 'Madini', 'Ruby': 'Madini', 'Tanzanite': 'Madini', 'Shaba': 'Madini',
     'Mbegu': 'Agriculture', 'Maharage': 'Agriculture', 'Mchele': 'Agriculture', 'Unga wa ngano': 'Food',
     'Unga wa sembe': 'Food', 'Ndizi': 'Agriculture', 'Viazi mbatata': 'Agriculture', 'Mboga mboga': 'Agriculture',
     'Embe': 'Agriculture', 'Nanasi': 'Agriculture', 'Parachichi': 'Agriculture', 'Miwa': 'Agriculture',
@@ -197,8 +215,10 @@ const itemCategorization: Record<string, string> = {
     'Sukari': 'Food', 'Juice': 'Food', 'Bwawa': 'Vifaa', 'Boat': 'Vifaa',
     'Samaki': 'Food', 'Chumvi': 'Food',
     'Umeme': 'Raw Material', 'Maji': 'Raw Material',
-    'Mashine A1': 'Vifaa', 'Mashine A2': 'Vifaa', 'Mashine A3': 'Vifaa', 'Mashine A4': 'Vifaa', 'Mashine A5': 'Vifaa', 'Mashine B7': 'Vifaa', 'Mashine C1': 'Vifaa', 'Mashine C2': 'Vifaa',
-    'Leseni B7': 'Vifaa'
+    'Mashine A1': 'Vifaa', 'Mashine A2': 'Vifaa', 'Mashine A3': 'Vifaa', 'Mashine A4': 'Vifaa', 'Mashine A5': 'Vifaa',
+    'Mashine B1': 'Vifaa', 'Mashine B2': 'Vifaa', 'Mashine B3': 'Vifaa', 'Mashine B4': 'Vifaa', 'Mashine B5': 'Vifaa', 'Mashine B6': 'Vifaa', 'Mashine B7': 'Vifaa',
+    'Mashine C1': 'Vifaa', 'Mashine C2': 'Vifaa',
+    'Leseni B1': 'Vifaa', 'Leseni B2': 'Vifaa', 'Leseni B3': 'Vifaa', 'Leseni B4': 'Vifaa', 'Leseni B5': 'Vifaa', 'Leseni B6': 'Vifaa', 'Leseni B7': 'Vifaa',
 };
 
 generatedEntries.forEach(entry => {
