@@ -173,5 +173,12 @@ export const buildingData: Record<string, BuildingConfig> = {
         productionRate: 100, // Produces 100 paper units per hour
         buildCost: [{ name: 'Mbao', quantity: 100 }, { name: 'Matofali', quantity: 50 }],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    wizara_ya_madini: {
+        productionRate: 2, // Produces 2 certificates per hour at level 1
+        buildCost: [{ name: 'Zege', quantity: 300 }, { name: 'Nondo', quantity: 150 }, { name: 'Mbao', quantity: 200 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     }
 };
+
+    

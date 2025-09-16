@@ -255,6 +255,14 @@ const availableBuildings: BuildingType[] = [
         image: 'https://picsum.photos/seed/paper-mill/200/200',
         imageHint: 'paper mill'
     },
+    {
+        id: 'wizara_ya_madini',
+        name: 'Wizara ya Madini',
+        icon: <FileText className="mr-2 h-6 w-6 text-yellow-500" />,
+        description: 'Inatoa vyeti vya uhalali wa uchimbaji madini.',
+        image: 'https://picsum.photos/seed/ministry-minerals/200/200',
+        imageHint: 'government building'
+    },
 ];
 
 interface DashboardProps {
@@ -847,3 +855,5 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
     </div>
   );
 }
+
+    

@@ -74,7 +74,7 @@ export const recipes: Recipe[] = [
   // Kiwanda cha Samaki Recipes
   { id: 'bwawa', buildingId: 'kiwanda_cha_samaki', output: { name: 'Bwawa', quantity: 1 }, inputs: [], cost: 100, requiredWorkers: [{ specialty: 'Uvuvi', count: 1 }] },
   { id: 'boat', buildingId: 'kiwanda_cha_samaki', output: { name: 'Boat', quantity: 1 }, inputs: [], cost: 200, requiredWorkers: [{ specialty: 'Uvuvi', count: 2 }] },
-  { id: 'samaki', buildingId: 'kiwanda_cha_samaki', output: { name: 'Samaki', quantity: 1 }, inputs: [], cost: 300, requiredWorkers: [{ specialty: 'Uvuvi', count: 1 }] },
+  { id: 'samaki', buildingId: 'kiwanda_cha_samaki', output: { name: 'Samaki', quantity: 1 }, inputs: [{ name: 'Bwawa', quantity: 1 }, { name: 'Boat', quantity: 1 }], cost: 300, requiredWorkers: [{ specialty: 'Uvuvi', count: 1 }] },
   { id: 'chumvi', buildingId: 'kiwanda_cha_samaki', output: { name: 'Chumvi', quantity: 1 }, inputs: [], cost: 50, requiredWorkers: [{ specialty: 'Uvuvi', count: 1 }] },
 
   // Ujenzi & Uchimbaji Recipes
@@ -122,4 +122,16 @@ export const recipes: Recipe[] = [
     cost: 10000,
     requiredWorkers: licenseRecipeWorkers,
   })),
+
+  // Wizara ya Madini
+  {
+    id: 'cheti_cha_madini',
+    buildingId: 'wizara_ya_madini',
+    output: { name: 'Cheti cha Madini', quantity: 1 },
+    inputs: [{ name: 'Karatasi', quantity: 10 }],
+    cost: 50000,
+    requiredWorkers: [{ specialty: 'Usimamizi', count: 1 }],
+  },
 ];
+
+    
