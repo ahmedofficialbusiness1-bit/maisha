@@ -5,7 +5,7 @@ import {
     Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component, CookingPot,
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf, LucideIcon, 
     Milestone, Mountain, Package, Palmtree, Recycle, Shell, Ship, Shrub, Sprout,
-    Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wood, Wrench
+    Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench
 } from 'lucide-react';
 
 
@@ -34,7 +34,7 @@ const getImageUrl = (name: string) => `https://picsum.photos/seed/${name.toLower
 const getImageHint = (name: string) => name.toLowerCase().split(' ').slice(0, 2).join(' ');
 
 const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
-    'Mbao': <Wood />,
+    'Mbao': <Hammer />,
     'Matofali': <ToyBrick />,
     'Nondo': <Component />,
     'Zege': <Building />,
