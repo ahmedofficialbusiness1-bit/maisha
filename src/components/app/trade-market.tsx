@@ -17,6 +17,8 @@ import { ArrowLeft, ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, Chevrons
 import type { InventoryItem } from './inventory';
 import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data.tsx';
 import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+
 
 export type PlayerListing = {
   id: number;
@@ -227,3 +229,5 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
     </div>
   );
 }
+
+    
