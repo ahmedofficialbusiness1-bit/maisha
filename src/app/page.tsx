@@ -218,9 +218,9 @@ export default function Home() {
   };
 
   const handleDemolishBuilding = (slotIndex: number) => {
+    const buildingName = buildingSlots[slotIndex]?.building?.name || 'Jengo';
     setBuildingSlots(prev => {
         const newSlots = [...prev];
-        const buildingName = newSlots[slotIndex]?.building?.name || 'Jengo';
         newSlots[slotIndex] = { building: null, level: 0 };
         return newSlots;
     });
@@ -546,5 +546,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     
