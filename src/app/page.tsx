@@ -11,7 +11,7 @@ import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { recipes } from '@/lib/recipe-data';
 import { useToast } from '@/hooks/use-toast';
-import { encyclopediaData } from '@/lib/encyclopedia-data';
+import { encyclopediaData } from '@/lib/encyclopedia-data.tsx';
 import { buildingData } from '@/lib/building-data';
 
 

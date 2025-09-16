@@ -2,10 +2,10 @@ import React from 'react';
 import { recipes, type Recipe } from './recipe-data';
 import { buildingData } from './building-data';
 import { 
-    Apple, Bean, Beef, Boat, Brick, Building, Carrot, Citrus, Coffee, Component, CookingPot,
-    Egg, Factory, Feather, Fish, Fuel, Gem, GlassWater, Grape, Hammer, HardHat, Leaf, LucideIcon, 
-    Milestone, Mountain, Package, Palmtree, Recycle, Shell, Ship, ShoppingCart, Shrub, Sprout,
-    Squirrel, Stethoscope, Sugar, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wood, Wrench
+    Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component, CookingPot,
+    Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf, LucideIcon, 
+    Milestone, Mountain, Package, Palmtree, Recycle, Shell, Ship, Shrub, Sprout,
+    Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wood, Wrench
 } from 'lucide-react';
 
 
@@ -35,7 +35,7 @@ const getImageHint = (name: string) => name.toLowerCase().split(' ').slice(0, 2)
 
 const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Mbao': <Wood />,
-    'Matofali': <Brick />,
+    'Matofali': <ToyBrick />,
     'Nondo': <Component />,
     'Zege': <Building />,
     'Saruji': <Building />,
@@ -70,7 +70,7 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Kuku': <Feather />,
     'Ngombe': <Package />,
     'Nyama': <Beef />,
-    'Sukari': <Sugar />,
+    'Sukari': <Wheat />,
     'Juice': <CookingPot />,
     'Bwawa': <Warehouse />,
     'Boat': <Ship />,

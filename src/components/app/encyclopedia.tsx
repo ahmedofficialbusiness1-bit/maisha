@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
+import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data.tsx';
 import { ScrollArea } from '../ui/scroll-area';
 
 export function Encyclopedia() {

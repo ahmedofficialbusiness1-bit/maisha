@@ -15,7 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, ChevronsLeft, ChevronsRight, HelpCircle } from 'lucide-react';
 import type { InventoryItem } from './inventory';
-import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
+import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data.tsx';
 import { cn } from '@/lib/utils';
 
 export type PlayerListing = {
@@ -108,12 +108,14 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                           key={product.id}
                           onClick={() => setSelectedProduct(product)}
                           className={cn(
-                            "p-2 rounded-md border-2 text-center",
+                            "p-2 rounded-md border-2 text-center aspect-square flex flex-col items-center justify-center",
                             selectedProduct?.id === product.id ? "bg-blue-600/50 border-blue-400" : "bg-gray-700/50 border-gray-600 hover:bg-gray-700"
                           )}
                           title={product.name}
                         >
-                          <Image src={product.imageUrl} alt={product.name} width={48} height={48} className="object-contain mx-auto" data-ai-hint={product.imageHint} />
+                          <div className="h-8 w-8 flex items-center justify-center">
+                            {React.cloneElement(product.icon, { className: "h-6 w-6" })}
+                          </div>
                           <span className="text-xs font-medium mt-1 block truncate">{product.name}</span>
                         </button>
                       ))}
@@ -133,7 +135,7 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                     <div className="flex items-center justify-between">
                          <Button variant="ghost" size="icon"><ChevronsLeft /></Button>
                          <div className="text-center">
-                            {selectedProduct && <Image src={selectedProduct.imageUrl} alt={selectedProduct.name} width={40} height={40} className="mx-auto" data-ai-hint={selectedProduct.imageHint} />}
+                            {selectedProduct && React.cloneElement(selectedProduct.icon, { className: "h-8 w-8 mx-auto" })}
                             <div className="flex items-center gap-2">
                                 <CardTitle className="text-lg">{selectedProduct?.name || "Select Product"}</CardTitle>
                                 <HelpCircle className="h-4 w-4 text-gray-400 cursor-pointer" />
