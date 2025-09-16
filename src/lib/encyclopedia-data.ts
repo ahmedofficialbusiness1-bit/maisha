@@ -27,7 +27,7 @@ const getImageHint = (name: string) => name.toLowerCase().split(' ').slice(0, 2)
 
 const generatedEntries = recipes.map(recipe => {
     const buildingInfo = buildingData[recipe.buildingId];
-    const baseTimePerUnit = (3600) / buildingInfo.productionRate; // Time in seconds for 1 unit at level 1
+    const baseTimePerUnit = buildingInfo ? (3600) / buildingInfo.productionRate : 0; // Time in seconds for 1 unit at level 1
 
     const entry: EncyclopediaEntry = {
         id: recipe.id,
@@ -38,6 +38,7 @@ const generatedEntries = recipes.map(recipe => {
         imageHint: getImageHint(recipe.output.name),
         properties: [
             { label: 'Production Cost', value: `$${recipe.cost}` },
+            { label: 'Market Cost', value: `$${Math.ceil(recipe.cost * 1.25)}`},
             { label: 'Base Production Time', value: `${baseTimePerUnit.toFixed(2)}s / unit` },
             { label: 'Output Quantity', value: `${recipe.output.quantity.toLocaleString()} unit(s)` },
             { label: 'Building', value: recipe.buildingId.charAt(0).toUpperCase() + recipe.buildingId.slice(1).replace('_', ' ') }
@@ -63,10 +64,23 @@ recipes.forEach(recipe => {
     allItemNames.add(recipe.output.name);
     recipe.inputs.forEach(input => allItemNames.add(input.name));
 });
+buildingData.shamba.buildCost.forEach(cost => allItemNames.add(cost.name));
+
 
 // Add entries for items that are inputs but not outputs
 allItemNames.forEach(itemName => {
     if (!generatedEntries.some(entry => entry.name === itemName)) {
+        // Find if this item is a build material to get an estimated cost
+        let estimatedCost = 10; // Default cost
+        Object.values(buildingData).forEach(b => {
+            const costItem = b.buildCost.find(c => c.name === itemName);
+            if (costItem) {
+                // A very rough estimation, can be refined
+                estimatedCost = Math.max(estimatedCost, costItem.quantity / 2);
+            }
+        });
+
+
         const entry: EncyclopediaEntry = {
             id: itemName.toLowerCase().replace(/'/g, '').replace(/\s+/g, '_'),
             name: itemName,
@@ -75,7 +89,8 @@ allItemNames.forEach(itemName => {
             imageUrl: getImageUrl(itemName),
             imageHint: getImageHint(itemName),
             properties: [
-                { label: 'Type', value: 'Base Input' }
+                { label: 'Type', value: 'Base Input' },
+                { label: 'Market Cost', value: `$${estimatedCost}` }
             ],
         };
         generatedEntries.push(entry);

@@ -289,6 +289,41 @@ export default function Home() {
           description: `Umetumia ${starsToUse} Star Boosts kupunguza muda wa ujenzi kwa ${reductionText.trim()}.`,
       });
   };
+
+  const handleBuyMaterial = (materialName: string, quantityNeeded: number) => {
+    const entry = encyclopediaData.find(e => e.name === materialName);
+    const priceProp = entry?.properties.find(p => p.label === "Market Cost");
+    if (!priceProp) {
+        toast({ variant: "destructive", title: "Hitilafu", description: `Bei ya ${materialName} haipatikani.`});
+        return;
+    }
+
+    const pricePerUnit = parseFloat(priceProp.value.replace('$', ''));
+    const totalCost = pricePerUnit * quantityNeeded;
+
+    if (money < totalCost) {
+        toast({ variant: "destructive", title: "Pesa Haitoshi", description: `Unahitaji $${totalCost.toLocaleString()} kununua ${quantityNeeded.toLocaleString()}x ${materialName}.`});
+        return;
+    }
+
+    setMoney(prevMoney => prevMoney - totalCost);
+    setInventory(prevInventory => {
+        const newInventory = [...prevInventory];
+        const itemIndex = newInventory.findIndex(i => i.item === materialName);
+
+        if (itemIndex > -1) {
+            newInventory[itemIndex].quantity += quantityNeeded;
+        } else {
+            newInventory.push({ item: materialName, quantity: quantityNeeded, marketPrice: pricePerUnit });
+        }
+        return newInventory;
+    });
+
+    toast({
+        title: "Manunuzi Yamekamilika",
+        description: `Umenunua ${quantityNeeded.toLocaleString()}x ${materialName} kwa $${totalCost.toLocaleString()}.`
+    });
+  };
   
    React.useEffect(() => {
     const interval = setInterval(() => {
@@ -386,6 +421,7 @@ export default function Home() {
             onBoostConstruction={handleBoostConstruction}
             onUpgradeBuilding={handleUpgradeBuilding}
             onDemolishBuilding={handleDemolishBuilding}
+            onBuyMaterial={handleBuyMaterial}
           />
         )}
         {view === 'inventory' && <Inventory inventoryItems={inventory} onPostToMarket={handlePostToMarket} />}

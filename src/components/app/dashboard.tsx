@@ -193,6 +193,7 @@ interface DashboardProps {
     onBoostConstruction: (slotIndex: number, starsToUse: number) => void;
     onUpgradeBuilding: (slotIndex: number) => void;
     onDemolishBuilding: (slotIndex: number) => void;
+    onBuyMaterial: (materialName: string, quantity: number) => void;
 }
 
 const formatTime = (ms: number) => {
@@ -207,7 +208,7 @@ const formatTime = (ms: number) => {
     return `${minutes}:${seconds}`;
 };
 
-export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding }: DashboardProps) {
+export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding, onBuyMaterial }: DashboardProps) {
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
   const [selectedBuildingForBuild, setSelectedBuildingForBuild] = React.useState<BuildingType | null>(null);
@@ -494,12 +495,14 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                               return (
                                   <div key={cost.name} className={cn('flex justify-between items-center p-2 rounded-md', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
                                       <span>{cost.name}</span>
-                                      <div className='flex items-center gap-4'>
+                                      <div className='flex items-center gap-2'>
                                           <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
                                             {has.toLocaleString()} / {needed.toLocaleString()}
                                           </span>
                                           {!hasEnough && (
-                                            <Button size="sm" variant="secondary" className="h-7" disabled>Nunua</Button>
+                                            <Button size="sm" variant="secondary" className="h-7" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                Nunua
+                                            </Button>
                                           )}
                                       </div>
                                   </div>
