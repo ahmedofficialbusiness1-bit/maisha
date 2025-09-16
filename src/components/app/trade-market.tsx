@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Image from 'next/image';
 import {
   Table,
   TableBody,
@@ -9,32 +10,38 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, TrendingUp, TrendingDown } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, ChevronsLeft, ChevronsRight, HelpCircle } from 'lucide-react';
 import type { InventoryItem } from './inventory';
+import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
+import { cn } from '@/lib/utils';
 
-export type PlayerListing = { 
-  id: number; 
-  commodity: string; 
-  seller: string; 
-  quantity: number; 
-  price: number; 
+export type PlayerListing = {
+  id: number;
+  commodity: string;
+  seller: string;
+  quantity: number;
+  price: number;
+  avatar: string;
+  quality: number;
+  imageHint: string;
 };
 
 function PriceTicker({ inventory }: { inventory: InventoryItem[] }) {
-  const [tickerItems, setTickerItems] = React.useState<any[]>([]);
-
-  React.useEffect(() => {
+  const tickerItems = React.useMemo(() => {
     const items = inventory.map((item, index) => ({
       commodity: item.item,
       price: item.marketPrice,
       // Simulate change for visual effect
-      change: (Math.random() - 0.5) * 5, 
+      change: (Math.random() - 0.5) * 5,
     }));
     // Duplicate for seamless loop
-    setTickerItems([...items, ...items]); 
+    return [...items, ...items];
   }, [inventory]);
 
-  if(tickerItems.length === 0) return null;
+  if (tickerItems.length === 0) return null;
 
   return (
     <div className="relative flex w-full overflow-hidden bg-gray-900/80 border-y border-gray-700 py-2">
@@ -62,56 +69,129 @@ function PriceTicker({ inventory }: { inventory: InventoryItem[] }) {
   );
 }
 
+const productCategories = encyclopediaData.reduce((acc, item) => {
+    const category = item.category || 'Uncategorized';
+    if (!acc[category]) {
+        acc[category] = [];
+    }
+    acc[category].push(item);
+    return acc;
+}, {} as Record<string, EncyclopediaEntry[]>);
+
 interface TradeMarketProps {
   playerListings: PlayerListing[];
   inventory: InventoryItem[];
 }
 
 export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
+  const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(encyclopediaData[0] || null);
+
+  const filteredListings = playerListings.filter(listing => listing.commodity === selectedProduct?.name);
+
   return (
-    <div className="flex flex-col gap-4 text-white">
+    <div className="flex flex-col gap-4 text-white -m-4 sm:-m-6">
       <PriceTicker inventory={inventory} />
 
-      <Card className="bg-gray-800/60 border-gray-700 text-white">
-        <CardHeader>
-          <CardTitle>Soko la Wachezaji</CardTitle>
-          <CardDescription className="text-gray-400">
-            Nunua bidhaa zilizowekwa sokoni na wachezaji wengine.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-gray-700 hover:bg-gray-700/50">
-                <TableHead className="text-white">Bidhaa</TableHead>
-                <TableHead className="text-white">Muuzaji</TableHead>
-                <TableHead className="text-right text-white">Idadi</TableHead>
-                <TableHead className="text-right text-white">Bei (kwa Kimoja)</TableHead>
-                <TableHead className="text-center text-white">Kitendo</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {playerListings.map((listing) => (
-                <TableRow key={listing.id} className="border-gray-700 hover:bg-gray-700/50">
-                  <TableCell className="font-medium">{listing.commodity}</TableCell>
-                  <TableCell className="text-gray-400">{listing.seller}</TableCell>
-                  <TableCell className="text-right font-mono">{listing.quantity.toLocaleString()}</TableCell>
-                  <TableCell className="text-right font-mono">${listing.price.toFixed(2)}</TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        className="bg-green-600 text-white hover:bg-green-700"
-                    >
-                      Nunua
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 px-4 sm:px-6">
+        {/* Left Column: Product Selection */}
+        <div className="lg:col-span-3">
+          <Card className="bg-gray-800/60 border-gray-700 h-full">
+            <ScrollArea className="h-[75vh]">
+              <CardContent className="p-2">
+                {Object.entries(productCategories).map(([category, products]) => (
+                  <div key={category} className="mb-4">
+                    <h3 className="font-bold text-sm text-gray-400 px-2 mb-2">{category}</h3>
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-4 gap-2">
+                      {products.map(product => (
+                        <button
+                          key={product.id}
+                          onClick={() => setSelectedProduct(product)}
+                          className={cn(
+                            "aspect-square p-1 rounded-md flex items-center justify-center border-2",
+                            selectedProduct?.id === product.id ? "bg-blue-600/50 border-blue-400" : "bg-gray-700/50 border-gray-600 hover:bg-gray-700"
+                          )}
+                          title={product.name}
+                        >
+                          <Image src={product.imageUrl} alt={product.name} width={48} height={48} className="object-contain" data-ai-hint={product.imageHint} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </ScrollArea>
+          </Card>
+        </div>
+
+        {/* Center & Right Column */}
+        <div className="lg:col-span-9">
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader className="border-b border-gray-700 p-3">
+                    <div className="flex items-center justify-between">
+                         <Button variant="ghost" size="icon"><ChevronsLeft /></Button>
+                         <div className="text-center">
+                            {selectedProduct && <Image src={selectedProduct.imageUrl} alt={selectedProduct.name} width={40} height={40} className="mx-auto" data-ai-hint={selectedProduct.imageHint} />}
+                            <div className="flex items-center gap-2">
+                                <CardTitle className="text-lg">{selectedProduct?.name || "Select Product"}</CardTitle>
+                                <HelpCircle className="h-4 w-4 text-gray-400 cursor-pointer" />
+                            </div>
+                         </div>
+                         <Button variant="ghost" size="icon"><ChevronsRight /></Button>
+                    </div>
+                    <div className="flex justify-center items-center gap-2 pt-2">
+                        <Input type="number" placeholder="0" className="w-24 bg-gray-700 border-gray-600 text-right" />
+                        <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4 text-yellow-400" />
+                            <Input type="number" placeholder="0" className="w-16 bg-gray-700 border-gray-600 text-right" />
+                        </div>
+                        <Button className="bg-gray-600 hover:bg-gray-500">BUY</Button>
+                    </div>
+                </CardHeader>
+                 <CardContent className="p-0">
+                    <ScrollArea className="h-[60vh]">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="border-gray-700">
+                                    <TableHead className="text-white w-2/5">Seller</TableHead>
+                                    <TableHead className="text-right text-white">Quality</TableHead>
+                                    <TableHead className="text-right text-white">Amount</TableHead>
+                                    <TableHead className="text-right text-white">Price (Total)</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                            {filteredListings.map((listing) => (
+                                <TableRow key={listing.id} className="border-gray-700 hover:bg-gray-700/50 cursor-pointer">
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-2">
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src={listing.avatar} alt={listing.seller} data-ai-hint={listing.imageHint} />
+                                                <AvatarFallback>{listing.seller.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <span>{listing.seller}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-1">
+                                            <span>{listing.quality}</span>
+                                            <Star className="h-4 w-4 text-yellow-400" />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right font-mono">{listing.quantity.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-mono">${listing.price.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</TableCell>
+                                </TableRow>
+                            ))}
+                            </TableBody>
+                        </Table>
+                         {filteredListings.length === 0 && (
+                            <div className="flex items-center justify-center h-48 text-gray-400">
+                                <p>No players are selling {selectedProduct?.name || 'this item'} currently.</p>
+                            </div>
+                         )}
+                    </ScrollArea>
+                </CardContent>
+            </Card>
+        </div>
+      </div>
     </div>
   );
 }

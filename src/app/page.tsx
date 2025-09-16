@@ -29,8 +29,13 @@ const initialInventoryItems: InventoryItem[] = [
 ];
 
 const initialPlayerListings: PlayerListing[] = [
-    { id: 1, commodity: 'Maji', seller: 'Mkulima Hodari', quantity: 5000, price: 11.00 },
-    { id: 2, commodity: 'Yai', seller: 'Mfanyabiashara Mjanja', quantity: 10000, price: 209.50 },
+    { id: 1, commodity: 'Maji', seller: 'Flexy suyo', quantity: 450, price: 835.00, avatar: 'https://picsum.photos/seed/flexy/40/40', quality: 1, imageHint: 'player avatar' },
+    { id: 2, commodity: 'Yai', seller: 'MKG CIE', quantity: 1, price: 835.00, avatar: 'https://picsum.photos/seed/mkg/40/40', quality: 0, imageHint: 'company logo' },
+    { id: 3, commodity: 'Maji', seller: 'Atul Company', quantity: 944, price: 835.00, avatar: 'https://picsum.photos/seed/atul/40/40', quality: 0, imageHint: 'company logo' },
+    { id: 4, commodity: 'Yai', seller: 'Prometheucls co', quantity: 1969, price: 840.00, avatar: 'https://picsum.photos/seed/prom/40/40', quality: 1, imageHint: 'company logo' },
+    { id: 5, commodity: 'Mbao', seller: 'laptop si gera', quantity: 421, price: 845.00, avatar: 'https://picsum.photos/seed/laptop/40/40', quality: 4, imageHint: 'player avatar' },
+    { id: 6, commodity: 'Nondo', seller: 'Mustika70', quantity: 11964, price: 850.00, avatar: 'https://picsum.photos/seed/mustika/40/40', quality: 4, imageHint: 'company logo' },
+    { id: 7, commodity: 'Matofali', seller: 'Schreinerei', quantity: 44, price: 850.00, avatar: 'https://picsum.photos/seed/schrein/40/40', quality: 2, imageHint: 'company logo' },
 ];
 
 const BUILDING_SLOTS = 20;
@@ -250,6 +255,9 @@ export default function Home() {
         seller: 'Mchezaji', // current player
         quantity,
         price,
+        avatar: 'https://picsum.photos/seed/mchezaji/40/40',
+        quality: 5,
+        imageHint: 'player avatar'
       };
       return [newListing, ...prevListings];
     });
