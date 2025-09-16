@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { recipes, type Recipe } from './recipe-data';
 import { buildingData } from './building-data';
@@ -5,7 +6,7 @@ import {
     Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component, CookingPot,
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf, LucideIcon, 
     Milestone, Mountain, Package, Palmtree, Recycle, Shell, Ship, Shrub, Sprout,
-    Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText, ScrollText
+    Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText, ScrollText, Droplets, Zap
 } from 'lucide-react';
 
 
@@ -34,82 +35,98 @@ const getImageUrl = (name: string) => `https://picsum.photos/seed/${name.toLower
 const getImageHint = (name: string) => name.toLowerCase().split(' ').slice(0, 2).join(' ');
 
 const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
-    'Mbao': <Hammer />,
-    'Matofali': <ToyBrick />,
-    'Nondo': <Component />,
-    'Zege': <Building />,
-    'Saruji': <Building />,
-    'Mchanga': <Shell />,
-    'Mawe': <Mountain />,
-    'Kokoto': <Milestone />,
-    'Miti': <TreeDeciduous />,
-    'Madini ya chuma': <Gem />,
-    'Chuma': <Wrench />,
-    'Mbegu': <Sprout />,
-    'Maharage': <Bean />,
-    'Mchele': <Package />,
-    'Unga wa ngano': <Wheat />,
-    'Unga wa sembe': <Package />,
-    'Ndizi': <Package />,
-    'Viazi mbatata': <Package />,
-    'Mboga mboga': <Carrot />,
-    'Embe': <Apple />,
-    'Nanasi': <Palmtree />,
-    'Parachichi': <Package />,
-    'Miwa': <Shrub />,
-    'Nyasi': <Leaf />,
-    'Mbolea': <Recycle />,
-    'Zabibu': <Grape />,
-    'Apple': <Apple />,
-    'Chungwa': <Citrus />,
-    'Korosho': <Squirrel />,
-    'Karafuu': <Sun />,
-    'Pamba': <Feather />,
-    'Katani': <Package />,
-    'Yai': <Egg />,
-    'Kuku': <Feather />,
-    'Ngombe': <Package />,
-    'Nyama': <Beef />,
-    'Sukari': <Wheat />,
-    'Juice': <CookingPot />,
-    'Bwawa': <Warehouse />,
-    'Boat': <Ship />,
-    'Samaki': <Fish />,
-    'Chumvi': <Package />,
-    'Umeme': <Wind />,
-    'Maji': <GlassWater />,
-    'Mashine A1': <Wrench />,
-    'Mashine A2': <Wrench />,
-    'Mashine A3': <Wrench />,
-    'Mashine A4': <Wrench />,
-    'Mashine A5': <Wrench />,
-    'Mashine B1': <Wrench />,
-    'Mashine B2': <Wrench />,
-    'Mashine B3': <Wrench />,
-    'Mashine B4': <Wrench />,
-    'Mashine B5': <Wrench />,
-    'Mashine B6': <Wrench />,
-    'Mashine B7': <Wrench />,
-    'Mashine C1': <Wrench />,
-    'Mashine C2': <Wrench />,
-    'Leseni B1': <FileText />,
-    'Leseni B2': <FileText />,
-    'Leseni B3': <FileText />,
-    'Leseni B4': <FileText />,
-    'Leseni B5': <FileText />,
-    'Leseni B6': <FileText />,
-    'Leseni B7': <FileText />,
-    'Shaba': <Gem />,
-    'Almasi': <Gem />,
-    'Dhahabu': <Gem />,
-    'Silver': <Gem />,
-    'Ruby': <Gem />,
-    'Tanzanite': <Gem />,
-    'Mabati': <Building />,
-    'Karatasi': <ScrollText />,
-    'Cheti cha Madini': <FileText />,
-    'Default': <Package />
+    // Construction
+    'Mbao': <Hammer className="text-amber-800" />,
+    'Matofali': <ToyBrick className="text-orange-600" />,
+    'Nondo': <Component className="text-slate-500" />,
+    'Zege': <Building className="text-gray-500" />,
+    'Saruji': <Building className="text-gray-400" />,
+    'Mabati': <Building className="text-slate-400" />,
+
+    // Raw Materials (Ujenzi)
+    'Mchanga': <Shell className="text-yellow-600" />,
+    'Mawe': <Mountain className="text-gray-500" />,
+    'Kokoto': <Milestone className="text-gray-600" />,
+    'Miti': <TreeDeciduous className="text-green-700" />,
+    'Madini ya chuma': <Gem className="text-slate-600" />,
+    'Chuma': <Wrench className="text-slate-500" />,
+    
+    // Madini
+    'Shaba': <Gem className="text-orange-400" />,
+    'Almasi': <Gem className="text-cyan-400" />,
+    'Dhahabu': <Gem className="text-yellow-400" />,
+    'Silver': <Gem className="text-slate-400" />,
+    'Ruby': <Gem className="text-red-500" />,
+    'Tanzanite': <Gem className="text-purple-400" />,
+
+    // Agriculture & Food
+    'Mbegu': <Sprout className="text-green-400" />,
+    'Maharage': <Bean className="text-amber-900" />,
+    'Mchele': <Package className="text-gray-200" />,
+    'Unga wa ngano': <Wheat className="text-amber-200" />,
+    'Unga wa sembe': <Package className="text-yellow-100" />,
+    'Ndizi': <Package className="text-yellow-300" />,
+    'Viazi mbatata': <Package className="text-amber-500" />,
+    'Mboga mboga': <Carrot className="text-orange-500" />,
+    'Embe': <Apple className="text-yellow-500" />,
+    'Nanasi': <Palmtree className="text-yellow-600" />,
+    'Parachichi': <Package className="text-green-800" />,
+    'Miwa': <Shrub className="text-lime-500" />,
+    'Nyasi': <Leaf className="text-green-500" />,
+    'Mbolea': <Recycle className="text-brown-500" />,
+    'Zabibu': <Grape className="text-purple-600" />,
+    'Apple': <Apple className="text-red-600" />,
+    'Chungwa': <Citrus className="text-orange-500" />,
+    'Korosho': <Squirrel className="text-amber-700" />,
+    'Karafuu': <Sun className="text-red-900" />,
+    'Pamba': <Feather className="text-gray-200" />,
+    'Katani': <Package className="text-lime-700" />,
+    'Yai': <Egg className="text-yellow-200" />,
+    'Kuku': <Feather className="text-orange-400" />,
+    'Ngombe': <Package className="text-brown-400" />,
+    'Nyama': <Beef className="text-red-700" />,
+    'Sukari': <Wheat className="text-white" />,
+    'Juice': <CookingPot className="text-pink-500" />,
+
+    // Uvuvi
+    'Bwawa': <Warehouse className="text-blue-700" />,
+    'Boat': <Ship className="text-white" />,
+    'Samaki': <Fish className="text-cyan-500" />,
+    'Chumvi': <Package className="text-gray-300" />,
+
+    // Utilities
+    'Umeme': <Zap className="text-yellow-300" />,
+    'Maji': <Droplets className="text-blue-500" />,
+
+    // Vifaa & Nyaraka
+    'Mashine A1': <Wrench className="text-gray-400" />,
+    'Mashine A2': <Wrench className="text-gray-400" />,
+    'Mashine A3': <Wrench className="text-gray-400" />,
+    'Mashine A4': <Wrench className="text-gray-400" />,
+    'Mashine A5': <Wrench className="text-gray-400" />,
+    'Mashine B1': <Wrench className="text-gray-400" />,
+    'Mashine B2': <Wrench className="text-gray-400" />,
+    'Mashine B3': <Wrench className="text-gray-400" />,
+    'Mashine B4': <Wrench className="text-gray-400" />,
+    'Mashine B5': <Wrench className="text-gray-400" />,
+    'Mashine B6': <Wrench className="text-gray-400" />,
+    'Mashine B7': <Wrench className="text-gray-400" />,
+    'Mashine C1': <Wrench className="text-gray-400" />,
+    'Mashine C2': <Wrench className="text-gray-400" />,
+    'Leseni B1': <FileText className="text-blue-300" />,
+    'Leseni B2': <FileText className="text-blue-300" />,
+    'Leseni B3': <FileText className="text-blue-300" />,
+    'Leseni B4': <FileText className="text-blue-300" />,
+    'Leseni B5': <FileText className="text-blue-300" />,
+    'Leseni B6': <FileText className="text-blue-300" />,
+    'Leseni B7': <FileText className="text-blue-300" />,
+    'Karatasi': <ScrollText className="text-white" />,
+    'Cheti cha Madini': <FileText className="text-yellow-500" />,
+    
+    // Default
+    'Default': <Package className="text-gray-400" />
 };
+
 
 const getIcon = (name: string): React.ReactElement<LucideIcon> => {
     return itemIcons[name] || itemIcons['Default'];
