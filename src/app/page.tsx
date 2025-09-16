@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -8,11 +9,13 @@ import { Inventory, type InventoryItem } from '@/components/app/inventory';
 import { CommoditySimulator } from '@/components/app/commodity-simulator';
 import { TradeMarket, type PlayerListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
+import { HumanResources } from '@/components/app/human-resources';
 import type { Recipe } from '@/lib/recipe-data';
 import { recipes } from '@/lib/recipe-data';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data.tsx';
 import { buildingData } from '@/lib/building-data';
+import { workerData, type Worker } from '@/lib/worker-data.tsx';
 
 
 const initialInventoryItems: InventoryItem[] = [
@@ -40,7 +43,7 @@ const initialPlayerListings: PlayerListing[] = [
 
 const BUILDING_SLOTS = 20;
 
-export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'encyclopedia';
+export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'encyclopedia' | 'hr';
 
 export default function Home() {
   const [view, setView] = React.useState<View>('dashboard');
@@ -52,6 +55,42 @@ export default function Home() {
   const { toast } = useToast();
   const [money, setMoney] = React.useState(1900000);
   const [stars, setStars] = React.useState(50); // Initial stars for testing
+  
+  const [availableWorkers, setAvailableWorkers] = React.useState<Worker[]>(workerData);
+  const [hiredWorkers, setHiredWorkers] = React.useState<Worker[]>([]);
+
+  const handleHireWorker = (workerId: string) => {
+    const workerToHire = availableWorkers.find(w => w.id === workerId);
+    if (!workerToHire || money < workerToHire.salary) {
+      toast({
+        variant: "destructive",
+        title: "Haiwezekani Kuajiri",
+        description: workerToHire ? "Huna pesa za kutosha kulipa mshahara wa awali." : "Mfanyakazi hapatikani.",
+      });
+      return;
+    }
+    setMoney(prev => prev - workerToHire.salary); // Initial salary payment
+    setHiredWorkers(prev => [...prev, workerToHire]);
+    setAvailableWorkers(prev => prev.filter(w => w.id !== workerId));
+    toast({
+      title: "Umeajiri Mfanyakazi Mpya!",
+      description: `${workerToHire.name} amejiunga na timu yako.`,
+    });
+  };
+
+  const handleFireWorker = (workerId: string) => {
+    const workerToFire = hiredWorkers.find(w => w.id === workerId);
+    if (!workerToFire) return;
+
+    setHiredWorkers(prev => prev.filter(w => w.id !== workerId));
+    setAvailableWorkers(prev => [...prev, workerToFire]);
+    toast({
+      variant: 'destructive',
+      title: "Mfanyakazi Amefukuzwa",
+      description: `${workerToFire.name} hayupo tena kazini.`,
+    });
+  };
+
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
     const costs = buildingData[building.id].buildCost;
@@ -412,8 +451,34 @@ export default function Home() {
 
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [toast]);
+     // Salary payment interval (every minute)
+    const salaryInterval = setInterval(() => {
+        const totalSalary = hiredWorkers.reduce((acc, worker) => acc + worker.salary, 0);
+        if (totalSalary > 0) {
+            setMoney(prevMoney => {
+                if (prevMoney < totalSalary) {
+                    toast({
+                        variant: "destructive",
+                        title: "Pesa haitoshi kulipa mishahara!",
+                        description: `Unahitaji $${totalSalary.toLocaleString()} lakini una $${prevMoney.toLocaleString()} pekee.`
+                    });
+                    // Here you might want to add logic to fire workers automatically
+                    return prevMoney;
+                }
+                toast({
+                    title: "Mishahara Imelipwa",
+                    description: `Umelipa jumla ya $${totalSalary.toLocaleString()} kwa wafanyakazi wako.`
+                });
+                return prevMoney - totalSalary;
+            });
+        }
+    }, 60000); // Every 60 seconds (1 minute)
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(salaryInterval);
+    }
+  }, [toast, hiredWorkers]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
@@ -436,6 +501,15 @@ export default function Home() {
         {view === 'market' && <TradeMarket playerListings={marketListings} inventory={inventory} />}
         {view === 'simulator' && <CommoditySimulator />}
         {view === 'encyclopedia' && <Encyclopedia />}
+        {view === 'hr' && (
+          <HumanResources
+            availableWorkers={availableWorkers}
+            hiredWorkers={hiredWorkers}
+            money={money}
+            onHireWorker={handleHireWorker}
+            onFireWorker={handleFireWorker}
+          />
+        )}
       </main>
       <AppFooter activeView={view} setView={setView} />
     </div>
