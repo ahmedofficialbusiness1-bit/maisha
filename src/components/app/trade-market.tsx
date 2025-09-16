@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, ChevronsLeft, ChevronsRight, HelpCircle } from 'lucide-react';
+import { ArrowLeft, ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, ChevronsLeft, ChevronsRight, HelpCircle } from 'lucide-react';
 import type { InventoryItem } from './inventory';
 import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data.tsx';
 import { cn } from '@/lib/utils';
@@ -79,131 +79,151 @@ const productCategories = encyclopediaData.reduce((acc, item) => {
     return acc;
 }, {} as Record<string, EncyclopediaEntry[]>);
 
-
 interface TradeMarketProps {
   playerListings: PlayerListing[];
   inventory: InventoryItem[];
 }
 
 export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
-  const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(encyclopediaData[0] || null);
+  const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
+  const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
 
   const filteredListings = playerListings.filter(listing => listing.commodity === selectedProduct?.name);
   
   const handleProductSelect = (product: EncyclopediaEntry) => {
     setSelectedProduct(product);
+    setViewMode('exchange');
   };
+
+  const handleBackToList = () => {
+      setViewMode('list');
+      setSelectedProduct(null);
+  }
 
   return (
     <div className="flex flex-col gap-4 text-white -m-4 sm:-m-6">
       <PriceTicker inventory={inventory} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 px-4 sm:px-6">
-        {/* Left Column: Product Selection */}
-        <div className="lg:col-span-3">
-          <Card className="bg-gray-800/60 border-gray-700 h-full">
-            <ScrollArea className="h-[75vh]">
-              <CardContent className="p-2">
-                {Object.entries(productCategories).map(([category, products]) => (
-                  <div key={category} className="mb-4">
-                    <h3 className="font-bold text-sm text-gray-400 px-2 mb-2">{category}</h3>
-                    <div className="grid grid-cols-9 gap-2">
-                      {products.map(product => (
-                        <button
-                          key={product.id}
-                          onClick={() => handleProductSelect(product)}
-                          className={cn(
-                            "p-1 rounded-md border-2 text-center aspect-square flex flex-col items-center justify-center",
-                            selectedProduct?.id === product.id ? "bg-blue-600/50 border-blue-400" : "bg-gray-700/50 border-gray-600 hover:bg-gray-700"
-                          )}
-                          title={product.name}
-                        >
-                          <div className="h-5 w-5 flex items-center justify-center">
-                            {React.cloneElement(product.icon, { className: "h-5 w-5" })}
-                          </div>
-                          <span className="text-[10px] font-medium mt-1 block truncate">{product.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </ScrollArea>
-          </Card>
-        </div>
-
-        {/* Right Column: Buy Controls and Listings */}
-        <div className="lg:col-span-9 flex flex-col gap-4">
-            {/* Buy Controls Card */}
-            <Card className="bg-gray-800/60 border-gray-700">
-                <CardHeader>
-                    <div className="flex items-center justify-center text-center">
-                        <div>
-                            {selectedProduct && React.cloneElement(selectedProduct.icon, { className: "h-8 w-8 mx-auto" })}
-                            <div className="flex items-center gap-2">
-                                <CardTitle>{selectedProduct?.name || "Select Product"}</CardTitle>
-                                <HelpCircle className="h-4 w-4 text-gray-400 cursor-pointer" />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex justify-center items-center gap-2 pt-2">
-                        <Input type="number" placeholder="0" className="w-24 bg-gray-700 border-gray-600 text-right" />
-                        <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 text-yellow-400" />
-                            <Input type="number" placeholder="0" className="w-16 bg-gray-700 border-gray-600 text-right" />
-                        </div>
-                        <Button className="bg-gray-600 hover:bg-gray-500">BUY</Button>
-                    </div>
+      
+      {viewMode === 'list' && (
+        <div className="p-4 sm:p-6">
+            <Card className="bg-gray-800/60 border-gray-700 h-full">
+                 <CardHeader>
+                    <CardTitle>Trade Market</CardTitle>
+                    <CardDescription>Select a product to see exchange listings.</CardDescription>
                 </CardHeader>
-            </Card>
-
-            {/* Listings Card */}
-            <Card className="bg-gray-800/60 border-gray-700 flex-grow">
-                 <CardContent className="p-0">
-                    <ScrollArea className="h-[calc(75vh-160px)]">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="border-gray-700 sticky top-0 bg-gray-800">
-                                    <TableHead className="text-white w-2/5">Seller</TableHead>
-                                    <TableHead className="text-right text-white">Quality</TableHead>
-                                    <TableHead className="text-right text-white">Amount</TableHead>
-                                    <TableHead className="text-right text-white">Price (Total)</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                            {filteredListings.map((listing) => (
-                                <TableRow key={listing.id} className="border-gray-700 hover:bg-gray-700/50 cursor-pointer">
-                                    <TableCell className="font-medium">
-                                        <div className="flex items-center gap-2">
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage src={listing.avatar} alt={listing.seller} data-ai-hint={listing.imageHint} />
-                                                <AvatarFallback>{listing.seller.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <span>{listing.seller}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <span>{listing.quality}</span>
-                                            <Star className="h-4 w-4 text-yellow-400" />
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right font-mono">{listing.quantity.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right font-mono">${listing.price.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</TableCell>
-                                </TableRow>
-                            ))}
-                            </TableBody>
-                        </Table>
-                         {filteredListings.length === 0 && (
-                            <div className="flex items-center justify-center h-48 text-gray-400">
-                                <p>No players are selling {selectedProduct?.name || 'this item'} currently.</p>
+                <ScrollArea className="h-[70vh]">
+                <CardContent className="p-2">
+                    {Object.entries(productCategories).map(([category, products]) => (
+                    <div key={category} className="mb-4">
+                        <h3 className="font-bold text-sm text-gray-400 px-2 mb-2">{category}</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+                        {products.map(product => (
+                            <button
+                            key={product.id}
+                            onClick={() => handleProductSelect(product)}
+                            className="p-3 rounded-lg border-2 text-center flex flex-col items-center justify-center bg-gray-700/50 border-gray-600 hover:bg-blue-600/30 hover:border-blue-500 transition-colors"
+                            title={product.name}
+                            >
+                            <div className="h-8 w-8 flex items-center justify-center mb-2">
+                                {React.cloneElement(product.icon, { className: "h-full w-full" })}
                             </div>
-                         )}
-                    </ScrollArea>
+                            <span className="text-xs font-semibold block truncate w-full">{product.name}</span>
+                            </button>
+                        ))}
+                        </div>
+                    </div>
+                    ))}
                 </CardContent>
+                </ScrollArea>
             </Card>
         </div>
-      </div>
+      )}
+
+      {viewMode === 'exchange' && selectedProduct && (
+         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 px-4 sm:px-6">
+            <div className="lg:col-span-3">
+                 <Card className="bg-gray-800/60 border-gray-700 h-full">
+                     <CardHeader>
+                        <Button variant="outline" onClick={handleBackToList} className="mb-4">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to All Products
+                        </Button>
+                         <div className="text-center">
+                            {React.cloneElement(selectedProduct.icon, { className: "h-12 w-12 mx-auto mb-2" })}
+                            <CardTitle className="text-2xl">{selectedProduct.name}</CardTitle>
+                            <CardDescription>{selectedProduct.category}</CardDescription>
+                         </div>
+                     </CardHeader>
+                     <CardContent>
+                        <div className="space-y-4">
+                             <div>
+                                <Label htmlFor='buy-amount'>Amount to Buy</Label>
+                                <Input id="buy-amount" type="number" placeholder="0" className="w-full bg-gray-700 border-gray-600 mt-1" />
+                            </div>
+                             <div>
+                                <Label htmlFor='min-quality'>Min Quality</Label>
+                                <div className="flex items-center gap-1 mt-1">
+                                    <Star className="h-4 w-4 text-yellow-400" />
+                                    <Input id="min-quality" type="number" placeholder="0" className="w-full bg-gray-700 border-gray-600" />
+                                </div>
+                            </div>
+                            <Button className="w-full bg-green-600 hover:bg-green-700">BUY</Button>
+                        </div>
+                     </CardContent>
+                 </Card>
+            </div>
+            <div className="lg:col-span-9 flex flex-col gap-4">
+                <Card className="bg-gray-800/60 border-gray-700 flex-grow">
+                     <CardHeader>
+                        <CardTitle>Exchange for {selectedProduct.name}</CardTitle>
+                        <CardDescription>Showing all active player listings.</CardDescription>
+                     </CardHeader>
+                     <CardContent className="p-0">
+                        <ScrollArea className="h-[65vh]">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="border-gray-700 sticky top-0 bg-gray-800/95 backdrop-blur-sm">
+                                        <TableHead className="text-white w-2/5">Seller</TableHead>
+                                        <TableHead className="text-right text-white">Quality</TableHead>
+                                        <TableHead className="text-right text-white">Amount</TableHead>
+                                        <TableHead className="text-right text-white">Price (Total)</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                {filteredListings.map((listing) => (
+                                    <TableRow key={listing.id} className="border-gray-700 hover:bg-gray-700/50 cursor-pointer">
+                                        <TableCell className="font-medium">
+                                            <div className="flex items-center gap-2">
+                                                <Avatar className="h-8 w-8">
+                                                    <AvatarImage src={listing.avatar} alt={listing.seller} data-ai-hint={listing.imageHint} />
+                                                    <AvatarFallback>{listing.seller.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <span>{listing.seller}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <span>{listing.quality}</span>
+                                                <Star className="h-4 w-4 text-yellow-400" />
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right font-mono">{listing.quantity.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-mono">${listing.price.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</TableCell>
+                                    </TableRow>
+                                ))}
+                                </TableBody>
+                            </Table>
+                             {filteredListings.length === 0 && (
+                                <div className="flex items-center justify-center h-48 text-gray-400">
+                                    <p>No players are selling {selectedProduct?.name || 'this item'} currently.</p>
+                                </div>
+                             )}
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
