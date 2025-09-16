@@ -113,8 +113,8 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                           )}
                           title={product.name}
                         >
-                          <div className="h-8 w-8 flex items-center justify-center">
-                            {React.cloneElement(product.icon, { className: "h-6 w-6" })}
+                          <div className="h-7 w-7 flex items-center justify-center">
+                            {React.cloneElement(product.icon, { className: "h-5 w-5" })}
                           </div>
                           <span className="text-xs font-medium mt-1 block truncate">{product.name}</span>
                         </button>
