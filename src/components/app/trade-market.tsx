@@ -31,6 +31,7 @@ export type PlayerListing = {
 
 function PriceTicker({ inventory }: { inventory: InventoryItem[] }) {
   const tickerItems = React.useMemo(() => {
+    if (!inventory || inventory.length === 0) return [];
     const items = inventory.map((item, index) => ({
       commodity: item.item,
       price: item.marketPrice,
@@ -101,18 +102,19 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                 {Object.entries(productCategories).map(([category, products]) => (
                   <div key={category} className="mb-4">
                     <h3 className="font-bold text-sm text-gray-400 px-2 mb-2">{category}</h3>
-                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {products.map(product => (
                         <button
                           key={product.id}
                           onClick={() => setSelectedProduct(product)}
                           className={cn(
-                            "aspect-square p-1 rounded-md flex items-center justify-center border-2",
+                            "p-2 rounded-md border-2 text-center",
                             selectedProduct?.id === product.id ? "bg-blue-600/50 border-blue-400" : "bg-gray-700/50 border-gray-600 hover:bg-gray-700"
                           )}
                           title={product.name}
                         >
-                          <Image src={product.imageUrl} alt={product.name} width={48} height={48} className="object-contain" data-ai-hint={product.imageHint} />
+                          <Image src={product.imageUrl} alt={product.name} width={48} height={48} className="object-contain mx-auto" data-ai-hint={product.imageHint} />
+                          <span className="text-xs font-medium mt-1 block truncate">{product.name}</span>
                         </button>
                       ))}
                     </div>
