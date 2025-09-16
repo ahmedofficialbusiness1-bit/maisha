@@ -9,6 +9,31 @@ export type Recipe = {
   requiredWorkers: { specialty: WorkerSpecialty; count: number }[];
 };
 
+const machineRecipeInputs = [
+    { name: 'Chuma', quantity: 10 },
+    { name: 'Nondo', quantity: 5 },
+    { name: 'Mabati', quantity: 5 },
+    { name: 'Saruji', quantity: 10 },
+    { name: 'Matofali', quantity: 20 },
+    { name: 'Maji', quantity: 10 },
+    { name: 'Umeme', quantity: 10 },
+    { name: 'Mbao', quantity: 10 },
+];
+
+const machineRecipeWorkers = [
+    { specialty: 'Uzalishaji' as WorkerSpecialty, count: 5 },
+    { specialty: 'Usimamizi' as WorkerSpecialty, count: 2 },
+];
+
+const licenseRecipeInputs = [
+    { name: 'Karatasi', quantity: 100 },
+    { name: 'Cheti cha Madini', quantity: 1 },
+];
+
+const licenseRecipeWorkers = [
+    { specialty: 'Usimamizi' as WorkerSpecialty, count: 1 },
+];
+
 export const recipes: Recipe[] = [
   // Shamba Recipes
   { id: 'mbegu', buildingId: 'shamba', output: { name: 'Mbegu', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 1 }], cost: 5, requiredWorkers: [{ specialty: 'Kilimo', count: 1 }] },
@@ -74,6 +99,27 @@ export const recipes: Recipe[] = [
   { id: 'tanzanite', buildingId: 'uchimbaji_tanzanite', output: { name: 'Tanzanite', quantity: 1 }, inputs: [{ name: 'Mashine B4', quantity: 1}, { name: 'Maji', quantity: 1}, { name: 'Umeme', quantity: 1}, { name: 'Leseni B4', quantity: 1}], cost: 4500, requiredWorkers: [{ specialty: 'Uchimbaji', count: 5}] },
   { id: 'shaba', buildingId: 'uchimbaji_shaba', output: { name: 'Shaba', quantity: 1 }, inputs: [{ name: 'Mashine B6', quantity: 1}, { name: 'Maji', quantity: 1}, { name: 'Umeme', quantity: 1}, { name: 'Leseni B6', quantity: 1}], cost: 1000, requiredWorkers: [{ specialty: 'Uchimbaji', count: 2}] },
 
-];
+  // New Factories
+  // Kiwanda cha Karatasi
+  { id: 'karatasi', buildingId: 'kiwanda_cha_karatasi', output: { name: 'Karatasi', quantity: 10 }, inputs: [{ name: 'Mbao', quantity: 2 }, { name: 'Maji', quantity: 5 }, { name: 'Umeme', quantity: 2 }], cost: 100, requiredWorkers: [{ specialty: 'Uzalishaji', count: 2 }] },
 
-    
+  // Kiwanda cha Mashine
+  ...['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'C1', 'C2'].map(m => ({
+    id: `mashine_${m.toLowerCase()}`,
+    buildingId: 'kiwanda_cha_mashine',
+    output: { name: `Mashine ${m}`, quantity: 1 },
+    inputs: machineRecipeInputs,
+    cost: 5000,
+    requiredWorkers: machineRecipeWorkers,
+  })),
+
+  // Ofisi ya Leseni
+  ...['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'].map(l => ({
+    id: `leseni_${l.toLowerCase()}`,
+    buildingId: 'ofisi_ya_leseni',
+    output: { name: `Leseni ${l}`, quantity: 1 },
+    inputs: licenseRecipeInputs,
+    cost: 10000,
+    requiredWorkers: licenseRecipeWorkers,
+  })),
+];

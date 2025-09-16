@@ -5,7 +5,7 @@ import {
     Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component, CookingPot,
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf, LucideIcon, 
     Milestone, Mountain, Package, Palmtree, Recycle, Shell, Ship, Shrub, Sprout,
-    Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText
+    Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText, ScrollText
 } from 'lucide-react';
 
 
@@ -79,10 +79,10 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Umeme': <Wind />,
     'Maji': <GlassWater />,
     'Mashine A1': <Wrench />,
-    'Mashine A2': <Component />,
-    'Mashine A3': <Factory />,
-    'Mashine A4': <Component />,
-    'Mashine A5': <Component />,
+    'Mashine A2': <Wrench />,
+    'Mashine A3': <Wrench />,
+    'Mashine A4': <Wrench />,
+    'Mashine A5': <Wrench />,
     'Mashine B1': <Wrench />,
     'Mashine B2': <Wrench />,
     'Mashine B3': <Wrench />,
@@ -106,6 +106,8 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Ruby': <Gem />,
     'Tanzanite': <Gem />,
     'Mabati': <Building />,
+    'Karatasi': <ScrollText />,
+    'Cheti cha Madini': <FileText />,
     'Default': <Package />
 };
 
@@ -168,6 +170,8 @@ allItemNames.forEach(itemName => {
             estimatedCost = 5000; // Generic machine cost
         } else if (itemName.includes('Leseni')) {
             estimatedCost = 10000;
+        } else if (itemName === 'Cheti cha Madini') {
+            estimatedCost = 25000;
         }
         else {
             Object.values(buildingData).forEach(b => {
@@ -199,7 +203,7 @@ allItemNames.forEach(itemName => {
 
 
 // Group items by category for the market view
-const categoryOrder = ['Construction', 'Vifaa', 'Madini', 'Raw Material', 'Agriculture', 'Food', 'Product'];
+const categoryOrder = ['Construction', 'Vifaa', 'Documents', 'Madini', 'Raw Material', 'Agriculture', 'Food', 'Product'];
 const itemCategorization: Record<string, string> = {
     'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction', 'Mabati': 'Construction',
     'Saruji': 'Construction', 'Mchanga': 'Construction', 'Mawe': 'Construction', 'Kokoto': 'Construction',
@@ -215,11 +219,18 @@ const itemCategorization: Record<string, string> = {
     'Sukari': 'Food', 'Juice': 'Food', 'Bwawa': 'Vifaa', 'Boat': 'Vifaa',
     'Samaki': 'Food', 'Chumvi': 'Food',
     'Umeme': 'Raw Material', 'Maji': 'Raw Material',
-    'Mashine A1': 'Vifaa', 'Mashine A2': 'Vifaa', 'Mashine A3': 'Vifaa', 'Mashine A4': 'Vifaa', 'Mashine A5': 'Vifaa',
-    'Mashine B1': 'Vifaa', 'Mashine B2': 'Vifaa', 'Mashine B3': 'Vifaa', 'Mashine B4': 'Vifaa', 'Mashine B5': 'Vifaa', 'Mashine B6': 'Vifaa', 'Mashine B7': 'Vifaa',
-    'Mashine C1': 'Vifaa', 'Mashine C2': 'Vifaa',
-    'Leseni B1': 'Vifaa', 'Leseni B2': 'Vifaa', 'Leseni B3': 'Vifaa', 'Leseni B4': 'Vifaa', 'Leseni B5': 'Vifaa', 'Leseni B6': 'Vifaa', 'Leseni B7': 'Vifaa',
+    'Karatasi': 'Product', 'Cheti cha Madini': 'Documents',
 };
+
+// Auto-categorize Machines and Licenses
+allItemNames.forEach(itemName => {
+    if (itemName.startsWith('Mashine')) {
+        itemCategorization[itemName] = 'Vifaa';
+    }
+    if (itemName.startsWith('Leseni')) {
+        itemCategorization[itemName] = 'Documents';
+    }
+});
 
 generatedEntries.forEach(entry => {
     if (itemCategorization[entry.name]) {
@@ -242,5 +253,3 @@ export const encyclopediaData: EncyclopediaEntry[] = generatedEntries.sort((a, b
     }
     return a.name.localeCompare(b.name);
 });
-
-    

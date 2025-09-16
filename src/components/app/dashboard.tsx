@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -39,7 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { Worker } from '@/lib/worker-data';
+import type { Worker } from '@/lib/worker-data.tsx';
 
 export type BuildingType = {
   id: string;
@@ -230,6 +230,30 @@ const availableBuildings: BuildingType[] = [
         description: 'Huandaa vinywaji na vyakula.',
         image: 'https://picsum.photos/seed/restaurant/200/200',
         imageHint: 'restaurant interior'
+    },
+    {
+        id: 'kiwanda_cha_mashine',
+        name: 'Kiwanda cha Mashine',
+        icon: <Wrench className="mr-2 h-6 w-6" />,
+        description: 'Huzalisha mashine mbalimbali za uzalishaji.',
+        image: 'https://picsum.photos/seed/machine-factory/200/200',
+        imageHint: 'machine factory'
+    },
+    {
+        id: 'ofisi_ya_leseni',
+        name: 'Ofisi ya Leseni',
+        icon: <FileText className="mr-2 h-6 w-6" />,
+        description: 'Hutoa leseni mbalimbali za uendeshaji.',
+        image: 'https://picsum.photos/seed/license-office/200/200',
+        imageHint: 'government office'
+    },
+    {
+        id: 'kiwanda_cha_karatasi',
+        name: 'Kiwanda cha Karatasi',
+        icon: <ScrollText className="mr-2 h-6 w-6" />,
+        description: 'Huzalisha karatasi kutoka kwenye mbao.',
+        image: 'https://picsum.photos/seed/paper-mill/200/200',
+        imageHint: 'paper mill'
     },
 ];
 
