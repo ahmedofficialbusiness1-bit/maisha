@@ -29,6 +29,24 @@ const initialInventoryItems: InventoryItem[] = [
   { item: 'Matofali', quantity: 1000, marketPrice: 120 },
   { item: 'Nondo', quantity: 200, marketPrice: 350 },
   { item: 'Zege', quantity: 100, marketPrice: 250 },
+  // Add initial machines for testing
+  { item: 'Mashine A1', quantity: 10, marketPrice: 5000 },
+  { item: 'Mashine A2', quantity: 10, marketPrice: 5000 },
+  { item: 'Mashine A3', quantity: 10, marketPrice: 5000 },
+  { item: 'Mashine A4', quantity: 10, marketPrice: 5000 },
+  { item: 'Mashine A5', quantity: 10, marketPrice: 5000 },
+  { item: 'Mashine B7', quantity: 10, marketPrice: 5000 },
+  { item: 'Mashine C1', quantity: 10, marketPrice: 5000 },
+  { item: 'Mashine C2', quantity: 10, marketPrice: 5000 },
+  { item: 'Leseni B7', quantity: 10, marketPrice: 10000 },
+  { item: 'Shaba', quantity: 100, marketPrice: 1000 },
+  { item: 'Miti', quantity: 1000, marketPrice: 25 },
+  { item: 'Saruji', quantity: 1000, marketPrice: 80 },
+  { item: 'Chuma', quantity: 200, marketPrice: 150 },
+  { item: 'Kokoto', quantity: 1000, marketPrice: 20 },
+  { item: 'Mawe', quantity: 1000, marketPrice: 15 },
+  { item: 'Umeme', quantity: 10000, marketPrice: 10 },
+  { item: 'Mchanga', quantity: 1000, marketPrice: 20 },
 ];
 
 const initialPlayerListings: PlayerListing[] = [
@@ -528,3 +546,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

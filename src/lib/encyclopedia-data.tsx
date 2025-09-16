@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { recipes, type Recipe } from './recipe-data';
 import { buildingData } from './building-data';
@@ -6,7 +5,7 @@ import {
     Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component, CookingPot,
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf, LucideIcon, 
     Milestone, Mountain, Package, Palmtree, Recycle, Shell, Ship, Shrub, Sprout,
-    Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench
+    Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText
 } from 'lucide-react';
 
 
@@ -81,6 +80,15 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Maji': <GlassWater />,
     'Mashine A1': <Wrench />,
     'Mashine A2': <Component />,
+    'Mashine A3': <Factory />,
+    'Mashine A4': <Component />,
+    'Mashine A5': <Component />,
+    'Mashine B7': <Wrench />,
+    'Mashine C1': <Wrench />,
+    'Mashine C2': <Wrench />,
+    'Leseni B7': <FileText />,
+    'Shaba': <Gem />,
+    'Mabati': <Building />,
     'Default': <Package />
 };
 
@@ -132,10 +140,6 @@ recipes.forEach(recipe => {
 Object.values(buildingData).forEach(b => {
     b.buildCost.forEach(cost => allItemNames.add(cost.name));
 });
-// Manually add machines
-allItemNames.add('Mashine A1');
-allItemNames.add('Mashine A2');
-
 
 
 // Add entries for items that are inputs but not outputs
@@ -144,8 +148,11 @@ allItemNames.forEach(itemName => {
         // Find if this item is a build material to get an estimated cost
         let estimatedCost = 10; // Default cost
         if (itemName.includes('Mashine')) {
-            estimatedCost = itemName === 'Mashine A1' ? 5000 : 15000;
-        } else {
+            estimatedCost = 5000; // Generic machine cost
+        } else if (itemName.includes('Leseni')) {
+            estimatedCost = 10000;
+        }
+        else {
             Object.values(buildingData).forEach(b => {
                 const costItem = b.buildCost.find(c => c.name === itemName);
                 if (costItem) {
@@ -177,9 +184,9 @@ allItemNames.forEach(itemName => {
 // Group items by category for the market view
 const categoryOrder = ['Construction', 'Vifaa', 'Raw Material', 'Agriculture', 'Food', 'Product'];
 const itemCategorization: Record<string, string> = {
-    'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction',
+    'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction', 'Mabati': 'Construction',
     'Saruji': 'Construction', 'Mchanga': 'Construction', 'Mawe': 'Construction', 'Kokoto': 'Construction',
-    'Miti': 'Raw Material', 'Madini ya chuma': 'Raw Material', 'Chuma': 'Construction',
+    'Miti': 'Raw Material', 'Madini ya chuma': 'Raw Material', 'Chuma': 'Construction', 'Shaba': 'Raw Material',
     'Mbegu': 'Agriculture', 'Maharage': 'Agriculture', 'Mchele': 'Agriculture', 'Unga wa ngano': 'Food',
     'Unga wa sembe': 'Food', 'Ndizi': 'Agriculture', 'Viazi mbatata': 'Agriculture', 'Mboga mboga': 'Agriculture',
     'Embe': 'Agriculture', 'Nanasi': 'Agriculture', 'Parachichi': 'Agriculture', 'Miwa': 'Agriculture',
@@ -190,7 +197,8 @@ const itemCategorization: Record<string, string> = {
     'Sukari': 'Food', 'Juice': 'Food', 'Bwawa': 'Vifaa', 'Boat': 'Vifaa',
     'Samaki': 'Food', 'Chumvi': 'Food',
     'Umeme': 'Raw Material', 'Maji': 'Raw Material',
-    'Mashine A1': 'Vifaa', 'Mashine A2': 'Vifaa',
+    'Mashine A1': 'Vifaa', 'Mashine A2': 'Vifaa', 'Mashine A3': 'Vifaa', 'Mashine A4': 'Vifaa', 'Mashine A5': 'Vifaa', 'Mashine B7': 'Vifaa', 'Mashine C1': 'Vifaa', 'Mashine C2': 'Vifaa',
+    'Leseni B7': 'Vifaa'
 };
 
 generatedEntries.forEach(entry => {
@@ -214,3 +222,5 @@ export const encyclopediaData: EncyclopediaEntry[] = generatedEntries.sort((a, b
     }
     return a.name.localeCompare(b.name);
 });
+
+    
