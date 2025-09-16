@@ -125,10 +125,11 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
           </Card>
         </div>
 
-        {/* Center & Right Column */}
-        <div className="lg:col-span-9">
+        {/* Right Column: Buy Controls and Listings */}
+        <div className="lg:col-span-9 flex flex-col gap-4">
+            {/* Buy Controls Card */}
             <Card className="bg-gray-800/60 border-gray-700">
-                <CardHeader className="border-b border-gray-700 p-3">
+                <CardHeader>
                     <div className="flex items-center justify-between">
                          <Button variant="ghost" size="icon"><ChevronsLeft /></Button>
                          <div className="text-center">
@@ -149,11 +150,15 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                         <Button className="bg-gray-600 hover:bg-gray-500">BUY</Button>
                     </div>
                 </CardHeader>
+            </Card>
+
+            {/* Listings Card */}
+            <Card className="bg-gray-800/60 border-gray-700 flex-grow">
                  <CardContent className="p-0">
-                    <ScrollArea className="h-[60vh]">
+                    <ScrollArea className="h-[calc(75vh-160px)]">
                         <Table>
                             <TableHeader>
-                                <TableRow className="border-gray-700">
+                                <TableRow className="border-gray-700 sticky top-0 bg-gray-800">
                                     <TableHead className="text-white w-2/5">Seller</TableHead>
                                     <TableHead className="text-right text-white">Quality</TableHead>
                                     <TableHead className="text-right text-white">Amount</TableHead>
