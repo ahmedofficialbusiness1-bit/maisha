@@ -118,7 +118,7 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                     {Object.entries(productCategories).map(([category, products]) => (
                     <div key={category} className="mb-4">
                         <h3 className="font-bold text-sm text-gray-400 px-2 mb-2">{category}</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                         {products.map(product => (
                             <button
                             key={product.id}
@@ -126,7 +126,7 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                             className="p-3 rounded-lg border-2 text-center flex flex-col items-center justify-center bg-gray-700/50 border-gray-600 hover:bg-blue-600/30 hover:border-blue-500 transition-colors"
                             title={product.name}
                             >
-                            <div className="h-8 w-8 flex items-center justify-center mb-2">
+                            <div className="h-5 w-5 flex items-center justify-center mb-2">
                                 {React.cloneElement(product.icon, { className: "h-full w-full" })}
                             </div>
                             <span className="text-xs font-semibold block truncate w-full">{product.name}</span>
@@ -229,5 +229,3 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
     </div>
   );
 }
-
-    
