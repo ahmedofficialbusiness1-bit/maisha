@@ -1,3 +1,4 @@
+import * as React from 'react';
 import {
   Table,
   TableBody,
@@ -8,19 +9,8 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown } from 'lucide-react';
-
-const marketData = [
-  { commodity: 'Corn', price: 150.75, change: 1.5, changeType: 'increase' },
-  { commodity: 'Sunflower Seeds', price: 320.50, change: -0.8, changeType: 'decrease' },
-  { commodity: 'Eggs', price: 210.00, change: 2.1, changeType: 'increase' },
-  { commodity: 'Corn Flour', price: 280.25, change: 0.5, changeType: 'increase' },
-  { commodity: 'Cooking Oil', price: 550.00, change: -1.2, changeType: 'decrease' },
-  { commodity: 'Chicken Feed', price: 180.90, change: 0.2, changeType: 'increase' },
-  { commodity: 'Soybeans', price: 410.10, change: -2.5, changeType: 'decrease' },
-  { commodity: 'Crude Oil', price: 705.20, change: 1.1, changeType: 'increase' },
-  { commodity: 'Gold', price: 1805.50, change: -0.2, changeType: 'decrease' },
-];
+import { ArrowUp, ArrowDown, TrendingUp, TrendingDown } from 'lucide-react';
+import type { InventoryItem } from './inventory';
 
 export type PlayerListing = { 
   id: number; 
@@ -30,9 +20,21 @@ export type PlayerListing = {
   price: number; 
 };
 
+function PriceTicker({ inventory }: { inventory: InventoryItem[] }) {
+  const [tickerItems, setTickerItems] = React.useState<any[]>([]);
 
-function PriceTicker() {
-  const tickerItems = [...marketData, ...marketData]; // Duplicate for seamless loop
+  React.useEffect(() => {
+    const items = inventory.map((item, index) => ({
+      commodity: item.item,
+      price: item.marketPrice,
+      // Simulate change for visual effect
+      change: (Math.random() - 0.5) * 5, 
+    }));
+    // Duplicate for seamless loop
+    setTickerItems([...items, ...items]); 
+  }, [inventory]);
+
+  if(tickerItems.length === 0) return null;
 
   return (
     <div className="relative flex w-full overflow-hidden bg-gray-900/80 border-y border-gray-700 py-2">
@@ -43,15 +45,15 @@ function PriceTicker() {
             <span className="ml-2 font-mono text-white">${item.price.toFixed(2)}</span>
             <div
               className={`flex items-center ml-1 ${
-                item.changeType === 'increase' ? 'text-green-400' : 'text-red-400'
+                item.change >= 0 ? 'text-green-400' : 'text-red-400'
               }`}
             >
-              {item.changeType === 'increase' ? (
-                <ArrowUp className="h-3 w-3" />
+              {item.change >= 0 ? (
+                <TrendingUp className="h-3 w-3" />
               ) : (
-                <ArrowDown className="h-3 w-3" />
+                <TrendingDown className="h-3 w-3" />
               )}
-              <span className="ml-0.5 text-xs font-mono">{Math.abs(item.change)}%</span>
+              <span className="ml-0.5 text-xs font-mono">{Math.abs(item.change).toFixed(1)}%</span>
             </div>
           </div>
         ))}
@@ -62,12 +64,13 @@ function PriceTicker() {
 
 interface TradeMarketProps {
   playerListings: PlayerListing[];
+  inventory: InventoryItem[];
 }
 
-export function TradeMarket({ playerListings }: TradeMarketProps) {
+export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
   return (
     <div className="flex flex-col gap-4 text-white">
-      <PriceTicker />
+      <PriceTicker inventory={inventory} />
 
       <Card className="bg-gray-800/60 border-gray-700 text-white">
         <CardHeader>

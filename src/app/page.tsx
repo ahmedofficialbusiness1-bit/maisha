@@ -425,7 +425,7 @@ export default function Home() {
           />
         )}
         {view === 'inventory' && <Inventory inventoryItems={inventory} onPostToMarket={handlePostToMarket} />}
-        {view === 'market' && <TradeMarket playerListings={marketListings} />}
+        {view === 'market' && <TradeMarket playerListings={marketListings} inventory={inventory} />}
         {view === 'simulator' && <CommoditySimulator />}
         {view === 'encyclopedia' && <Encyclopedia />}
       </main>
