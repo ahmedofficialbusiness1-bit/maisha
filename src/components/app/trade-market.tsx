@@ -102,7 +102,7 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                 {Object.entries(productCategories).map(([category, products]) => (
                   <div key={category} className="mb-4">
                     <h3 className="font-bold text-sm text-gray-400 px-2 mb-2">{category}</h3>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       {products.map(product => (
                         <button
                           key={product.id}
