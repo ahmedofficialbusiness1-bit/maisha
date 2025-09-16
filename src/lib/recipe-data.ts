@@ -11,7 +11,7 @@ export type Recipe = {
 
 export const recipes: Recipe[] = [
   // Shamba Recipes
-  { id: 'mbegu', buildingId: 'shamba', output: { name: 'Mbegu', quantity: 1 }, inputs: [], cost: 5, requiredWorkers: [{ specialty: 'Kilimo', count: 1 }] },
+  { id: 'mbegu', buildingId: 'shamba', output: { name: 'Mbegu', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 1 }], cost: 5, requiredWorkers: [{ specialty: 'Kilimo', count: 1 }] },
   { id: 'maharage', buildingId: 'shamba', output: { name: 'Maharage', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 1 }, { name: 'Mbegu', quantity: 1 }], cost: 20, requiredWorkers: [{ specialty: 'Kilimo', count: 1 }] },
   { id: 'mchele', buildingId: 'shamba', output: { name: 'Mchele', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 1 }, { name: 'Mbegu', quantity: 1 }], cost: 20, requiredWorkers: [{ specialty: 'Kilimo', count: 1 }] },
   { id: 'unga_wa_ngano', buildingId: 'shamba', output: { name: 'Unga wa ngano', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 1 }, { name: 'Mbegu', quantity: 1 }], cost: 20, requiredWorkers: [{ specialty: 'Kilimo', count: 1 }] },
