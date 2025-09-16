@@ -211,7 +211,7 @@ const availableBuildings: BuildingType[] = [
         id: 'kiwanda_cha_chuma',
         name: 'Kiwanda cha Chuma',
         icon: <Factory className="mr-2 h-6 w-6" />,
-        description: 'Huzalisha nondo za chuma.',
+        description: 'Huyeyusha madini ya chuma na kuzalisha nondo.',
         image: 'https://picsum.photos/seed/steel-mill/200/200',
         imageHint: 'steel mill'
     },
@@ -379,6 +379,7 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
 
     const hasEnoughWorkers = (recipe: Recipe): { has: boolean, missing: string[] } => {
         const missing: string[] = [];
+        if (!recipe.requiredWorkers) return { has: true, missing: [] };
         const has = recipe.requiredWorkers.every(req => {
             const available = hiredWorkers.filter(w => w.specialty === req.specialty).length;
             if (available < req.count) {
@@ -707,7 +708,7 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
                             {/* Worker Requirements */}
                             <div>
                                 <h4 className='font-semibold mb-2 flex items-center gap-2'><Users className='h-4 w-4' /> Workers Required</h4>
-                                {selectedRecipe.requiredWorkers.length > 0 ? (
+                                {selectedRecipe.requiredWorkers && selectedRecipe.requiredWorkers.length > 0 ? (
                                     <ul className='text-sm space-y-1 text-gray-300 list-disc list-inside'>
                                       {selectedRecipe.requiredWorkers.map(req => {
                                         const available = hiredWorkers.filter(w => w.specialty === req.specialty).length;
