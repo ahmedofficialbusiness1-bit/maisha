@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -73,7 +73,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'shamba',
         name: 'Shamba',
-        icon: <Leaf className="mr-2" />,
+        icon: <Leaf className="mr-2 h-6 w-6" />,
         description: 'Huzalisha mazao ya kilimo na mifugo.',
         image: 'https://picsum.photos/seed/farm-land/200/200',
         imageHint: 'fertile farm'
@@ -81,7 +81,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'zizi',
         name: 'Zizi',
-        icon: <Drumstick className="mr-2" />,
+        icon: <Drumstick className="mr-2 h-6 w-6" />,
         description: 'Hufuga wanyama na kuzalisha bidhaa za mifugo.',
         image: 'https://picsum.photos/seed/animal-pen/200/200',
         imageHint: 'animal pen'
@@ -89,7 +89,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_samaki',
         name: 'Kiwanda cha Samaki',
-        icon: <GlassWater className="mr-2" />,
+        icon: <GlassWater className="mr-2 h-6 w-6" />,
         description: 'Husindika samaki na bidhaa za baharini.',
         image: 'https://picsum.photos/seed/fish-factory/200/200',
         imageHint: 'fish factory'
@@ -97,7 +97,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_mawe',
         name: 'Uchimbaji Mawe (Quarry)',
-        icon: <Mountain className="mr-2" />,
+        icon: <Mountain className="mr-2 h-6 w-6" />,
         description: 'Huchimba mawe na kokoto.',
         image: 'https://picsum.photos/seed/quarry/200/200',
         imageHint: 'stone quarry'
@@ -105,7 +105,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_mchanga',
         name: 'Uchimbaji Mchanga',
-        icon: <Mountain className="mr-2" />,
+        icon: <Mountain className="mr-2 h-6 w-6" />,
         description: 'Huchimba mchanga.',
         image: 'https://picsum.photos/seed/sand-pit/200/200',
         imageHint: 'sand pit'
@@ -113,7 +113,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_chuma',
         name: 'Uchimbaji Chuma',
-        icon: <Gem className="mr-2" />,
+        icon: <Gem className="mr-2 h-6 w-6" />,
         description: 'Huchimba madini ya chuma.',
         image: 'https://picsum.photos/seed/iron-mine/200/200',
         imageHint: 'iron mine'
@@ -121,7 +121,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_umeme',
         name: 'Kiwanda cha Umeme',
-        icon: <Zap className="mr-2" />,
+        icon: <Zap className="mr-2 h-6 w-6" />,
         description: 'Huzalisha umeme.',
         image: 'https://picsum.photos/seed/power-plant/200/200',
         imageHint: 'power plant'
@@ -129,7 +129,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_maji',
         name: 'Kiwanda cha Maji',
-        icon: <Droplets className="mr-2" />,
+        icon: <Droplets className="mr-2 h-6 w-6" />,
         description: 'Huzalisha maji safi.',
         image: 'https://picsum.photos/seed/water-plant/200/200',
         imageHint: 'water plant'
@@ -137,7 +137,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_mbao',
         name: 'Kiwanda cha Mbao',
-        icon: <Hammer className="mr-2" />,
+        icon: <Hammer className="mr-2 h-6 w-6" />,
         description: 'Husindika miti kuwa mbao.',
         image: 'https://picsum.photos/seed/lumber-mill/200/200',
         imageHint: 'lumber mill'
@@ -145,7 +145,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_saruji',
         name: 'Kiwanda cha Saruji',
-        icon: <Factory className="mr-2" />,
+        icon: <Factory className="mr-2 h-6 w-6" />,
         description: 'Huzalisha saruji.',
         image: 'https://picsum.photos/seed/cement-factory/200/200',
         imageHint: 'cement factory'
@@ -153,7 +153,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_matofali',
         name: 'Kiwanda cha Matofali',
-        icon: <ToyBrick className="mr-2" />,
+        icon: <ToyBrick className="mr-2 h-6 w-6" />,
         description: 'Huzalisha matofali na zege.',
         image: 'https://picsum.photos/seed/brick-factory/200/200',
         imageHint: 'brick factory'
@@ -161,7 +161,7 @@ const availableBuildings: BuildingType[] = [
      {
         id: 'kiwanda_cha_chuma',
         name: 'Kiwanda cha Chuma',
-        icon: <Factory className="mr-2" />,
+        icon: <Factory className="mr-2 h-6 w-6" />,
         description: 'Huzalisha nondo za chuma.',
         image: 'https://picsum.photos/seed/steel-mill/200/200',
         imageHint: 'steel mill'
@@ -169,7 +169,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_sukari',
         name: 'Kiwanda cha Sukari',
-        icon: <Wheat className="mr-2" />,
+        icon: <Wheat className="mr-2 h-6 w-6" />,
         description: 'Husindika miwa kuwa sukari.',
         image: 'https://picsum.photos/seed/sugar-factory/200/200',
         imageHint: 'sugar factory'
@@ -177,7 +177,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'mgahawa',
         name: 'Mgahawa',
-        icon: <Utensils className="mr-2" />,
+        icon: <Utensils className="mr-2 h-6 w-6" />,
         description: 'Huandaa vinywaji na vyakula.',
         image: 'https://picsum.photos/seed/restaurant/200/200',
         imageHint: 'restaurant interior'
@@ -209,6 +209,9 @@ const formatTime = (ms: number) => {
 
 export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding }: DashboardProps) {
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
+  const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
+  const [selectedBuildingForBuild, setSelectedBuildingForBuild] = React.useState<BuildingType | null>(null);
+
   const [isProductionDialogOpen, setIsProductionDialogOpen] = React.useState(false);
   const [isManagementDialogOpen, setIsManagementDialogOpen] = React.useState(false);
   const [isDemolishDialogOpen, setIsDemolishDialogOpen] = React.useState(false);
@@ -226,16 +229,28 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
 
   const handleOpenBuildDialog = (index: number) => {
     setSelectedSlotIndex(index);
+    setBuildDialogStep('list');
+    setSelectedBuildingForBuild(null);
     setIsBuildDialogOpen(true);
   };
+  
+  const handleSelectBuildingToShowDetails = (building: BuildingType) => {
+    setSelectedBuildingForBuild(building);
+    setBuildDialogStep('details');
+  };
 
-  const handleSelectBuildingToBuild = (building: BuildingType) => {
-    if (selectedSlotIndex !== null) {
-      onBuild(selectedSlotIndex, building);
+  const handleBuildDialogBack = () => {
+    setBuildDialogStep('list');
+    setSelectedBuildingForBuild(null);
+  };
+
+  const handleConfirmBuild = () => {
+    if (selectedSlotIndex !== null && selectedBuildingForBuild) {
+      onBuild(selectedSlotIndex, selectedBuildingForBuild);
     }
     setIsBuildDialogOpen(false);
-    setSelectedSlotIndex(null);
   };
+
 
   const handleOpenProductionDialog = () => {
     if (selectedSlotIndex === null) return;
@@ -349,6 +364,8 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   const upgradeCosts = selectedSlot?.building ? buildingData[selectedSlot.building.id].upgradeCost(selectedSlot.level + 1) : [];
   const canAffordUpgrade = hasEnoughMaterials(upgradeCosts);
 
+  const buildCosts = selectedBuildingForBuild ? buildingData[selectedBuildingForBuild.id].buildCost : [];
+  const canAffordBuild = hasEnoughMaterials(buildCosts);
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -427,60 +444,82 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       </div>
 
       {/* Build Dialog */}
-        <Dialog open={isBuildDialogOpen} onOpenChange={setIsBuildDialogOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white">
-              <DialogHeader>
-                <DialogTitle>Construct a Building</DialogTitle>
-                <DialogDescription>
-                  Select a building to construct on this plot. Each building has unique benefits and costs.
-                </DialogDescription>
-              </DialogHeader>
-              <ScrollArea className="max-h-[70vh] pr-4">
-                <div className="flex flex-col gap-2 pt-4">
-                  {availableBuildings.map((b) => {
-                      const costs = buildingData[b.id].buildCost;
-                      const canAfford = hasEnoughMaterials(costs);
-                      return (
-                        <div key={b.id} className='p-3 bg-gray-800/50 rounded-lg border border-gray-700'>
-                            <div className='flex items-center justify-between'>
-                                <div className='flex items-center'>
-                                  {b.icon}
-                                  <div className='text-left'>
-                                      <p className='font-semibold'>{b.name}</p>
-                                      <p className='text-xs text-gray-400'>{b.description}</p>
-                                  </div>
-                                </div>
-                                <Button
-                                  variant="secondary"
-                                  className="bg-green-600 hover:bg-green-700 text-white"
-                                  disabled={!canAfford}
-                                  onClick={() => handleSelectBuildingToBuild(b)}
-                                >
-                                  Build
-                                </Button>
-                            </div>
-                             <Separator className='my-2 bg-gray-600'/>
-                             <div className='text-xs'>
-                                <p className='font-semibold mb-1'>Gharama:</p>
-                                <div className='flex flex-wrap gap-x-4 gap-y-1'>
-                                    {costs.map(cost => {
-                                        const invItem = inventory.find(i => i.item === cost.name);
-                                        const has = invItem?.quantity || 0;
-                                        return (
-                                           <span key={cost.name} className={cn(has >= cost.quantity ? 'text-gray-300' : 'text-red-400')}>
-                                               {cost.name}: {has.toLocaleString()}/{cost.quantity.toLocaleString()}
-                                           </span>
-                                        )
-                                    })}
-                                </div>
-                             </div>
-                        </div>
-                      )
-                  })}
-                </div>
+      <Dialog open={isBuildDialogOpen} onOpenChange={setIsBuildDialogOpen}>
+          <DialogContent className="bg-gray-900 border-gray-700 text-white">
+            <DialogHeader>
+              {buildDialogStep === 'details' && selectedBuildingForBuild && (
+                <Button variant="ghost" size="icon" onClick={handleBuildDialogBack} className='absolute left-4 top-4'>
+                  <ArrowLeft />
+                </Button>
+              )}
+              <DialogTitle>
+                {buildDialogStep === 'list' ? 'Chagua Jengo' : `Jenga ${selectedBuildingForBuild?.name}`}
+              </DialogTitle>
+              <DialogDescription>
+                {buildDialogStep === 'list' 
+                  ? 'Chagua jengo unalotaka kujenga kwenye kiwanja hiki.'
+                  : 'Hakiki mahitaji na anza ujenzi.'}
+              </DialogDescription>
+            </DialogHeader>
+
+            {buildDialogStep === 'list' && (
+              <ScrollArea className="max-h-[70vh] pr-4 -mr-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4">
+                      {availableBuildings.map((b) => (
+                          <Card 
+                              key={b.id} 
+                              className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-4 text-center"
+                              onClick={() => handleSelectBuildingToShowDetails(b)}
+                          >
+                            {b.icon}
+                            <p className="font-semibold mt-2 text-sm">{b.name}</p>
+                          </Card>
+                      ))}
+                  </div>
               </ScrollArea>
-            </DialogContent>
-        </Dialog>
+            )}
+
+            {buildDialogStep === 'details' && selectedBuildingForBuild && (
+              <div className='py-4 space-y-4'>
+                  <p className='text-sm text-gray-400'>{selectedBuildingForBuild.description}</p>
+                  <Separator className='bg-gray-600'/>
+                  <div>
+                      <h3 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h3>
+                      <div className='space-y-2'>
+                          {buildCosts.map(cost => {
+                              const invItem = inventory.find(i => i.item === cost.name);
+                              const has = invItem?.quantity || 0;
+                              const needed = cost.quantity;
+                              const hasEnough = has >= needed;
+                              return (
+                                  <div key={cost.name} className={cn('flex justify-between items-center p-2 rounded-md', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
+                                      <span>{cost.name}</span>
+                                      <div className='flex items-center gap-4'>
+                                          <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                            {has.toLocaleString()} / {needed.toLocaleString()}
+                                          </span>
+                                          {!hasEnough && (
+                                            <Button size="sm" variant="secondary" className="h-7" disabled>Nunua</Button>
+                                          )}
+                                      </div>
+                                  </div>
+                              )
+                          })}
+                      </div>
+                  </div>
+                  <DialogFooter>
+                      <Button
+                          className='w-full bg-green-600 hover:bg-green-700'
+                          disabled={!canAffordBuild}
+                          onClick={handleConfirmBuild}
+                      >
+                          Jenga kwa Dakika 15
+                      </Button>
+                  </DialogFooter>
+              </div>
+            )}
+          </DialogContent>
+      </Dialog>
         
         {/* Management Dialog */}
         <Dialog open={isManagementDialogOpen} onOpenChange={setIsManagementDialogOpen}>
