@@ -29,12 +29,18 @@ export const recipes: Recipe[] = [
   { id: 'karafuu', buildingId: 'shamba', output: { name: 'Karafuu', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 1 }, { name: 'Mbegu', quantity: 1 }], cost: 50 },
   { id: 'pamba', buildingId: 'shamba', output: { name: 'Pamba', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 1 }, { name: 'Mbegu', quantity: 1 }], cost: 30 },
   { id: 'katani', buildingId: 'shamba', output: { name: 'Katani', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 1 }, { name: 'Mbegu', quantity: 1 }], cost: 30 },
-  { id: 'sukari', buildingId: 'shamba', output: { name: 'Sukari', quantity: 1 }, inputs: [{ name: 'Miwa', quantity: 5 }], cost: 80 },
-  { id: 'ngombe', buildingId: 'shamba', output: { name: 'Ngombe', quantity: 1 }, inputs: [{ name: 'Nyasi', quantity: 5 }, { name: 'Mbolea', quantity: 2 }], cost: 100 },
-  { id: 'kuku', buildingId: 'shamba', output: { name: 'Kuku', quantity: 1 }, inputs: [{ name: 'Yai', quantity: 1 }, { name: 'Mbolea', quantity: 1 }], cost: 50 },
-  { id: 'yai', buildingId: 'shamba', output: { name: 'Yai', quantity: 1 }, inputs: [{ name: 'Mbolea', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 30 },
-  { id: 'juice', buildingId: 'shamba', output: { name: 'Juice', quantity: 1 }, inputs: [{ name: 'Embe', quantity: 1 }, { name: 'Nanasi', quantity: 1 }, { name: 'Parachichi', quantity: 1 }, { name: 'Sukari', quantity: 1 }], cost: 150 },
-  { id: 'nyama', buildingId: 'shamba', output: { name: 'Nyama', quantity: 1 }, inputs: [{ name: 'Ngombe', quantity: 1 }], cost: 50 },
+  
+  // Zizi Recipes
+  { id: 'yai', buildingId: 'zizi', output: { name: 'Yai', quantity: 1 }, inputs: [{ name: 'Mbolea', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 30 },
+  { id: 'kuku', buildingId: 'zizi', output: { name: 'Kuku', quantity: 1 }, inputs: [{ name: 'Yai', quantity: 1 }, { name: 'Mbolea', quantity: 1 }], cost: 50 },
+  { id: 'ngombe', buildingId: 'zizi', output: { name: 'Ngombe', quantity: 1 }, inputs: [{ name: 'Nyasi', quantity: 5 }, { name: 'Mbolea', quantity: 2 }], cost: 100 },
+  { id: 'nyama', buildingId: 'zizi', output: { name: 'Nyama', quantity: 1 }, inputs: [{ name: 'Ngombe', quantity: 1 }], cost: 50 },
+
+  // Kiwanda cha Sukari Recipes
+  { id: 'sukari', buildingId: 'kiwanda_cha_sukari', output: { name: 'Sukari', quantity: 1 }, inputs: [{ name: 'Miwa', quantity: 5 }], cost: 80 },
+
+  // Mgahawa Recipes
+  { id: 'juice', buildingId: 'mgahawa', output: { name: 'Juice', quantity: 1 }, inputs: [{ name: 'Embe', quantity: 1 }, { name: 'Nanasi', quantity: 1 }, { name: 'Parachichi', quantity: 1 }, { name: 'Sukari', quantity: 1 }], cost: 150 },
   
   // Kiwanda cha Samaki Recipes
   { id: 'bwawa', buildingId: 'kiwanda_cha_samaki', output: { name: 'Bwawa', quantity: 1 }, inputs: [], cost: 100 },

@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -79,9 +79,17 @@ const availableBuildings: BuildingType[] = [
         imageHint: 'fertile farm'
     },
     {
+        id: 'zizi',
+        name: 'Zizi',
+        icon: <Drumstick className="mr-2" />,
+        description: 'Hufuga wanyama na kuzalisha bidhaa za mifugo.',
+        image: 'https://picsum.photos/seed/animal-pen/200/200',
+        imageHint: 'animal pen'
+    },
+    {
         id: 'kiwanda_cha_samaki',
         name: 'Kiwanda cha Samaki',
-        icon: <Droplets className="mr-2" />,
+        icon: <GlassWater className="mr-2" />,
         description: 'Husindika samaki na bidhaa za baharini.',
         image: 'https://picsum.photos/seed/fish-factory/200/200',
         imageHint: 'fish factory'
@@ -157,6 +165,22 @@ const availableBuildings: BuildingType[] = [
         description: 'Huzalisha nondo za chuma.',
         image: 'https://picsum.photos/seed/steel-mill/200/200',
         imageHint: 'steel mill'
+    },
+    {
+        id: 'kiwanda_cha_sukari',
+        name: 'Kiwanda cha Sukari',
+        icon: <Wheat className="mr-2" />,
+        description: 'Husindika miwa kuwa sukari.',
+        image: 'https://picsum.photos/seed/sugar-factory/200/200',
+        imageHint: 'sugar factory'
+    },
+    {
+        id: 'mgahawa',
+        name: 'Mgahawa',
+        icon: <Utensils className="mr-2" />,
+        description: 'Huandaa vinywaji na vyakula.',
+        image: 'https://picsum.photos/seed/restaurant/200/200',
+        imageHint: 'restaurant interior'
     },
 ];
 
