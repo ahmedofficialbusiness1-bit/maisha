@@ -49,7 +49,7 @@ export const recipes: Recipe[] = [
   // Kiwanda cha Samaki Recipes
   { id: 'bwawa', buildingId: 'kiwanda_cha_samaki', output: { name: 'Bwawa', quantity: 1 }, inputs: [], cost: 100, requiredWorkers: [{ specialty: 'Uvuvi', count: 1 }] },
   { id: 'boat', buildingId: 'kiwanda_cha_samaki', output: { name: 'Boat', quantity: 1 }, inputs: [], cost: 200, requiredWorkers: [{ specialty: 'Uvuvi', count: 2 }] },
-  { id: 'samaki', buildingId: 'kiwanda_cha_samaki', output: { name: 'Samaki', quantity: 1 }, inputs: [{ name: 'Bwawa', quantity: 1 }, { name: 'Boat', quantity: 1 }], cost: 300, requiredWorkers: [{ specialty: 'Uvuvi', count: 1 }] },
+  { id: 'samaki', buildingId: 'kiwanda_cha_samaki', output: { name: 'Samaki', quantity: 1 }, inputs: [], cost: 300, requiredWorkers: [{ specialty: 'Uvuvi', count: 1 }] },
   { id: 'chumvi', buildingId: 'kiwanda_cha_samaki', output: { name: 'Chumvi', quantity: 1 }, inputs: [], cost: 50, requiredWorkers: [{ specialty: 'Uvuvi', count: 1 }] },
 
   // Ujenzi & Uchimbaji Recipes
@@ -59,8 +59,7 @@ export const recipes: Recipe[] = [
   { id: 'kokoto', buildingId: 'uchimbaji_mawe', output: { name: 'Kokoto', quantity: 1 }, inputs: [{ name: 'Mawe', quantity: 1 }], cost: 20, requiredWorkers: [{ specialty: 'Uzalishaji', count: 1 }] },
   { id: 'mbao', buildingId: 'kiwanda_cha_mbao', output: { name: 'Mbao', quantity: 1 }, inputs: [{ name: 'Mashine A2', quantity: 1 }, { name: 'Miti', quantity: 2 }], cost: 60, requiredWorkers: [{ specialty: 'Uzalishaji', count: 1 }] },
   { id: 'mchanga', buildingId: 'uchimbaji_mchanga', output: { name: 'Mchanga', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 1 }, { name: 'Umeme', quantity: 1 }], cost: 20, requiredWorkers: [{ specialty: 'Uchimbaji', count: 1 }] },
-  { id: 'madini_ya_chuma', buildingId: 'uchimbaji_chuma', output: { name: 'Madini ya chuma', quantity: 1 }, inputs: [], cost: 40, requiredWorkers: [{ specialty: 'Uchimbaji', count: 2 }] },
-  { id: 'chuma', buildingId: 'kiwanda_cha_chuma', output: { name: 'Chuma', quantity: 1 }, inputs: [{ name: 'Mashine B7', quantity: 1 }, {name: 'Madini ya chuma', quantity: 2}, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }, { name: 'Leseni B7', quantity: 1 }], cost: 150, requiredWorkers: [{ specialty: 'Uzalishaji', count: 2 }] },
+  { id: 'chuma', buildingId: 'uchimbaji_chuma', output: { name: 'Chuma', quantity: 1 }, inputs: [{ name: 'Mashine B7', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }, { name: 'Leseni B7', quantity: 1 }], cost: 150, requiredWorkers: [{ specialty: 'Uzalishaji', count: 2 }] },
   { id: 'nondo', buildingId: 'kiwanda_cha_chuma', output: { name: 'Nondo', quantity: 1 }, inputs: [{ name: 'Mashine A4', quantity: 1 }, { name: 'Chuma', quantity: 2 }, { name: 'Umeme', quantity: 1 }], cost: 350, requiredWorkers: [{ specialty: 'Uzalishaji', count: 2 }] },
   { id: 'saruji', buildingId: 'kiwanda_cha_saruji', output: { name: 'Saruji', quantity: 1 }, inputs: [{ name: 'Mchanga', quantity: 2 }, { name: 'Maji', quantity: 1 }], cost: 80, requiredWorkers: [{ specialty: 'Uzalishaji', count: 1 }] },
   { id: 'matofali', buildingId: 'kiwanda_cha_matofali', output: { name: 'Matofali', quantity: 1 }, inputs: [{ name: 'Mashine A1', quantity: 1 }, { name: 'Saruji', quantity: 1 }, { name: 'Mchanga', quantity: 2 }, { name: 'Maji', quantity: 1 }, { name: 'Umeme', quantity: 1 }], cost: 120, requiredWorkers: [{ specialty: 'Uzalishaji', count: 1 }] },
