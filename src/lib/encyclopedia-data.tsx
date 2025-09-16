@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { recipes, type Recipe } from './recipe-data';
 import { buildingData } from './building-data';
@@ -78,6 +79,8 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Chumvi': <Package />,
     'Umeme': <Wind />,
     'Maji': <GlassWater />,
+    'Mashine A1': <Wrench />,
+    'Mashine A2': <Component />,
     'Default': <Package />
 };
 
@@ -129,6 +132,10 @@ recipes.forEach(recipe => {
 Object.values(buildingData).forEach(b => {
     b.buildCost.forEach(cost => allItemNames.add(cost.name));
 });
+// Manually add machines
+allItemNames.add('Mashine A1');
+allItemNames.add('Mashine A2');
+
 
 
 // Add entries for items that are inputs but not outputs
@@ -136,20 +143,24 @@ allItemNames.forEach(itemName => {
     if (!generatedEntries.some(entry => entry.name === itemName)) {
         // Find if this item is a build material to get an estimated cost
         let estimatedCost = 10; // Default cost
-        Object.values(buildingData).forEach(b => {
-            const costItem = b.buildCost.find(c => c.name === itemName);
-            if (costItem) {
-                // A very rough estimation, can be refined
-                estimatedCost = Math.max(estimatedCost, costItem.quantity / 2);
-            }
-        });
+        if (itemName.includes('Mashine')) {
+            estimatedCost = itemName === 'Mashine A1' ? 5000 : 15000;
+        } else {
+            Object.values(buildingData).forEach(b => {
+                const costItem = b.buildCost.find(c => c.name === itemName);
+                if (costItem) {
+                    // A very rough estimation, can be refined
+                    estimatedCost = Math.max(estimatedCost, costItem.quantity * 5);
+                }
+            });
+        }
 
 
         const entry: EncyclopediaEntry = {
             id: itemName.toLowerCase().replace(/'/g, '').replace(/\s+/g, '_'),
             name: itemName,
             category: "Raw Material",
-            description: `A fundamental resource used in production. It may be produced or sourced from suppliers.`,
+            description: `A fundamental resource or piece of equipment used in production. It may be produced or sourced from suppliers.`,
             imageUrl: getImageUrl(itemName),
             imageHint: getImageHint(itemName),
             icon: getIcon(itemName),
@@ -164,7 +175,7 @@ allItemNames.forEach(itemName => {
 
 
 // Group items by category for the market view
-const categoryOrder = ['Construction', 'Raw Material', 'Agriculture', 'Food', 'Product'];
+const categoryOrder = ['Construction', 'Vifaa', 'Raw Material', 'Agriculture', 'Food', 'Product'];
 const itemCategorization: Record<string, string> = {
     'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction',
     'Saruji': 'Construction', 'Mchanga': 'Construction', 'Mawe': 'Construction', 'Kokoto': 'Construction',
@@ -176,9 +187,10 @@ const itemCategorization: Record<string, string> = {
     'Chungwa': 'Agriculture', 'Korosho': 'Agriculture', 'Karafuu': 'Agriculture', 'Pamba': 'Raw Material',
     'Katani': 'Raw Material',
     'Yai': 'Food', 'Kuku': 'Agriculture', 'Ngombe': 'Agriculture', 'Nyama': 'Food',
-    'Sukari': 'Food', 'Juice': 'Food', 'Bwawa': 'Raw Material', 'Boat': 'Raw Material',
+    'Sukari': 'Food', 'Juice': 'Food', 'Bwawa': 'Vifaa', 'Boat': 'Vifaa',
     'Samaki': 'Food', 'Chumvi': 'Food',
     'Umeme': 'Raw Material', 'Maji': 'Raw Material',
+    'Mashine A1': 'Vifaa', 'Mashine A2': 'Vifaa',
 };
 
 generatedEntries.forEach(entry => {
