@@ -79,7 +79,7 @@ const productCategories = encyclopediaData.reduce((acc, item) => {
     return acc;
 }, {} as Record<string, EncyclopediaEntry[]>);
 
-const allProducts = encyclopediaData;
+const allProducts = Object.values(productCategories).flat();
 
 interface TradeMarketProps {
   playerListings: PlayerListing[];
@@ -111,6 +111,7 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
         productRefs.current[selectedProduct.id]?.scrollIntoView({
             behavior: 'smooth',
             block: 'nearest',
+            inline: 'start',
         });
     }
   }, [selectedProduct]);
@@ -135,7 +136,7 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                           ref={(el) => productRefs.current[product.id] = el}
                           onClick={() => handleProductSelect(product)}
                           className={cn(
-                            "p-2 rounded-md border-2 text-center aspect-square flex flex-col items-center justify-center",
+                            "p-1 rounded-md border-2 text-center aspect-square flex flex-col items-center justify-center",
                             selectedProduct?.id === product.id ? "bg-blue-600/50 border-blue-400" : "bg-gray-700/50 border-gray-600 hover:bg-gray-700"
                           )}
                           title={product.name}
@@ -143,7 +144,7 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                           <div className="h-5 w-5 flex items-center justify-center">
                             {React.cloneElement(product.icon, { className: "h-5 w-5" })}
                           </div>
-                          <span className="text-xs font-medium mt-1 block truncate">{product.name}</span>
+                          <span className="text-[10px] font-medium mt-1 block truncate">{product.name}</span>
                         </button>
                       ))}
                     </div>
