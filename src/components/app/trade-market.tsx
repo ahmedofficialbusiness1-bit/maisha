@@ -79,15 +79,41 @@ const productCategories = encyclopediaData.reduce((acc, item) => {
     return acc;
 }, {} as Record<string, EncyclopediaEntry[]>);
 
+const allProducts = encyclopediaData;
+
 interface TradeMarketProps {
   playerListings: PlayerListing[];
   inventory: InventoryItem[];
 }
 
 export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
-  const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(encyclopediaData[0] || null);
+  const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(allProducts[0] || null);
+  const productRefs = React.useRef<Record<string, HTMLButtonElement | null>>({});
 
   const filteredListings = playerListings.filter(listing => listing.commodity === selectedProduct?.name);
+  
+  const handleProductSelect = (product: EncyclopediaEntry) => {
+    setSelectedProduct(product);
+  };
+  
+  const navigateProduct = (direction: 'next' | 'prev') => {
+    if (!selectedProduct) return;
+    const currentIndex = allProducts.findIndex(p => p.id === selectedProduct.id);
+    const nextIndex = direction === 'next' 
+        ? (currentIndex + 1) % allProducts.length
+        : (currentIndex - 1 + allProducts.length) % allProducts.length;
+    const nextProduct = allProducts[nextIndex];
+    setSelectedProduct(nextProduct);
+  };
+
+  React.useEffect(() => {
+    if (selectedProduct && productRefs.current[selectedProduct.id]) {
+        productRefs.current[selectedProduct.id]?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+        });
+    }
+  }, [selectedProduct]);
 
   return (
     <div className="flex flex-col gap-4 text-white -m-4 sm:-m-6">
@@ -106,14 +132,15 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                       {products.map(product => (
                         <button
                           key={product.id}
-                          onClick={() => setSelectedProduct(product)}
+                          ref={(el) => productRefs.current[product.id] = el}
+                          onClick={() => handleProductSelect(product)}
                           className={cn(
                             "p-2 rounded-md border-2 text-center aspect-square flex flex-col items-center justify-center",
                             selectedProduct?.id === product.id ? "bg-blue-600/50 border-blue-400" : "bg-gray-700/50 border-gray-600 hover:bg-gray-700"
                           )}
                           title={product.name}
                         >
-                          <div className="h-7 w-7 flex items-center justify-center">
+                          <div className="h-5 w-5 flex items-center justify-center">
                             {React.cloneElement(product.icon, { className: "h-5 w-5" })}
                           </div>
                           <span className="text-xs font-medium mt-1 block truncate">{product.name}</span>
@@ -133,15 +160,15 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                         <Button variant="ghost" size="icon"><ChevronsLeft /></Button>
+                         <Button variant="ghost" size="icon" onClick={() => navigateProduct('prev')}><ChevronsLeft /></Button>
                          <div className="text-center">
-                            {selectedProduct && React.cloneElement(selectedProduct.icon, { className: "h-8 w-8 mx-auto" })}
+                            {selectedProduct && React.cloneElement(selectedProduct.icon, { className: "h-7 w-7 mx-auto" })}
                             <div className="flex items-center gap-2">
-                                <CardTitle className="text-lg">{selectedProduct?.name || "Select Product"}</CardTitle>
+                                <CardTitle className="text-xl">{selectedProduct?.name || "Select Product"}</CardTitle>
                                 <HelpCircle className="h-4 w-4 text-gray-400 cursor-pointer" />
                             </div>
                          </div>
-                         <Button variant="ghost" size="icon"><ChevronsRight /></Button>
+                         <Button variant="ghost" size="icon" onClick={() => navigateProduct('next')}><ChevronsRight /></Button>
                     </div>
                     <div className="flex justify-center items-center gap-2 pt-2">
                         <Input type="number" placeholder="0" className="w-24 bg-gray-700 border-gray-600 text-right" />
