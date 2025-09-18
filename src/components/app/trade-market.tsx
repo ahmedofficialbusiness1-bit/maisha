@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import Image from 'next/image';
 import {
@@ -13,11 +14,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, ChevronsLeft, ChevronsRight, HelpCircle, Search } from 'lucide-react';
+import { ArrowLeft, ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, ChevronsLeft, ChevronsRight, HelpCircle, Search, FileText, Building, LandPlot, ShieldCheck, Landmark } from 'lucide-react';
 import type { InventoryItem } from './inventory';
 import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data.tsx';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 
 export type PlayerListing = {
@@ -29,6 +31,30 @@ export type PlayerListing = {
   avatar: string;
   quality: number;
   imageHint: string;
+};
+
+export type StockListing = {
+    id: string;
+    ticker: string;
+    companyName: string;
+    stockPrice: number;
+    sharesAvailable: number;
+    marketCap: number;
+    logo: string;
+    imageHint: string;
+};
+
+export type BondListing = {
+    id: number;
+    issuer: string;
+    faceValue: number;
+    couponRate: number;
+    maturityDate: string;
+    price: number;
+    quantityAvailable: number;
+    creditRating: string;
+    issuerLogo: string;
+    imageHint: string;
 };
 
 function PriceTicker({ inventory }: { inventory: InventoryItem[] }) {
@@ -83,10 +109,12 @@ const productCategories = encyclopediaData.reduce((acc, item) => {
 
 interface TradeMarketProps {
   playerListings: PlayerListing[];
+  stockListings: StockListing[];
+  bondListings: BondListing[];
   inventory: InventoryItem[];
 }
 
-export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, inventory }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -124,16 +152,13 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
     return filtered;
   }, [searchTerm]);
 
-
-  return (
-    <div className="flex flex-col gap-4 text-white -m-4 sm:-m-6">
-      <PriceTicker inventory={inventory} />
-      
-      {viewMode === 'list' && (
+  const renderCommoditiesMarket = () => (
+    <>
+    {viewMode === 'list' && (
         <div className="p-4 sm:p-6 flex flex-col gap-4">
             <Card className="bg-gray-800/60 border-gray-700">
                  <CardHeader>
-                    <CardTitle>Trade Market</CardTitle>
+                    <CardTitle>Soko la Bidhaa</CardTitle>
                     <CardDescription>Tafuta na chagua bidhaa ili kuona orodha za sokoni.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -183,7 +208,7 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                      <CardHeader>
                         <Button variant="outline" onClick={handleBackToList} className="mb-4">
                             <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to All Products
+                            Rudi kwenye Bidhaa Zote
                         </Button>
                          <div className="text-center">
                             {React.cloneElement(selectedProduct.icon, { className: "h-12 w-12 mx-auto mb-2" })}
@@ -194,17 +219,17 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                      <CardContent>
                         <div className="space-y-4">
                              <div>
-                                <Label htmlFor='buy-amount'>Amount to Buy</Label>
+                                <Label htmlFor='buy-amount'>Kiasi cha Kununua</Label>
                                 <Input id="buy-amount" type="number" placeholder="0" className="w-full bg-gray-700 border-gray-600 mt-1" />
                             </div>
                              <div>
-                                <Label htmlFor='min-quality'>Min Quality</Label>
+                                <Label htmlFor='min-quality'>Ubora wa Chini</Label>
                                 <div className="flex items-center gap-1 mt-1">
                                     <Star className="h-4 w-4 text-yellow-400" />
                                     <Input id="min-quality" type="number" placeholder="0" className="w-full bg-gray-700 border-gray-600" />
                                 </div>
                             </div>
-                            <Button className="w-full bg-green-600 hover:bg-green-700">BUY</Button>
+                            <Button className="w-full bg-green-600 hover:bg-green-700">NUNUA</Button>
                         </div>
                      </CardContent>
                  </Card>
@@ -212,18 +237,18 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
             <div className="lg:col-span-9 flex flex-col gap-4">
                 <Card className="bg-gray-800/60 border-gray-700 flex-grow">
                      <CardHeader>
-                        <CardTitle>Exchange for {selectedProduct.name}</CardTitle>
-                        <CardDescription>Showing all active player listings.</CardDescription>
+                        <CardTitle>Soko la {selectedProduct.name}</CardTitle>
+                        <CardDescription>Inaonyesha orodha zote za wachezaji.</CardDescription>
                      </CardHeader>
                      <CardContent className="p-0">
                         <ScrollArea className="h-[65vh]">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="border-gray-700 sticky top-0 bg-gray-800/95 backdrop-blur-sm">
-                                        <TableHead className="text-white w-2/5">Seller</TableHead>
-                                        <TableHead className="text-right text-white">Quality</TableHead>
-                                        <TableHead className="text-right text-white">Amount</TableHead>
-                                        <TableHead className="text-right text-white">Price (Total)</TableHead>
+                                        <TableHead className="text-white w-2/5">Muuzaji</TableHead>
+                                        <TableHead className="text-right text-white">Ubora</TableHead>
+                                        <TableHead className="text-right text-white">Kiasi</TableHead>
+                                        <TableHead className="text-right text-white">Bei (Jumla)</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -252,7 +277,7 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
                             </Table>
                              {filteredListings.length === 0 && (
                                 <div className="flex items-center justify-center h-48 text-gray-400">
-                                    <p>No players are selling {selectedProduct?.name || 'this item'} currently.</p>
+                                    <p>Hakuna wachezaji wanaouza {selectedProduct?.name || 'bidhaa hii'} kwa sasa.</p>
                                 </div>
                              )}
                         </ScrollArea>
@@ -261,6 +286,134 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
             </div>
         </div>
       )}
+    </>
+  );
+
+    const renderStocksMarket = () => (
+        <div className="p-4 sm:p-6">
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Soko la Hisa</CardTitle>
+                    <CardDescription>Nunua na uza hisa za makampuni mbalimbali yaliyosajiliwa.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="border-gray-700 hover:bg-gray-700/50">
+                                <TableHead className="text-white">Kampuni</TableHead>
+                                <TableHead className="text-right text-white">Bei ya Hisa</TableHead>
+                                <TableHead className="text-right text-white">Hisa Zinazopatikana</TableHead>
+                                <TableHead className="text-right text-white">Thamani ya Soko</TableHead>
+                                <TableHead className="text-right text-white">Vitendo</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {stockListings.map((stock) => (
+                                <TableRow key={stock.id} className="border-gray-700">
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar>
+                                                <AvatarImage src={stock.logo} alt={stock.companyName} data-ai-hint={stock.imageHint} />
+                                                <AvatarFallback>{stock.ticker.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-bold">{stock.companyName}</p>
+                                                <p className="text-xs text-gray-400">{stock.ticker}</p>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right font-mono">${stock.stockPrice.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right font-mono">{stock.sharesAvailable.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-mono">${stock.marketCap.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button size="sm" variant="secondary" className="bg-green-600 hover:bg-green-700">Nunua</Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+    );
+
+    const renderBondsMarket = () => (
+        <div className="p-4 sm:p-6">
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Soko la Hatifungani</CardTitle>
+                    <CardDescription>Wekeza kwenye hatifungani za serikali na makampuni kwa mapato ya kudumu.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="border-gray-700 hover:bg-gray-700/50">
+                                <TableHead className="text-white">Mtoaji</TableHead>
+                                <TableHead className="text-right text-white">Ukadiriaji</TableHead>
+                                <TableHead className="text-right text-white">Kiwango cha Kuponi</TableHead>
+                                <TableHead className="text-right text-white">Ukomavu</TableHead>
+                                <TableHead className="text-right text-white">Bei</TableHead>
+                                <TableHead className="text-right text-white">Vitendo</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {bondListings.map((bond) => (
+                                <TableRow key={bond.id} className="border-gray-700">
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar>
+                                                <AvatarImage src={bond.issuerLogo} alt={bond.issuer} data-ai-hint={bond.imageHint} />
+                                                <AvatarFallback>{bond.issuer.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <p className="font-bold">{bond.issuer}</p>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className={cn("flex items-center justify-end font-bold", 
+                                            bond.creditRating.startsWith('A') ? 'text-green-400' : 
+                                            bond.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
+                                        )}>
+                                            {bond.creditRating}
+                                            <ShieldCheck className="ml-1 h-4 w-4" />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right font-mono text-green-400">{bond.couponRate.toFixed(2)}%</TableCell>
+                                    <TableCell className="text-right font-mono">{new Date(bond.maturityDate).toLocaleDateString()}</TableCell>
+                                    <TableCell className="text-right font-mono">${bond.price.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button size="sm" variant="secondary" className="bg-blue-600 hover:bg-blue-700">Nunua</Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+    );
+
+  return (
+    <div className="flex flex-col gap-4 text-white -m-4 sm:-m-6">
+      <PriceTicker inventory={inventory} />
+      
+        <Tabs defaultValue="commodities" className="w-full pt-4">
+            <div className="px-4 sm:px-6">
+                <TabsList className="grid w-full grid-cols-3 bg-gray-800/80">
+                    <TabsTrigger value="commodities"><LandPlot className='mr-2 h-4 w-4'/>Bidhaa</TabsTrigger>
+                    <TabsTrigger value="stocks"><Landmark className='mr-2 h-4 w-4'/>Hisa</TabsTrigger>
+                    <TabsTrigger value="bonds"><FileText className='mr-2 h-4 w-4'/>Hatifungani</TabsTrigger>
+                </TabsList>
+            </div>
+            <TabsContent value="commodities" className="mt-4">
+                {renderCommoditiesMarket()}
+            </TabsContent>
+            <TabsContent value="stocks" className="mt-4">
+                {renderStocksMarket()}
+            </TabsContent>
+            <TabsContent value="bonds" className="mt-4">
+                {renderBondsMarket()}
+            </TabsContent>
+        </Tabs>
     </div>
   );
 }

@@ -6,8 +6,7 @@ import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot, type BuildingType } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
-import { CommoditySimulator } from '@/components/app/commodity-simulator';
-import { TradeMarket, type PlayerListing } from '@/components/app/trade-market';
+import { TradeMarket, type PlayerListing, type StockListing, type BondListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import { HumanResources } from '@/components/app/human-resources';
 import type { Recipe } from '@/lib/recipe-data';
@@ -57,6 +56,19 @@ const initialPlayerListings: PlayerListing[] = [
     { id: 7, commodity: 'Matofali', seller: 'Schreinerei', quantity: 440, price: 19.00, avatar: 'https://picsum.photos/seed/schrein/40/40', quality: 2, imageHint: 'company logo' },
 ];
 
+const initialStockListings: StockListing[] = [
+    { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, sharesAvailable: 10000, marketCap: 4507500, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo' },
+    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, sharesAvailable: 50000, marketCap: 6025000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo' },
+    { id: 'MADINI', ticker: 'MADINI', companyName: 'Madini Resources', stockPrice: 87.20, sharesAvailable: 25000, marketCap: 2180000, logo: 'https://picsum.photos/seed/madini/40/40', imageHint: 'mining company' },
+    { id: 'TEKNOLO', ticker: 'TEKNOLO', companyName: 'Teknolojia Solutions', stockPrice: 320.00, sharesAvailable: 15000, marketCap: 4800000, logo: 'https://picsum.photos/seed/teknolo/40/40', imageHint: 'tech logo' },
+];
+
+const initialBondListings: BondListing[] = [
+    { id: 1, issuer: 'Serikali ya Tanzania', faceValue: 1000, couponRate: 5.5, maturityDate: '2030-12-31', price: 980, quantityAvailable: 500, creditRating: 'A+', issuerLogo: 'https://picsum.photos/seed/tza-gov/40/40', imageHint: 'government seal' },
+    { id: 2, issuer: 'Kilimo Fresh Inc.', faceValue: 1000, couponRate: 7.2, maturityDate: '2028-06-30', price: 1010, quantityAvailable: 2000, creditRating: 'BBB', issuerLogo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo' },
+    { id: 3, issuer: 'Uchumi wa Afrika', faceValue: 5000, couponRate: 6.0, maturityDate: '2035-01-01', price: 4950, quantityAvailable: 100, creditRating: 'AA-', issuerLogo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo' },
+];
+
 const BUILDING_SLOTS = 20;
 
 export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'encyclopedia' | 'hr';
@@ -65,6 +77,8 @@ export default function Home() {
   const [view, setView] = React.useState<View>('dashboard');
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialInventoryItems);
   const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialPlayerListings);
+  const [stockListings, setStockListings] = React.useState<StockListing[]>(initialStockListings);
+  const [bondListings, setBondListings] = React.useState<BondListing[]>(initialBondListings);
   const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(
     Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 }))
   );
@@ -527,7 +541,14 @@ export default function Home() {
           />
         )}
         {view === 'inventory' && <Inventory inventoryItems={inventory} onPostToMarket={handlePostToMarket} />}
-        {view === 'market' && <TradeMarket playerListings={marketListings} inventory={inventory} />}
+        {view === 'market' && (
+          <TradeMarket 
+            playerListings={marketListings} 
+            stockListings={stockListings}
+            bondListings={bondListings}
+            inventory={inventory} 
+          />
+        )}
         {view === 'simulator' && <CommoditySimulator />}
         {view === 'encyclopedia' && <Encyclopedia />}
         {view === 'hr' && (
@@ -544,7 +565,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
-
-    
