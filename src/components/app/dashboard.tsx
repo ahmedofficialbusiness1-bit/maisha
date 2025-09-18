@@ -123,7 +123,7 @@ const availableBuildings: BuildingType[] = [
      {
         id: 'uchimbaji_almasi',
         name: 'Uchimbaji Almasi',
-        icon: <Gem className="mr-2 h-6 w-6 text-cyan-400" />,
+        icon: <Gem className="text-cyan-400" />,
         description: 'Huchimba Almasi.',
         image: 'https://picsum.photos/seed/diamond-mine/200/200',
         imageHint: 'diamond mine'
@@ -131,7 +131,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_dhahabu',
         name: 'Uchimbaji Dhahabu',
-        icon: <Gem className="mr-2 h-6 w-6 text-yellow-400" />,
+        icon: <Gem className="text-yellow-400" />,
         description: 'Huchimba Dhahabu.',
         image: 'https://picsum.photos/seed/gold-mine/200/200',
         imageHint: 'gold mine'
@@ -139,7 +139,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_silver',
         name: 'Uchimbaji Silver',
-        icon: <Gem className="mr-2 h-6 w-6 text-slate-400" />,
+        icon: <Gem className="text-slate-400" />,
         description: 'Huchimba Silver.',
         image: 'https://picsum.photos/seed/silver-mine/200/200',
         imageHint: 'silver mine'
@@ -147,7 +147,7 @@ const availableBuildings: BuildingType[] = [
      {
         id: 'uchimbaji_ruby',
         name: 'Uchimbaji Ruby',
-        icon: <Gem className="mr-2 h-6 w-6 text-red-500" />,
+        icon: <Gem className="text-red-500" />,
         description: 'Huchimba Ruby.',
         image: 'https://picsum.photos/seed/ruby-mine/200/200',
         imageHint: 'ruby mine'
@@ -155,7 +155,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_tanzanite',
         name: 'Uchimbaji Tanzanite',
-        icon: <Gem className="mr-2 h-6 w-6 text-purple-400" />,
+        icon: <Gem className="text-purple-400" />,
         description: 'Huchimba Tanzanite.',
         image: 'https://picsum.photos/seed/tanzanite-mine/200/200',
         imageHint: 'tanzanite mine'
@@ -163,7 +163,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_shaba',
         name: 'Uchimbaji Shaba',
-        icon: <Gem className="mr-2 h-6 w-6 text-orange-400" />,
+        icon: <Gem className="text-orange-400" />,
         description: 'Huchimba Shaba.',
         image: 'https://picsum.photos/seed/copper-mine/200/200',
         imageHint: 'copper mine'
@@ -171,7 +171,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_umeme',
         name: 'Kiwanda cha Umeme',
-        icon: <Zap className="mr-2 h-6 w-6 text-yellow-300" />,
+        icon: <Zap className="text-yellow-300" />,
         description: 'Huzalisha umeme.',
         image: 'https://picsum.photos/seed/power-plant/200/200',
         imageHint: 'power plant'
@@ -179,7 +179,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_maji',
         name: 'Kiwanda cha Maji',
-        icon: <Droplets className="mr-2 h-6 w-6 text-blue-500" />,
+        icon: <Droplets className="text-blue-500" />,
         description: 'Huzalisha maji safi.',
         image: 'https://picsum.photos/seed/water-plant/200/200',
         imageHint: 'water plant'
@@ -187,7 +187,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_mbao',
         name: 'Kiwanda cha Mbao',
-        icon: <Hammer className="mr-2 h-6 w-6 text-amber-800" />,
+        icon: <Hammer className="text-amber-800" />,
         description: 'Husindika miti kuwa mbao.',
         image: 'https://picsum.photos/seed/lumber-mill/200/200',
         imageHint: 'lumber mill'
@@ -195,7 +195,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_saruji',
         name: 'Kiwanda cha Saruji',
-        icon: <Factory className="mr-2 h-6 w-6 text-gray-400" />,
+        icon: <Factory className="text-gray-400" />,
         description: 'Huzalisha saruji.',
         image: 'https://picsum.photos/seed/cement-factory/200/200',
         imageHint: 'cement factory'
@@ -203,7 +203,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_matofali',
         name: 'Kiwanda cha Matofali',
-        icon: <ToyBrick className="mr-2 h-6 w-6 text-orange-600" />,
+        icon: <ToyBrick className="text-orange-600" />,
         description: 'Huzalisha matofali na zege.',
         image: 'https://picsum.photos/seed/brick-factory/200/200',
         imageHint: 'brick factory'
@@ -211,7 +211,7 @@ const availableBuildings: BuildingType[] = [
      {
         id: 'kiwanda_cha_chuma',
         name: 'Kiwanda cha Chuma',
-        icon: <Factory className="mr-2 h-6 w-6 text-slate-500" />,
+        icon: <Factory className="text-slate-500" />,
         description: 'Huyeyusha madini ya chuma na kuzalisha nondo.',
         image: 'https://picsum.photos/seed/steel-mill/200/200',
         imageHint: 'steel mill'
@@ -219,7 +219,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_sukari',
         name: 'Kiwanda cha Sukari',
-        icon: <Wheat className="mr-2 h-6 w-6 text-amber-200" />,
+        icon: <Wheat className="text-amber-200" />,
         description: 'Husindika miwa kuwa sukari.',
         image: 'https://picsum.photos/seed/sugar-factory/200/200',
         imageHint: 'sugar factory'
@@ -227,7 +227,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'mgahawa',
         name: 'Mgahawa',
-        icon: <Utensils className="mr-2 h-6 w-6 text-white" />,
+        icon: <Utensils className="text-white" />,
         description: 'Huandaa vinywaji na vyakula.',
         image: 'https://picsum.photos/seed/restaurant/200/200',
         imageHint: 'restaurant interior'
@@ -235,7 +235,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_mashine',
         name: 'Kiwanda cha Mashine',
-        icon: <Wrench className="mr-2 h-6 w-6 text-gray-400" />,
+        icon: <Wrench className="text-gray-400" />,
         description: 'Huzalisha mashine mbalimbali za uzalishaji.',
         image: 'https://picsum.photos/seed/machine-factory/200/200',
         imageHint: 'machine factory'
@@ -243,7 +243,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'ofisi_ya_leseni',
         name: 'Ofisi ya Leseni',
-        icon: <FileText className="mr-2 h-6 w-6 text-blue-300" />,
+        icon: <FileText className="text-blue-300" />,
         description: 'Hutoa leseni mbalimbali za uendeshaji.',
         image: 'https://picsum.photos/seed/license-office/200/200',
         imageHint: 'government office'
@@ -251,7 +251,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_karatasi',
         name: 'Kiwanda cha Karatasi',
-        icon: <ScrollText className="mr-2 h-6 w-6 text-white" />,
+        icon: <ScrollText className="text-white" />,
         description: 'Huzalisha karatasi kutoka kwenye mbao.',
         image: 'https://picsum.photos/seed/paper-mill/200/200',
         imageHint: 'paper mill'
@@ -259,7 +259,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'wizara_ya_madini',
         name: 'Wizara ya Madini',
-        icon: <FileText className="mr-2 h-6 w-6 text-yellow-500" />,
+        icon: <FileText className="text-yellow-500" />,
         description: 'Inatoa vyeti vya uhalali wa uchimbaji madini.',
         image: 'https://picsum.photos/seed/ministry-minerals/200/200',
         imageHint: 'government building'
@@ -483,18 +483,15 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
               key={index}
               onClick={() => handleCardClick(slot, index)}
               className={cn(
-                "flex flex-col items-center justify-center h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer"
+                "flex flex-col items-center justify-center h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square"
               )}
             >
-                <Image
-                    src={slot.building.image}
-                    alt={slot.building.name}
-                    width={200}
-                    height={200}
-                    data-ai-hint={slot.building.imageHint}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-black/50 group-hover:bg-black/70 transition-colors" />
+                <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
+                    {React.cloneElement(slot.building.icon, {
+                        className: 'w-12 h-12 opacity-80',
+                    })}
+                </div>
+                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/60 transition-colors" />
 
                 {slot.production && (
                    <div className="absolute top-2 left-2 p-1 bg-yellow-500/80 rounded-full animate-pulse">
@@ -571,7 +568,7 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
                               className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-4 text-center"
                               onClick={() => handleSelectBuildingToShowDetails(b)}
                           >
-                            {b.icon}
+                            {React.cloneElement(b.icon, { className: 'h-8 w-8' })}
                             <p className="font-semibold mt-2 text-sm">{b.name}</p>
                           </Card>
                       ))}
@@ -856,6 +853,8 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
     </div>
   );
 }
+
+    
 
     
 
