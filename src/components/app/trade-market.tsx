@@ -1,4 +1,5 @@
 
+
 import * as React from 'react';
 import Image from 'next/image';
 import {
@@ -20,6 +21,15 @@ import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-dat
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Separator } from '../ui/separator';
 
 
 export type PlayerListing = {
@@ -43,6 +53,8 @@ export type StockListing = {
     logo: string;
     imageHint: string;
     creditRating: string;
+    dailyRevenue: number;
+    dividendYield: number; // e.g., 0.015 for 1.5%
 };
 
 export type BondListing = {
@@ -113,12 +125,31 @@ interface TradeMarketProps {
   stockListings: StockListing[];
   bondListings: BondListing[];
   inventory: InventoryItem[];
+  onBuyStock: (stock: StockListing, quantity: number) => void;
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, inventory }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
+
+  const [isBuyStockDialogOpen, setIsBuyStockDialogOpen] = React.useState(false);
+  const [selectedStock, setSelectedStock] = React.useState<StockListing | null>(null);
+  const [buyStockQuantity, setBuyStockQuantity] = React.useState(1);
+
+  const handleOpenBuyStockDialog = (stock: StockListing) => {
+    setSelectedStock(stock);
+    setBuyStockQuantity(1);
+    setIsBuyStockDialogOpen(true);
+  };
+  
+  const handleConfirmBuyStock = () => {
+    if (selectedStock && buyStockQuantity > 0) {
+      onBuyStock(selectedStock, buyStockQuantity);
+      setIsBuyStockDialogOpen(false);
+    }
+  };
+
 
   const filteredListings = playerListings.filter(listing => listing.commodity === selectedProduct?.name);
   
@@ -324,7 +355,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                             </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right">
+                                     <TableCell className="text-right">
                                         <div className={cn("flex items-center justify-end font-bold", 
                                             stock.creditRating.startsWith('A') ? 'text-green-400' : 
                                             stock.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
@@ -337,7 +368,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                     <TableCell className="text-right font-mono">{stock.sharesAvailable.toLocaleString()}</TableCell>
                                     <TableCell className="text-right font-mono">${stock.marketCap.toLocaleString()}</TableCell>
                                     <TableCell className="text-right">
-                                        <Button size="sm" variant="secondary" className="bg-green-600 hover:bg-green-700">Nunua</Button>
+                                        <Button size="sm" variant="secondary" className="bg-green-600 hover:bg-green-700" onClick={() => handleOpenBuyStockDialog(stock)}>Nunua</Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -404,6 +435,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
     );
 
   return (
+    <>
     <div className="flex flex-col gap-4 text-white -m-4 sm:-m-6">
       <PriceTicker inventory={inventory} />
       
@@ -426,5 +458,50 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             </TabsContent>
         </Tabs>
     </div>
+     <Dialog open={isBuyStockDialogOpen} onOpenChange={setIsBuyStockDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Nunua Hisa za {selectedStock?.ticker}</DialogTitle>
+            <DialogDescription>
+              Weka kiasi cha hisa unachotaka kununua.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedStock && (
+             <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="quantity" className="text-right">Kiasi</Label>
+                    <Input 
+                        id="quantity" 
+                        type="number"
+                        value={buyStockQuantity}
+                        onChange={(e) => setBuyStockQuantity(Math.max(1, Math.min(Number(e.target.value), selectedStock.sharesAvailable)))}
+                        min="1"
+                        max={selectedStock.sharesAvailable}
+                        className="col-span-3 bg-gray-800 border-gray-600"
+                    />
+                </div>
+                <div className='col-span-4 text-xs text-center text-gray-400'>
+                    <p>Bei kwa Hisa: ${selectedStock.stockPrice.toFixed(2)}</p>
+                </div>
+                <Separator className="my-2 bg-gray-700"/>
+                <div className='text-center'>
+                    <p className="text-lg font-bold">Jumla ya Gharama</p>
+                    <p className='text-2xl font-mono text-green-400'>${(buyStockQuantity * selectedStock.stockPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+             </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBuyStockDialogOpen(false)}>Ghairi</Button>
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={!selectedStock || buyStockQuantity <= 0 || buyStockQuantity > selectedStock.sharesAvailable}
+              onClick={handleConfirmBuyStock}
+            >
+              Thibitisha Ununuzi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -57,12 +57,13 @@ const initialPlayerListings: PlayerListing[] = [
     { id: 7, commodity: 'Matofali', seller: 'Schreinerei', quantity: 440, price: 19.00, avatar: 'https://picsum.photos/seed/schrein/40/40', quality: 2, imageHint: 'company logo' },
 ];
 
-const initialStockListings: StockListing[] = [
-    { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, sharesAvailable: 10000, marketCap: 4507500, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+' },
-    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, sharesAvailable: 50000, marketCap: 6025000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-' },
-    { id: 'MADINI', ticker: 'MADINI', companyName: 'Madini Resources', stockPrice: 87.20, sharesAvailable: 25000, marketCap: 2180000, logo: 'https://picsum.photos/seed/madini/40/40', imageHint: 'mining company', creditRating: 'BBB' },
-    { id: 'TEKNOLO', ticker: 'TEKNOLO', companyName: 'Teknolojia Solutions', stockPrice: 320.00, sharesAvailable: 15000, marketCap: 4800000, logo: 'https://picsum.photos/seed/teknolo/40/40', imageHint: 'tech logo', creditRating: 'A+' },
+const initialCompanyData: StockListing[] = [
+    { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, sharesAvailable: 10000, marketCap: 4507500, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 500000, dividendYield: 0.015 },
+    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, sharesAvailable: 50000, marketCap: 6025000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 250000, dividendYield: 0.021 },
+    { id: 'MADINI', ticker: 'MADINI', companyName: 'Madini Resources', stockPrice: 87.20, sharesAvailable: 25000, marketCap: 2180000, logo: 'https://picsum.photos/seed/madini/40/40', imageHint: 'mining company', creditRating: 'BBB', dailyRevenue: 180000, dividendYield: 0.018 },
+    { id: 'TEKNOLO', ticker: 'TEKNOLO', companyName: 'Teknolojia Solutions', stockPrice: 320.00, sharesAvailable: 15000, marketCap: 4800000, logo: 'https://picsum.photos/seed/teknolo/40/40', imageHint: 'tech logo', creditRating: 'A+', dailyRevenue: 700000, dividendYield: 0.025 },
 ];
+
 
 const initialBondListings: BondListing[] = [
     { id: 1, issuer: 'Serikali ya Tanzania', faceValue: 1000, couponRate: 5.5, maturityDate: '2030-12-31', price: 980, quantityAvailable: 500, creditRating: 'A+', issuerLogo: 'https://picsum.photos/seed/tza-gov/40/40', imageHint: 'government seal' },
@@ -72,13 +73,18 @@ const initialBondListings: BondListing[] = [
 
 const BUILDING_SLOTS = 20;
 
+export type PlayerStock = {
+    ticker: string;
+    shares: number;
+}
+
 export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'encyclopedia' | 'hr';
 
 export default function Home() {
   const [view, setView] = React.useState<View>('dashboard');
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialInventoryItems);
   const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialPlayerListings);
-  const [stockListings, setStockListings] = React.useState<StockListing[]>(initialStockListings);
+  const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
   const [bondListings, setBondListings] = React.useState<BondListing[]>(initialBondListings);
   const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(
     Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 }))
@@ -89,6 +95,8 @@ export default function Home() {
   
   const [availableWorkers, setAvailableWorkers] = React.useState<Worker[]>(workerData);
   const [hiredWorkers, setHiredWorkers] = React.useState<Worker[]>([]);
+  
+  const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>([]);
 
   const handleHireWorker = (workerId: string) => {
     const workerToHire = availableWorkers.find(w => w.id === workerId);
@@ -414,6 +422,35 @@ export default function Home() {
         description: `Umenunua ${quantityNeeded.toLocaleString()}x ${materialName} kwa $${totalCost.toLocaleString()}.`
     });
   };
+
+  const handleBuyStock = (stock: StockListing, quantity: number) => {
+      const totalCost = stock.stockPrice * quantity;
+      if (money < totalCost) {
+        toast({ variant: 'destructive', title: 'Pesa Haitoshi', description: `Unahitaji $${totalCost.toLocaleString()} kununua hisa hizi.` });
+        return;
+      }
+
+      setMoney(prev => prev - totalCost);
+      
+      // Update player's stock portfolio
+      setPlayerStocks(prev => {
+          const existingStock = prev.find(s => s.ticker === stock.ticker);
+          if (existingStock) {
+              return prev.map(s => s.ticker === stock.ticker ? { ...s, shares: s.shares + quantity } : s);
+          } else {
+              return [...prev, { ticker: stock.ticker, shares: quantity }];
+          }
+      });
+      
+      // Update company's available shares
+      setCompanyData(prev => prev.map(c => 
+          c.ticker === stock.ticker 
+          ? { ...c, sharesAvailable: c.sharesAvailable - quantity }
+          : c
+      ));
+
+      toast({ title: 'Umefanikiwa Kununua Hisa!', description: `Umenunua hisa ${quantity.toLocaleString()} za ${stock.ticker}.` });
+  }
   
    React.useEffect(() => {
     const interval = setInterval(() => {
@@ -517,11 +554,62 @@ export default function Home() {
         }
     }, 60000); // Every 60 seconds (1 minute)
 
+    const dividendInterval = setInterval(() => {
+        let totalDividends = 0;
+        const dividendMessages: string[] = [];
+
+        playerStocks.forEach(playerStock => {
+            const company = companyData.find(c => c.ticker === playerStock.ticker);
+            if (company && playerStock.shares > 0) {
+                // Calculate dividend per share
+                // (dailyRevenue * dividendYield) / totalShares
+                const totalShares = company.sharesAvailable + playerStocks.reduce((acc, ps) => (ps.ticker === company.ticker ? acc + ps.shares : acc), 0) // This is a simplification
+                const dividendPerShare = (company.dailyRevenue * company.dividendYield) / totalShares;
+                const dividendForPlayer = dividendPerShare * playerStock.shares;
+
+                if (dividendForPlayer > 0) {
+                    totalDividends += dividendForPlayer;
+                    dividendMessages.push(`$${dividendForPlayer.toFixed(2)} from ${company.ticker}`);
+                }
+            }
+        });
+
+        if (totalDividends > 0) {
+            setMoney(prev => prev + totalDividends);
+            toast({
+                title: 'Umelipwa Gawio!',
+                description: `Umepokea jumla ya $${totalDividends.toFixed(2)}. (${dividendMessages.join(', ')})`
+            });
+        }
+    }, 2 * 60000); // Every 2 minutes to simulate a "day"
+
+    // Stock market fluctuation interval
+    const marketFluctuationInterval = setInterval(() => {
+        setCompanyData(prevData => prevData.map(company => {
+            const priceChangePercent = (Math.random() - 0.49) * 0.05; // -2.5% to +2.5%
+            const revenueChangePercent = (Math.random() - 0.45) * 0.1; // -5% to +5%
+            
+            const newPrice = Math.max(1, company.stockPrice * (1 + priceChangePercent));
+            const newRevenue = Math.max(1000, company.dailyRevenue * (1 + revenueChangePercent));
+            const newMarketCap = newPrice * (company.sharesAvailable + playerStocks.find(ps => ps.ticker === company.ticker)?.shares || 0);
+
+            return {
+                ...company,
+                stockPrice: newPrice,
+                dailyRevenue: newRevenue,
+                marketCap: newMarketCap
+            };
+        }));
+    }, 30000); // Every 30 seconds
+
+
     return () => {
       clearInterval(interval);
       clearInterval(salaryInterval);
+      clearInterval(dividendInterval);
+      clearInterval(marketFluctuationInterval);
     }
-  }, [toast, hiredWorkers]);
+  }, [toast, hiredWorkers, playerStocks, companyData]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
@@ -545,9 +633,10 @@ export default function Home() {
         {view === 'market' && (
           <TradeMarket 
             playerListings={marketListings} 
-            stockListings={stockListings}
+            stockListings={companyData}
             bondListings={bondListings}
             inventory={inventory} 
+            onBuyStock={handleBuyStock}
           />
         )}
         {view === 'simulator' && <CommoditySimulator />}
