@@ -9,9 +9,6 @@ export default async function Home() {
     redirect('/login');
   }
 
-  // Here you would fetch the user's game data from Firestore
-  // For now, we'll pass null and let the Game component handle initial state.
-  const userGameData = null;
-
-  return <Game initialData={userGameData} />;
+  // The Game component will handle its own initial data fetching or state.
+  return <Game />;
 }

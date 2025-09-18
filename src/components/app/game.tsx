@@ -100,7 +100,9 @@ export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'encyclo
 
 // This component will hold all the game logic and state.
 // `initialData` will be used to load saved game state from Firestore in the future.
-export function Game({ initialData }: { initialData: any }) {
+export function Game() {
+  // For now, we'll pass null and let the Game component handle initial state.
+  const initialData = null;
   const [view, setView] = React.useState<View>('dashboard');
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialInventoryItems);
   const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialPlayerListings);
