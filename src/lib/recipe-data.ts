@@ -100,6 +100,11 @@ export const recipes: Recipe[] = [
   { id: 'tanzanite', buildingId: 'uchimbaji_tanzanite', output: { name: 'Tanzanite', quantity: 1 }, inputs: [{ name: 'Mashine B4', quantity: 1}, { name: 'Maji', quantity: 1}, { name: 'Umeme', quantity: 1}, { name: 'Leseni B4', quantity: 1}], cost: 4500, requiredWorkers: [{ specialty: 'Uchimbaji', count: 5}] },
   { id: 'shaba', buildingId: 'uchimbaji_shaba', output: { name: 'Shaba', quantity: 1 }, inputs: [{ name: 'Mashine B6', quantity: 1}, { name: 'Maji', quantity: 1}, { name: 'Umeme', quantity: 1}, { name: 'Leseni B6', quantity: 1}], cost: 1000, requiredWorkers: [{ specialty: 'Uchimbaji', count: 2}] },
 
+  // Mafuta Recipes
+  { id: 'mafuta_ghafi', buildingId: 'uchimbaji_mafuta', output: { name: 'Mafuta Ghafi', quantity: 1 }, inputs: [{ name: 'Mashine A1', quantity: 1 }, { name: 'Maji', quantity: 1 }, { name: 'Umeme', quantity: 1 }], cost: 800, requiredWorkers: [{ specialty: 'Uchimbaji', count: 3 }] },
+  { id: 'disel', buildingId: 'kiwanda_cha_disel', output: { name: 'Disel', quantity: 1 }, inputs: [{ name: 'Mashine A2', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Mafuta Ghafi', quantity: 1 }], cost: 1200, requiredWorkers: [{ specialty: 'Uzalishaji', count: 2 }] },
+  { id: 'petrol', buildingId: 'kiwanda_cha_petrol', output: { name: 'Petrol', quantity: 1 }, inputs: [{ name: 'Mashine A3', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Mafuta Ghafi', quantity: 1 }], cost: 1500, requiredWorkers: [{ specialty: 'Uzalishaji', count: 2 }] },
+
   // Kiwanda cha Karatasi
   { id: 'karatasi', buildingId: 'kiwanda_cha_karatasi', output: { name: 'Karatasi', quantity: 10 }, inputs: [{ name: 'Mbao', quantity: 2 }, { name: 'Maji', quantity: 5 }, { name: 'Umeme', quantity: 2 }], cost: 100, requiredWorkers: [{ specialty: 'Uzalishaji', count: 2 }] },
 
@@ -160,3 +165,4 @@ export const recipes: Recipe[] = [
     
 
     
+

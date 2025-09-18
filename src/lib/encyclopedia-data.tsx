@@ -89,6 +89,11 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Sukari': <Wheat className="text-white" />,
     'Juice': <CookingPot className="text-pink-500" />,
 
+    // Mafuta
+    'Mafuta Ghafi': <Droplets className="text-gray-900" />,
+    'Disel': <Droplets className="text-gray-600" />,
+    'Petrol': <Droplets className="text-orange-500" />,
+
     // Uvuvi
     'Bwawa': <Warehouse className="text-blue-700" />,
     'Boat': <Ship className="text-white" />,
@@ -244,12 +249,13 @@ allItemNames.forEach(itemName => {
 
 
 // Group items by category for the market view
-const categoryOrder = ['Construction', 'Vifaa', 'Documents', 'Madini', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
+const categoryOrder = ['Construction', 'Vifaa', 'Documents', 'Madini', 'Mafuta', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
 const itemCategorization: Record<string, string> = {
     'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction', 'Mabati': 'Construction',
     'Saruji': 'Construction', 'Mchanga': 'Construction', 'Mawe': 'Construction', 'Kokoto': 'Construction',
     'Miti': 'Raw Material', 'Madini ya chuma': 'Raw Material', 'Chuma': 'Construction',
     'Almasi': 'Madini', 'Dhahabu': 'Madini', 'Silver': 'Madini', 'Ruby': 'Madini', 'Tanzanite': 'Madini', 'Shaba': 'Madini',
+    'Mafuta Ghafi': 'Mafuta', 'Disel': 'Mafuta', 'Petrol': 'Mafuta',
     'Mbegu': 'Agriculture', 'Maharage': 'Agriculture', 'Mchele': 'Agriculture', 'Unga wa ngano': 'Food',
     'Unga wa sembe': 'Food', 'Ndizi': 'Agriculture', 'Viazi mbatata': 'Agriculture', 'Mboga mboga': 'Agriculture',
     'Embe': 'Agriculture', 'Nanasi': 'Agriculture', 'Parachichi': 'Agriculture', 'Miwa': 'Agriculture',

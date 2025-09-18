@@ -326,6 +326,30 @@ const availableBuildings: BuildingType[] = [
         description: 'Hutengeneza vito na mapambo ya thamani.',
         image: 'https://picsum.photos/seed/goldsmith/200/200',
         imageHint: 'goldsmith workshop'
+    },
+    {
+        id: 'uchimbaji_mafuta',
+        name: 'Uchimbaji Mafuta',
+        icon: <Droplets className="text-gray-900" />,
+        description: 'Huchimba mafuta ghafi kutoka ardhini.',
+        image: 'https://picsum.photos/seed/oil-rig/200/200',
+        imageHint: 'oil rig'
+    },
+    {
+        id: 'kiwanda_cha_disel',
+        name: 'Kiwanda cha Disel',
+        icon: <Factory className="text-gray-700" />,
+        description: 'Husindika mafuta ghafi kuwa disel.',
+        image: 'https://picsum.photos/seed/diesel-factory/200/200',
+        imageHint: 'oil refinery'
+    },
+    {
+        id: 'kiwanda_cha_petrol',
+        name: 'Kiwanda cha Petrol',
+        icon: <Factory className="text-orange-700" />,
+        description: 'Husindika mafuta ghafi kuwa petroli.',
+        image: 'https://picsum.photos/seed/petrol-factory/200/200',
+        imageHint: 'oil refinery night'
     }
 ];
 
@@ -362,6 +386,9 @@ const buildingStyles: Record<string, { body: string; roof: string }> = {
     kiwanda_cha_chokaa: { body: 'bg-stone-700/80', roof: 'border-b-stone-800/90' },
     kiwanda_cha_gundi: { body: 'bg-yellow-700/80', roof: 'border-b-yellow-800/90' },
     sonara: { body: 'bg-yellow-800/80', roof: 'border-b-yellow-950/90' },
+    uchimbaji_mafuta: { body: 'bg-gray-900/80', roof: 'border-b-black/90' },
+    kiwanda_cha_disel: { body: 'bg-gray-700/80', roof: 'border-b-gray-800/90' },
+    kiwanda_cha_petrol: { body: 'bg-orange-800/80', roof: 'border-b-orange-900/90' },
     default: { body: 'bg-gray-700/80', roof: 'border-b-gray-600/90' }
 };
 
@@ -972,3 +999,4 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
     
 
     
+
