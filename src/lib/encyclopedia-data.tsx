@@ -256,21 +256,16 @@ allItemNames.forEach(itemName => {
     if (!generatedEntries.some(entry => entry.name === itemName)) {
         // Find if this item is a build material to get an estimated cost
         let estimatedCost = 10; // Default cost
-        if (itemName.includes('Mashine')) {
-            estimatedCost = 5000; // Generic machine cost
-        } else if (itemName.includes('Leseni')) {
+        if (itemName.includes('Leseni')) {
             estimatedCost = 10000;
         } else if (itemName === 'Cheti cha Madini') {
             estimatedCost = 25000;
-        }
-        else {
-            Object.values(buildingData).forEach(b => {
-                const costItem = b.buildCost.find(c => c.name === itemName);
-                if (costItem) {
-                    // A very rough estimation, can be refined
-                    estimatedCost = Math.max(estimatedCost, costItem.quantity * 5);
-                }
-            });
+        } else {
+            // Find a recipe where this item is an output to get its cost
+             const recipe = recipes.find(r => r.output.name === itemName);
+             if (recipe) {
+                estimatedCost = recipe.cost;
+             }
         }
 
 

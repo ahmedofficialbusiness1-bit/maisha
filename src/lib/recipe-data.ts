@@ -28,7 +28,6 @@ const machineRecipeWorkers = [
 
 const licenseRecipeInputs = [
     { name: 'Karatasi', quantity: 100 },
-    { name: 'Cheti cha Madini', quantity: 1 },
 ];
 
 const licenseRecipeWorkers = [
@@ -109,24 +108,30 @@ export const recipes: Recipe[] = [
   { id: 'karatasi', buildingId: 'kiwanda_cha_karatasi', output: { name: 'Karatasi', quantity: 10 }, inputs: [{ name: 'Mbao', quantity: 2 }, { name: 'Maji', quantity: 5 }, { name: 'Umeme', quantity: 2 }], cost: 1000, requiredWorkers: [{ specialty: 'Uzalishaji', count: 2 }] },
 
   // Kiwanda cha Mashine
-  ...['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'C1', 'C2'].map(m => ({
-    id: `mashine_${m.toLowerCase()}`,
-    buildingId: 'kiwanda_cha_mashine',
-    output: { name: `Mashine ${m}`, quantity: 1 },
-    inputs: machineRecipeInputs,
-    cost: 25000,
-    requiredWorkers: machineRecipeWorkers,
-  })),
+  { id: 'mashine_a1', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine A1', quantity: 1 }, inputs: machineRecipeInputs, cost: 25000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_a2', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine A2', quantity: 1 }, inputs: machineRecipeInputs, cost: 26000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_a3', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine A3', quantity: 1 }, inputs: machineRecipeInputs, cost: 27000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_a4', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine A4', quantity: 1 }, inputs: machineRecipeInputs, cost: 28000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_a5', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine A5', quantity: 1 }, inputs: machineRecipeInputs, cost: 29000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_b1', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine B1', quantity: 1 }, inputs: machineRecipeInputs, cost: 50000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_b2', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine B2', quantity: 1 }, inputs: machineRecipeInputs, cost: 51000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_b3', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine B3', quantity: 1 }, inputs: machineRecipeInputs, cost: 52000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_b4', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine B4', quantity: 1 }, inputs: machineRecipeInputs, cost: 53000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_b5', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine B5', quantity: 1 }, inputs: machineRecipeInputs, cost: 54000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_b6', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine B6', quantity: 1 }, inputs: machineRecipeInputs, cost: 55000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_b7', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine B7', quantity: 1 }, inputs: machineRecipeInputs, cost: 56000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_c1', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine C1', quantity: 1 }, inputs: machineRecipeInputs, cost: 100000, requiredWorkers: machineRecipeWorkers },
+  { id: 'mashine_c2', buildingId: 'kiwanda_cha_mashine', output: { name: 'Mashine C2', quantity: 1 }, inputs: machineRecipeInputs, cost: 110000, requiredWorkers: machineRecipeWorkers },
 
   // Ofisi ya Leseni
-  ...['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'].map(l => ({
-    id: `leseni_${l.toLowerCase()}`,
-    buildingId: 'ofisi_ya_leseni',
-    output: { name: `Leseni ${l}`, quantity: 1 },
-    inputs: licenseRecipeInputs,
-    cost: 50000,
-    requiredWorkers: licenseRecipeWorkers,
-  })),
+  { id: 'leseni_b1', buildingId: 'ofisi_ya_leseni', output: { name: 'Leseni B1', quantity: 1 }, inputs: licenseRecipeInputs, cost: 50000, requiredWorkers: licenseRecipeWorkers },
+  { id: 'leseni_b2', buildingId: 'ofisi_ya_leseni', output: { name: 'Leseni B2', quantity: 1 }, inputs: licenseRecipeInputs, cost: 50000, requiredWorkers: licenseRecipeWorkers },
+  { id: 'leseni_b3', buildingId: 'ofisi_ya_leseni', output: { name: 'Leseni B3', quantity: 1 }, inputs: licenseRecipeInputs, cost: 50000, requiredWorkers: licenseRecipeWorkers },
+  { id: 'leseni_b4', buildingId: 'ofisi_ya_leseni', output: { name: 'Leseni B4', quantity: 1 }, inputs: licenseRecipeInputs, cost: 50000, requiredWorkers: licenseRecipeWorkers },
+  { id: 'leseni_b5', buildingId: 'ofisi_ya_leseni', output: { name: 'Leseni B5', quantity: 1 }, inputs: licenseRecipeInputs, cost: 50000, requiredWorkers: licenseRecipeWorkers },
+  { id: 'leseni_b6', buildingId: 'ofisi_ya_leseni', output: { name: 'Leseni B6', quantity: 1 }, inputs: licenseRecipeInputs, cost: 50000, requiredWorkers: licenseRecipeWorkers },
+  { id: 'leseni_b7', buildingId: 'ofisi_ya_leseni', output: { name: 'Leseni B7', quantity: 1 }, inputs: licenseRecipeInputs, cost: 50000, requiredWorkers: licenseRecipeWorkers },
+
 
   // Wizara ya Madini
   {
@@ -180,10 +185,10 @@ export const recipes: Recipe[] = [
   { id: 'motherboard', buildingId: 'kiwanda_cha_motherboard', output: { name: 'Motherboard', quantity: 1 }, inputs: [{ name: 'Processor', quantity: 1 }, { name: 'Ram', quantity: 1 }, { name: 'Rom', quantity: 1 }, { name: 'Housing', quantity: 1 }, { name: 'PCB', quantity: 1 }, { name: 'Maji', quantity: 1 }, { name: 'Umeme', quantity: 1 }], cost: 15000, requiredWorkers: [] },
 
   // Tier 3: Final Products (Assembly factories)
-  { id: 'tv', buildingId: 'kiwanda_cha_tv', output: { name: 'TV', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 50000, requiredWorkers: [] },
-  { id: 'tablet', buildingId: 'kiwanda_cha_tablet', output: { name: 'Tablet', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 40000, requiredWorkers: [] },
-  { id: 'smartphone', buildingId: 'kiwanda_cha_smartphone', output: { name: 'Smartphone', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 30000, requiredWorkers: [] },
-  { id: 'laptop', buildingId: 'kiwanda_cha_laptop', output: { name: 'Laptop', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 60000, requiredWorkers: [] },
+  { id: 'tv', buildingId: 'kiwanda_cha_tv', output: { name: 'TV', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 75000, requiredWorkers: [] },
+  { id: 'tablet', buildingId: 'kiwanda_cha_tablet', output: { name: 'Tablet', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 60000, requiredWorkers: [] },
+  { id: 'smartphone', buildingId: 'kiwanda_cha_smartphone', output: { name: 'Smartphone', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 100000, requiredWorkers: [] },
+  { id: 'laptop', buildingId: 'kiwanda_cha_laptop', output: { name: 'Laptop', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 150000, requiredWorkers: [] },
 
   // Vehicle Chain - Spares (kiwanda_cha_spare)
   { id: 'car_body', buildingId: 'kiwanda_cha_spare', output: { name: 'Car Body', quantity: 1 }, inputs: [{ name: 'Chuma', quantity: 10 }, { name: 'Maji', quantity: 5 }, { name: 'Umeme', quantity: 5 }, { name: 'Mbao', quantity: 2 }], cost: 20000, requiredWorkers: [] },
