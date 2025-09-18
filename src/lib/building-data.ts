@@ -311,4 +311,20 @@ export const buildingData: Record<string, BuildingConfig> = {
         buildCost: [{ name: 'Nondo', quantity: 1500 }, { name: 'Zege', quantity: 800 }],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
+    // Space Chain
+    kiwanda_cha_k_mashine: {
+        productionRate: 0.5,
+        buildCost: [{ name: 'Nondo', quantity: 2000 }, { name: 'Zege', quantity: 1000 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_anga: {
+        productionRate: 0.2,
+        buildCost: [{ name: 'Nondo', quantity: 5000 }, { name: 'Zege', quantity: 2500 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_roketi: {
+        productionRate: 0.1,
+        buildCost: [{ name: 'Nondo', quantity: 10000 }, { name: 'Zege', quantity: 5000 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
 };

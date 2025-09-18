@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane, Rocket } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -473,6 +473,31 @@ const availableBuildings: BuildingType[] = [
         image: 'https://picsum.photos/seed/shipyard/200/200',
         imageHint: 'shipyard'
     },
+    // Space Chain
+    {
+        id: 'kiwanda_cha_k_mashine',
+        name: 'Kiwanda cha K Mashine',
+        icon: <Wrench className="text-purple-400" />,
+        description: 'Huzalisha mashine maalum za "K-Series" kwa ajili ya teknolojia ya anga.',
+        image: 'https://picsum.photos/seed/k-machine-factory/200/200',
+        imageHint: 'advanced factory'
+    },
+    {
+        id: 'kiwanda_cha_anga',
+        name: 'Kiwanda cha Anga',
+        icon: <Factory className="text-blue-300" />,
+        description: 'Huunganisha sehemu muhimu za roketi na vyombo vya anga.',
+        image: 'https://picsum.photos/seed/space-factory/200/200',
+        imageHint: 'space assembly'
+    },
+    {
+        id: 'kiwanda_cha_roketi',
+        name: 'Kiwanda cha Roketi',
+        icon: <Rocket className="text-red-500" />,
+        description: 'Huunganisha roketi kamili tayari kwa safari ya anga.',
+        image: 'https://picsum.photos/seed/rocket-factory/200/200',
+        imageHint: 'rocket launch'
+    },
 ];
 
 const buildingStyles: Record<string, { body: string; roof: string }> = {
@@ -528,6 +553,10 @@ const buildingStyles: Record<string, { body: string; roof: string }> = {
     kiwanda_cha_pikipiki: { body: 'bg-blue-800/80', roof: 'border-b-blue-950/90' },
     kiwanda_cha_ndege: { body: 'bg-cyan-800/80', roof: 'border-b-cyan-950/90' },
     kiwanda_cha_meli: { body: 'bg-indigo-800/80', roof: 'border-b-indigo-950/90' },
+    // Space Chain
+    kiwanda_cha_k_mashine: { body: 'bg-purple-800/80', roof: 'border-b-purple-950/90' },
+    kiwanda_cha_anga: { body: 'bg-blue-900/80', roof: 'border-b-blue-950/90' },
+    kiwanda_cha_roketi: { body: 'bg-red-900/80', roof: 'border-b-red-950/90' },
     default: { body: 'bg-gray-700/80', roof: 'border-b-gray-600/90' }
 };
 

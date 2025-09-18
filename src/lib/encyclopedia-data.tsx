@@ -9,7 +9,7 @@ import {
     Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText, ScrollText, Droplets, Zap,
     Building2, Glasses, FlaskConical, Shirt, Watch, Footprints, CircleDollarSign, Medal, Crown,
     Tv, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, HardDrive, Speaker, CircuitBoard,
-    Monitor, Car, Bike, Plane, Tractor
+    Monitor, Car, Bike, Plane, Tractor, Rocket, ShieldCheck
 } from 'lucide-react';
 
 
@@ -169,6 +169,16 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Truck body': <Package className="text-gray-400"/>,
     'Bodi ya Ndege': <Package className="text-gray-400"/>,
     'Bodi ya Meli': <Package className="text-gray-400"/>,
+    
+    // Space Chain
+    'Roketi': <Rocket className="text-red-500" />,
+    'Fuselage': <Package className="text-slate-300" />,
+    'Wings': <Plane className="text-slate-300" />,
+    'Tarakilishi': <Cpu className="text-slate-300" />,
+    'Cockpit': <Package className="text-slate-300" />,
+    'Attitude Control': <Component className="text-slate-300" />,
+    'Rocket Engine': <Cpu className="text-slate-300" />,
+    'Heat Shield': <ShieldCheck className="text-slate-300" />,
 
 
     // Vifaa & Nyaraka
@@ -186,6 +196,13 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Mashine B7': <Wrench className="text-gray-400" />,
     'Mashine C1': <Wrench className="text-gray-400" />,
     'Mashine C2': <Wrench className="text-gray-400" />,
+    'K1 Mashine': <Wrench className="text-purple-400" />,
+    'K2 Mashine': <Wrench className="text-purple-400" />,
+    'K3 Mashine': <Wrench className="text-purple-400" />,
+    'K4 Mashine': <Wrench className="text-purple-400" />,
+    'K5 Mashine': <Wrench className="text-purple-400" />,
+    'K6 Mashine': <Wrench className="text-purple-400" />,
+    'K7 Mashine': <Wrench className="text-purple-400" />,
     'Leseni B1': <FileText className="text-blue-300" />,
     'Leseni B2': <FileText className="text-blue-300" />,
     'Leseni B3': <FileText className="text-blue-300" />,
@@ -256,10 +273,10 @@ allItemNames.forEach(itemName => {
     if (!generatedEntries.some(entry => entry.name === itemName)) {
         // Find if this item is a build material to get an estimated cost
         let estimatedCost = 10; // Default cost
-        if (itemName.includes('Leseni')) {
-            estimatedCost = 10000;
+        if (itemName.startsWith('Leseni')) {
+            estimatedCost = 100000;
         } else if (itemName === 'Cheti cha Madini') {
-            estimatedCost = 25000;
+            estimatedCost = 250000;
         } else {
             // Find a recipe where this item is an output to get its cost
              const recipe = recipes.find(r => r.output.name === itemName);
@@ -288,7 +305,7 @@ allItemNames.forEach(itemName => {
 
 
 // Group items by category for the market view
-const categoryOrder = ['Vehicles', 'Spares', 'Electronics', 'Construction', 'Vifaa', 'Documents', 'Madini', 'Mafuta', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
+const categoryOrder = ['Space', 'Vehicles', 'Spares', 'Electronics', 'Construction', 'Vifaa', 'Documents', 'Madini', 'Mafuta', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
 const itemCategorization: Record<string, string> = {
     'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction', 'Mabati': 'Construction',
     'Saruji': 'Construction', 'Mchanga': 'Construction', 'Mawe': 'Construction', 'Kokoto': 'Construction',
@@ -369,6 +386,16 @@ const itemCategorization: Record<string, string> = {
     'Ndege ya kifahari': 'Vehicles',
     'Meli': 'Vehicles',
     'Meli ya kifahari': 'Vehicles',
+    
+    // Space Chain
+    'Roketi': 'Space',
+    'Fuselage': 'Space',
+    'Wings': 'Space',
+    'Tarakilishi': 'Space',
+    'Cockpit': 'Space',
+    'Attitude Control': 'Space',
+    'Rocket Engine': 'Space',
+    'Heat Shield': 'Space',
 };
 
 // Auto-categorize Machines and Licenses
@@ -378,6 +405,9 @@ allItemNames.forEach(itemName => {
     }
     if (itemName.startsWith('Leseni')) {
         itemCategorization[itemName] = 'Documents';
+    }
+    if (itemName.startsWith('K') && itemName.endsWith('Mashine')) {
+        itemCategorization[itemName] = 'Vifaa';
     }
 });
 
