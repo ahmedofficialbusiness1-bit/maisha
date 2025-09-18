@@ -42,6 +42,7 @@ export type StockListing = {
     marketCap: number;
     logo: string;
     imageHint: string;
+    creditRating: string;
 };
 
 export type BondListing = {
@@ -301,6 +302,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         <TableHeader>
                             <TableRow className="border-gray-700 hover:bg-gray-700/50">
                                 <TableHead className="text-white">Kampuni</TableHead>
+                                <TableHead className="text-right text-white">Ukadiriaji</TableHead>
                                 <TableHead className="text-right text-white">Bei ya Hisa</TableHead>
                                 <TableHead className="text-right text-white">Hisa Zinazopatikana</TableHead>
                                 <TableHead className="text-right text-white">Thamani ya Soko</TableHead>
@@ -320,6 +322,15 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                                 <p className="font-bold">{stock.companyName}</p>
                                                 <p className="text-xs text-gray-400">{stock.ticker}</p>
                                             </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className={cn("flex items-center justify-end font-bold", 
+                                            stock.creditRating.startsWith('A') ? 'text-green-400' : 
+                                            stock.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
+                                        )}>
+                                            {stock.creditRating}
+                                            <ShieldCheck className="ml-1 h-4 w-4" />
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right font-mono">${stock.stockPrice.toFixed(2)}</TableCell>
