@@ -24,37 +24,56 @@ const initialInventoryItems: InventoryItem[] = [
   { item: 'Yai', quantity: 25000, marketPrice: 1.25 },
   { item: 'Bwawa', quantity: 10, marketPrice: 125 },
   { item: 'Boat', quantity: 5, marketPrice: 250 },
-  { item: 'Mbao', quantity: 500, marketPrice: 12.5 },
-  { item: 'Matofali', quantity: 1000, marketPrice: 18.75 },
+  { item: 'Mbao', quantity: 500, marketPrice: 25 },
+  { item: 'Matofali', quantity: 1000, marketPrice: 37.5 },
   { item: 'Nondo', quantity: 200, marketPrice: 312.5 },
-  { item: 'Zege', quantity: 100, marketPrice: 37.5 },
+  { item: 'Zege', quantity: 100, marketPrice: 62.5 },
   { item: 'Mashine A1', quantity: 10, marketPrice: 2500 },
   { item: 'Mashine A2', quantity: 10, marketPrice: 2750 },
   { item: 'Mashine A3', quantity: 10, marketPrice: 3000 },
   { item: 'Mashine A4', quantity: 10, marketPrice: 3250 },
   { item: 'Mashine A5', quantity: 10, marketPrice: 3500 },
+  { item: 'Mashine B1', quantity: 10, marketPrice: 6250 },
+  { item: 'Mashine B2', quantity: 10, marketPrice: 6500 },
+  { item: 'Mashine B3', quantity: 10, marketPrice: 6750 },
+  { item: 'Mashine B4', quantity: 10, marketPrice: 7000 },
+  { item: 'Mashine B5', quantity: 10, marketPrice: 7250 },
+  { item: 'Mashine B6', quantity: 10, marketPrice: 7500 },
   { item: 'Mashine B7', quantity: 10, marketPrice: 7750 },
   { item: 'Mashine C1', quantity: 10, marketPrice: 12500 },
   { item: 'Mashine C2', quantity: 10, marketPrice: 13750 },
+  { item: 'K1 Mashine', quantity: 2, marketPrice: 375000 },
+  { item: 'K2 Mashine', quantity: 2, marketPrice: 400000 },
+  { item: 'K3 Mashine', quantity: 2, marketPrice: 425000 },
+  { item: 'K4 Mashine', quantity: 2, marketPrice: 450000 },
+  { item: 'K5 Mashine', quantity: 2, marketPrice: 475000 },
+  { item: 'K6 Mashine', quantity: 2, marketPrice: 500000 },
+  { item: 'K7 Mashine', quantity: 2, marketPrice: 525000 },
+  { item: 'Leseni B1', quantity: 10, marketPrice: 12500 },
+  { item: 'Leseni B2', quantity: 10, marketPrice: 12500 },
+  { item: 'Leseni B3', quantity: 10, marketPrice: 12500 },
+  { item: 'Leseni B4', quantity: 10, marketPrice: 12500 },
+  { item: 'Leseni B5', quantity: 10, marketPrice: 12500 },
+  { item: 'Leseni B6', quantity: 10, marketPrice: 12500 },
   { item: 'Leseni B7', quantity: 10, marketPrice: 12500 },
   { item: 'Shaba', quantity: 100, marketPrice: 62.5 },
-  { item: 'Miti', quantity: 1000, marketPrice: 6.25 },
+  { item: 'Miti', quantity: 1000, marketPrice: 1.5 },
   { item: 'Saruji', quantity: 1000, marketPrice: 6.25 },
   { item: 'Chuma', quantity: 200, marketPrice: 125 },
   { item: 'Kokoto', quantity: 1000, marketPrice: 2.5 },
-  { item: 'Mawe', quantity: 1000, marketPrice: 1.25 },
+  { item: 'Mawe', quantity: 1000, marketPrice: 0.5 },
   { item: 'Umeme', quantity: 10000, marketPrice: 0.03 },
-  { item: 'Mchanga', quantity: 1000, marketPrice: 0.5 },
+  { item: 'Mchanga', quantity: 1000, marketPrice: 0.4 },
 ];
 
 const initialPlayerListings: PlayerListing[] = [
     { id: 1, commodity: 'Maji', seller: 'Flexy suyo', quantity: 450, price: 0.02, avatar: 'https://picsum.photos/seed/flexy/40/40', quality: 1, imageHint: 'player avatar' },
     { id: 2, commodity: 'Yai', seller: 'MKG CIE', quantity: 100, price: 1.25, avatar: 'https://picsum.photos/seed/mkg/40/40', quality: 0, imageHint: 'company logo' },
     { id: 3, commodity: 'Maji', seller: 'Atul Company', quantity: 944, price: 0.02, avatar: 'https://picsum.photos/seed/atul/40/40', quality: 0, imageHint: 'company logo' },
-    { id: 4, commodity: 'Yai', seller: 'Prometheucls co', quantity: 1969, price: 1.30, avatar: 'https://picsum.photos/seed/prom/40/40', quality: 1, imageHint: 'company logo' },
-    { id: 5, commodity: 'Mbao', seller: 'laptop si gera', quantity: 421, price: 13.00, avatar: 'https://picsum.photos/seed/laptop/40/40', quality: 4, imageHint: 'player avatar' },
-    { id: 6, commodity: 'Nondo', seller: 'Mustika70', quantity: 119, price: 320.00, avatar: 'https://picsum.photos/seed/mustika/40/40', quality: 4, imageHint: 'company logo' },
-    { id: 7, commodity: 'Matofali', seller: 'Schreinerei', quantity: 440, price: 19.00, avatar: 'https://picsum.photos/seed/schrein/40/40', quality: 2, imageHint: 'company logo' },
+    { id: 4, commodity: 'Yai', seller: 'Prometheucls co', quantity: 1969, price: 1.3, avatar: 'https://picsum.photos/seed/prom/40/40', quality: 1, imageHint: 'company logo' },
+    { id: 5, commodity: 'Mbao', seller: 'laptop si gera', quantity: 421, price: 13.0, avatar: 'https://picsum.photos/seed/laptop/40/40', quality: 4, imageHint: 'player avatar' },
+    { id: 6, commodity: 'Nondo', seller: 'Mustika70', quantity: 119, price: 320.0, avatar: 'https://picsum.photos/seed/mustika/40/40', quality: 4, imageHint: 'company logo' },
+    { id: 7, commodity: 'Matofali', seller: 'Schreinerei', quantity: 440, price: 19.0, avatar: 'https://picsum.photos/seed/schrein/40/40', quality: 2, imageHint: 'company logo' },
 ];
 
 const initialCompanyData: StockListing[] = [
@@ -581,7 +600,7 @@ export default function Home() {
                 description: `Umepokea jumla ya $${totalDividends.toFixed(2)}. (${dividendMessages.join(', ')})`
             });
         }
-    }, 30 * 60000); // Every 30 minutes to simulate a "day"
+    }, 24 * 60 * 60000); // Every 24 hours to simulate a "day"
 
     // Stock market fluctuation interval
     const marketFluctuationInterval = setInterval(() => {
@@ -600,7 +619,7 @@ export default function Home() {
                 marketCap: newMarketCap
             };
         }));
-    }, 30000); // Every 30 seconds
+    }, 60 * 60000); // Every hour
 
 
     return () => {
@@ -655,3 +674,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
