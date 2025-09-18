@@ -19,44 +19,42 @@ import { workerData, type Worker } from '@/lib/worker-data.tsx';
 
 
 const initialInventoryItems: InventoryItem[] = [
-  { item: 'Maji', quantity: 15000, marketPrice: 10 },
-  { item: 'Mbegu', quantity: 8000, marketPrice: 15 },
-  { item: 'Yai', quantity: 25000, marketPrice: 210 },
-  { item: 'Bwawa', quantity: 10, marketPrice: 700 },
-  { item: 'Boat', quantity: 5, marketPrice: 1800 },
-  // Add initial construction materials for testing
-  { item: 'Mbao', quantity: 500, marketPrice: 60 },
-  { item: 'Matofali', quantity: 1000, marketPrice: 120 },
-  { item: 'Nondo', quantity: 200, marketPrice: 350 },
-  { item: 'Zege', quantity: 100, marketPrice: 250 },
-  // Add initial machines for testing
-  { item: 'Mashine A1', quantity: 10, marketPrice: 5000 },
-  { item: 'Mashine A2', quantity: 10, marketPrice: 5000 },
-  { item: 'Mashine A3', quantity: 10, marketPrice: 5000 },
-  { item: 'Mashine A4', quantity: 10, marketPrice: 5000 },
-  { item: 'Mashine A5', quantity: 10, marketPrice: 5000 },
-  { item: 'Mashine B7', quantity: 10, marketPrice: 5000 },
-  { item: 'Mashine C1', quantity: 10, marketPrice: 5000 },
-  { item: 'Mashine C2', quantity: 10, marketPrice: 5000 },
-  { item: 'Leseni B7', quantity: 10, marketPrice: 10000 },
-  { item: 'Shaba', quantity: 100, marketPrice: 1000 },
-  { item: 'Miti', quantity: 1000, marketPrice: 25 },
-  { item: 'Saruji', quantity: 1000, marketPrice: 80 },
-  { item: 'Chuma', quantity: 200, marketPrice: 150 },
-  { item: 'Kokoto', quantity: 1000, marketPrice: 20 },
-  { item: 'Mawe', quantity: 1000, marketPrice: 15 },
-  { item: 'Umeme', quantity: 10000, marketPrice: 10 },
-  { item: 'Mchanga', quantity: 1000, marketPrice: 20 },
+  { item: 'Maji', quantity: 15000, marketPrice: 0.02 },
+  { item: 'Mbegu', quantity: 8000, marketPrice: 0.1 },
+  { item: 'Yai', quantity: 25000, marketPrice: 1.25 },
+  { item: 'Bwawa', quantity: 10, marketPrice: 125 },
+  { item: 'Boat', quantity: 5, marketPrice: 250 },
+  { item: 'Mbao', quantity: 500, marketPrice: 12.5 },
+  { item: 'Matofali', quantity: 1000, marketPrice: 18.75 },
+  { item: 'Nondo', quantity: 200, marketPrice: 312.5 },
+  { item: 'Zege', quantity: 100, marketPrice: 37.5 },
+  { item: 'Mashine A1', quantity: 10, marketPrice: 2500 },
+  { item: 'Mashine A2', quantity: 10, marketPrice: 2750 },
+  { item: 'Mashine A3', quantity: 10, marketPrice: 3000 },
+  { item: 'Mashine A4', quantity: 10, marketPrice: 3250 },
+  { item: 'Mashine A5', quantity: 10, marketPrice: 3500 },
+  { item: 'Mashine B7', quantity: 10, marketPrice: 7750 },
+  { item: 'Mashine C1', quantity: 10, marketPrice: 12500 },
+  { item: 'Mashine C2', quantity: 10, marketPrice: 13750 },
+  { item: 'Leseni B7', quantity: 10, marketPrice: 12500 },
+  { item: 'Shaba', quantity: 100, marketPrice: 62.5 },
+  { item: 'Miti', quantity: 1000, marketPrice: 6.25 },
+  { item: 'Saruji', quantity: 1000, marketPrice: 6.25 },
+  { item: 'Chuma', quantity: 200, marketPrice: 125 },
+  { item: 'Kokoto', quantity: 1000, marketPrice: 2.5 },
+  { item: 'Mawe', quantity: 1000, marketPrice: 1.25 },
+  { item: 'Umeme', quantity: 10000, marketPrice: 0.03 },
+  { item: 'Mchanga', quantity: 1000, marketPrice: 0.5 },
 ];
 
 const initialPlayerListings: PlayerListing[] = [
-    { id: 1, commodity: 'Maji', seller: 'Flexy suyo', quantity: 450, price: 835.00, avatar: 'https://picsum.photos/seed/flexy/40/40', quality: 1, imageHint: 'player avatar' },
-    { id: 2, commodity: 'Yai', seller: 'MKG CIE', quantity: 1, price: 835.00, avatar: 'https://picsum.photos/seed/mkg/40/40', quality: 0, imageHint: 'company logo' },
-    { id: 3, commodity: 'Maji', seller: 'Atul Company', quantity: 944, price: 835.00, avatar: 'https://picsum.photos/seed/atul/40/40', quality: 0, imageHint: 'company logo' },
-    { id: 4, commodity: 'Yai', seller: 'Prometheucls co', quantity: 1969, price: 840.00, avatar: 'https://picsum.photos/seed/prom/40/40', quality: 1, imageHint: 'company logo' },
-    { id: 5, commodity: 'Mbao', seller: 'laptop si gera', quantity: 421, price: 845.00, avatar: 'https://picsum.photos/seed/laptop/40/40', quality: 4, imageHint: 'player avatar' },
-    { id: 6, commodity: 'Nondo', seller: 'Mustika70', quantity: 11964, price: 850.00, avatar: 'https://picsum.photos/seed/mustika/40/40', quality: 4, imageHint: 'company logo' },
-    { id: 7, commodity: 'Matofali', seller: 'Schreinerei', quantity: 44, price: 850.00, avatar: 'https://picsum.photos/seed/schrein/40/40', quality: 2, imageHint: 'company logo' },
+    { id: 1, commodity: 'Maji', seller: 'Flexy suyo', quantity: 450, price: 0.02, avatar: 'https://picsum.photos/seed/flexy/40/40', quality: 1, imageHint: 'player avatar' },
+    { id: 2, commodity: 'Yai', seller: 'MKG CIE', quantity: 100, price: 1.25, avatar: 'https://picsum.photos/seed/mkg/40/40', quality: 0, imageHint: 'company logo' },
+    { id: 3, commodity: 'Maji', seller: 'Atul Company', quantity: 944, price: 0.02, avatar: 'https://picsum.photos/seed/atul/40/40', quality: 0, imageHint: 'company logo' },
+    { id: 4, commodity: 'Yai', seller: 'Prometheucls co', quantity: 1969, price: 1.30, avatar: 'https://picsum.photos/seed/prom/40/40', quality: 1, imageHint: 'company logo' },
+    { id: 5, commodity: 'Mbao', seller: 'laptop si gera', quantity: 421, price: 13.00, avatar: 'https://picsum.photos/seed/laptop/40/40', quality: 4, imageHint: 'player avatar' },
+    { id: 6, commodity: 'Nondo', seller: 'Mustika70', quantity: 119, price: 320.00, avatar: 'https://picsum.photos/seed/mustika/40/40', quality: 4, imageHint: 'company logo' },
+    { id: 7, commodity: 'Matofali', seller: 'Schreinerei', quantity: 440, price: 19.00, avatar: 'https://picsum.photos/seed/schrein/40/40', quality: 2, imageHint: 'company logo' },
 ];
 
 const BUILDING_SLOTS = 20;
@@ -432,7 +430,7 @@ export default function Home() {
               } else {
                  const encyclopediaEntry = encyclopediaData.find(e => e.name === output.name);
                  const marketPrice = encyclopediaEntry 
-                    ? parseFloat(encyclopediaEntry.properties.find(p => p.label.includes("Cost"))?.value.replace('$', '') || '100')
+                    ? parseFloat(encyclopediaEntry.properties.find(p => p.label.includes("Market Cost"))?.value.replace('$', '') || '100')
                     : 100;
 
                 newInventory.push({ item: output.name, quantity: (output.quantity * slot.production!.quantity), marketPrice });

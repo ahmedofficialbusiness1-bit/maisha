@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { recipes, type Recipe } from './recipe-data';
 import { buildingData } from './building-data';
@@ -223,9 +224,24 @@ const getIcon = (name: string): React.ReactElement<LucideIcon> => {
 };
 
 
+// Create a map of all recipe costs for easy lookup
+const recipeCosts = new Map<string, number>();
+recipes.forEach(recipe => {
+    recipeCosts.set(recipe.output.name, recipe.cost);
+});
+
+// Helper to calculate market cost (production cost + profit margin)
+const calculateMarketCost = (itemName: string): number => {
+    const productionCost = recipeCosts.get(itemName) || 0;
+    // Add a 25% profit margin, rounding to nearest integer
+    return Math.ceil(productionCost * 1.25); 
+};
+
+
 const generatedEntries = recipes.map(recipe => {
     const buildingInfo = buildingData[recipe.buildingId];
     const baseTimePerUnit = buildingInfo ? (3600) / buildingInfo.productionRate : 0; // Time in seconds for 1 unit at level 1
+    const marketCost = calculateMarketCost(recipe.output.name);
 
     const entry: EncyclopediaEntry = {
         id: recipe.id,
@@ -237,7 +253,7 @@ const generatedEntries = recipes.map(recipe => {
         icon: getIcon(recipe.output.name),
         properties: [
             { label: 'Production Cost', value: `$${recipe.cost}` },
-            { label: 'Market Cost', value: `$${Math.ceil(recipe.cost * 1.25)}`},
+            { label: 'Market Cost', value: `$${marketCost}`},
             { label: 'Base Production Time', value: `${baseTimePerUnit.toFixed(2)}s / unit` },
             { label: 'Output Quantity', value: `${recipe.output.quantity.toLocaleString()} unit(s)` },
             { label: 'Building', value: recipe.buildingId.charAt(0).toUpperCase() + recipe.buildingId.slice(1).replace(/_/g, ' ') }
@@ -268,23 +284,29 @@ Object.values(buildingData).forEach(b => {
 });
 
 
+// Define base costs for fundamental raw materials
+const baseMaterialCosts: Record<string, number> = {
+    'Maji': 0.02,
+    'Umeme': 0.03,
+    'Mbegu': 0.1,
+    'Nyasi': 0.05,
+    'Miti': 1.5,
+    'Mawe': 0.5,
+    'Mchanga': 0.4,
+    'Madini ya chuma': 5,
+};
+
+
 // Add entries for items that are inputs but not outputs
 allItemNames.forEach(itemName => {
     if (!generatedEntries.some(entry => entry.name === itemName)) {
-        // Find if this item is a build material to get an estimated cost
-        let estimatedCost = 10; // Default cost
+        let estimatedCost = baseMaterialCosts[itemName] || 10; // Use base cost or a default
+        
         if (itemName.startsWith('Leseni')) {
-            estimatedCost = 100000;
+            estimatedCost = 10000;
         } else if (itemName === 'Cheti cha Madini') {
-            estimatedCost = 250000;
-        } else {
-            // Find a recipe where this item is an output to get its cost
-             const recipe = recipes.find(r => r.output.name === itemName);
-             if (recipe) {
-                estimatedCost = recipe.cost;
-             }
+            estimatedCost = 5000;
         }
-
 
         const entry: EncyclopediaEntry = {
             id: itemName.toLowerCase().replace(/'/g, '').replace(/\s+/g, '_'),
@@ -296,7 +318,7 @@ allItemNames.forEach(itemName => {
             icon: getIcon(itemName),
             properties: [
                 { label: 'Type', value: 'Base Input' },
-                { label: 'Market Cost', value: `$${estimatedCost}` }
+                { label: 'Market Cost', value: `$${estimatedCost.toLocaleString(undefined, {minimumFractionDigits: 2})}` }
             ],
         };
         generatedEntries.push(entry);
@@ -432,3 +454,4 @@ export const encyclopediaData: EncyclopediaEntry[] = generatedEntries.sort((a, b
     }
     return a.name.localeCompare(b.name);
 });
+
