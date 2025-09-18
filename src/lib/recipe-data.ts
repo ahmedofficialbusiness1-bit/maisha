@@ -160,9 +160,34 @@ export const recipes: Recipe[] = [
   { id: 'mkufu_wa_almasi', buildingId: 'sonara', output: { name: 'Mkufu wa Almasi', quantity: 1 }, inputs: [{ name: 'Almasi', quantity: 5 }, { name: 'Chuma', quantity: 1 }, { name: 'Mashine B1', quantity: 1 }, { name: 'Maji', quantity: 1 }, { name: 'Umeme', quantity: 1 }], cost: 30000, requiredWorkers: [{ specialty: 'Uzalishaji', count: 3 }] },
   { id: 'saa_ya_almasi', buildingId: 'sonara', output: { name: 'Saa ya Almasi', quantity: 1 }, inputs: [{ name: 'Almasi', quantity: 3 }, { name: 'Chuma', quantity: 1 }, { name: 'Mashine B1', quantity: 1 }, { name: 'Maji', quantity: 1 }, { name: 'Umeme', quantity: 1 }], cost: 28000, requiredWorkers: [{ specialty: 'Uzalishaji', count: 3 }] },
   { id: 'pete_ya_almasi', buildingId: 'sonara', output: { name: 'Pete ya Almasi', quantity: 1 }, inputs: [{ name: 'Almasi', quantity: 2 }, { name: 'Chuma', quantity: 1 }, { name: 'Mashine B1', quantity: 1 }, { name: 'Maji', quantity: 1 }, { name: 'Umeme', quantity: 1 }], cost: 22000, requiredWorkers: [{ specialty: 'Uzalishaji', count: 3 }] },
+
+  // Electronics Chain
+  // Tier 1: Sub-components (mostly from kiwanda_cha_usanidi)
+  { id: 'housing', buildingId: 'kiwanda_cha_usanidi', output: { name: 'Housing', quantity: 1 }, inputs: [{ name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 100, requiredWorkers: [] },
+  { id: 'nyaya', buildingId: 'kiwanda_cha_usanidi', output: { name: 'Nyaya', quantity: 1 }, inputs: [{ name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 50, requiredWorkers: [] },
+  { id: 'lcd', buildingId: 'kiwanda_cha_usanidi', output: { name: 'LCD', quantity: 1 }, inputs: [{ name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 200, requiredWorkers: [] },
+  { id: 'cathode', buildingId: 'kiwanda_cha_usanidi', output: { name: 'Cathode', quantity: 1 }, inputs: [{ name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 80, requiredWorkers: [] },
+  { id: 'anode', buildingId: 'kiwanda_cha_usanidi', output: { name: 'Anode', quantity: 1 }, inputs: [{ name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 80, requiredWorkers: [] },
+  { id: 'ram', buildingId: 'kiwanda_cha_usanidi', output: { name: 'Ram', quantity: 1 }, inputs: [{ name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 150, requiredWorkers: [] },
+  { id: 'rom', buildingId: 'kiwanda_cha_usanidi', output: { name: 'Rom', quantity: 1 }, inputs: [{ name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 120, requiredWorkers: [] },
+  { id: 'pcb', buildingId: 'kiwanda_cha_usanidi', output: { name: 'PCB', quantity: 1 }, inputs: [{ name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 180, requiredWorkers: [] },
+  { id: 'vifaa_vya_ndani', buildingId: 'kiwanda_cha_vifaa_vya_ndani', output: { name: 'Vifaa vya ndani', quantity: 10 }, inputs: [], cost: 500, requiredWorkers: [] },
+
+  // Tier 2: Components (from their respective factories)
+  { id: 'processor', buildingId: 'kiwanda_cha_processor', output: { name: 'Processor', quantity: 1 }, inputs: [], cost: 1000, requiredWorkers: [] }, // Simplified for now
+  { id: 'betri', buildingId: 'kiwanda_cha_betri', output: { name: 'Betri', quantity: 1 }, inputs: [{ name: 'Housing', quantity: 1 }, { name: 'Nyaya', quantity: 1 }, { name: 'Cathode', quantity: 1 }, { name: 'Anode', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 500, requiredWorkers: [] },
+  { id: 'display', buildingId: 'kiwanda_cha_display', output: { name: 'Display', quantity: 1 }, inputs: [{ name: 'Nyaya', quantity: 1 }, { name: 'LCD', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Maji', quantity: 1 }, { name: 'Umeme', quantity: 1 }], cost: 800, requiredWorkers: [] },
+  { id: 'motherboard', buildingId: 'kiwanda_cha_motherboard', output: { name: 'Motherboard', quantity: 1 }, inputs: [{ name: 'Processor', quantity: 1 }, { name: 'Ram', quantity: 1 }, { name: 'Rom', quantity: 1 }, { name: 'Housing', quantity: 1 }, { name: 'PCB', quantity: 1 }, { name: 'Maji', quantity: 1 }, { name: 'Umeme', quantity: 1 }], cost: 1500, requiredWorkers: [] },
+
+  // Tier 3: Final Products (Assembly factories)
+  { id: 'tv', buildingId: 'kiwanda_cha_tv', output: { name: 'TV', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 5000, requiredWorkers: [] },
+  { id: 'tablet', buildingId: 'kiwanda_cha_tablet', output: { name: 'Tablet', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 4000, requiredWorkers: [] },
+  { id: 'smartphone', buildingId: 'kiwanda_cha_smartphone', output: { name: 'Smartphone', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 3000, requiredWorkers: [] },
+  { id: 'laptop', buildingId: 'kiwanda_cha_laptop', output: { name: 'Laptop', quantity: 1 }, inputs: [{ name: 'Display', quantity: 1 }, { name: 'Processor', quantity: 1 }, { name: 'Betri', quantity: 1 }, { name: 'Motherboard', quantity: 1 }, { name: 'Vifaa vya ndani', quantity: 1 }, { name: 'Chuma', quantity: 1 }, { name: 'Umeme', quantity: 1 }, { name: 'Maji', quantity: 1 }], cost: 6000, requiredWorkers: [] },
 ];
 
     
 
     
+
 

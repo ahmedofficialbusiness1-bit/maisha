@@ -233,8 +233,60 @@ export const buildingData: Record<string, BuildingConfig> = {
         productionRate: 15,
         buildCost: [{ name: 'Nondo', quantity: 250 }, { name: 'Zege', quantity: 150 }, { name: 'Matofali', quantity: 400 }],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
-    }
+    },
+    // Electronics
+    kiwanda_cha_tv: {
+        productionRate: 5,
+        buildCost: [{ name: 'Zege', quantity: 100 }, { name: 'Nondo', quantity: 200 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_tablet: {
+        productionRate: 10,
+        buildCost: [{ name: 'Zege', quantity: 100 }, { name: 'Nondo', quantity: 200 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_smartphone: {
+        productionRate: 15,
+        buildCost: [{ name: 'Zege', quantity: 100 }, { name: 'Nondo', quantity: 200 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_laptop: {
+        productionRate: 8,
+        buildCost: [{ name: 'Zege', quantity: 100 }, { name: 'Nondo', quantity: 200 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_processor: {
+        productionRate: 20,
+        buildCost: [{ name: 'Zege', quantity: 300 }, { name: 'Nondo', quantity: 300 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_betri: {
+        productionRate: 30,
+        buildCost: [{ name: 'Zege', quantity: 150 }, { name: 'Nondo', quantity: 150 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_display: {
+        productionRate: 25,
+        buildCost: [{ name: 'Zege', quantity: 200 }, { name: 'Nondo', quantity: 150 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_motherboard: {
+        productionRate: 20,
+        buildCost: [{ name: 'Zege', quantity: 250 }, { name: 'Nondo', quantity: 200 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_vifaa_vya_ndani: {
+        productionRate: 50,
+        buildCost: [{ name: 'Zege', quantity: 100 }, { name: 'Nondo', quantity: 100 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_usanidi: {
+        productionRate: 40,
+        buildCost: [{ name: 'Zege', quantity: 150 }, { name: 'Nondo', quantity: 150 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
 };
 
     
+
 

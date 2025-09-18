@@ -7,7 +7,9 @@ import {
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf, LucideIcon, 
     Milestone, Mountain, Package, Palmtree, Recycle, Shell, Ship, Shrub, Sprout,
     Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText, ScrollText, Droplets, Zap,
-    Building2, Glasses, FlaskConical, Shirt, Watch, Footprints, CircleDollarSign, Medal, Crown
+    Building2, Glasses, FlaskConical, Shirt, Watch, Footprints, CircleDollarSign, Medal, Crown,
+    Tv, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, HardDrive, Speaker, CircuitBoard,
+    Monitor
 } from 'lucide-react';
 
 
@@ -90,7 +92,7 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Juice': <CookingPot className="text-pink-500" />,
 
     // Mafuta
-    'Mafuta Ghafi': <Droplets className="text-gray-900" />,
+    'Mafuta Ghafi': <Droplets className="text-black" />,
     'Disel': <Droplets className="text-gray-600" />,
     'Petrol': <Droplets className="text-orange-500" />,
 
@@ -125,6 +127,25 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Mkufu wa Almasi': <Crown className="text-cyan-300" />,
     'Saa ya Almasi': <Watch className="text-cyan-300" />,
     'Pete ya Almasi': <Gem className="text-cyan-300" />,
+
+    // Electronics
+    'TV': <Tv className="text-blue-400" />,
+    'Tablet': <Tablet className="text-blue-400" />,
+    'Smartphone': <Smartphone className="text-blue-400" />,
+    'Laptop': <Laptop className="text-blue-400" />,
+    'Processor': <Cpu className="text-purple-400" />,
+    'Betri': <Battery className="text-green-400" />,
+    'Display': <Monitor className="text-cyan-400" />,
+    'Motherboard': <MemoryStick className="text-green-600" />,
+    'Vifaa vya ndani': <Wrench className="text-slate-400" />,
+    'Housing': <HardDrive className="text-gray-500" />,
+    'Nyaya': <Component className="text-yellow-600" />,
+    'LCD': <Monitor className="text-blue-300" />,
+    'Cathode': <CircuitBoard className="text-red-500" />,
+    'Anode': <CircuitBoard className="text-green-500" />,
+    'Ram': <MemoryStick className="text-blue-500" />,
+    'Rom': <MemoryStick className="text-purple-500" />,
+    'PCB': <CircuitBoard className="text-green-700" />,
 
 
     // Vifaa & Nyaraka
@@ -249,7 +270,7 @@ allItemNames.forEach(itemName => {
 
 
 // Group items by category for the market view
-const categoryOrder = ['Construction', 'Vifaa', 'Documents', 'Madini', 'Mafuta', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
+const categoryOrder = ['Electronics', 'Construction', 'Vifaa', 'Documents', 'Madini', 'Mafuta', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
 const itemCategorization: Record<string, string> = {
     'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction', 'Mabati': 'Construction',
     'Saruji': 'Construction', 'Mchanga': 'Construction', 'Mawe': 'Construction', 'Kokoto': 'Construction',
@@ -288,6 +309,25 @@ const itemCategorization: Record<string, string> = {
     'Mkufu wa Almasi': 'Mavazi',
     'Saa ya Almasi': 'Mavazi',
     'Pete ya Almasi': 'Mavazi',
+
+    // Electronics
+    'TV': 'Electronics',
+    'Tablet': 'Electronics',
+    'Smartphone': 'Electronics',
+    'Laptop': 'Electronics',
+    'Processor': 'Electronics',
+    'Betri': 'Electronics',
+    'Display': 'Electronics',
+    'Motherboard': 'Electronics',
+    'Vifaa vya ndani': 'Electronics',
+    'Housing': 'Electronics',
+    'Nyaya': 'Electronics',
+    'LCD': 'Electronics',
+    'Cathode': 'Electronics',
+    'Anode': 'Electronics',
+    'Ram': 'Electronics',
+    'Rom': 'Electronics',
+    'PCB': 'Electronics',
 };
 
 // Auto-categorize Machines and Licenses

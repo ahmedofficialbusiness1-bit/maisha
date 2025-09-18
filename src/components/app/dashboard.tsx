@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -330,7 +330,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_mafuta',
         name: 'Uchimbaji Mafuta',
-        icon: <Droplets className="text-gray-900" />,
+        icon: <Droplets className="text-black" />,
         description: 'Huchimba mafuta ghafi kutoka ardhini.',
         image: 'https://picsum.photos/seed/oil-rig/200/200',
         imageHint: 'oil rig'
@@ -350,7 +350,88 @@ const availableBuildings: BuildingType[] = [
         description: 'Husindika mafuta ghafi kuwa petroli.',
         image: 'https://picsum.photos/seed/petrol-factory/200/200',
         imageHint: 'oil refinery night'
-    }
+    },
+    // Electronics
+    {
+        id: 'kiwanda_cha_tv',
+        name: 'Kiwanda cha TV',
+        icon: <Tv className="text-blue-400" />,
+        description: 'Huunganisha na kuzalisha televisheni.',
+        image: 'https://picsum.photos/seed/tv-factory/200/200',
+        imageHint: 'electronics factory'
+    },
+    {
+        id: 'kiwanda_cha_tablet',
+        name: 'Kiwanda cha Tablet',
+        icon: <Tablet className="text-blue-400" />,
+        description: 'Huunganisha na kuzalisha tablets.',
+        image: 'https://picsum.photos/seed/tablet-factory/200/200',
+        imageHint: 'electronics factory'
+    },
+    {
+        id: 'kiwanda_cha_smartphone',
+        name: 'Kiwanda cha Smartphone',
+        icon: <Smartphone className="text-blue-400" />,
+        description: 'Huunganisha na kuzalisha simu janja.',
+        image: 'https://picsum.photos/seed/smartphone-factory/200/200',
+        imageHint: 'electronics factory'
+    },
+    {
+        id: 'kiwanda_cha_laptop',
+        name: 'Kiwanda cha Laptop',
+        icon: <Laptop className="text-blue-400" />,
+        description: 'Huunganisha na kuzalisha laptop.',
+        image: 'https://picsum.photos/seed/laptop-factory/200/200',
+        imageHint: 'electronics factory'
+    },
+    {
+        id: 'kiwanda_cha_processor',
+        name: 'Kiwanda cha Processor',
+        icon: <Cpu className="text-purple-400" />,
+        description: 'Huzalisha processor kwa ajili ya vifaa vya kielektroniki.',
+        image: 'https://picsum.photos/seed/cpu-factory/200/200',
+        imageHint: 'clean room'
+    },
+    {
+        id: 'kiwanda_cha_betri',
+        name: 'Kiwanda cha Betri',
+        icon: <Battery className="text-green-400" />,
+        description: 'Huzalisha betri kwa ajili ya vifaa vya kielektroniki.',
+        image: 'https://picsum.photos/seed/battery-factory/200/200',
+        imageHint: 'battery production'
+    },
+    {
+        id: 'kiwanda_cha_display',
+        name: 'Kiwanda cha Display',
+        icon: <Monitor className="text-cyan-400" />,
+        description: 'Huzalisha display (screen) kwa ajili ya vifaa vya kielektroniki.',
+        image: 'https://picsum.photos/seed/display-factory/200/200',
+        imageHint: 'screen manufacturing'
+    },
+    {
+        id: 'kiwanda_cha_motherboard',
+        name: 'Kiwanda cha Motherboard',
+        icon: <MemoryStick className="text-green-600" />,
+        description: 'Huzalisha motherboard kwa ajili ya vifaa vya kielektroniki.',
+        image: 'https://picsum.photos/seed/motherboard-factory/200/200',
+        imageHint: 'circuit board'
+    },
+    {
+        id: 'kiwanda_cha_vifaa_vya_ndani',
+        name: 'Kiwanda cha Vifaa vya Ndani',
+        icon: <Wrench className="text-slate-400" />,
+        description: 'Huzalisha komponenti ndogo ndogo za ndani.',
+        image: 'https://picsum.photos/seed/components-factory/200/200',
+        imageHint: 'small components'
+    },
+    {
+        id: 'kiwanda_cha_usanidi',
+        name: 'Kiwanda cha Usanidi',
+        icon: <Factory className="text-gray-500" />,
+        description: 'Huzalisha sehemu maalum za kielektroniki.',
+        image: 'https://picsum.photos/seed/config-factory/200/200',
+        imageHint: 'electronics assembly'
+    },
 ];
 
 const buildingStyles: Record<string, { body: string; roof: string }> = {
@@ -389,6 +470,17 @@ const buildingStyles: Record<string, { body: string; roof: string }> = {
     uchimbaji_mafuta: { body: 'bg-gray-900/80', roof: 'border-b-black/90' },
     kiwanda_cha_disel: { body: 'bg-gray-700/80', roof: 'border-b-gray-800/90' },
     kiwanda_cha_petrol: { body: 'bg-orange-800/80', roof: 'border-b-orange-900/90' },
+    // Electronics
+    kiwanda_cha_tv: { body: 'bg-blue-800/80', roof: 'border-b-blue-950/90' },
+    kiwanda_cha_tablet: { body: 'bg-blue-800/80', roof: 'border-b-blue-950/90' },
+    kiwanda_cha_smartphone: { body: 'bg-blue-800/80', roof: 'border-b-blue-950/90' },
+    kiwanda_cha_laptop: { body: 'bg-blue-800/80', roof: 'border-b-blue-950/90' },
+    kiwanda_cha_processor: { body: 'bg-purple-800/80', roof: 'border-b-purple-950/90' },
+    kiwanda_cha_betri: { body: 'bg-green-800/80', roof: 'border-b-green-950/90' },
+    kiwanda_cha_display: { body: 'bg-cyan-800/80', roof: 'border-b-cyan-950/90' },
+    kiwanda_cha_motherboard: { body: 'bg-green-900/80', roof: 'border-b-green-950/90' },
+    kiwanda_cha_vifaa_vya_ndani: { body: 'bg-slate-700/80', roof: 'border-b-slate-800/90' },
+    kiwanda_cha_usanidi: { body: 'bg-gray-700/80', roof: 'border-b-gray-800/90' },
     default: { body: 'bg-gray-700/80', roof: 'border-b-gray-600/90' }
 };
 
@@ -999,4 +1091,5 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
     
 
     
+
 
