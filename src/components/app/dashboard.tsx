@@ -266,6 +266,34 @@ const availableBuildings: BuildingType[] = [
     },
 ];
 
+const buildingStyles: Record<string, { body: string; roof: string }> = {
+    shamba: { body: 'bg-green-800/80', roof: 'border-b-green-950/90' },
+    zizi: { body: 'bg-orange-800/80', roof: 'border-b-orange-950/90' },
+    kiwanda_cha_samaki: { body: 'bg-blue-800/80', roof: 'border-b-blue-950/90' },
+    uchimbaji_mawe: { body: 'bg-gray-700/80', roof: 'border-b-gray-800/90' },
+    uchimbaji_mchanga: { body: 'bg-yellow-800/80', roof: 'border-b-yellow-950/90' },
+    uchimbaji_chuma: { body: 'bg-slate-700/80', roof: 'border-b-slate-800/90' },
+    uchimbaji_almasi: { body: 'bg-cyan-800/80', roof: 'border-b-cyan-950/90' },
+    uchimbaji_dhahabu: { body: 'bg-yellow-700/80', roof: 'border-b-yellow-800/90' },
+    uchimbaji_silver: { body: 'bg-slate-600/80', roof: 'border-b-slate-700/90' },
+    uchimbaji_ruby: { body: 'bg-red-800/80', roof: 'border-b-red-950/90' },
+    uchimbaji_tanzanite: { body: 'bg-purple-800/80', roof: 'border-b-purple-950/90' },
+    uchimbaji_shaba: { body: 'bg-orange-700/80', roof: 'border-b-orange-800/90' },
+    kiwanda_cha_umeme: { body: 'bg-yellow-600/80', roof: 'border-b-yellow-700/90' },
+    kiwanda_cha_maji: { body: 'bg-blue-700/80', roof: 'border-b-blue-800/90' },
+    kiwanda_cha_mbao: { body: 'bg-amber-800/80', roof: 'border-b-amber-950/90' },
+    kiwanda_cha_saruji: { body: 'bg-gray-600/80', roof: 'border-b-gray-700/90' },
+    kiwanda_cha_matofali: { body: 'bg-orange-900/80', roof: 'border-b-orange-950/90' },
+    kiwanda_cha_chuma: { body: 'bg-slate-800/80', roof: 'border-b-slate-900/90' },
+    kiwanda_cha_sukari: { body: 'bg-amber-600/80', roof: 'border-b-amber-700/90' },
+    mgahawa: { body: 'bg-indigo-700/80', roof: 'border-b-indigo-800/90' },
+    kiwanda_cha_mashine: { body: 'bg-gray-700/80', roof: 'border-b-gray-900/90' },
+    ofisi_ya_leseni: { body: 'bg-blue-900/80', roof: 'border-b-blue-950/90' },
+    kiwanda_cha_karatasi: { body: 'bg-stone-400/80', roof: 'border-b-stone-500/90' },
+    wizara_ya_madini: { body: 'bg-yellow-900/80', roof: 'border-b-yellow-950/90' },
+    default: { body: 'bg-gray-700/80', roof: 'border-b-gray-600/90' }
+};
+
 interface DashboardProps {
     buildingSlots: BuildingSlot[];
     inventory: InventoryItem[];
@@ -478,6 +506,7 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {buildingSlots.map((slot, index) => {
             const currentRecipe = slot.production ? recipes.find(r => r.id === slot.production!.recipeId) : null;
+            const style = slot.building ? (buildingStyles[slot.building.id] || buildingStyles.default) : buildingStyles.default;
             return slot.building ? (
             <Card
               key={index}
@@ -488,14 +517,14 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
             >
                 <div className="w-full h-4/6 relative flex items-center justify-center">
                     {/* Building Body */}
-                    <div className="w-4/5 h-full bg-gray-700/80 rounded-t-md flex items-center justify-center">
+                    <div className={cn("w-4/5 h-full rounded-t-md flex items-center justify-center", style.body)}>
                         {React.cloneElement(slot.building.icon, {
-                            className: 'w-10 h-10 opacity-90',
+                            className: 'w-10 h-10 text-white/90',
                         })}
                     </div>
                     {/* Building Roof */}
                     <div 
-                        className="absolute top-0 w-full h-0 border-b-[30px] border-b-gray-600/90"
+                        className={cn("absolute top-0 w-full h-0 border-b-[30px]", style.roof)}
                         style={{
                             borderLeft: '20px solid transparent',
                             borderRight: '20px solid transparent',
@@ -870,3 +899,4 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
     
 
     
+
