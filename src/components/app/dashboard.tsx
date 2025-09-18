@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -19,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -319,6 +318,14 @@ const availableBuildings: BuildingType[] = [
         description: 'Huzalisha gundi.',
         image: 'https://picsum.photos/seed/glue-factory/200/200',
         imageHint: 'glue factory'
+    },
+    {
+        id: 'sonara',
+        name: 'Sonara',
+        icon: <CircleDollarSign className="text-yellow-400" />,
+        description: 'Hutengeneza vito na mapambo ya thamani.',
+        image: 'https://picsum.photos/seed/goldsmith/200/200',
+        imageHint: 'goldsmith workshop'
     }
 ];
 
@@ -354,6 +361,7 @@ const buildingStyles: Record<string, { body: string; roof: string }> = {
     kiwanda_cha_vioo: { body: 'bg-cyan-700/80', roof: 'border-b-cyan-800/90' },
     kiwanda_cha_chokaa: { body: 'bg-stone-700/80', roof: 'border-b-stone-800/90' },
     kiwanda_cha_gundi: { body: 'bg-yellow-700/80', roof: 'border-b-yellow-800/90' },
+    sonara: { body: 'bg-yellow-800/80', roof: 'border-b-yellow-950/90' },
     default: { body: 'bg-gray-700/80', roof: 'border-b-gray-600/90' }
 };
 

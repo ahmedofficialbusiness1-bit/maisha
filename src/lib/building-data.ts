@@ -213,6 +213,11 @@ export const buildingData: Record<string, BuildingConfig> = {
         productionRate: 80,
         buildCost: [{ name: 'Mbao', quantity: 80 }, { name: 'Matofali', quantity: 80 }],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    sonara: {
+        productionRate: 5,
+        buildCost: [{ name: 'Zege', quantity: 300 }, { name: 'Nondo', quantity: 100 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     }
 };
 

@@ -7,7 +7,7 @@ import {
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf, LucideIcon, 
     Milestone, Mountain, Package, Palmtree, Recycle, Shell, Ship, Shrub, Sprout,
     Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText, ScrollText, Droplets, Zap,
-    Building2, Glasses, FlaskConical, Shirt, Watch, Footprints
+    Building2, Glasses, FlaskConical, Shirt, Watch, Footprints, CircleDollarSign, Medal, Crown
 } from 'lucide-react';
 
 
@@ -113,6 +113,13 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Jeans': <Shirt className="text-blue-600" />,
     'Skirt': <Shirt className="text-pink-500" />,
     'Kijora': <Shirt className="text-green-500" />,
+    // Vito
+    'Mkufu wa Dhahabu': <Medal className="text-yellow-400" />,
+    'Saa ya Dhahabu': <Watch className="text-yellow-400" />,
+    'Pete ya Dhahabu': <CircleDollarSign className="text-yellow-400" />,
+    'Mkufu wa Almasi': <Crown className="text-cyan-300" />,
+    'Saa ya Almasi': <Watch className="text-cyan-300" />,
+    'Pete ya Almasi': <Gem className="text-cyan-300" />,
 
 
     // Vifaa & Nyaraka
@@ -269,6 +276,12 @@ const itemCategorization: Record<string, string> = {
     'Jeans': 'Mavazi',
     'Skirt': 'Mavazi',
     'Kijora': 'Mavazi',
+    'Mkufu wa Dhahabu': 'Mavazi',
+    'Saa ya Dhahabu': 'Mavazi',
+    'Pete ya Dhahabu': 'Mavazi',
+    'Mkufu wa Almasi': 'Mavazi',
+    'Saa ya Almasi': 'Mavazi',
+    'Pete ya Almasi': 'Mavazi',
 };
 
 // Auto-categorize Machines and Licenses
