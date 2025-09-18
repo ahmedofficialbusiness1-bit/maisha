@@ -6,7 +6,8 @@ import {
     Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component, CookingPot,
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf, LucideIcon, 
     Milestone, Mountain, Package, Palmtree, Recycle, Shell, Ship, Shrub, Sprout,
-    Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText, ScrollText, Droplets, Zap
+    Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText, ScrollText, Droplets, Zap,
+    Building2, Glasses, FlaskConical, Shirt, Watch, Footprints
 } from 'lucide-react';
 
 
@@ -97,6 +98,22 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     // Utilities
     'Umeme': <Zap className="text-yellow-300" />,
     'Maji': <Droplets className="text-blue-500" />,
+
+    // Mavazi & Nguo
+    'Gundi': <FlaskConical className="text-yellow-200" />,
+    'Chokaa': <Building2 className="text-stone-400" />,
+    'Kioo': <Glasses className="text-cyan-300" />,
+    'Kitamba': <Package className="text-pink-400" />,
+    'Ngozi': <Package className="text-amber-800" />,
+    'Soli': <Footprints className="text-stone-500" />,
+    'Saa': <Watch className="text-slate-300" />,
+    'Viatu': <Footprints className="text-amber-900" />,
+    'Pochi': <Package className="text-amber-700" />,
+    'T-Shirt': <Shirt className="text-white" />,
+    'Jeans': <Shirt className="text-blue-600" />,
+    'Skirt': <Shirt className="text-pink-500" />,
+    'Kijora': <Shirt className="text-green-500" />,
+
 
     // Vifaa & Nyaraka
     'Mashine A1': <Wrench className="text-gray-400" />,
@@ -220,7 +237,7 @@ allItemNames.forEach(itemName => {
 
 
 // Group items by category for the market view
-const categoryOrder = ['Construction', 'Vifaa', 'Documents', 'Madini', 'Raw Material', 'Agriculture', 'Food', 'Product'];
+const categoryOrder = ['Construction', 'Vifaa', 'Documents', 'Madini', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
 const itemCategorization: Record<string, string> = {
     'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction', 'Mabati': 'Construction',
     'Saruji': 'Construction', 'Mchanga': 'Construction', 'Mawe': 'Construction', 'Kokoto': 'Construction',
@@ -237,6 +254,21 @@ const itemCategorization: Record<string, string> = {
     'Samaki': 'Food', 'Chumvi': 'Food',
     'Umeme': 'Raw Material', 'Maji': 'Raw Material',
     'Karatasi': 'Product', 'Cheti cha Madini': 'Documents',
+
+    // Mavazi
+    'Gundi': 'Raw Material',
+    'Chokaa': 'Raw Material',
+    'Kioo': 'Product',
+    'Kitamba': 'Product',
+    'Ngozi': 'Product',
+    'Soli': 'Product',
+    'Saa': 'Mavazi',
+    'Viatu': 'Mavazi',
+    'Pochi': 'Mavazi',
+    'T-Shirt': 'Mavazi',
+    'Jeans': 'Mavazi',
+    'Skirt': 'Mavazi',
+    'Kijora': 'Mavazi',
 };
 
 // Auto-categorize Machines and Licenses
@@ -270,3 +302,5 @@ export const encyclopediaData: EncyclopediaEntry[] = generatedEntries.sort((a, b
     }
     return a.name.localeCompare(b.name);
 });
+
+    

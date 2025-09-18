@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -264,6 +264,62 @@ const availableBuildings: BuildingType[] = [
         image: 'https://picsum.photos/seed/ministry-minerals/200/200',
         imageHint: 'government building'
     },
+    {
+        id: 'kiwanda_cha_vitambaa',
+        name: 'Kiwanda cha Vitambaa',
+        icon: <Factory className="text-pink-400" />,
+        description: 'Huzalisha vitambaa kutoka pamba na katani.',
+        image: 'https://picsum.photos/seed/fabric-factory/200/200',
+        imageHint: 'fabric factory'
+    },
+    {
+        id: 'kiwanda_cha_ngozi',
+        name: 'Kiwanda cha Ngozi',
+        icon: <Factory className="text-amber-800" />,
+        description: 'Husindika ngozi kutoka kwa wanyama.',
+        image: 'https://picsum.photos/seed/leather-factory/200/200',
+        imageHint: 'leather factory'
+    },
+    {
+        id: 'kiwanda_cha_nguo',
+        name: 'Kiwanda cha Nguo',
+        icon: <Shirt className="text-blue-500" />,
+        description: 'Hushona mavazi mbalimbali.',
+        image: 'https://picsum.photos/seed/garment-factory/200/200',
+        imageHint: 'garment factory'
+    },
+    {
+        id: 'kiwanda_cha_saa',
+        name: 'Kiwanda cha Saa',
+        icon: <Watch className="text-slate-300" />,
+        description: 'Huzalisha saa na soli za viatu.',
+        image: 'https://picsum.photos/seed/watch-factory/200/200',
+        imageHint: 'watch factory'
+    },
+    {
+        id: 'kiwanda_cha_vioo',
+        name: 'Kiwanda cha Vioo',
+        icon: <Glasses className="text-cyan-300" />,
+        description: 'Huzalisha vioo kwa ajili ya saa na matumizi mengine.',
+        image: 'https://picsum.photos/seed/glass-factory/200/200',
+        imageHint: 'glass factory'
+    },
+    {
+        id: 'kiwanda_cha_chokaa',
+        name: 'Kiwanda cha Chokaa',
+        icon: <Building2 className="text-stone-400" />,
+        description: 'Huzalisha chokaa.',
+        image: 'https://picsum.photos/seed/lime-factory/200/200',
+        imageHint: 'lime factory'
+    },
+    {
+        id: 'kiwanda_cha_gundi',
+        name: 'Kiwanda cha Gundi',
+        icon: <FlaskConical className="text-yellow-200" />,
+        description: 'Huzalisha gundi.',
+        image: 'https://picsum.photos/seed/glue-factory/200/200',
+        imageHint: 'glue factory'
+    }
 ];
 
 const buildingStyles: Record<string, { body: string; roof: string }> = {
@@ -291,6 +347,13 @@ const buildingStyles: Record<string, { body: string; roof: string }> = {
     ofisi_ya_leseni: { body: 'bg-blue-900/80', roof: 'border-b-blue-950/90' },
     kiwanda_cha_karatasi: { body: 'bg-stone-400/80', roof: 'border-b-stone-500/90' },
     wizara_ya_madini: { body: 'bg-yellow-900/80', roof: 'border-b-yellow-950/90' },
+    kiwanda_cha_vitambaa: { body: 'bg-pink-800/80', roof: 'border-b-pink-950/90' },
+    kiwanda_cha_ngozi: { body: 'bg-amber-900/80', roof: 'border-b-amber-950/90' },
+    kiwanda_cha_nguo: { body: 'bg-blue-800/80', roof: 'border-b-blue-950/90' },
+    kiwanda_cha_saa: { body: 'bg-slate-700/80', roof: 'border-b-slate-800/90' },
+    kiwanda_cha_vioo: { body: 'bg-cyan-700/80', roof: 'border-b-cyan-800/90' },
+    kiwanda_cha_chokaa: { body: 'bg-stone-700/80', roof: 'border-b-stone-800/90' },
+    kiwanda_cha_gundi: { body: 'bg-yellow-700/80', roof: 'border-b-yellow-800/90' },
     default: { body: 'bg-gray-700/80', roof: 'border-b-gray-600/90' }
 };
 
@@ -900,3 +963,4 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
 
     
 
+    

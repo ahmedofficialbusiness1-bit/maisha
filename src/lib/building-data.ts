@@ -1,3 +1,4 @@
+
 export type BuildingConfig = {
     productionRate: number; // units per hour at level 1
     buildCost: { name: string; quantity: number }[];
@@ -158,7 +159,6 @@ export const buildingData: Record<string, BuildingConfig> = {
         buildCost: [{ name: 'Zege', quantity: 250 }, { name: 'Nondo', quantity: 100 }],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
-    // New Factories
     kiwanda_cha_mashine: {
         productionRate: 1, // Produces 1 machine per hour at level 1
         buildCost: [{ name: 'Zege', quantity: 200 }, { name: 'Nondo', quantity: 100 }],
@@ -177,6 +177,41 @@ export const buildingData: Record<string, BuildingConfig> = {
     wizara_ya_madini: {
         productionRate: 2, // Produces 2 certificates per hour at level 1
         buildCost: [{ name: 'Zege', quantity: 300 }, { name: 'Nondo', quantity: 150 }, { name: 'Mbao', quantity: 200 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_vitambaa: {
+        productionRate: 50,
+        buildCost: [{ name: 'Mbao', quantity: 100 }, { name: 'Matofali', quantity: 100 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_ngozi: {
+        productionRate: 30,
+        buildCost: [{ name: 'Mbao', quantity: 120 }, { name: 'Matofali', quantity: 80 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_nguo: {
+        productionRate: 20,
+        buildCost: [{ name: 'Matofali', quantity: 200 }, { name: 'Nondo', quantity: 50 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_saa: {
+        productionRate: 10,
+        buildCost: [{ name: 'Nondo', quantity: 100 }, { name: 'Zege', quantity: 50 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_vioo: {
+        productionRate: 40,
+        buildCost: [{ name: 'Matofali', quantity: 150 }, { name: 'Zege', quantity: 100 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_chokaa: {
+        productionRate: 60,
+        buildCost: [{ name: 'Mawe', quantity: 200 }, { name: 'Mbao', quantity: 50 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_gundi: {
+        productionRate: 80,
+        buildCost: [{ name: 'Mbao', quantity: 80 }, { name: 'Matofali', quantity: 80 }],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     }
 };
