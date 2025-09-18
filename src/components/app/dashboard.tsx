@@ -75,7 +75,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'shamba',
         name: 'Shamba',
-        icon: <Leaf className="mr-2 h-6 w-6 text-green-500" />,
+        icon: <Leaf className="text-green-500" />,
         description: 'Huzalisha mazao ya kilimo na mifugo.',
         image: 'https://picsum.photos/seed/farm-land/200/200',
         imageHint: 'fertile farm'
@@ -83,7 +83,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'zizi',
         name: 'Zizi',
-        icon: <Drumstick className="mr-2 h-6 w-6 text-orange-400" />,
+        icon: <Drumstick className="text-orange-400" />,
         description: 'Hufuga wanyama na kuzalisha bidhaa za mifugo.',
         image: 'https://picsum.photos/seed/animal-pen/200/200',
         imageHint: 'animal pen'
@@ -91,7 +91,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_samaki',
         name: 'Kiwanda cha Samaki',
-        icon: <GlassWater className="mr-2 h-6 w-6 text-blue-400" />,
+        icon: <GlassWater className="text-blue-400" />,
         description: 'Husindika samaki na bidhaa za baharini.',
         image: 'https://picsum.photos/seed/fish-factory/200/200',
         imageHint: 'fish factory'
@@ -99,7 +99,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_mawe',
         name: 'Uchimbaji Mawe (Quarry)',
-        icon: <Mountain className="mr-2 h-6 w-6 text-gray-500" />,
+        icon: <Mountain className="text-gray-500" />,
         description: 'Huchimba mawe na kokoto.',
         image: 'https://picsum.photos/seed/quarry/200/200',
         imageHint: 'stone quarry'
@@ -107,7 +107,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_mchanga',
         name: 'Uchimbaji Mchanga',
-        icon: <Mountain className="mr-2 h-6 w-6 text-yellow-600" />,
+        icon: <Mountain className="text-yellow-600" />,
         description: 'Huchimba mchanga.',
         image: 'https://picsum.photos/seed/sand-pit/200/200',
         imageHint: 'sand pit'
@@ -115,7 +115,7 @@ const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_chuma',
         name: 'Uchimbaji Chuma',
-        icon: <Gem className="mr-2 h-6 w-6 text-slate-500" />,
+        icon: <Gem className="text-slate-500" />,
         description: 'Huchimba madini ya chuma.',
         image: 'https://picsum.photos/seed/iron-mine/200/200',
         imageHint: 'iron mine'
@@ -483,15 +483,26 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
               key={index}
               onClick={() => handleCardClick(slot, index)}
               className={cn(
-                "flex flex-col items-center justify-center h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square"
+                "flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2"
               )}
             >
-                <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-                    {React.cloneElement(slot.building.icon, {
-                        className: 'w-12 h-12 opacity-80',
-                    })}
+                <div className="w-full h-4/6 relative flex items-center justify-center">
+                    {/* Building Body */}
+                    <div className="w-4/5 h-full bg-gray-700/80 rounded-t-md flex items-center justify-center">
+                        {React.cloneElement(slot.building.icon, {
+                            className: 'w-10 h-10 opacity-90',
+                        })}
+                    </div>
+                    {/* Building Roof */}
+                    <div 
+                        className="absolute top-0 w-full h-0 border-b-[30px] border-b-gray-600/90"
+                        style={{
+                            borderLeft: '20px solid transparent',
+                            borderRight: '20px solid transparent',
+                        }}
+                    />
                 </div>
-                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/60 transition-colors" />
+
 
                 {slot.production && (
                    <div className="absolute top-2 left-2 p-1 bg-yellow-500/80 rounded-full animate-pulse">
