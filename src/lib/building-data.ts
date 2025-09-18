@@ -285,8 +285,30 @@ export const buildingData: Record<string, BuildingConfig> = {
         buildCost: [{ name: 'Zege', quantity: 150 }, { name: 'Nondo', quantity: 150 }],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
+    // Vehicle Chain
+    kiwanda_cha_spare: {
+        productionRate: 10,
+        buildCost: [{ name: 'Nondo', quantity: 200 }, { name: 'Zege', quantity: 100 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_gari: {
+        productionRate: 2,
+        buildCost: [{ name: 'Nondo', quantity: 500 }, { name: 'Zege', quantity: 300 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_pikipiki: {
+        productionRate: 5,
+        buildCost: [{ name: 'Nondo', quantity: 300 }, { name: 'Zege', quantity: 150 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_ndege: {
+        productionRate: 1,
+        buildCost: [{ name: 'Nondo', quantity: 1000 }, { name: 'Zege', quantity: 500 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    kiwanda_cha_meli: {
+        productionRate: 1,
+        buildCost: [{ name: 'Nondo', quantity: 1500 }, { name: 'Zege', quantity: 800 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
 };
-
-    
-
-

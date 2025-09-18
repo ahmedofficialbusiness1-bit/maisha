@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -432,6 +432,47 @@ const availableBuildings: BuildingType[] = [
         image: 'https://picsum.photos/seed/config-factory/200/200',
         imageHint: 'electronics assembly'
     },
+    // Vehicle Chain
+    {
+        id: 'kiwanda_cha_spare',
+        name: 'Kiwanda cha Spare',
+        icon: <Wrench className="text-yellow-500" />,
+        description: 'Huzalisha vipuri mbalimbali vya magari na vyombo vingine.',
+        image: 'https://picsum.photos/seed/spare-parts-factory/200/200',
+        imageHint: 'spare parts'
+    },
+    {
+        id: 'kiwanda_cha_gari',
+        name: 'Kiwanda cha Gari',
+        icon: <Car className="text-red-500" />,
+        description: 'Huunganisha magari na malori.',
+        image: 'https://picsum.photos/seed/car-factory/200/200',
+        imageHint: 'car factory'
+    },
+    {
+        id: 'kiwanda_cha_pikipiki',
+        name: 'Kiwanda cha Pikipiki',
+        icon: <Bike className="text-blue-500" />,
+        description: 'Huunganisha pikipiki.',
+        image: 'https://picsum.photos/seed/motorcycle-factory/200/200',
+        imageHint: 'motorcycle factory'
+    },
+    {
+        id: 'kiwanda_cha_ndege',
+        name: 'Kiwanda cha Ndege',
+        icon: <Plane className="text-cyan-400" />,
+        description: 'Huunganisha ndege.',
+        image: 'https://picsum.photos/seed/airplane-factory/200/200',
+        imageHint: 'airplane factory'
+    },
+    {
+        id: 'kiwanda_cha_meli',
+        name: 'Kiwanda cha Meli',
+        icon: <Ship className="text-indigo-500" />,
+        description: 'Huunganisha meli.',
+        image: 'https://picsum.photos/seed/shipyard/200/200',
+        imageHint: 'shipyard'
+    },
 ];
 
 const buildingStyles: Record<string, { body: string; roof: string }> = {
@@ -481,6 +522,12 @@ const buildingStyles: Record<string, { body: string; roof: string }> = {
     kiwanda_cha_motherboard: { body: 'bg-green-900/80', roof: 'border-b-green-950/90' },
     kiwanda_cha_vifaa_vya_ndani: { body: 'bg-slate-700/80', roof: 'border-b-slate-800/90' },
     kiwanda_cha_usanidi: { body: 'bg-gray-700/80', roof: 'border-b-gray-800/90' },
+    // Vehicle Chain
+    kiwanda_cha_spare: { body: 'bg-yellow-800/80', roof: 'border-b-yellow-950/90' },
+    kiwanda_cha_gari: { body: 'bg-red-800/80', roof: 'border-b-red-950/90' },
+    kiwanda_cha_pikipiki: { body: 'bg-blue-800/80', roof: 'border-b-blue-950/90' },
+    kiwanda_cha_ndege: { body: 'bg-cyan-800/80', roof: 'border-b-cyan-950/90' },
+    kiwanda_cha_meli: { body: 'bg-indigo-800/80', roof: 'border-b-indigo-950/90' },
     default: { body: 'bg-gray-700/80', roof: 'border-b-gray-600/90' }
 };
 
@@ -1083,13 +1130,3 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
     </div>
   );
 }
-
-    
-
-    
-
-    
-
-    
-
-

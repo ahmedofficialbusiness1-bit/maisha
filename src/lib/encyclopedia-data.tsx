@@ -9,7 +9,7 @@ import {
     Squirrel, Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText, ScrollText, Droplets, Zap,
     Building2, Glasses, FlaskConical, Shirt, Watch, Footprints, CircleDollarSign, Medal, Crown,
     Tv, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, HardDrive, Speaker, CircuitBoard,
-    Monitor
+    Monitor, Car, Bike, Plane, Tractor
 } from 'lucide-react';
 
 
@@ -147,6 +147,29 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Rom': <MemoryStick className="text-purple-500" />,
     'PCB': <CircuitBoard className="text-green-700" />,
 
+    // Vehicle Chain
+    'Car Body': <Car className="text-gray-400"/>,
+    'Bike Body': <Bike className="text-gray-400"/>,
+    'Interior': <Package className="text-gray-400"/>,
+    'Luxury Interior': <Package className="text-yellow-400"/>,
+    'Motor': <Wrench className="text-gray-400"/>,
+    'Engine': <Cpu className="text-gray-400"/>,
+    'Dashboard': <Monitor className="text-gray-400"/>,
+    'Bull Dozer': <Tractor className="text-yellow-600"/>,
+    'Lori': <Tractor className="text-red-600"/>,
+    'Gari ya kifahari': <Car className="text-purple-500"/>,
+    'Gari': <Car className="text-blue-500"/>,
+    'Pikipiki ya Kifahari': <Bike className="text-purple-500"/>,
+    'Pikipiki': <Bike className="text-blue-500"/>,
+    'Ndege': <Plane className="text-cyan-500"/>,
+    'Ndege ya kifahari': <Plane className="text-purple-500"/>,
+    'Meli': <Ship className="text-indigo-500"/>,
+    'Meli ya kifahari': <Ship className="text-purple-500"/>,
+    'Bull dozer body': <Package className="text-gray-400"/>,
+    'Truck body': <Package className="text-gray-400"/>,
+    'Bodi ya Ndege': <Package className="text-gray-400"/>,
+    'Bodi ya Meli': <Package className="text-gray-400"/>,
+
 
     // Vifaa & Nyaraka
     'Mashine A1': <Wrench className="text-gray-400" />,
@@ -270,7 +293,7 @@ allItemNames.forEach(itemName => {
 
 
 // Group items by category for the market view
-const categoryOrder = ['Electronics', 'Construction', 'Vifaa', 'Documents', 'Madini', 'Mafuta', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
+const categoryOrder = ['Vehicles', 'Spares', 'Electronics', 'Construction', 'Vifaa', 'Documents', 'Madini', 'Mafuta', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
 const itemCategorization: Record<string, string> = {
     'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction', 'Mabati': 'Construction',
     'Saruji': 'Construction', 'Mchanga': 'Construction', 'Mawe': 'Construction', 'Kokoto': 'Construction',
@@ -328,6 +351,29 @@ const itemCategorization: Record<string, string> = {
     'Ram': 'Electronics',
     'Rom': 'Electronics',
     'PCB': 'Electronics',
+
+    // Vehicle Chain
+    'Car Body': 'Spares',
+    'Bike Body': 'Spares',
+    'Interior': 'Spares',
+    'Luxury Interior': 'Spares',
+    'Motor': 'Spares',
+    'Engine': 'Spares',
+    'Dashboard': 'Spares',
+    'Bull dozer body': 'Spares',
+    'Truck body': 'Spares',
+    'Bodi ya Ndege': 'Spares',
+    'Bodi ya Meli': 'Spares',
+    'Bull Dozer': 'Vehicles',
+    'Lori': 'Vehicles',
+    'Gari ya kifahari': 'Vehicles',
+    'Gari': 'Vehicles',
+    'Pikipiki ya Kifahari': 'Vehicles',
+    'Pikipiki': 'Vehicles',
+    'Ndege': 'Vehicles',
+    'Ndege ya kifahari': 'Vehicles',
+    'Meli': 'Vehicles',
+    'Meli ya kifahari': 'Vehicles',
 };
 
 // Auto-categorize Machines and Licenses
@@ -361,5 +407,3 @@ export const encyclopediaData: EncyclopediaEntry[] = generatedEntries.sort((a, b
     }
     return a.name.localeCompare(b.name);
 });
-
-    
