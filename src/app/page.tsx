@@ -581,7 +581,7 @@ export default function Home() {
                 description: `Umepokea jumla ya $${totalDividends.toFixed(2)}. (${dividendMessages.join(', ')})`
             });
         }
-    }, 2 * 60000); // Every 2 minutes to simulate a "day"
+    }, 30 * 60000); // Every 30 minutes to simulate a "day"
 
     // Stock market fluctuation interval
     const marketFluctuationInterval = setInterval(() => {
