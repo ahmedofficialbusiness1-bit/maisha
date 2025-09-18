@@ -3,9 +3,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Bell, Menu, Star, Coins, LogOut } from 'lucide-react';
+import { Bell, Menu, Star, Coins } from 'lucide-react';
 import { useMemo } from 'react';
-import { signOut } from '@/lib/auth';
 
 interface AppHeaderProps {
     money: number;
@@ -79,13 +78,6 @@ export function AppHeader({ money, stars }: AppHeaderProps) {
           <span className="sr-only">Notifications</span>
         </Button>
         
-        {/* Logout Button */}
-        <form action={signOut}>
-          <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10">
-            <LogOut className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="sr-only">Logout</span>
-          </Button>
-        </form>
       </div>
     </header>
   );

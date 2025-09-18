@@ -16,6 +16,14 @@ import { buildingData } from '@/lib/building-data';
 import { workerData, type Worker } from '@/lib/worker-data.tsx';
 import { CommoditySimulator } from '@/components/app/commodity-simulator';
 
+const BUILDING_SLOTS = 20;
+
+export type PlayerStock = {
+    ticker: string;
+    shares: number;
+}
+
+export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'encyclopedia' | 'hr';
 
 const initialInventoryItems: InventoryItem[] = [
   { item: 'Maji', quantity: 15000, marketPrice: 0.02 },
@@ -68,56 +76,33 @@ const initialInventoryItems: InventoryItem[] = [
 const initialPlayerListings: PlayerListing[] = [
     { id: 1, commodity: 'Maji', seller: 'Flexy suyo', quantity: 450, price: 0.02, avatar: 'https://picsum.photos/seed/flexy/40/40', quality: 1, imageHint: 'player avatar' },
     { id: 2, commodity: 'Yai', seller: 'MKG CIE', quantity: 100, price: 1.25, avatar: 'https://picsum.photos/seed/mkg/40/40', quality: 0, imageHint: 'company logo' },
-    { id: 3, commodity: 'Maji', seller: 'Atul Company', quantity: 944, price: 0.02, avatar: 'https://picsum.photos/seed/atul/40/40', quality: 0, imageHint: 'company logo' },
-    { id: 4, commodity: 'Yai', seller: 'Prometheucls co', quantity: 1969, price: 1.3, avatar: 'https://picsum.photos/seed/prom/40/40', quality: 1, imageHint: 'company logo' },
-    { id: 5, commodity: 'Mbao', seller: 'laptop si gera', quantity: 421, price: 13.0, avatar: 'https://picsum.photos/seed/laptop/40/40', quality: 4, imageHint: 'player avatar' },
-    { id: 6, commodity: 'Nondo', seller: 'Mustika70', quantity: 119, price: 320.0, avatar: 'https://picsum.photos/seed/mustika/40/40', quality: 4, imageHint: 'company logo' },
-    { id: 7, commodity: 'Matofali', seller: 'Schreinerei', quantity: 440, price: 19.0, avatar: 'https://picsum.photos/seed/schrein/40/40', quality: 2, imageHint: 'company logo' },
 ];
 
 const initialCompanyData: StockListing[] = [
     { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, sharesAvailable: 10000, marketCap: 4507500, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 500000, dividendYield: 0.015 },
     { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, sharesAvailable: 50000, marketCap: 6025000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 250000, dividendYield: 0.021 },
-    { id: 'MADINI', ticker: 'MADINI', companyName: 'Madini Resources', stockPrice: 87.20, sharesAvailable: 25000, marketCap: 2180000, logo: 'https://picsum.photos/seed/madini/40/40', imageHint: 'mining company', creditRating: 'BBB', dailyRevenue: 180000, dividendYield: 0.018 },
-    { id: 'TEKNOLO', ticker: 'TEKNOLO', companyName: 'Teknolojia Solutions', stockPrice: 320.00, sharesAvailable: 15000, marketCap: 4800000, logo: 'https://picsum.photos/seed/teknolo/40/40', imageHint: 'tech logo', creditRating: 'A+', dailyRevenue: 700000, dividendYield: 0.025 },
 ];
-
 
 const initialBondListings: BondListing[] = [
     { id: 1, issuer: 'Serikali ya Tanzania', faceValue: 1000, couponRate: 5.5, maturityDate: '2030-12-31', price: 980, quantityAvailable: 500, creditRating: 'A+', issuerLogo: 'https://picsum.photos/seed/tza-gov/40/40', imageHint: 'government seal' },
     { id: 2, issuer: 'Kilimo Fresh Inc.', faceValue: 1000, couponRate: 7.2, maturityDate: '2028-06-30', price: 1010, quantityAvailable: 2000, creditRating: 'BBB', issuerLogo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo' },
-    { id: 3, issuer: 'Uchumi wa Afrika', faceValue: 5000, couponRate: 6.0, maturityDate: '2035-01-01', price: 4950, quantityAvailable: 100, creditRating: 'AA-', issuerLogo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo' },
 ];
 
-const BUILDING_SLOTS = 20;
-
-export type PlayerStock = {
-    ticker: string;
-    shares: number;
-}
-
-export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'encyclopedia' | 'hr';
-
-// This component will hold all the game logic and state.
-// `initialData` will be used to load saved game state from Firestore in the future.
 export function Game() {
-  // For now, we'll pass null and let the Game component handle initial state.
-  const initialData = null;
+  const { toast } = useToast();
+
   const [view, setView] = React.useState<View>('dashboard');
+
+  // State Management
+  const [money, setMoney] = React.useState(1900000);
+  const [stars, setStars] = React.useState(50);
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialInventoryItems);
   const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialPlayerListings);
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
   const [bondListings, setBondListings] = React.useState<BondListing[]>(initialBondListings);
-  const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(
-    Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 }))
-  );
-  const { toast } = useToast();
-  const [money, setMoney] = React.useState(1900000);
-  const [stars, setStars] = React.useState(50); // Initial stars for testing
-  
+  const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })));
   const [availableWorkers, setAvailableWorkers] = React.useState<Worker[]>(workerData);
   const [hiredWorkers, setHiredWorkers] = React.useState<Worker[]>([]);
-  
   const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>([]);
 
   const handleHireWorker = (workerId: string) => {
