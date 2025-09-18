@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane, Rocket } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane, Rocket, ShieldCheck, Search } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -589,6 +589,7 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
   const [selectedBuildingForBuild, setSelectedBuildingForBuild] = React.useState<BuildingType | null>(null);
+  const [buildingSearch, setBuildingSearch] = React.useState('');
 
   const [isProductionDialogOpen, setIsProductionDialogOpen] = React.useState(false);
   const [isManagementDialogOpen, setIsManagementDialogOpen] = React.useState(false);
@@ -609,6 +610,7 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
     setSelectedSlotIndex(index);
     setBuildDialogStep('list');
     setSelectedBuildingForBuild(null);
+    setBuildingSearch('');
     setIsBuildDialogOpen(true);
   };
   
@@ -760,6 +762,10 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
   const canAffordBuild = hasEnoughMaterials(buildCosts);
   
   const workerCheck = selectedRecipe ? hasEnoughWorkers(selectedRecipe) : { has: true, missing: [] };
+  
+  const filteredBuildings = availableBuildings.filter(b =>
+      b.name.toLowerCase().includes(buildingSearch.toLowerCase())
+  );
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -860,26 +866,37 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
               </DialogTitle>
               <DialogDescription>
                 {buildDialogStep === 'list' 
-                  ? 'Chagua jengo unalotaka kujenga kwenye kiwanja hiki.'
+                  ? 'Tafuta na chagua jengo unalotaka kujenga kwenye kiwanja hiki.'
                   : 'Hakiki mahitaji na anza ujenzi.'}
               </DialogDescription>
             </DialogHeader>
 
             {buildDialogStep === 'list' && (
-              <ScrollArea className="max-h-[70vh] pr-4 -mr-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4">
-                      {availableBuildings.map((b) => (
-                          <Card 
-                              key={b.id} 
-                              className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-4 text-center"
-                              onClick={() => handleSelectBuildingToShowDetails(b)}
-                          >
-                            {React.cloneElement(b.icon, { className: 'h-8 w-8' })}
-                            <p className="font-semibold mt-2 text-sm">{b.name}</p>
-                          </Card>
-                      ))}
-                  </div>
-              </ScrollArea>
+              <div className='pt-4 flex flex-col gap-4'>
+                <div className='relative'>
+                    <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
+                    <Input 
+                        placeholder='Tafuta jengo...'
+                        value={buildingSearch}
+                        onChange={(e) => setBuildingSearch(e.target.value)}
+                        className='pl-10 bg-gray-800 border-gray-600'
+                    />
+                </div>
+                <ScrollArea className="max-h-[60vh] pr-4 -mr-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {filteredBuildings.map((b) => (
+                            <Card 
+                                key={b.id} 
+                                className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-4 text-center"
+                                onClick={() => handleSelectBuildingToShowDetails(b)}
+                            >
+                              {React.cloneElement(b.icon, { className: 'h-8 w-8' })}
+                              <p className="font-semibold mt-2 text-sm">{b.name}</p>
+                            </Card>
+                        ))}
+                    </div>
+                </ScrollArea>
+              </div>
             )}
 
             {buildDialogStep === 'details' && selectedBuildingForBuild && (

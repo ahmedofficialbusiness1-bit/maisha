@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, ChevronsLeft, ChevronsRight, HelpCircle } from 'lucide-react';
+import { ArrowLeft, ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, ChevronsLeft, ChevronsRight, HelpCircle, Search } from 'lucide-react';
 import type { InventoryItem } from './inventory';
 import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data.tsx';
 import { cn } from '@/lib/utils';
@@ -89,6 +89,7 @@ interface TradeMarketProps {
 export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
+  const [searchTerm, setSearchTerm] = React.useState('');
 
   const filteredListings = playerListings.filter(listing => listing.commodity === selectedProduct?.name);
   
@@ -102,42 +103,76 @@ export function TradeMarket({ playerListings, inventory }: TradeMarketProps) {
       setSelectedProduct(null);
   }
 
+  const filteredCategories = React.useMemo(() => {
+    if (!searchTerm) {
+        return productCategories;
+    }
+
+    const lowercasedFilter = searchTerm.toLowerCase();
+    const filtered: Record<string, EncyclopediaEntry[]> = {};
+
+    for (const category in productCategories) {
+        const matchingProducts = productCategories[category].filter(product =>
+            product.name.toLowerCase().includes(lowercasedFilter)
+        );
+
+        if (matchingProducts.length > 0) {
+            filtered[category] = matchingProducts;
+        }
+    }
+
+    return filtered;
+  }, [searchTerm]);
+
+
   return (
     <div className="flex flex-col gap-4 text-white -m-4 sm:-m-6">
       <PriceTicker inventory={inventory} />
       
       {viewMode === 'list' && (
-        <div className="p-4 sm:p-6">
-            <Card className="bg-gray-800/60 border-gray-700 h-full">
+        <div className="p-4 sm:p-6 flex flex-col gap-4">
+            <Card className="bg-gray-800/60 border-gray-700">
                  <CardHeader>
                     <CardTitle>Trade Market</CardTitle>
-                    <CardDescription>Select a product to see exchange listings.</CardDescription>
+                    <CardDescription>Tafuta na chagua bidhaa ili kuona orodha za sokoni.</CardDescription>
                 </CardHeader>
-                <ScrollArea className="h-[70vh]">
-                <CardContent className="p-2">
-                    {Object.entries(productCategories).map(([category, products]) => (
-                    <div key={category} className="mb-4">
-                        <h3 className="font-bold text-sm text-gray-400 px-2 mb-2">{category}</h3>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
-                        {products.map(product => (
-                            <button
-                            key={product.id}
-                            onClick={() => handleProductSelect(product)}
-                            className="p-3 rounded-lg border-2 text-center flex flex-col items-center justify-center bg-gray-700/50 border-gray-600 hover:bg-blue-600/30 hover:border-blue-500 transition-colors"
-                            title={product.name}
-                            >
-                            <div className="h-5 w-5 flex items-center justify-center mb-2">
-                                {React.cloneElement(product.icon, { className: "h-full w-full" })}
-                            </div>
-                            <span className="text-xs font-semibold block truncate w-full">{product.name}</span>
-                            </button>
-                        ))}
-                        </div>
+                <CardContent>
+                    <div className='relative'>
+                        <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
+                        <Input 
+                            placeholder='Tafuta bidhaa...'
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className='w-full pl-10 bg-gray-900/80 border-gray-600'
+                        />
                     </div>
-                    ))}
                 </CardContent>
-                </ScrollArea>
             </Card>
+
+            <ScrollArea className="h-[65vh]">
+            <div className="pr-4">
+                {Object.entries(filteredCategories).map(([category, products]) => (
+                <div key={category} className="mb-4">
+                    <h3 className="font-bold text-sm text-gray-400 px-2 mb-2">{category}</h3>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+                    {products.map(product => (
+                        <button
+                        key={product.id}
+                        onClick={() => handleProductSelect(product)}
+                        className="p-3 rounded-lg border-2 text-center flex flex-col items-center justify-center bg-gray-700/50 border-gray-600 hover:bg-blue-600/30 hover:border-blue-500 transition-colors"
+                        title={product.name}
+                        >
+                        <div className="h-5 w-5 flex items-center justify-center mb-2">
+                            {React.cloneElement(product.icon, { className: "h-full w-full" })}
+                        </div>
+                        <span className="text-xs font-semibold block truncate w-full">{product.name}</span>
+                        </button>
+                    ))}
+                    </div>
+                </div>
+                ))}
+                </div>
+            </ScrollArea>
         </div>
       )}
 
