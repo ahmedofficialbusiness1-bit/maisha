@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -698,6 +699,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   };
 
   const hasEnoughMaterials = (costs: {name: string, quantity: number}[]): boolean => {
+      if (!costs) return false;
       return costs.every(cost => {
           const inventoryItem = inventory.find(item => item.item === cost.name);
           return inventoryItem && inventoryItem.quantity >= cost.quantity;
@@ -754,7 +756,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     if (!slot || !slot.building) return;
 
     const buildingInfo = buildingData[slot.building.id];
-    const ratePerHr = buildingInfo.productionRate * (1 + (slot.level - 1) * 0.4);
     
     // Logic for producers (factories, farms)
     if (selectedRecipe && productionQuantity > 0) {
@@ -766,12 +767,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         if (!hasEnoughMaterials(neededInputs)) {
            return;
         }
-        
-        // This is a rough estimation. Real time should be based on recipe complexity.
-        // For now, we use a simplified version based on production rate.
-        const baseTimePerBatch = (3600 * 1000) / ratePerHr;
-        const totalDurationMs = baseTimePerBatch * productionQuantity;
-
+        const totalDurationMs = calculateProductionTime(productionQuantity);
         onStartProduction(selectedSlotIndex, selectedRecipe, productionQuantity, totalDurationMs);
     }
     // Logic for sellers (shops)
@@ -780,10 +776,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         return; // Not enough in inventory
       }
       
-      // Sale time could be based on item value or a flat rate per shop level
-      const saleTimePerUnitMs = 5 * 1000; // 5 seconds per unit
-      const totalDurationMs = saleTimePerUnitMs * productionQuantity;
-
+      const totalDurationMs = calculateSaleTime(productionQuantity);
       onStartSelling(selectedSlotIndex, selectedInventoryItem, productionQuantity, totalDurationMs);
     }
     
@@ -853,27 +846,26 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     });
   }
 
-  const getBuildingProductionRate = (slot: BuildingSlot | null): number => {
-    if (!slot || !slot.building) return 0;
-    const buildingInfo = buildingData[slot.building.id];
-    // Shops don't have a production rate in the same way
-    if(SHOP_BUILDING_IDS.includes(slot.building.id)) return 100; // Placeholder for sale speed
-    return buildingInfo.productionRate * (1 + (slot.level -1) * 0.4);
-  }
-
   const calculateProductionTime = (quantity: number): number => {
       if (!selectedSlot || !selectedRecipe) return 0;
-      const ratePerHr = getBuildingProductionRate(selectedSlot);
-      if (ratePerHr === 0) return Infinity;
-      const hours = quantity / ratePerHr;
-      return hours * 3600 * 1000; // time in ms
+      const buildingInfo = buildingData[selectedRecipe.buildingId];
+      // Time in seconds for one batch, adjusted by level
+      const ratePerHr = buildingInfo.productionRate * (1 + (selectedSlot.level - 1) * 0.4);
+      if (ratePerHr <= 0) return Infinity; // Avoid division by zero for non-producing buildings
+      
+      const baseTimePerBatch = (3600) / ratePerHr;
+      const totalSeconds = baseTimePerBatch * quantity;
+      return totalSeconds * 1000; // time in ms
   }
 
   const calculateSaleTime = (quantity: number): number => {
       if (!selectedSlot || !selectedInventoryItem) return 0;
-      // Let's define a simple sale time: 5 seconds per item
-      const timePerItemMs = 5000;
-      return timePerItemMs * quantity;
+      const productInfo = encyclopediaData.find(e => e.name === selectedInventoryItem.item);
+      const productionTimeProp = productInfo?.properties.find(p => p.label === 'Base Production Time');
+      if (!productionTimeProp) return 5000 * quantity; // Fallback: 5 seconds per item
+
+      const timePerUnitSeconds = parseFloat(productionTimeProp.value);
+      return timePerUnitSeconds * quantity * 1000; // Total time in ms
   }
   
   const calculateProductionCost = (recipe: Recipe, quantity: number): number => {
@@ -881,7 +873,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     if (!recipe.inputs) return 0;
     for (const input of recipe.inputs) {
       const encyclopediaEntry = encyclopediaData.find(e => e.name === input.name);
-      const pricePerUnit = parseFloat(encyclopediaEntry?.properties.find(p => p.label === "Market Cost")?.value.replace('$', '') || '0');
+      const pricePerUnit = parseFloat(encyclopediaEntry?.properties.find(p => p.label === "Market Cost")?.value.replace('$', '').replace(/,/g, '') || '0');
       totalCost += pricePerUnit * input.quantity * quantity;
     }
     return totalCost;
@@ -907,10 +899,10 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   const remainingTime = selectedSlot?.construction ? selectedSlot.construction.endTime - now : 0;
   const maxStarsToUse = Math.min(stars, Math.ceil(remainingTime / timeReductionPerStar));
   
-  const upgradeCosts = selectedSlot?.building ? buildingData[selectedSlot.building.id].upgradeCost(selectedSlot.level + 1) : [];
+  const upgradeCosts = selectedSlot?.building ? buildingData[selectedSlot.building.id]?.upgradeCost(selectedSlot.level + 1) : [];
   const canAffordUpgrade = hasEnoughMaterials(upgradeCosts);
 
-  const buildCosts = selectedBuildingForBuild ? buildingData[selectedBuildingForBuild.id].buildCost : [];
+  const buildCosts = selectedBuildingForBuild ? buildingData[selectedBuildingForBuild.id]?.buildCost : [];
   const canAffordBuild = hasEnoughMaterials(buildCosts);
   
   const filteredBuildings = availableBuildings.filter(b =>
@@ -1054,7 +1046,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                     <div>
                         <h3 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h3>
                         <div className="space-y-1">
-                            {buildCosts.map(cost => {
+                            {buildCosts && buildCosts.map(cost => {
                                 const invItem = inventory.find(i => i.item === cost.name);
                                 const has = invItem?.quantity || 0;
                                 const needed = cost.quantity;
@@ -1103,50 +1095,48 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         Chagua kitendo cha kufanya kwenye jengo hili.
                     </DialogDescription>
                 </DialogHeader>
-                <div className='flex-grow overflow-y-auto -mr-6 pr-6'>
-                    <div className='py-4 space-y-4'>
-                         <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
-                            {isSelectedBuildingShop ? <Store className='mr-2'/> : <Tractor className='mr-2'/>} 
-                            {isSelectedBuildingShop ? "Anza Kuuza" : "Anza Uzalishaji"}
+                <div className='py-4 space-y-4'>
+                    <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
+                        {isSelectedBuildingShop ? <Store className='mr-2'/> : <Tractor className='mr-2'/>} 
+                        {isSelectedBuildingShop ? "Anza Kuuza" : "Anza Uzalishaji"}
+                    </Button>
+                    <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
+                        <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
+                            <ChevronsUp className='mr-2'/> Boresha hadi Level {(selectedSlot?.level || 0) + 1}
                         </Button>
-                        <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
-                            <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
-                                <ChevronsUp className='mr-2'/> Boresha hadi Level {(selectedSlot?.level || 0) + 1}
-                            </Button>
-                            <Separator className='my-3 bg-gray-600'/>
-                            <div className='space-y-1'>
-                                <p className='font-semibold mb-1 text-xs'>Gharama ya Kuboresha:</p>
-                                <div className="space-y-1">
-                                    {upgradeCosts.map(cost => {
-                                        const invItem = inventory.find(i => i.item === cost.name);
-                                        const has = invItem?.quantity || 0;
-                                        const needed = cost.quantity;
-                                        const hasEnough = has >= needed;
-                                        return (
-                                            <div key={cost.name} className='flex justify-between items-center p-1 rounded-md text-xs'>
-                                                <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                    {cost.name}
+                        <Separator className='my-3 bg-gray-600'/>
+                        <div className='space-y-1'>
+                            <p className='font-semibold mb-1 text-xs'>Gharama ya Kuboresha:</p>
+                            <div className="space-y-1">
+                                {upgradeCosts && upgradeCosts.map(cost => {
+                                    const invItem = inventory.find(i => i.item === cost.name);
+                                    const has = invItem?.quantity || 0;
+                                    const needed = cost.quantity;
+                                    const hasEnough = has >= needed;
+                                    return (
+                                        <div key={cost.name} className='flex justify-between items-center p-1 rounded-md text-xs'>
+                                            <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                {cost.name}
+                                            </span>
+                                            <div className='flex items-center gap-1'>
+                                                <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                    {has.toLocaleString()}/{needed.toLocaleString()}
                                                 </span>
-                                                <div className='flex items-center gap-1'>
-                                                    <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                        {has.toLocaleString()}/{needed.toLocaleString()}
-                                                    </span>
-                                                    {!hasEnough && (
-                                                        <Button size="sm" variant="secondary" className="h-5 px-1.5 text-[10px]" onClick={() => onBuyMaterial(cost.name, needed - has)}>
-                                                            Nunua
-                                                        </Button>
-                                                    )}
-                                                </div>
+                                                {!hasEnough && (
+                                                    <Button size="sm" variant="secondary" className="h-5 px-1.5 text-[10px]" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                        Nunua
+                                                    </Button>
+                                                )}
                                             </div>
-                                        )
-                                    })}
-                                </div>
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
-                        <Button className='w-full justify-start' variant="destructive" onClick={() => setIsDemolishDialogOpen(true)}>
-                            <Trash2 className='mr-2'/> Futa Jengo
-                        </Button>
                     </div>
+                    <Button className='w-full justify-start' variant="destructive" onClick={() => setIsDemolishDialogOpen(true)}>
+                        <Trash2 className='mr-2'/> Futa Jengo
+                    </Button>
                 </div>
             </DialogContent>
         </Dialog>
@@ -1184,37 +1174,45 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                     <div className="col-span-1 flex flex-col gap-2">
                         {isSelectedBuildingShop ? (
                             shopInventory.length > 0 ? (
-                                shopInventory.map((item) => (
-                                    <Button
-                                        key={item.item}
-                                        variant="outline"
-                                        className={cn(
-                                            "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
-                                            selectedInventoryItem?.item === item.item && "bg-blue-600 border-blue-400"
-                                        )}
-                                        onClick={() => handleSelectInventoryItem(item)}
-                                    >
-                                        {item.item}
-                                    </Button>
-                                ))
+                                <ScrollArea className="h-full">
+                                    <div className="flex flex-col gap-2 pr-4">
+                                        {shopInventory.map((item) => (
+                                            <Button
+                                                key={item.item}
+                                                variant="outline"
+                                                className={cn(
+                                                    "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
+                                                    selectedInventoryItem?.item === item.item && "bg-blue-600 border-blue-400"
+                                                )}
+                                                onClick={() => handleSelectInventoryItem(item)}
+                                            >
+                                                {item.item}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
                             ) : (
                                 <p className="text-sm text-gray-500">Hakuna bidhaa zinazohusiana na duka hili kwenye ghala.</p>
                             )
                         ) : (
                             buildingRecipes.length > 0 ? (
-                                buildingRecipes.map((recipe) => (
-                                    <Button
-                                        key={recipe.id}
-                                        variant="outline"
-                                        className={cn(
-                                            "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
-                                            selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
-                                        )}
-                                        onClick={() => handleSelectRecipe(recipe)}
-                                    >
-                                        {recipe.output.name}
-                                    </Button>
-                                ))
+                                <ScrollArea className="h-full">
+                                    <div className="flex flex-col gap-2 pr-4">
+                                        {buildingRecipes.map((recipe) => (
+                                            <Button
+                                                key={recipe.id}
+                                                variant="outline"
+                                                className={cn(
+                                                    "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
+                                                    selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
+                                                )}
+                                                onClick={() => handleSelectRecipe(recipe)}
+                                            >
+                                                {recipe.output.name}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
                             ) : (
                                 <p className="text-sm text-gray-500">Hakuna mapishi kwa jengo hili.</p>
                             )
