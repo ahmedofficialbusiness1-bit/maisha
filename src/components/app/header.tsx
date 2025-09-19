@@ -52,15 +52,15 @@ export function AppHeader({ money, stars, setView }: AppHeaderProps) {
       <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
         {/* Money */}
         <div className="flex items-center gap-1 rounded-full bg-green-500/20 p-1 pr-2 sm:gap-2 sm:pr-3 border border-green-500/50">
-          <div className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-green-600">
-             <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-300"/>
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-600">
+             <Coins className="h-3 w-3 text-yellow-300"/>
           </div>
           <div className="text-xs sm:text-lg font-bold text-white">{formattedMoney}</div>
         </div>
 
         {/* Player Profile & Level */}
         <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8 sm:h-11 sm:w-11 border-2 border-yellow-400">
+          <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border-2 border-yellow-400">
             <AvatarImage src="https://picsum.photos/seed/player/100/100" data-ai-hint="player avatar" />
             <AvatarFallback>P</AvatarFallback>
           </Avatar>
@@ -75,7 +75,7 @@ export function AppHeader({ money, stars, setView }: AppHeaderProps) {
         
         {/* Star Boost */}
         <div className="flex items-center gap-1 rounded-full bg-yellow-400/20 p-1 sm:p-2 border border-yellow-400/50">
-            <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-400" />
+            <Star className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-400" />
             <span className="font-bold text-white text-xs sm:text-base">{stars}</span>
         </div>
 
