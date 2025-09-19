@@ -917,8 +917,8 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         className='pl-10 bg-gray-800 border-gray-600'
                     />
                 </div>
-                <ScrollArea className="max-h-[60vh]">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pr-4">
+                <ScrollArea className="max-h-[60vh] pr-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {filteredBuildings.map((b) => (
                             <Card 
                                 key={b.id} 
