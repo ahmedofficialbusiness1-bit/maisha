@@ -35,6 +35,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { MoreHorizontal } from 'lucide-react';
+import { encyclopediaData } from '@/lib/encyclopedia-data';
 
 export type InventoryItem = {
   item: string;
@@ -52,21 +53,21 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState<InventoryItem | null>(null);
   const [quantity, setQuantity] = React.useState(1);
-  const [price, setPrice] = React.useState(0);
+  const [officialPrice, setOfficialPrice] = React.useState(0);
   
   const handleOpenSellDialog = (item: InventoryItem) => {
+    const entry = encyclopediaData.find(e => e.name === item.item);
+    const price = entry ? parseFloat(entry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : item.marketPrice;
+
     setSelectedItem(item);
-    setPrice(item.marketPrice);
+    setOfficialPrice(price);
     setQuantity(1);
     setIsSellDialogOpen(true);
   };
-  
-  const priceFloor = selectedItem ? selectedItem.marketPrice * 0.8 : 0;
-  const priceCeiling = selectedItem ? selectedItem.marketPrice * 1.2 : 0;
 
   const handleConfirmPost = () => {
     if (selectedItem) {
-      onPostToMarket(selectedItem, quantity, price);
+      onPostToMarket(selectedItem, quantity, officialPrice);
       setIsSellDialogOpen(false);
     }
   };
@@ -139,7 +140,7 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
           <DialogHeader>
             <DialogTitle>Sell {selectedItem?.item} on the Market</DialogTitle>
             <DialogDescription>
-              Set the quantity and price per unit. The total value will be calculated automatically.
+              Set the quantity to sell. The price is fixed to the official market rate.
             </DialogDescription>
           </DialogHeader>
           {selectedItem && (
@@ -161,20 +162,18 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
                     <Input 
                         id="price" 
                         type="number"
-                        value={price}
-                        onChange={(e) => setPrice(Number(e.target.value))}
-                        step="0.01"
-                        className="col-span-3 bg-gray-800 border-gray-600"
+                        value={officialPrice}
+                        disabled
+                        className="col-span-3 bg-gray-800 border-gray-600 disabled:opacity-75"
                     />
                 </div>
                 <div className='col-span-4 text-xs text-center text-gray-400'>
-                    <p>Market Price: ${selectedItem.marketPrice.toFixed(2)}</p>
-                    <p>Allowed Range: ${priceFloor.toFixed(2)} - ${priceCeiling.toFixed(2)}</p>
+                    <p>Official Market Price (Bei Elekezi): ${officialPrice.toFixed(2)}</p>
                 </div>
                 <Separator className="my-2 bg-gray-700"/>
                 <div className='text-center'>
                     <p className="text-lg font-bold">Total Sale Value</p>
-                    <p className='text-2xl font-mono text-green-400'>${(quantity * price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <p className='text-2xl font-mono text-green-400'>${(quantity * officialPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
              </div>
           )}
@@ -182,7 +181,7 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
             <Button variant="outline" onClick={() => setIsSellDialogOpen(false)}>Cancel</Button>
             <Button 
               className="bg-green-600 hover:bg-green-700 text-white"
-              disabled={!selectedItem || quantity <= 0 || quantity > selectedItem.quantity || price < priceFloor || price > priceCeiling}
+              disabled={!selectedItem || quantity <= 0 || quantity > selectedItem.quantity}
               onClick={handleConfirmPost}
             >
               Post to Market
