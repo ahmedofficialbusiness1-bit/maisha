@@ -183,20 +183,20 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
 
 
     // Vifaa & Nyaraka
-    'Mashine A1': <Wrench className="text-gray-400" />,
-    'Mashine A2': <Wrench className="text-gray-400" />,
-    'Mashine A3': <Wrench className="text-gray-400" />,
-    'Mashine A4': <Wrench className="text-gray-400" />,
-    'Mashine A5': <Wrench className="text-gray-400" />,
-    'Mashine B1': <Wrench className="text-gray-400" />,
-    'Mashine B2': <Wrench className="text-gray-400" />,
-    'Mashine B3': <Wrench className="text-gray-400" />,
-    'Mashine B4': <Wrench className="text-gray-400" />,
-    'Mashine B5': <Wrench className="text-gray-400" />,
-    'Mashine B6': <Wrench className="text-gray-400" />,
-    'Mashine B7': <Wrench className="text-gray-400" />,
-    'Mashine C1': <Wrench className="text-gray-400" />,
-    'Mashine C2': <Wrench className="text-gray-400" />,
+    'A1 Mashine': <Wrench className="text-gray-400" />,
+    'A2 Mashine': <Wrench className="text-gray-400" />,
+    'A3 Mashine': <Wrench className="text-gray-400" />,
+    'A4 Mashine': <Wrench className="text-gray-400" />,
+    'A5 Mashine': <Wrench className="text-gray-400" />,
+    'B1 Mashine': <Wrench className="text-gray-400" />,
+    'B2 Mashine': <Wrench className="text-gray-400" />,
+    'B3 Mashine': <Wrench className="text-gray-400" />,
+    'B4 Mashine': <Wrench className="text-gray-400" />,
+    'B5 Mashine': <Wrench className="text-gray-400" />,
+    'B6 Mashine': <Wrench className="text-gray-400" />,
+    'B7 Mashine': <Wrench className="text-gray-400" />,
+    'C1 Mashine': <Wrench className="text-gray-400" />,
+    'C2 Mashine': <Wrench className="text-gray-400" />,
     'K1 Mashine': <Wrench className="text-purple-400" />,
     'K2 Mashine': <Wrench className="text-purple-400" />,
     'K3 Mashine': <Wrench className="text-purple-400" />,
@@ -315,20 +315,20 @@ const priceList: Record<string, number> = {
   'Leseni B5': 25000,
   'Leseni B6': 25000,
   'Leseni B7': 25000,
-  'Mashine A1': 5000,
-  'Mashine A2': 5500,
-  'Mashine A3': 6000,
-  'Mashine A4': 6500,
-  'Mashine A5': 7000,
-  'Mashine B1': 12500,
-  'Mashine B2': 13000,
-  'Mashine B3': 13500,
-  'Mashine B4': 14000,
-  'Mashine B5': 14500,
-  'Mashine B6': 15000,
-  'Mashine B7': 15500,
-  'Mashine C1': 25000,
-  'Mashine C2': 27500,
+  'A1 Mashine': 5000,
+  'A2 Mashine': 5500,
+  'A3 Mashine': 6000,
+  'A4 Mashine': 6500,
+  'A5 Mashine': 7000,
+  'B1 Mashine': 12500,
+  'B2 Mashine': 13000,
+  'B3 Mashine': 13500,
+  'B4 Mashine': 14000,
+  'B5 Mashine': 14500,
+  'B6 Mashine': 15000,
+  'B7 Mashine': 15500,
+  'C1 Mashine': 25000,
+  'C2 Mashine': 27500,
   'K1 Mashine': 750000,
   'K2 Mashine': 800000,
   'K3 Mashine': 850000,
@@ -541,14 +541,11 @@ const itemCategorization: Record<string, string> = {
 
 // Auto-categorize Machines and Licenses
 finalEntries.forEach(entry => {
-    if (entry.name.startsWith('Mashine')) {
+    if (entry.name.endsWith('Mashine')) {
         itemCategorization[entry.name] = 'Vifaa';
     }
     if (entry.name.startsWith('Leseni')) {
         itemCategorization[entry.name] = 'Documents';
-    }
-    if (entry.name.startsWith('K') && entry.name.endsWith('Mashine')) {
-        itemCategorization[entry.name] = 'Vifaa';
     }
 });
 
