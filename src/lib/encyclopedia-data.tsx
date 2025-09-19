@@ -234,7 +234,7 @@ const baseMaterialCosts: Record<string, number> = {
     'Umeme': 0.02,
     'Mawe': 0.2,
     'Mchanga': 0.15,
-    'Madini ya chuma': 2, 
+    'Madini ya chuma': 2.0, 
     'Chuma': 2.00,
     'Bwawa': 125, 
     'Boat': 250,
@@ -316,13 +316,13 @@ const generatedEntries = recipes.map(recipe => {
     const baseTimePerUnit = buildingInfo ? (3600) / (buildingInfo.productionRate * recipe.output.quantity) : 0; 
     
     // Get the pre-calculated production cost
-    const costPerUnit = calculatedPrices.get(recipe.output.name) || 0;
+    const productionCost = calculatedPrices.get(recipe.output.name) || 0;
 
-    // Pricing: (cost * profit_margin)
-    const profitMargin = 1.30; // 30% base profit
+    // Calculate profit based on the user's formula
+    const profit = productionCost * 0.30;
     
     // Market cost is the production cost per unit, plus profit.
-    let marketCost = costPerUnit * profitMargin;
+    const marketCost = productionCost + profit;
     
     // Update the map with the FINAL market cost
     calculatedPrices.set(recipe.output.name, marketCost);
@@ -336,7 +336,7 @@ const generatedEntries = recipes.map(recipe => {
         imageHint: getImageHint(recipe.output.name),
         icon: getIcon(recipe.output.name),
         properties: [
-            { label: 'Production Cost', value: `$${costPerUnit.toFixed(2)}` },
+            { label: 'Production Cost', value: `$${productionCost.toFixed(2)}` },
             { label: 'Market Cost', value: `$${marketCost.toFixed(2)}`},
             { label: 'Base Production Time', value: `${baseTimePerUnit.toFixed(2)}s / unit` },
             { label: 'Output Quantity', value: `${recipe.output.quantity.toLocaleString()} unit(s)` },
@@ -518,3 +518,5 @@ export const encyclopediaData: EncyclopediaEntry[] = generatedEntries.sort((a, b
     }
     return a.name.localeCompare(b.name);
 });
+
+    
