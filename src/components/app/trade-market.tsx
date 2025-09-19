@@ -121,6 +121,7 @@ const productCategories = encyclopediaData.reduce((acc, item) => {
 }, {} as Record<string, EncyclopediaEntry[]>);
 
 const AI_PLAYER_NAME = 'Serekali';
+const PLAYER_NAME = 'Mchezaji';
 
 
 interface TradeMarketProps {
@@ -129,9 +130,10 @@ interface TradeMarketProps {
   bondListings: BondListing[];
   inventory: InventoryItem[];
   onBuyStock: (stock: StockListing, quantity: number) => void;
+  onBuyFromMarket: (listing: PlayerListing, quantity: number) => void;
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -139,6 +141,9 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
   const [isBuyStockDialogOpen, setIsBuyStockDialogOpen] = React.useState(false);
   const [selectedStock, setSelectedStock] = React.useState<StockListing | null>(null);
   const [buyStockQuantity, setBuyStockQuantity] = React.useState(1);
+  
+  const [buyQuantity, setBuyQuantity] = React.useState(0);
+  const [selectedListing, setSelectedListing] = React.useState<PlayerListing | null>(null);
 
   const handleOpenBuyStockDialog = (stock: StockListing) => {
     setSelectedStock(stock);
@@ -159,12 +164,30 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
   const handleProductSelect = (product: EncyclopediaEntry) => {
     setSelectedProduct(product);
     setViewMode('exchange');
+    setBuyQuantity(0);
+    setSelectedListing(null);
   };
 
   const handleBackToList = () => {
       setViewMode('list');
       setSelectedProduct(null);
   }
+  
+  const handleSelectListing = (listing: PlayerListing) => {
+    if (listing.seller === PLAYER_NAME) return;
+    setSelectedListing(listing);
+    setBuyQuantity(listing.quantity);
+  }
+
+  const handleConfirmBuy = () => {
+    if (selectedListing && buyQuantity > 0) {
+        onBuyFromMarket(selectedListing, buyQuantity);
+        // Reset after buying
+        setSelectedListing(null);
+        setBuyQuantity(0);
+    }
+  }
+
 
   const filteredCategories = React.useMemo(() => {
     if (!searchTerm) {
@@ -255,16 +278,30 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         <div className="space-y-4">
                              <div>
                                 <Label htmlFor='buy-amount'>Kiasi cha Kununua</Label>
-                                <Input id="buy-amount" type="number" placeholder="0" className="w-full bg-gray-700 border-gray-600 mt-1" />
+                                <Input 
+                                  id="buy-amount" 
+                                  type="number" 
+                                  placeholder="0" 
+                                  className="w-full bg-gray-700 border-gray-600 mt-1" 
+                                  value={buyQuantity}
+                                  onChange={(e) => setBuyQuantity(Math.max(0, Math.min(Number(e.target.value), selectedListing?.quantity || 0)))}
+                                  disabled={!selectedListing}
+                                />
                             </div>
-                             <div>
-                                <Label htmlFor='min-quality'>Ubora wa Chini</Label>
-                                <div className="flex items-center gap-1 mt-1">
-                                    <Star className="h-4 w-4 text-yellow-400" />
-                                    <Input id="min-quality" type="number" placeholder="0" className="w-full bg-gray-700 border-gray-600" />
-                                </div>
+                            <div className='text-center text-sm'>
+                                {selectedListing ? (
+                                    <p>Jumla: <span className='font-bold'>${(buyQuantity * selectedListing.price).toLocaleString(undefined, { minimumFractionDigits: 2})}</span></p>
+                                ) : (
+                                    <p className='text-gray-400'>Chagua muuzaji ili kununua.</p>
+                                )}
                             </div>
-                            <Button className="w-full bg-green-600 hover:bg-green-700">NUNUA</Button>
+                            <Button 
+                              className="w-full bg-green-600 hover:bg-green-700"
+                              onClick={handleConfirmBuy}
+                              disabled={!selectedListing || buyQuantity <= 0}
+                            >
+                                NUNUA
+                            </Button>
                         </div>
                      </CardContent>
                  </Card>
@@ -283,12 +320,20 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                         <TableHead className="text-white w-2/5">Muuzaji</TableHead>
                                         <TableHead className="text-right text-white">Ubora</TableHead>
                                         <TableHead className="text-right text-white">Kiasi</TableHead>
-                                        <TableHead className="text-right text-white">Bei (Jumla)</TableHead>
+                                        <TableHead className="text-right text-white">Bei (kwa uniti)</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                 {filteredListings.map((listing) => (
-                                    <TableRow key={listing.id} className="border-gray-700 hover:bg-gray-700/50 cursor-pointer">
+                                    <TableRow 
+                                      key={listing.id}
+                                      onClick={() => handleSelectListing(listing)}
+                                      className={cn(
+                                        "border-gray-700 hover:bg-gray-700/50",
+                                        listing.seller === PLAYER_NAME ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
+                                        selectedListing?.id === listing.id && "bg-blue-600/30"
+                                      )}
+                                    >
                                         <TableCell className="font-medium">
                                             <div className="flex items-center gap-2">
                                                 <Avatar className="h-8 w-8">

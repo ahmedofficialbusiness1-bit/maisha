@@ -99,6 +99,7 @@ const initialBondListings: BondListing[] = [
 ];
 
 const AI_PLAYER_NAME = 'Serekali';
+const PLAYER_NAME = 'Mchezaji';
 
 export function Game() {
   const { toast } = useToast();
@@ -303,7 +304,7 @@ export function Game() {
       const newListing: PlayerListing = {
         id: prevListings.length + Date.now(), // simple unique id
         commodity: item.item,
-        seller: 'Mchezaji', // current player
+        seller: PLAYER_NAME, // current player
         quantity,
         price,
         avatar: 'https://picsum.photos/seed/mchezaji/40/40',
@@ -412,6 +413,58 @@ export function Game() {
 
       toast({ title: 'Umefanikiwa Kununua Hisa!', description: `Umenunua hisa ${quantity.toLocaleString()} za ${stock.ticker}.` });
   }
+
+  const handleBuyFromMarket = (listing: PlayerListing, quantity: number) => {
+    if (listing.seller === PLAYER_NAME) {
+        toast({ variant: "destructive", title: "Action not allowed", description: "Huwezi kununua bidhaa zako mwenyewe." });
+        return;
+    }
+
+    const totalCost = listing.price * quantity;
+
+    if (money < totalCost) {
+        toast({ variant: "destructive", title: "Pesa Haitoshi", description: `Unahitaji $${totalCost.toLocaleString()} kununua bidhaa hii.` });
+        return;
+    }
+
+    // 1. Deduct money from player
+    setMoney(prev => prev - totalCost);
+
+    // 2. Add item to player's inventory
+    setInventory(prevInventory => {
+        const newInventory = [...prevInventory];
+        const itemIndex = newInventory.findIndex(i => i.item === listing.commodity);
+        if (itemIndex > -1) {
+            newInventory[itemIndex].quantity += quantity;
+        } else {
+            const encyclopediaEntry = encyclopediaData.find(e => e.name === listing.commodity);
+            newInventory.push({
+                item: listing.commodity,
+                quantity: quantity,
+                marketPrice: encyclopediaEntry?.properties.find(p => p.label.includes("Market Cost"))?.value.replace('$', '') ? parseFloat(encyclopediaEntry.properties.find(p => p.label.includes("Market Cost"))!.value.replace('$', '')) : 0,
+            });
+        }
+        return newInventory;
+    });
+
+    // 3. Update market listing
+    setMarketListings(prevListings => {
+        const newListings = prevListings.map(l => {
+            if (l.id === listing.id) {
+                return { ...l, quantity: l.quantity - quantity };
+            }
+            return l;
+        });
+        // Remove listing if quantity is zero
+        return newListings.filter(l => l.quantity > 0);
+    });
+
+    // 4. (Future) Credit the seller. For now, only Serekali and others are sellers.
+    // If seller is not Serekali, we can assume it's another player.
+    // For now, the money just "leaves the system".
+
+    toast({ title: 'Manunuzi Yamekamilika', description: `Umenunua ${quantity.toLocaleString()}x ${listing.commodity} kwa $${totalCost.toLocaleString()}.` });
+  };
   
    React.useEffect(() => {
     const interval = setInterval(() => {
@@ -632,6 +685,7 @@ export function Game() {
             bondListings={bondListings}
             inventory={inventory} 
             onBuyStock={handleBuyStock}
+            onBuyFromMarket={handleBuyFromMarket}
           />
         )}
         {view === 'chats' && <Chats />}

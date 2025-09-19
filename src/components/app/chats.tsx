@@ -28,6 +28,8 @@ type Message = {
   timestamp: string;
 };
 
+const PLAYER_NAME = 'Mchezaji';
+
 const sampleMessages: Message[] = [
   {
     id: '1',
@@ -61,7 +63,7 @@ function ChatGroup({ title, messages: initialMessages }: { title: string; messag
       const sentMessage: Message = {
         id: Date.now().toString(),
         sender: { // In a real app, this would be the current logged-in user
-          name: 'Mchezaji',
+          name: PLAYER_NAME,
           avatar: 'https://picsum.photos/seed/mchezaji/40/40',
           avatarHint: 'player avatar'
         },
@@ -86,7 +88,7 @@ function ChatGroup({ title, messages: initialMessages }: { title: string; messag
       <ScrollArea className="flex-grow p-4" viewportRef={scrollViewportRef}>
         <div className="space-y-4" ref={scrollAreaRef}>
           {currentMessages.map((message, index) => {
-              const isPlayer = message.sender.name === 'Mchezaji';
+              const isPlayer = message.sender.name === PLAYER_NAME;
               return (
                 <div key={message.id} className={cn("flex items-start gap-3", isPlayer && "flex-row-reverse")}>
                   <Avatar>
