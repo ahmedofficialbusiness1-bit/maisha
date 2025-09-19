@@ -52,8 +52,8 @@ export function AppHeader({ money, stars, setView }: AppHeaderProps) {
       <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
         {/* Money */}
         <div className="flex items-center gap-1 rounded-full bg-green-500/20 p-1 pr-2 sm:gap-2 sm:pr-3 border border-green-500/50">
-          <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-green-600">
-             <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-300"/>
+          <div className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-green-600">
+             <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-300"/>
           </div>
           <div className="text-xs sm:text-lg font-bold text-white">{formattedMoney}</div>
         </div>
@@ -75,13 +75,13 @@ export function AppHeader({ money, stars, setView }: AppHeaderProps) {
         
         {/* Star Boost */}
         <div className="flex items-center gap-1 rounded-full bg-yellow-400/20 p-1 sm:p-2 border border-yellow-400/50">
-            <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
+            <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-400" />
             <span className="font-bold text-white text-xs sm:text-base">{stars}</span>
         </div>
 
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-10 sm:w-10">
-          <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+        <Button variant="ghost" size="icon" className="relative h-7 w-7 sm:h-8 sm:w-8">
+          <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-red-500" />
           <span className="sr-only">Notifications</span>
         </Button>
@@ -89,8 +89,8 @@ export function AppHeader({ money, stars, setView }: AppHeaderProps) {
         {/* Hamburger Menu */}
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
-                    <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
+                    <Menu className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span className="sr-only">Open menu</span>
                 </Button>
             </DropdownMenuTrigger>
