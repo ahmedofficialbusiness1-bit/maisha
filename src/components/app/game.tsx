@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data.tsx';
 import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
+import { Accounting, type Transaction } from '@/components/app/accounting';
 
 const BUILDING_SLOTS = 20;
 
@@ -21,7 +22,7 @@ export type PlayerStock = {
     shares: number;
 }
 
-export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia';
+export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting';
 
 export type UserData = {
   money: number;
@@ -32,6 +33,7 @@ export type UserData = {
   bondListings: BondListing[];
   buildingSlots: BuildingSlot[];
   playerStocks: PlayerStock[];
+  transactions: Transaction[];
 };
 
 const initialInventoryItems: InventoryItem[] = [
@@ -116,6 +118,18 @@ export function Game() {
   const [bondListings, setBondListings] = React.useState<BondListing[]>(initialData?.bondListings ?? initialBondListings);
   const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(initialData?.buildingSlots ?? Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })));
   const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>(initialData?.playerStocks ?? []);
+  const [transactions, setTransactions] = React.useState<Transaction[]>(initialData?.transactions ?? []);
+
+   const addTransaction = (type: 'income' | 'expense', amount: number, description: string) => {
+    const newTransaction: Transaction = {
+      id: `${Date.now()}-${Math.random()}`,
+      type,
+      amount,
+      description,
+      timestamp: Date.now(),
+    };
+    setTransactions(prev => [newTransaction, ...prev]);
+  };
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
     const costs = buildingData[building.id].buildCost;
@@ -263,8 +277,9 @@ export function Game() {
       const newInventory = [...prevInventory];
       for (const input of inputs) {
         const itemIndex = newInventory.findIndex(i => i.item === input.name);
+        const requiredQuantity = input.quantity * quantity;
         if (itemIndex > -1) {
-          newInventory[itemIndex].quantity -= (input.quantity * quantity);
+          newInventory[itemIndex].quantity -= requiredQuantity;
         }
       }
       return newInventory.filter(item => item.quantity > 0);
@@ -367,6 +382,8 @@ export function Game() {
     }
 
     setMoney(prevMoney => prevMoney - totalCost);
+    addTransaction('expense', totalCost, `Bought ${quantityNeeded.toLocaleString()}x ${materialName}`);
+
     setInventory(prevInventory => {
         const newInventory = [...prevInventory];
         const itemIndex = newInventory.findIndex(i => i.item === materialName);
@@ -393,6 +410,7 @@ export function Game() {
       }
 
       setMoney(prev => prev - totalCost);
+      addTransaction('expense', totalCost, `Bought ${quantity.toLocaleString()} shares of ${stock.ticker}`);
       
       // Update player's stock portfolio
       setPlayerStocks(prev => {
@@ -429,6 +447,8 @@ export function Game() {
 
     // 1. Deduct money from player
     setMoney(prev => prev - totalCost);
+    addTransaction('expense', totalCost, `Bought ${quantity.toLocaleString()}x ${listing.commodity} from market`);
+
 
     // 2. Add item to player's inventory
     setInventory(prevInventory => {
@@ -567,6 +587,7 @@ export function Game() {
 
         if (totalDividends > 0) {
             setMoney(prev => prev + totalDividends);
+            addTransaction('income', totalDividends, `Dividend Payout (${dividendMessages.join(', ')})`);
             toast({
                 title: 'Umelipwa Gawio!',
                 description: `Umepokea jumla ya $${totalDividends.toFixed(2)}. (${dividendMessages.join(', ')})`
@@ -690,6 +711,7 @@ export function Game() {
         )}
         {view === 'chats' && <Chats />}
         {view === 'encyclopedia' && <Encyclopedia />}
+        {view === 'accounting' && <Accounting transactions={transactions} />}
       </main>
       <AppFooter activeView={view} setView={setView} />
     </div>
