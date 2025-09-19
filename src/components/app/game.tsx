@@ -236,34 +236,39 @@ export function Game() {
 
   const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
     const inputs = recipe.inputs || [];
-    // 1. Check for required inputs
+    
+    // Calculate total production cost from inputs
+    let totalCost = 0;
     for (const input of inputs) {
         const inventoryItem = inventory.find(i => i.item === input.name);
         const requiredQuantity = input.quantity * quantity;
+
         if (!inventoryItem || inventoryItem.quantity < requiredQuantity) {
             toast({
                 variant: "destructive",
                 title: "Uhaba wa Rasilimali",
-                description: `Huna ${input.name} za kutosha kuanzisha uzalishaji. Unahitaji ${requiredQuantity.toLocaleString()}.`,
+                description: `Huna ${input.name} za kutosha. Unahitaji ${requiredQuantity.toLocaleString()}.`,
             });
             return;
         }
+        
+        const encyclopediaEntry = encyclopediaData.find(e => e.name === input.name);
+        const pricePerUnit = parseFloat(encyclopediaEntry?.properties.find(p => p.label === "Market Cost")?.value.replace('$', '') || '0');
+        totalCost += pricePerUnit * requiredQuantity;
     }
     
-    // Check for money
-    const totalCost = recipe.cost * quantity;
     if (money < totalCost) {
         toast({
             variant: "destructive",
             title: "Pesa haitoshi",
-            description: `Huna pesa za kutosha kuanzisha uzalishaji. Unahitaji $${totalCost.toLocaleString()}.`,
+            description: `Huna pesa za kutosha kulipia gharama za uzalishaji ($${totalCost.toLocaleString()}).`,
         });
         return;
     }
-
+    
     const now = Date.now();
     
-    // 2. Deduct inputs from inventory
+    // Deduct inputs from inventory
     setInventory(prevInventory => {
       const newInventory = [...prevInventory];
       for (const input of inputs) {
@@ -275,10 +280,10 @@ export function Game() {
       return newInventory.filter(item => item.quantity > 0);
     });
 
-    // 3. Deduct cost from player's money
-    setMoney(prevMoney => prevMoney - totalCost);
+    // Deduct cost from player's money - No longer needed as cost is embodied in inputs
+    // setMoney(prevMoney => prevMoney - totalCost);
 
-    // 4. Set production state on building
+    // Set production state on building
     setBuildingSlots(prev => {
       const newSlots = [...prev];
       const slot = newSlots[slotIndex];

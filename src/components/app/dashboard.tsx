@@ -39,6 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { encyclopediaData } from '@/lib/encyclopedia-data';
 
 export type BuildingType = {
   id: string;
@@ -725,6 +726,17 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       return hours * 3600 * 1000; // time in ms
   }
   
+  const calculateProductionCost = (recipe: Recipe, quantity: number): number => {
+    let totalCost = 0;
+    for (const input of recipe.inputs) {
+      const encyclopediaEntry = encyclopediaData.find(e => e.name === input.name);
+      const pricePerUnit = parseFloat(encyclopediaEntry?.properties.find(p => p.label === "Market Cost")?.value.replace('$', '') || '0');
+      totalCost += pricePerUnit * input.quantity * quantity;
+    }
+    return totalCost;
+  };
+
+
   const handleCardClick = (slot: BuildingSlot, index: number) => {
     if (slot.construction) {
         handleOpenBoostDialog(index);
@@ -1059,7 +1071,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             <div className='space-y-3'>
                                 <div className='flex justify-between items-center'>
                                   <span className='text-gray-400'>Total Cost:</span>
-                                  <span className='font-bold'>${(selectedRecipe.cost * productionQuantity).toLocaleString()}</span>
+                                  <span className='font-bold'>${calculateProductionCost(selectedRecipe, productionQuantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className='flex justify-between items-center'>
                                   <span className='text-gray-400'>Est. Time:</span>
