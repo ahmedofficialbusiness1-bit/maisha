@@ -636,11 +636,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     if (selectedSlotIndex !== null && selectedBuildingForBuild) {
         const costs = buildingData[selectedBuildingForBuild.id].buildCost;
         if (!hasEnoughMaterials(costs)) {
-            toast({
-                variant: "destructive",
-                title: "Uhaba wa Rasilimali",
-                description: `Huna vifaa vya kutosha kujenga. Tafadhali nunua vinavyokosekana.`,
-            });
+            
             return;
         }
         onBuild(selectedSlotIndex, selectedBuildingForBuild);
@@ -685,12 +681,8 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
           }));
 
           if (!hasEnoughMaterials(neededInputs)) {
-             toast({
-                variant: "destructive",
-                title: "Uhaba wa Rasilimali",
-                description: `Huna vifaa vya kutosha kuanza uzalishaji. Tafadhali nunua vinavyokosekana.`,
-            });
-            return;
+             
+             return;
           }
 
           const buildingInfo = buildingData[slot.building.id];
@@ -727,11 +719,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         const upgradeCosts = buildingData[slot.building.id].upgradeCost(slot.level + 1);
 
         if (!hasEnoughMaterials(upgradeCosts)) {
-            toast({
-                variant: "destructive",
-                title: "Uhaba wa Vifaa",
-                description: `Huna vifaa vya kutosha kuboresha. Tafadhali nunua vinavyokosekana.`,
-            });
+            
             return;
         }
         onUpgradeBuilding(selectedSlotIndex);
