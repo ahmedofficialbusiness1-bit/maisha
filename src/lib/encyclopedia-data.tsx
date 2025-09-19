@@ -230,7 +230,7 @@ const getIcon = (name: string): React.ReactElement<LucideIcon> => {
 
 const PROFIT_MARGIN = 0.30; // 30%
 
-// Base costs for fundamental, non-produced raw materials. These prices are doubled as requested.
+// Base costs for fundamental, non-produced raw materials.
 const baseMaterialCosts: Record<string, number> = {
     'Maji': 0.04,
     'Umeme': 0.08,
@@ -245,18 +245,25 @@ const baseMaterialCosts: Record<string, number> = {
 // Map to store FINAL market prices. This is the single source of truth for prices.
 const marketPrices = new Map<string, number>();
 
-// Set initial market prices for base materials with profit margin applied
+// Set initial market prices for base materials.
+// The cost of a base material IS its market price. There's no production cost to add margin to.
 for (const name in baseMaterialCosts) {
-    const cost = baseMaterialCosts[name];
-    marketPrices.set(name, cost * (1 + PROFIT_MARGIN));
+    marketPrices.set(name, baseMaterialCosts[name]);
 }
+
+
+// --- Generate Encyclopedia Entries using the final calculated prices ---
+
+const allItems = new Set<string>(recipes.flatMap(r => [r.output.name, ...r.inputs.map(i => i.name)]));
+Object.keys(baseMaterialCosts).forEach(item => allItems.add(item)); // Add base materials to the set as well
 
 // A set to keep track of which items have had their prices calculated
 const pricedItems = new Set(Object.keys(baseMaterialCosts));
 
-let itemsToPrice = recipes.map(r => r.output.name);
+
+let itemsToPrice = Array.from(allItems).filter(item => !pricedItems.has(item));
 let iterations = 0;
-const MAX_ITERATIONS = 20; // Safety break for potential circular dependencies
+const MAX_ITERATIONS = 50; // Increased for safety with long chains
 
 while (itemsToPrice.length > 0 && iterations < MAX_ITERATIONS) {
     const remainingItems = [];
@@ -268,6 +275,9 @@ while (itemsToPrice.length > 0 && iterations < MAX_ITERATIONS) {
         const recipe = recipes.find(r => r.output.name === itemName);
         if (!recipe) {
             // This item has no recipe and isn't a base material, should not happen if data is correct
+            // But if it does, let's mark it as priced to avoid infinite loop
+            pricedItems.add(itemName);
+            marketPrices.set(itemName, 9999999); // Assign a high price for visibility
             continue;
         }
 
@@ -287,7 +297,8 @@ while (itemsToPrice.length > 0 && iterations < MAX_ITERATIONS) {
 
         if (allInputsPriced) {
             const costPerUnit = productionCost / recipe.output.quantity;
-            const marketPrice = costPerUnit * (1 + PROFIT_MARGIN);
+            const profit = costPerUnit * PROFIT_MARGIN;
+            const marketPrice = costPerUnit + profit;
             
             marketPrices.set(itemName, marketPrice);
             pricedItems.add(itemName);
@@ -299,9 +310,11 @@ while (itemsToPrice.length > 0 && iterations < MAX_ITERATIONS) {
 
     // If no progress was made, break the loop
     if (remainingItems.length === itemsToPrice.length) {
-        // console.error("Could not price the following items due to missing dependencies:", remainingItems);
         // Default price for unpriceable items
-        remainingItems.forEach(item => marketPrices.set(item, 9_999_999));
+        remainingItems.forEach(item => {
+            marketPrices.set(item, 9_999_999)
+            pricedItems.add(item)
+        });
         break;
     }
 
@@ -310,16 +323,11 @@ while (itemsToPrice.length > 0 && iterations < MAX_ITERATIONS) {
 }
 
 
-// --- Generate Encyclopedia Entries using the final calculated prices ---
-
-const allItems = new Set<string>(recipes.flatMap(r => [r.output.name, ...r.inputs.map(i => i.name)]));
 const finalEntries: EncyclopediaEntry[] = [];
-
 allItems.forEach(itemName => {
     const recipe = recipes.find(r => r.output.name === itemName);
     const marketCost = marketPrices.get(itemName) || 0;
-    let productionCost = 0;
-
+    
     let properties: { label: string; value: string }[] = [
         { label: 'Market Cost', value: `$${marketCost.toLocaleString(undefined, {minimumFractionDigits: 2})}` }
     ];
@@ -330,14 +338,15 @@ allItems.forEach(itemName => {
         for (const input of recipe.inputs) {
             inputCost += (marketPrices.get(input.name) || 0) * input.quantity;
         }
-        productionCost = inputCost / recipe.output.quantity;
+        const productionCostPerUnit = inputCost / recipe.output.quantity;
 
         const buildingInfo = buildingData[recipe.buildingId];
-        const baseTimePerUnit = buildingInfo ? (3600) / (buildingInfo.productionRate * recipe.output.quantity) : 0; 
+        // Note: Production rate affects how MANY units are made, not the cost of ONE unit. Time is separate.
+        const baseTimePerUnit = buildingInfo ? (3600) / (buildingInfo.productionRate) : 0; // Time per batch
         
-        properties.unshift({ label: 'Production Cost', value: `$${productionCost.toLocaleString(undefined, {minimumFractionDigits: 2})}` });
-        properties.push({ label: 'Base Production Time', value: `${baseTimePerUnit.toFixed(2)}s / unit` });
-        properties.push({ label: 'Output Quantity', value: `${recipe.output.quantity.toLocaleString()} unit(s)` });
+        properties.unshift({ label: 'Production Cost', value: `$${productionCostPerUnit.toLocaleString(undefined, {minimumFractionDigits: 2})}` });
+        properties.push({ label: 'Base Production Time', value: `${baseTimePerUnit.toFixed(2)}s per batch` });
+        properties.push({ label: 'Output per Batch', value: `${recipe.output.quantity.toLocaleString()} unit(s)` });
         properties.push({ label: 'Building', value: recipe.buildingId.charAt(0).toUpperCase() + recipe.buildingId.slice(1).replace(/_/g, ' ') });
 
     } else {
