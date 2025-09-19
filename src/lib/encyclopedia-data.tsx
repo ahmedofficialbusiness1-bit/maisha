@@ -230,11 +230,11 @@ const getIcon = (name: string): React.ReactElement<LucideIcon> => {
 const PROFIT_MARGIN = 0.30; // 30%
 
 const baseMaterialCosts: Record<string, number> = {
-    'Maji': 0.02,
-    'Umeme': 0.04,
+    'Maji': 0.04,
+    'Umeme': 0.08,
     'Mawe': 1.6,
-    'Mchanga': 1.20,
-    'Madini ya chuma': 16.0,
+    'Mchanga': 1.2,
+    'Madini ya chuma': 8.0,
     'Bwawa': 500,
     'Boat': 1000,
 };
