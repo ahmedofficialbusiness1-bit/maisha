@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -40,6 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { encyclopediaData } from '@/lib/encyclopedia-data';
+import { productCategoryToShopMap } from './game';
 
 export type BuildingType = {
   id: string;
@@ -51,7 +53,7 @@ export type BuildingType = {
 };
 
 export type SellInfo = {
-    recipeId: string;
+    recipeId: string; // For shops, this will be the item name. For producers, the recipe ID.
     quantity: number;
     startTime: number;
     endTime: number;
@@ -617,7 +619,7 @@ const buildingStyles: Record<string, { body: string; roof: string }> = {
     default: { body: 'bg-gray-700/80', roof: 'border-b-gray-600/90' }
 };
 
-const SHOP_BUILDING_IDS = [
+export const SHOP_BUILDING_IDS = [
     'duka_kuu',
     'duka_la_ujenzi',
     'duka_la_nguo_na_vito',
@@ -632,6 +634,7 @@ interface DashboardProps {
     stars: number;
     onBuild: (slotIndex: number, building: BuildingType) => void;
     onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
+    onStartSelling: (slotIndex: number, item: InventoryItem, quantity: number, durationMs: number) => void;
     onBoostConstruction: (slotIndex: number, starsToUse: number) => void;
     onUpgradeBuilding: (slotIndex: number) => void;
     onDemolishBuilding: (slotIndex: number) => void;
@@ -650,7 +653,7 @@ const formatTime = (ms: number) => {
     return `${minutes}:${seconds}`;
 };
 
-export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding, onBuyMaterial }: DashboardProps) {
+export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onStartSelling, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding, onBuyMaterial }: DashboardProps) {
   
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
@@ -663,8 +666,12 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   const [isBoostDialogOpen, setIsBoostDialogOpen] = React.useState(false);
   const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
   const [now, setNow] = React.useState(Date.now());
+  
+  // State for production/selling dialog
   const [selectedRecipe, setSelectedRecipe] = React.useState<Recipe | null>(null);
+  const [selectedInventoryItem, setSelectedInventoryItem] = React.useState<InventoryItem | null>(null);
   const [productionQuantity, setProductionQuantity] = React.useState(1);
+  
   const [boostAmount, setBoostAmount] = React.useState(0);
   
   React.useEffect(() => {
@@ -701,7 +708,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     if (selectedSlotIndex !== null && selectedBuildingForBuild) {
         const costs = buildingData[selectedBuildingForBuild.id].buildCost;
         if (!hasEnoughMaterials(costs)) {
-            // This should ideally be handled by disabling the button, but as a fallback.
             return;
         }
         onBuild(selectedSlotIndex, selectedBuildingForBuild);
@@ -714,6 +720,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     if (selectedSlotIndex === null) return;
     setIsManagementDialogOpen(false);
     setSelectedRecipe(null);
+    setSelectedInventoryItem(null);
     setProductionQuantity(1);
     setIsProductionDialogOpen(true);
   };
@@ -731,35 +738,58 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   
   const handleSelectRecipe = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
+    setSelectedInventoryItem(null);
+    setProductionQuantity(1);
+  }
+  
+  const handleSelectInventoryItem = (item: InventoryItem) => {
+    setSelectedInventoryItem(item);
+    setSelectedRecipe(null);
     setProductionQuantity(1);
   }
 
-  const handleConfirmProduction = () => {
-      if(selectedSlotIndex !== null && selectedRecipe && productionQuantity > 0) {
-          const slot = buildingSlots[selectedSlotIndex];
-          if (!slot || !slot.building) return;
+  const handleConfirmProductionOrSale = () => {
+    if (selectedSlotIndex === null) return;
+    const slot = buildingSlots[selectedSlotIndex];
+    if (!slot || !slot.building) return;
 
-          const inputs = selectedRecipe.inputs || [];
-          const neededInputs = inputs.map(input => ({
-            name: input.name,
-            quantity: input.quantity * productionQuantity
-          }));
+    const buildingInfo = buildingData[slot.building.id];
+    const ratePerHr = buildingInfo.productionRate * (1 + (slot.level - 1) * 0.4);
+    
+    // Logic for producers (factories, farms)
+    if (selectedRecipe && productionQuantity > 0) {
+        const inputs = selectedRecipe.inputs || [];
+        const neededInputs = inputs.map(input => ({
+          name: input.name,
+          quantity: input.quantity * productionQuantity
+        }));
+        if (!hasEnoughMaterials(neededInputs)) {
+           return;
+        }
+        
+        // This is a rough estimation. Real time should be based on recipe complexity.
+        // For now, we use a simplified version based on production rate.
+        const baseTimePerBatch = (3600 * 1000) / ratePerHr;
+        const totalDurationMs = baseTimePerBatch * productionQuantity;
 
-          if (!hasEnoughMaterials(neededInputs)) {
-             // This should be handled by disabling the button.
-             return;
-          }
-
-          const buildingInfo = buildingData[slot.building.id];
-          const ratePerHr = buildingInfo.productionRate * (1 + (slot.level - 1) * 0.4);
-          const baseTimePerUnit = (3600 * 1000) / ratePerHr;
-          const totalDurationMs = baseTimePerUnit * productionQuantity;
-          
-          onStartProduction(selectedSlotIndex, selectedRecipe, productionQuantity, totalDurationMs);
-
-          setIsProductionDialogOpen(false);
-          setSelectedRecipe(null);
+        onStartProduction(selectedSlotIndex, selectedRecipe, productionQuantity, totalDurationMs);
+    }
+    // Logic for sellers (shops)
+    else if (selectedInventoryItem && productionQuantity > 0) {
+      if (selectedInventoryItem.quantity < productionQuantity) {
+        return; // Not enough in inventory
       }
+      
+      // Sale time could be based on item value or a flat rate per shop level
+      const saleTimePerUnitMs = 5 * 1000; // 5 seconds per unit
+      const totalDurationMs = saleTimePerUnitMs * productionQuantity;
+
+      onStartSelling(selectedSlotIndex, selectedInventoryItem, productionQuantity, totalDurationMs);
+    }
+    
+    setIsProductionDialogOpen(false);
+    setSelectedRecipe(null);
+    setSelectedInventoryItem(null);
   }
   
   const handleConfirmBoost = () => {
@@ -784,7 +814,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         const upgradeCosts = buildingData[slot.building.id].upgradeCost(slot.level + 1);
 
         if (!hasEnoughMaterials(upgradeCosts)) {
-            // Button should be disabled, but as a fallback.
             return;
         }
         onUpgradeBuilding(selectedSlotIndex);
@@ -799,6 +828,22 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     ? recipes.filter((recipe) => recipe.buildingId === selectedSlot.building!.id)
     : [];
 
+  const getShopInventory = (): InventoryItem[] => {
+    if (!selectedSlot?.building || !isSelectedBuildingShop) return [];
+  
+    const shopId = selectedSlot.building.id;
+  
+    return inventory.filter(item => {
+      const productInfo = encyclopediaData.find(e => e.name === item.item);
+      if (!productInfo) return false;
+      const targetShopId = productCategoryToShopMap[productInfo.category] || 'duka_kuu';
+      return targetShopId === shopId;
+    });
+  };
+
+  const shopInventory = getShopInventory();
+
+
   const hasEnoughInputsForProduction = (recipe: Recipe, quantity: number) => {
     if (!recipe.inputs) return true;
     return recipe.inputs.every(input => {
@@ -811,25 +856,41 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   const getBuildingProductionRate = (slot: BuildingSlot | null): number => {
     if (!slot || !slot.building) return 0;
     const buildingInfo = buildingData[slot.building.id];
+    // Shops don't have a production rate in the same way
+    if(SHOP_BUILDING_IDS.includes(slot.building.id)) return 100; // Placeholder for sale speed
     return buildingInfo.productionRate * (1 + (slot.level -1) * 0.4);
   }
 
   const calculateProductionTime = (quantity: number): number => {
-      if (!selectedSlot) return 0;
+      if (!selectedSlot || !selectedRecipe) return 0;
       const ratePerHr = getBuildingProductionRate(selectedSlot);
       if (ratePerHr === 0) return Infinity;
       const hours = quantity / ratePerHr;
       return hours * 3600 * 1000; // time in ms
   }
+
+  const calculateSaleTime = (quantity: number): number => {
+      if (!selectedSlot || !selectedInventoryItem) return 0;
+      // Let's define a simple sale time: 5 seconds per item
+      const timePerItemMs = 5000;
+      return timePerItemMs * quantity;
+  }
   
   const calculateProductionCost = (recipe: Recipe, quantity: number): number => {
     let totalCost = 0;
+    if (!recipe.inputs) return 0;
     for (const input of recipe.inputs) {
       const encyclopediaEntry = encyclopediaData.find(e => e.name === input.name);
       const pricePerUnit = parseFloat(encyclopediaEntry?.properties.find(p => p.label === "Market Cost")?.value.replace('$', '') || '0');
       totalCost += pricePerUnit * input.quantity * quantity;
     }
     return totalCost;
+  };
+  
+  const calculateSaleValue = (item: InventoryItem, quantity: number): number => {
+    const productInfo = encyclopediaData.find(e => e.name === item.item);
+    const pricePerUnit = productInfo ? parseFloat(productInfo.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : 0;
+    return pricePerUnit * quantity;
   };
 
 
@@ -839,7 +900,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     } else if (slot.building && !slot.sell) {
         handleOpenManagementDialog(index);
     }
-    // If it's in selling state, do nothing (or maybe show progress details later).
   }
 
   const timeReductionPerStar = 3 * 60 * 1000; // 3 minutes
@@ -867,7 +927,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {buildingSlots.map((slot, index) => {
-            const currentRecipe = slot.sell ? recipes.find(r => r.id === slot.sell!.recipeId) : null;
+            const currentRecipeName = slot.sell ? slot.sell!.recipeId : null;
             const style = slot.building ? (buildingStyles[slot.building.id] || buildingStyles.default) : buildingStyles.default;
             return slot.building ? (
             <Card
@@ -912,10 +972,10 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                 )}
                 <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
                     <p className="text-xs font-bold truncate">{slot.building.name} (Lvl {slot.level || 0})</p>
-                    {slot.sell && currentRecipe ? (
+                    {slot.sell && currentRecipeName ? (
                         <div className='text-xs font-mono text-green-300 flex items-center justify-center gap-2'>
                            <span>{formatTime(slot.sell.endTime - now)}</span>
-                           <span>| {currentRecipe.output.name}</span>
+                           <span>| {currentRecipeName}</span>
                         </div>
                     ) : slot.construction ? (
                         <div className='text-xs font-mono text-orange-300 flex items-center justify-center gap-2'>
@@ -1109,44 +1169,62 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
             </AlertDialogContent>
         </AlertDialog>
 
-        {/* Production Dialog */}
+        {/* Production/Selling Dialog */}
         <Dialog open={isProductionDialogOpen} onOpenChange={setIsProductionDialogOpen}>
             <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl flex flex-col max-h-[90vh]">
                 <DialogHeader>
-                    <DialogTitle>Uzalishaji: {selectedSlot?.building?.name} (Lvl {selectedSlot?.level})</DialogTitle>
+                    <DialogTitle>{isSelectedBuildingShop ? 'Uza Bidhaa' : 'Uzalishaji'}: {selectedSlot?.building?.name} (Lvl {selectedSlot?.level})</DialogTitle>
                     <DialogDescription>
-                        Chagua bidhaa, weka kiasi, na anza mchakato wa kuuza.
+                        {isSelectedBuildingShop ? 'Chagua bidhaa kutoka kwenye ghala, weka kiasi, na anza kuuza.' : 'Chagua bidhaa, weka kiasi, na anza mchakato wa uzalishaji.'}
                     </DialogDescription>
                 </DialogHeader>
                  <div className="flex-grow overflow-y-auto -mr-6 pr-6">
                     <div className="grid grid-cols-3 gap-4 pt-4">
-                    {/* Recipe List */}
+                    {/* Recipe/Item List */}
                     <div className="col-span-1 flex flex-col gap-2">
-                        {buildingRecipes.length > 0 ? (
-                            buildingRecipes.map((recipe) => (
-                                <Button
-                                    key={recipe.id}
-                                    variant="outline"
-                                    className={cn(
-                                        "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
-                                        selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
-                                    )}
-                                    onClick={() => handleSelectRecipe(recipe)}
-                                >
-                                    {recipe.output.name}
-                                </Button>
-                            ))
+                        {isSelectedBuildingShop ? (
+                            shopInventory.length > 0 ? (
+                                shopInventory.map((item) => (
+                                    <Button
+                                        key={item.item}
+                                        variant="outline"
+                                        className={cn(
+                                            "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
+                                            selectedInventoryItem?.item === item.item && "bg-blue-600 border-blue-400"
+                                        )}
+                                        onClick={() => handleSelectInventoryItem(item)}
+                                    >
+                                        {item.item}
+                                    </Button>
+                                ))
+                            ) : (
+                                <p className="text-sm text-gray-500">Hakuna bidhaa zinazohusiana na duka hili kwenye ghala.</p>
+                            )
                         ) : (
-                            <p className="text-sm text-gray-500">Hakuna mapishi kwa jengo hili.</p>
+                            buildingRecipes.length > 0 ? (
+                                buildingRecipes.map((recipe) => (
+                                    <Button
+                                        key={recipe.id}
+                                        variant="outline"
+                                        className={cn(
+                                            "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
+                                            selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
+                                        )}
+                                        onClick={() => handleSelectRecipe(recipe)}
+                                    >
+                                        {recipe.output.name}
+                                    </Button>
+                                ))
+                            ) : (
+                                <p className="text-sm text-gray-500">Hakuna mapishi kwa jengo hili.</p>
+                            )
                         )}
                     </div>
-                    {/* Production Details */}
+                    {/* Production/Sale Details */}
                     <div className="col-span-2">
-                        {selectedRecipe ? (
+                        {selectedRecipe ? ( // PRODUCER VIEW
                             <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
                                 <h3 className='text-xl font-bold'>{selectedRecipe.output.name}</h3>
-                                
-                                {/* Inputs */}
                                 <div>
                                     <h4 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h4>
                                     <div className='text-sm space-y-2 text-gray-300 list-disc list-inside'>
@@ -1170,43 +1248,63 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                     }) : <p className='text-sm text-gray-400 italic'>Hakuna vifaa vinavyohitajika.</p>}
                                     </div>
                                 </div>
-
-                                {/* Quantity */}
                                 <div className='space-y-2'>
-                                <Label htmlFor='quantity'>Idadi ya Kuzalisha</Label>
-                                <Input 
-                                    id="quantity"
-                                    type="number"
-                                    min="1"
-                                    value={productionQuantity}
-                                    onChange={(e) => setProductionQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                    className='bg-gray-700 border-gray-600'
-                                />
+                                  <Label htmlFor='quantity'>Idadi ya Kuzalisha</Label>
+                                  <Input 
+                                      id="quantity" type="number" min="1" value={productionQuantity}
+                                      onChange={(e) => setProductionQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                      className='bg-gray-700 border-gray-600'
+                                  />
                                 </div>
-                                
                                 <Separator className='my-4 bg-gray-600'/>
-
-                                {/* Summary & Action */}
                                 <div className='space-y-3'>
                                     <div className='flex justify-between items-center'>
-                                    <span className='text-gray-400'>Gharama ya Uzalishaji:</span>
-                                    <span className='font-bold'>${calculateProductionCost(selectedRecipe, productionQuantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                      <span className='text-gray-400'>Gharama ya Uzalishaji:</span>
+                                      <span className='font-bold'>${calculateProductionCost(selectedRecipe, productionQuantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className='flex justify-between items-center'>
-                                    <span className='text-gray-400'>Muda wa Kuuza:</span>
-                                    <span className='font-bold'>{formatTime(calculateProductionTime(productionQuantity))}</span>
+                                      <span className='text-gray-400'>Muda wa Uzalishaji:</span>
+                                      <span className='font-bold'>{formatTime(calculateProductionTime(productionQuantity))}</span>
                                     </div>
                                     <Button
-                                    className='w-full bg-green-600 hover:bg-green-700'
-                                    onClick={handleConfirmProduction}
-                                    disabled={!hasEnoughInputsForProduction(selectedRecipe, productionQuantity)}
+                                      className='w-full bg-green-600 hover:bg-green-700'
+                                      onClick={handleConfirmProductionOrSale}
+                                      disabled={!hasEnoughInputsForProduction(selectedRecipe, productionQuantity)}
                                     >
-                                    <CheckCircle className='mr-2'/>
-                                    Anza Kuuza
+                                      <CheckCircle className='mr-2'/> Anza Uzalishaji
                                     </Button>
                                 </div>
-
                             </div>
+                        ) : selectedInventoryItem ? ( // SHOP VIEW
+                          <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
+                              <h3 className='text-xl font-bold'>{selectedInventoryItem.item}</h3>
+                              <div className='space-y-2'>
+                                <Label htmlFor='quantity-sell'>Idadi ya Kuuza (Una: {selectedInventoryItem.quantity.toLocaleString()})</Label>
+                                <Input 
+                                    id="quantity-sell" type="number" min="1" max={selectedInventoryItem.quantity} value={productionQuantity}
+                                    onChange={(e) => setProductionQuantity(Math.max(1, Math.min(parseInt(e.target.value) || 1, selectedInventoryItem.quantity)))}
+                                    className='bg-gray-700 border-gray-600'
+                                />
+                              </div>
+                              <Separator className='my-4 bg-gray-600'/>
+                              <div className='space-y-3'>
+                                  <div className='flex justify-between items-center'>
+                                    <span className='text-gray-400'>Thamani ya Mauzo:</span>
+                                    <span className='font-bold text-green-400'>${calculateSaleValue(selectedInventoryItem, productionQuantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                  </div>
+                                  <div className='flex justify-between items-center'>
+                                    <span className='text-gray-400'>Muda wa Kuuza:</span>
+                                    <span className='font-bold'>{formatTime(calculateSaleTime(productionQuantity))}</span>
+                                  </div>
+                                  <Button
+                                    className='w-full bg-green-600 hover:bg-green-700'
+                                    onClick={handleConfirmProductionOrSale}
+                                    disabled={productionQuantity > selectedInventoryItem.quantity}
+                                  >
+                                    <CheckCircle className='mr-2'/> Anza Kuuza
+                                  </Button>
+                              </div>
+                          </div>
                         ) : (
                             <div className="flex items-center justify-center h-full text-center text-gray-500 p-4 rounded-lg bg-gray-800/50">
                             <p>Chagua bidhaa kutoka kushoto ili kuanza.</p>
