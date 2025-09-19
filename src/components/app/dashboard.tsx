@@ -635,7 +635,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     if (selectedSlotIndex !== null && selectedBuildingForBuild) {
         const costs = buildingData[selectedBuildingForBuild.id].buildCost;
         if (!hasEnoughMaterials(costs)) {
-            
             return;
         }
         onBuild(selectedSlotIndex, selectedBuildingForBuild);
@@ -680,7 +679,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
           }));
 
           if (!hasEnoughMaterials(neededInputs)) {
-             
              return;
           }
 
@@ -718,7 +716,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         const upgradeCosts = buildingData[slot.building.id].upgradeCost(slot.level + 1);
 
         if (!hasEnoughMaterials(upgradeCosts)) {
-            
             return;
         }
         onUpgradeBuilding(selectedSlotIndex);
@@ -904,7 +901,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             className='pl-10 bg-gray-800 border-gray-600 h-9'
                         />
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {filteredBuildings.map((b) => (
                             <Card 
                                 key={b.id} 
@@ -989,7 +986,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                 <ChevronsUp className='mr-2'/> Boresha hadi Level {(selectedSlot?.level || 0) + 1}
                             </Button>
                             <Separator className='my-3 bg-gray-600'/>
-                            <div className='space-y-1 pr-2'>
+                            <div className='space-y-1'>
                                 <p className='font-semibold mb-1 text-xs'>Gharama ya Kuboresha:</p>
                                 <ScrollArea className='max-h-[20vh]'>
                                     <div className="space-y-1 pr-2">
