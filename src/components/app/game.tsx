@@ -106,8 +106,24 @@ const initialBondListings: BondListing[] = [
 const AI_PLAYER_NAME = 'Serekali';
 const PLAYER_NAME = 'Mchezaji';
 
+const productCategoryToShopMap: Record<string, string> = {
+    'Space': 'duka_la_anga',
+    'Vehicles': 'duka_la_magari',
+    'Spares': 'duka_la_magari',
+    'Electronics': 'duka_la_electroniki',
+    'Mavazi': 'duka_la_nguo_na_vito',
+    'Construction': 'duka_la_ujenzi',
+    'Raw Material': 'duka_la_ujenzi',
+    'Vifaa': 'duka_la_ujenzi',
+    'Madini': 'duka_la_ujenzi',
+    'Mafuta': 'duka_la_ujenzi',
+    'Agriculture': 'duka_kuu',
+    'Food': 'duka_kuu',
+    'Product': 'duka_kuu', // Default
+};
+
+
 export function Game() {
-  const { toast } = useToast();
 
   const [view, setView] = React.useState<View>('dashboard');
 
@@ -248,9 +264,16 @@ export function Game() {
         const requiredQuantity = input.quantity * quantity;
 
         if (!inventoryItem || inventoryItem.quantity < requiredQuantity) {
-            
             return;
         }
+    }
+
+    const productInfo = encyclopediaData.find(e => e.name === recipe.output.name);
+    const shopId = productInfo ? productCategoryToShopMap[productInfo.category] || 'duka_kuu' : 'duka_kuu';
+    const hasShop = buildingSlots.some(slot => slot.building?.id === shopId);
+    
+    if (!hasShop) {
+        return;
     }
     
     const now = Date.now();
@@ -268,18 +291,18 @@ export function Game() {
       return newInventory.filter(item => item.quantity > 0);
     });
 
-    // Set production state on building
+    // Set selling state on building
     setBuildingSlots(prev => {
       const newSlots = [...prev];
       const slot = newSlots[slotIndex];
-      if(slot && slot.building && !slot.production) {
+      if(slot && slot.building && !slot.sell) {
         newSlots[slotIndex] = {
           ...slot,
-          production: {
+          sell: {
             recipeId: recipe.id,
             quantity: quantity,
             startTime: now,
-            endTime: now + durationMs,
+            endTime: now + durationMs, // Sell time equals production time
           }
         };
       }
@@ -318,7 +341,6 @@ export function Game() {
       const timeReduction = starsToUse * timeReductionPerStar;
 
       if (stars < starsToUse) {
-          
           return;
       }
       
@@ -331,14 +353,6 @@ export function Game() {
           }
           return newSlots;
       });
-
-      const hours = Math.floor(timeReduction / (60 * 60 * 1000));
-      const minutes = Math.floor((timeReduction % (60 * 60 * 1000)) / (60 * 1000));
-      let reductionText = "";
-      if(hours > 0) reductionText += `${hours} saa `;
-      if(minutes > 0) reductionText += `${minutes} dakika`;
-
-      
   };
 
  const handleBuyMaterial = (materialName: string, quantityToBuy: number): boolean => {
@@ -347,7 +361,6 @@ export function Game() {
       .sort((a, b) => a.price - b.price); // Sort by cheapest first
 
     if (listingsForMaterial.length === 0) {
-      
       return false;
     }
 
@@ -367,12 +380,10 @@ export function Game() {
     }
 
     if (quantityLeftToBuy > 0) {
-        
         return false;
     }
     
     if (money < totalCost) {
-        
         return false;
     }
 
@@ -410,15 +421,12 @@ export function Game() {
         return newListings.filter(l => l.quantity > 0);
     });
 
-    
-
     return true;
 };
 
   const handleBuyStock = (stock: StockListing, quantity: number) => {
       const totalCost = stock.stockPrice * quantity;
       if (money < totalCost) {
-        
         return;
       }
 
@@ -441,20 +449,16 @@ export function Game() {
           ? { ...c, sharesAvailable: c.sharesAvailable - quantity }
           : c
       ));
-
-      
   }
 
   const handleBuyFromMarket = (listing: PlayerListing, quantity: number) => {
     if (listing.seller === PLAYER_NAME) {
-        
         return;
     }
 
     const totalCost = listing.price * quantity;
 
     if (money < totalCost) {
-        
         return;
     }
 
@@ -496,52 +500,34 @@ export function Game() {
         // Remove listing if quantity is zero, but never remove Serekali
         return newListings.filter(l => l.quantity > 0);
     });
-
-    // 4. (Future) Credit the seller. For now, only Serekali and others are sellers.
-    // For now, the money just "leaves the system".
-
-    
   };
   
    React.useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
-      let inventoryUpdated = false;
-      let itemsProduced: string[] = [];
       let constructionCompleted: string[] = [];
 
       setBuildingSlots(prevSlots => {
         let slotsChanged = false;
         const newSlots = prevSlots.map(slot => {
-          // Check for completed production
-          if (slot && slot.production && now >= slot.production.endTime) {
+          // Check for completed sales
+          if (slot && slot.sell && now >= slot.sell.endTime) {
             slotsChanged = true;
-            inventoryUpdated = true;
             
-            const recipe = recipes.find(r => r.id === slot.production!.recipeId);
-            if (!recipe) return { ...slot, production: undefined };
+            const recipe = recipes.find(r => r.id === slot.sell!.recipeId);
+            if (!recipe) return { ...slot, sell: undefined };
 
-            const { output } = recipe;
-            itemsProduced.push(`${(output.quantity * slot.production!.quantity).toLocaleString()}x ${output.name}`);
-            
-            setInventory(prevInventory => {
-              const newInventory = [...prevInventory];
-              const itemIndex = newInventory.findIndex(i => i.item === output.name);
-              
-              if (itemIndex > -1) {
-                newInventory[itemIndex].quantity += (output.quantity * slot.production!.quantity);
-              } else {
-                 const encyclopediaEntry = encyclopediaData.find(e => e.name === output.name);
-                 const marketPrice = encyclopediaEntry 
-                    ? parseFloat(encyclopediaEntry.properties.find(p => p.label.includes("Market Cost"))?.value.replace('$', '') || '100')
-                    : 100;
+            const productInfo = encyclopediaData.find(e => e.name === recipe.output.name);
+            const pricePerUnit = productInfo ? parseFloat(productInfo.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : 0;
+            const totalQuantity = recipe.output.quantity * slot.sell.quantity;
+            const totalSaleValue = totalQuantity * pricePerUnit;
 
-                newInventory.push({ item: output.name, quantity: (output.quantity * slot.production!.quantity), marketPrice });
-              }
-              return newInventory;
-            });
+            if (totalSaleValue > 0) {
+                setMoney(prevMoney => prevMoney + totalSaleValue);
+                addTransaction('income', totalSaleValue, `Sold ${totalQuantity.toLocaleString()}x ${recipe.output.name}`);
+            }
             
-            return { ...slot, production: undefined };
+            return { ...slot, sell: undefined };
           }
           
           // Check for completed construction
@@ -565,14 +551,6 @@ export function Game() {
         }
         return prevSlots;
       });
-
-      if(inventoryUpdated){
-        
-      }
-      
-      if(constructionCompleted.length > 0){
-        
-      }
 
     }, 1000);
 
@@ -628,7 +606,7 @@ export function Game() {
       clearInterval(dividendInterval);
       clearInterval(marketFluctuationInterval);
     }
-  }, [toast, playerStocks, companyData]);
+  }, [playerStocks, companyData]);
   
   // "Serekali" AI Market Maker Logic
   React.useEffect(() => {

@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane, Rocket, ShieldCheck, Search } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane, Rocket, ShieldCheck, Search, Store, ShoppingCart } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -50,7 +50,7 @@ export type BuildingType = {
   imageHint: string;
 };
 
-export type ProductionInfo = {
+export type SellInfo = {
     recipeId: string;
     quantity: number;
     startTime: number;
@@ -66,11 +66,59 @@ export type ConstructionInfo = {
 export type BuildingSlot = {
     building: BuildingType | null;
     level: number;
-    production?: ProductionInfo;
+    sell?: SellInfo;
     construction?: ConstructionInfo;
 };
 
 const availableBuildings: BuildingType[] = [
+    {
+        id: 'duka_kuu',
+        name: 'Duka Kuu',
+        icon: <Store className="text-green-400" />,
+        description: 'Huzaa bidhaa za chakula, kilimo na za msingi.',
+        image: 'https://picsum.photos/seed/supermarket/200/200',
+        imageHint: 'supermarket aisle'
+    },
+    {
+        id: 'duka_la_ujenzi',
+        name: 'Duka la Vifaa vya Ujenzi',
+        icon: <ShoppingCart className="text-orange-400" />,
+        description: 'Huzaa vifaa vya ujenzi na malighafi.',
+        image: 'https://picsum.photos/seed/hardware-store/200/200',
+        imageHint: 'hardware store'
+    },
+    {
+        id: 'duka_la_nguo_na_vito',
+        name: 'Duka la Nguo na Vito',
+        icon: <ShoppingCart className="text-pink-400" />,
+        description: 'Huzaa mavazi, vito na bidhaa za kifahari.',
+        image: 'https://picsum.photos/seed/fashion-boutique/200/200',
+        imageHint: 'fashion boutique'
+    },
+    {
+        id: 'duka_la_electroniki',
+        name: 'Duka la Electroniki',
+        icon: <ShoppingCart className="text-blue-400" />,
+        description: 'Huzaa vifaa vya kielektroniki.',
+        image: 'https://picsum.photos/seed/electronics-store/200/200',
+        imageHint: 'electronics store'
+    },
+    {
+        id: 'duka_la_magari',
+        name: 'Duka la Magari',
+        icon: <ShoppingCart className="text-red-400" />,
+        description: 'Huzaa magari, pikipiki na vyombo vya usafiri.',
+        image: 'https://picsum.photos/seed/car-dealership/200/200',
+        imageHint: 'car dealership'
+    },
+    {
+        id: 'duka_la_anga',
+        name: 'Duka la Anga',
+        icon: <ShoppingCart className="text-purple-400" />,
+        description: 'Huzaa bidhaa za teknolojia ya anga.',
+        image: 'https://picsum.photos/seed/space-store/200/200',
+        imageHint: 'space showroom'
+    },
     {
         id: 'shamba',
         name: 'Shamba',
@@ -501,6 +549,15 @@ const availableBuildings: BuildingType[] = [
 ];
 
 const buildingStyles: Record<string, { body: string; roof: string }> = {
+    // Shops
+    duka_kuu: { body: 'bg-green-700/80', roof: 'border-b-green-800/90' },
+    duka_la_ujenzi: { body: 'bg-orange-700/80', roof: 'border-b-orange-800/90' },
+    duka_la_nguo_na_vito: { body: 'bg-pink-700/80', roof: 'border-b-pink-800/90' },
+    duka_la_electroniki: { body: 'bg-blue-700/80', roof: 'border-b-blue-800/90' },
+    duka_la_magari: { body: 'bg-red-700/80', roof: 'border-b-red-800/90' },
+    duka_la_anga: { body: 'bg-purple-700/80', roof: 'border-b-purple-800/90' },
+    
+    // Production
     shamba: { body: 'bg-green-800/80', roof: 'border-b-green-950/90' },
     zizi: { body: 'bg-orange-800/80', roof: 'border-b-orange-950/90' },
     kiwanda_cha_samaki: { body: 'bg-blue-800/80', roof: 'border-b-blue-950/90' },
@@ -765,10 +822,10 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   const handleCardClick = (slot: BuildingSlot, index: number) => {
     if (slot.construction) {
         handleOpenBoostDialog(index);
-    } else if (slot.building && !slot.production) {
+    } else if (slot.building && !slot.sell) {
         handleOpenManagementDialog(index);
     }
-    // If it's in production, do nothing (or maybe show progress details later).
+    // If it's in selling state, do nothing (or maybe show progress details later).
   }
 
   const timeReductionPerStar = 3 * 60 * 1000; // 3 minutes
@@ -796,7 +853,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {buildingSlots.map((slot, index) => {
-            const currentRecipe = slot.production ? recipes.find(r => r.id === slot.production!.recipeId) : null;
+            const currentRecipe = slot.sell ? recipes.find(r => r.id === slot.sell!.recipeId) : null;
             const style = slot.building ? (buildingStyles[slot.building.id] || buildingStyles.default) : buildingStyles.default;
             return slot.building ? (
             <Card
@@ -824,9 +881,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                 </div>
 
 
-                {slot.production && (
-                   <div className="absolute top-2 left-2 p-1 bg-yellow-500/80 rounded-full animate-pulse">
-                      <Clock className="h-4 w-4 text-white" />
+                {slot.sell && (
+                   <div className="absolute top-2 left-2 p-1 bg-green-500/80 rounded-full animate-pulse">
+                      <CircleDollarSign className="h-4 w-4 text-white" />
                    </div>
                 )}
                 {slot.construction && (
@@ -834,16 +891,16 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                       <Hammer className="h-4 w-4 text-white" />
                    </div>
                 )}
-                {!slot.production && !slot.construction && (
+                {!slot.sell && !slot.construction && (
                    <div className="absolute top-2 right-2 p-1 bg-gray-900/80 rounded-full">
                        <Settings className="h-4 w-4 text-white" />
                    </div>
                 )}
                 <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
                     <p className="text-xs font-bold truncate">{slot.building.name} (Lvl {slot.level || 0})</p>
-                    {slot.production && currentRecipe ? (
-                        <div className='text-xs font-mono text-yellow-300 flex items-center justify-center gap-2'>
-                           <span>{formatTime(slot.production.endTime - now)}</span>
+                    {slot.sell && currentRecipe ? (
+                        <div className='text-xs font-mono text-green-300 flex items-center justify-center gap-2'>
+                           <span>{formatTime(slot.sell.endTime - now)}</span>
                            <span>| {currentRecipe.output.name}</span>
                         </div>
                     ) : slot.construction ? (
@@ -1041,9 +1098,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         <Dialog open={isProductionDialogOpen} onOpenChange={setIsProductionDialogOpen}>
             <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl flex flex-col max-h-[90vh]">
                 <DialogHeader>
-                    <DialogTitle>Production: {selectedSlot?.building?.name} (Lvl {selectedSlot?.level})</DialogTitle>
+                    <DialogTitle>Uzalishaji: {selectedSlot?.building?.name} (Lvl {selectedSlot?.level})</DialogTitle>
                     <DialogDescription>
-                        Select a product, enter quantity, and start production.
+                        Chagua bidhaa, weka kiasi, na anza mchakato wa kuuza.
                     </DialogDescription>
                 </DialogHeader>
                  <div className="flex-grow overflow-y-auto -mr-6 pr-6">
@@ -1065,7 +1122,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                 </Button>
                             ))
                         ) : (
-                            <p className="text-sm text-gray-500">No recipes for this building.</p>
+                            <p className="text-sm text-gray-500">Hakuna mapishi kwa jengo hili.</p>
                         )}
                     </div>
                     {/* Production Details */}
@@ -1076,7 +1133,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                 
                                 {/* Inputs */}
                                 <div>
-                                    <h4 className='font-semibold mb-2'>Inputs Required</h4>
+                                    <h4 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h4>
                                     <div className='text-sm space-y-2 text-gray-300 list-disc list-inside'>
                                     {selectedRecipe.inputs.length > 0 ? selectedRecipe.inputs.map(input => {
                                         const invItem = inventory.find(i => i.item === input.name);
@@ -1095,13 +1152,13 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                             )}
                                         </div>
                                         )
-                                    }) : <p className='text-sm text-gray-400 italic'>No inputs required.</p>}
+                                    }) : <p className='text-sm text-gray-400 italic'>Hakuna vifaa vinavyohitajika.</p>}
                                     </div>
                                 </div>
 
                                 {/* Quantity */}
                                 <div className='space-y-2'>
-                                <Label htmlFor='quantity'>Production Quantity</Label>
+                                <Label htmlFor='quantity'>Idadi ya Kuzalisha</Label>
                                 <Input 
                                     id="quantity"
                                     type="number"
@@ -1117,11 +1174,11 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                 {/* Summary & Action */}
                                 <div className='space-y-3'>
                                     <div className='flex justify-between items-center'>
-                                    <span className='text-gray-400'>Total Cost:</span>
+                                    <span className='text-gray-400'>Gharama ya Uzalishaji:</span>
                                     <span className='font-bold'>${calculateProductionCost(selectedRecipe, productionQuantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className='flex justify-between items-center'>
-                                    <span className='text-gray-400'>Est. Time:</span>
+                                    <span className='text-gray-400'>Muda wa Kuuza:</span>
                                     <span className='font-bold'>{formatTime(calculateProductionTime(productionQuantity))}</span>
                                     </div>
                                     <Button
@@ -1130,14 +1187,14 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                     disabled={!hasEnoughInputsForProduction(selectedRecipe, productionQuantity)}
                                     >
                                     <CheckCircle className='mr-2'/>
-                                    Start Production
+                                    Anza Kuuza
                                     </Button>
                                 </div>
 
                             </div>
                         ) : (
                             <div className="flex items-center justify-center h-full text-center text-gray-500 p-4 rounded-lg bg-gray-800/50">
-                            <p>Select a recipe from the left to begin.</p>
+                            <p>Chagua bidhaa kutoka kushoto ili kuanza.</p>
                             </div>
                         )}
                     </div>
