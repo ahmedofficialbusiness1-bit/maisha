@@ -1,5 +1,6 @@
 
 
+
 import React from 'react';
 import { recipes, type Recipe } from './recipe-data';
 import { buildingData } from './building-data';
@@ -302,10 +303,24 @@ const priceList: Record<string, number> = {
   'C2 Mashine': 1900,
   'Karatasi': 50,
   'Cheti cha Madini': 100,
+
+  // Mavazi (User Provided)
+  'Kitamba': 20,
+  'Ngozi': 50,
+  'Viatu': 80,
+  'Pochi': 60,
+  'T-Shirt': 25,
+  'Jeans': 50,
+  'Skirt': 35,
+  'Kijora': 30,
+  'Saa': 200,
+  'Soli': 40,
+  'Kioo': 15,
+  'Chokaa': 10,
+  'Gundi': 5,
   
   // Other prices (fallback)
   'Ngombe': 100,
-  'Ngozi': 40,
   'Bwawa': 500,
   'Boat': 1000,
   'Mawe': 1.6,
@@ -314,17 +329,6 @@ const priceList: Record<string, number> = {
   'Mafuta Ghafi': 5,
   'Disel': 12,
   'Petrol': 12,
-  'Gundi': 8,
-  'Chokaa': 5,
-  'Kioo': 50,
-  'Soli': 35,
-  'Saa': 250,
-  'Viatu': 150,
-  'Pochi': 100,
-  'T-Shirt': 65,
-  'Jeans': 90,
-  'Skirt': 60,
-  'Kijora': 120,
   'Mkufu wa Dhahabu': 20000,
   'Saa ya Dhahabu': 25000,
   'Pete ya Dhahabu': 10000,
