@@ -586,7 +586,7 @@ const formatTime = (ms: number) => {
 };
 
 export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding, onBuyMaterial }: DashboardProps) {
-  const { toast } = useToast();
+  
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
   const [selectedBuildingForBuild, setSelectedBuildingForBuild] = React.useState<BuildingType | null>(null);
@@ -912,7 +912,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                 className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-4 text-center"
                                 onClick={() => handleSelectBuildingToShowDetails(b)}
                             >
-                            {React.cloneElement(b.icon, { className: 'h-6 w-6' })}
+                            {React.cloneElement(b.icon, { className: 'h-5 w-5' })}
                             <p className="font-semibold mt-2 text-sm">{b.name}</p>
                             </Card>
                         ))}
@@ -926,28 +926,30 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                     <Separator className='bg-gray-600'/>
                     <div>
                         <h3 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h3>
-                        <div className="space-y-1">
-                            {buildCosts.map(cost => {
-                                const invItem = inventory.find(i => i.item === cost.name);
-                                const has = invItem?.quantity || 0;
-                                const needed = cost.quantity;
-                                const hasEnough = has >= needed;
-                                return (
-                                    <div key={cost.name} className={cn('flex justify-between items-center p-1 rounded-md text-xs', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
-                                        <span>{cost.name}</span>
-                                        <div className='flex items-center gap-1'>
-                                            <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                {has.toLocaleString()} / {needed.toLocaleString()}
-                                            </span>
-                                            {!hasEnough && (
-                                                <Button size="sm" variant="secondary" className="h-5 text-[10px] px-1.5" onClick={() => onBuyMaterial(cost.name, needed - has)}>
-                                                    Nunua
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                )
-                            })}
+                        <div className='pr-2'>
+                          <div className="space-y-1">
+                              {buildCosts.map(cost => {
+                                  const invItem = inventory.find(i => i.item === cost.name);
+                                  const has = invItem?.quantity || 0;
+                                  const needed = cost.quantity;
+                                  const hasEnough = has >= needed;
+                                  return (
+                                      <div key={cost.name} className={cn('flex justify-between items-center p-1 rounded-md text-xs', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
+                                          <span>{cost.name}</span>
+                                          <div className='flex items-center gap-1'>
+                                              <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                  {has.toLocaleString()} / {needed.toLocaleString()}
+                                              </span>
+                                              {!hasEnough && (
+                                                  <Button size="sm" variant="secondary" className="h-5 text-[10px] px-1.5" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                      Nunua
+                                                  </Button>
+                                              )}
+                                          </div>
+                                      </div>
+                                  )
+                              })}
+                          </div>
                         </div>
                     </div>
                 </div>
@@ -986,7 +988,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                 <ChevronsUp className='mr-2'/> Boresha hadi Level {(selectedSlot?.level || 0) + 1}
                             </Button>
                             <Separator className='my-3 bg-gray-600'/>
-                            <div className='space-y-1'>
+                            <div className='space-y-1 pr-2'>
                                 <p className='font-semibold mb-1 text-xs'>Gharama ya Kuboresha:</p>
                                 <div className="space-y-1">
                                     {upgradeCosts.map(cost => {
