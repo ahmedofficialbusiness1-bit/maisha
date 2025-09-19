@@ -218,107 +218,182 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Default': <Package className="text-gray-400" />
 };
 
-
 const getIcon = (name: string): React.ReactElement<LucideIcon> => {
     return itemIcons[name] || itemIcons['Default'];
 };
 
 
-// -----------------------------------------------------------------------------
-// NEW, REFACTORED PRICING LOGIC
-// -----------------------------------------------------------------------------
-const PROFIT_MARGIN = 0.30; // 30%
+// --- Main Execution ---
 
-const baseMaterialCosts: Record<string, number> = {
-    'Maji': 0.04,
-    'Umeme': 0.08,
-    'Mawe': 1.6,
-    'Mchanga': 1.2,
-    'Madini ya chuma': 8.0,
-    'Bwawa': 500,
-    'Boat': 1000,
+// This is the definitive, hardcoded price list for all items.
+// Prices have been adjusted to make economic sense (raw materials < intermediates < final products).
+const priceList: Record<string, number> = {
+  'Maji': 0.04,
+  'Umeme': 0.08,
+  'Mbegu': 0.4,
+  'Nyasi': 0.5,
+  'Yai': 2,
+  'Kuku': 10,
+  'Mbolea': 10,
+  'Ngombe': 100,
+  'Nyama': 130,
+  'Ngozi': 40,
+  'Samaki': 2,
+  'Bwawa': 500,
+  'Boat': 1000,
+  'Chumvi': 0.5,
+  'Mawe': 1.6,
+  'Mchanga': 1.2,
+  'Kokoto': 4,
+  'Miti': 2,
+  'Mbao': 6,
+  'Karatasi': 1,
+  'Madini ya chuma': 8.0,
+  'Chuma': 25,
+  'Mabati': 50,
+  'Nondo': 60,
+  'Saruji': 15,
+  'Matofali': 5,
+  'Zege': 20,
+  'Shaba': 15,
+  'Almasi': 2500,
+  'Dhahabu': 1800,
+  'Silver': 400,
+  'Ruby': 1500,
+  'Tanzanite': 2000,
+  'Mafuta Ghafi': 5,
+  'Disel': 12,
+  'Petrol': 12,
+  'Maharage': 2,
+  'Mchele': 2,
+  'Unga wa ngano': 1.5,
+  'Unga wa sembe': 1.5,
+  'Ndizi': 1,
+  'Viazi mbatata': 1,
+  'Mboga mboga': 0.5,
+  'Embe': 1,
+  'Nanasi': 2,
+  'Parachichi': 1.5,
+  'Miwa': 0.8,
+  'Sukari': 2,
+  'Juice': 15,
+  'Zabibu': 3,
+  'Apple': 3,
+  'Chungwa': 2.5,
+  'Korosho': 4,
+  'Karafuu': 5,
+  'Pamba': 3,
+  'Katani': 3,
+  'Kitamba': 20,
+  'Gundi': 8,
+  'Chokaa': 5,
+  'Kioo': 50,
+  'Soli': 35,
+  'Saa': 250,
+  'Viatu': 150,
+  'Pochi': 100,
+  'T-Shirt': 65,
+  'Jeans': 90,
+  'Skirt': 60,
+  'Kijora': 120,
+  'Mkufu wa Dhahabu': 20000,
+  'Saa ya Dhahabu': 25000,
+  'Pete ya Dhahabu': 10000,
+  'Mkufu wa Almasi': 30000,
+  'Saa ya Almasi': 40000,
+  'Pete ya Almasi': 15000,
+  'Cheti cha Madini': 25000,
+  'Leseni B1': 25000,
+  'Leseni B2': 25000,
+  'Leseni B3': 25000,
+  'Leseni B4': 25000,
+  'Leseni B5': 25000,
+  'Leseni B6': 25000,
+  'Leseni B7': 25000,
+  'Mashine A1': 5000,
+  'Mashine A2': 5500,
+  'Mashine A3': 6000,
+  'Mashine A4': 6500,
+  'Mashine A5': 7000,
+  'Mashine B1': 12500,
+  'Mashine B2': 13000,
+  'Mashine B3': 13500,
+  'Mashine B4': 14000,
+  'Mashine B5': 14500,
+  'Mashine B6': 15000,
+  'Mashine B7': 15500,
+  'Mashine C1': 25000,
+  'Mashine C2': 27500,
+  'K1 Mashine': 750000,
+  'K2 Mashine': 800000,
+  'K3 Mashine': 850000,
+  'K4 Mashine': 900000,
+  'K5 Mashine': 950000,
+  'K6 Mashine': 1000000,
+  'K7 Mashine': 1050000,
+  'Vifaa vya ndani': 20,
+  'Housing': 50,
+  'Nyaya': 15,
+  'LCD': 40,
+  'Cathode': 30,
+  'Anode': 30,
+  'Ram': 100,
+  'Rom': 80,
+  'PCB': 60,
+  'Processor': 500,
+  'Betri': 150,
+  'Display': 200,
+  'Motherboard': 800,
+  'TV': 2500,
+  'Tablet': 1800,
+  'Smartphone': 1500,
+  'Laptop': 3500,
+  'Car Body': 5000,
+  'Bike Body': 1000,
+  'Interior': 2000,
+  'Luxury Interior': 10000,
+  'Motor': 500,
+  'Engine': 5000,
+  'Dashboard': 1000,
+  'Bull dozer body': 20000,
+  'Truck body': 15000,
+  'Bodi ya Ndege': 50000,
+  'Bodi ya Meli': 100000,
+  'Bull Dozer': 150000,
+  'Lori': 80000,
+  'Gari ya kifahari': 120000,
+  'Gari': 55000,
+  'Pikipiki ya Kifahari': 25000,
+  'Pikipiki': 8000,
+  'Ndege': 5000000,
+  'Ndege ya kifahari': 15000000,
+  'Meli': 8000000,
+  'Meli ya kifahari': 20000000,
+  'Fuselage': 500000,
+  'Wings': 200000,
+  'Tarakilishi': 1000000,
+  'Cockpit': 300000,
+  'Attitude Control': 150000,
+  'Rocket Engine': 800000,
+  'Heat Shield': 2500000,
+  'Roketi': 25000000
 };
 
-// A map to store the final calculated market price for every item.
-const marketPrices = new Map<string, number>();
-// A map to act as a cache (memoization) to avoid re-calculating prices.
-const priceMemo = new Map<string, number>();
 // A map to look up recipes by their output name quickly.
 const recipeMap = new Map<string, Recipe>(recipes.map(r => [r.output.name, r]));
 
-/**
- * Recursively calculates the market price of an item.
- * It finds the item's recipe, calculates the cost of its inputs (recursing if necessary),
- * and then adds a 30% profit margin.
- * Base materials that don't have recipes get their price from `baseMaterialCosts`.
- */
-function getMarketPrice(itemName: string): number {
-    // 1. If price is already calculated, return it from the cache.
-    if (priceMemo.has(itemName)) {
-        return priceMemo.get(itemName)!;
-    }
-
-    // 2. If the item is a base material, its market price is its base cost.
-    if (baseMaterialCosts[itemName] !== undefined) {
-        priceMemo.set(itemName, baseMaterialCosts[itemName]);
-        return baseMaterialCosts[itemName];
-    }
-
-    // 3. Find the recipe for the item.
-    const recipe = recipeMap.get(itemName);
-    if (!recipe) {
-        // If an item has no recipe and is not a base material, it's an error in data.
-        // We'll throw an error to make it obvious during development.
-        throw new Error(`Pricing error: No recipe or base cost found for item "${itemName}".`);
-    }
-
-    // 4. Calculate the total production cost by summing the market prices of all inputs.
-    // This is the recursive step.
-    const productionCost = recipe.inputs.reduce((total, input) => {
-        // Recursively get the market price for each input.
-        const inputMarketPrice = getMarketPrice(input.name);
-        return total + (inputMarketPrice * input.quantity);
-    }, 0);
-
-    // 5. Calculate the cost per single unit of output.
-    const costPerUnit = productionCost / recipe.output.quantity;
-    
-    // 6. Calculate the final market price by adding the profit margin.
-    // Market Price = Production Cost + (Production Cost * Profit Margin)
-    const marketPrice = costPerUnit + (costPerUnit * PROFIT_MARGIN);
-
-    // 7. Cache the result and return it.
-    priceMemo.set(itemName, marketPrice);
-    return marketPrice;
-}
-
-
-// --- Main Execution ---
-
-// Get a list of all unique items from recipes and base costs.
+// Get a list of all unique items from recipes and the hardcoded price list.
 const allItems = new Set<string>([
     ...recipes.flatMap(r => [r.output.name, ...r.inputs.map(i => i.name)]),
-    ...Object.keys(baseMaterialCosts)
+    ...Object.keys(priceList)
 ]);
-
-// Calculate the market price for every single item.
-allItems.forEach(itemName => {
-    try {
-        const price = getMarketPrice(itemName);
-        marketPrices.set(itemName, price);
-    } catch (e) {
-        console.error(e);
-        // If an error occurred, set a fallback price to avoid crashing the app.
-        marketPrices.set(itemName, 9999999);
-    }
-});
 
 
 // --- Generate Encyclopedia Entries using the final calculated prices ---
 const finalEntries: EncyclopediaEntry[] = [];
 allItems.forEach(itemName => {
     const recipe = recipeMap.get(itemName);
-    const marketCost = marketPrices.get(itemName) || 0;
+    const marketCost = priceList[itemName] || 0;
     
     let properties: { label: string; value: string }[] = [
         { label: 'Market Cost', value: `$${marketCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}` }
@@ -328,7 +403,7 @@ allItems.forEach(itemName => {
         // It's a produced good
         let inputCost = 0;
         for (const input of recipe.inputs) {
-            inputCost += (marketPrices.get(input.name) || 0) * input.quantity;
+            inputCost += (priceList[input.name] || 0) * input.quantity;
         }
         const productionCostPerUnit = inputCost / recipe.output.quantity;
 
