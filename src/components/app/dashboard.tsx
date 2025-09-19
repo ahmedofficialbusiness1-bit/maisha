@@ -889,7 +889,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
 
       {/* Build Dialog */}
       <Dialog open={isBuildDialogOpen} onOpenChange={setIsBuildDialogOpen}>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white">
+          <DialogContent className="bg-gray-900 border-gray-700 text-white flex flex-col max-h-[90vh]">
             <DialogHeader>
               {buildDialogStep === 'details' && selectedBuildingForBuild && (
                 <Button variant="ghost" size="icon" onClick={handleBuildDialogBack} className='absolute left-4 top-4'>
@@ -905,116 +905,55 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                   : 'Hakiki mahitaji na anza ujenzi.'}
               </DialogDescription>
             </DialogHeader>
-
-            {buildDialogStep === 'list' && (
-              <div className='pt-4 flex flex-col gap-4'>
-                <div className='relative'>
-                    <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
-                    <Input 
-                        placeholder='Tafuta jengo...'
-                        value={buildingSearch}
-                        onChange={(e) => setBuildingSearch(e.target.value)}
-                        className='pl-10 bg-gray-800 border-gray-600'
-                    />
-                </div>
-                <ScrollArea className="max-h-[60vh] pr-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        {filteredBuildings.map((b) => (
-                            <Card 
-                                key={b.id} 
-                                className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-4 text-center"
-                                onClick={() => handleSelectBuildingToShowDetails(b)}
-                            >
-                              {React.cloneElement(b.icon, { className: 'h-8 w-8' })}
-                              <p className="font-semibold mt-2 text-sm">{b.name}</p>
-                            </Card>
-                        ))}
+            <ScrollArea className="flex-grow">
+                <div className="pr-6">
+                    {buildDialogStep === 'list' && (
+                    <div className='pt-4 flex flex-col gap-4'>
+                        <div className='relative'>
+                            <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
+                            <Input 
+                                placeholder='Tafuta jengo...'
+                                value={buildingSearch}
+                                onChange={(e) => setBuildingSearch(e.target.value)}
+                                className='pl-10 bg-gray-800 border-gray-600'
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            {filteredBuildings.map((b) => (
+                                <Card 
+                                    key={b.id} 
+                                    className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-4 text-center"
+                                    onClick={() => handleSelectBuildingToShowDetails(b)}
+                                >
+                                {React.cloneElement(b.icon, { className: 'h-8 w-8' })}
+                                <p className="font-semibold mt-2 text-sm">{b.name}</p>
+                                </Card>
+                            ))}
+                        </div>
                     </div>
-                </ScrollArea>
-              </div>
-            )}
+                    )}
 
-            {buildDialogStep === 'details' && selectedBuildingForBuild && (
-              <div className='py-4 space-y-4'>
-                  <p className='text-sm text-gray-400'>{selectedBuildingForBuild.description}</p>
-                  <Separator className='bg-gray-600'/>
-                  <div>
-                      <h3 className='font-semibold mb-2 text-sm'>Vifaa Vinavyohitajika</h3>
-                      <div className='space-y-1 text-xs'>
-                          {buildCosts.map(cost => {
-                              const invItem = inventory.find(i => i.item === cost.name);
-                              const has = invItem?.quantity || 0;
-                              const needed = cost.quantity;
-                              const hasEnough = has >= needed;
-                              return (
-                                  <div key={cost.name} className={cn('flex justify-between items-center p-1 rounded-md', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
-                                      <span>{cost.name}</span>
-                                      <div className='flex items-center gap-1'>
-                                          <span className={cn('font-mono text-xs', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                            {has.toLocaleString()} / {needed.toLocaleString()}
-                                          </span>
-                                          {!hasEnough && (
-                                            <Button size="sm" variant="secondary" className="h-5 text-[10px] px-1.5" onClick={() => onBuyMaterial(cost.name, needed - has)}>
-                                                Nunua
-                                            </Button>
-                                          )}
-                                      </div>
-                                  </div>
-                              )
-                          })}
-                      </div>
-                  </div>
-                  <DialogFooter>
-                      <Button
-                          className='w-full bg-green-600 hover:bg-green-700'
-                          onClick={handleConfirmBuild}
-                          disabled={!canAffordBuild}
-                      >
-                          Jenga kwa Dakika 15
-                      </Button>
-                  </DialogFooter>
-              </div>
-            )}
-          </DialogContent>
-      </Dialog>
-        
-        {/* Management Dialog */}
-        <Dialog open={isManagementDialogOpen} onOpenChange={setIsManagementDialogOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white">
-                <DialogHeader>
-                    <DialogTitle>Simamia {selectedSlot?.building?.name}</DialogTitle>
-                    <DialogDescription>
-                        Chagua kitendo cha kufanya kwenye jengo hili.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className='py-4 space-y-4'>
-                    <Button className='w-full justify-start' variant="outline" onClick={handleOpenProductionDialog}>
-                        <Tractor className='mr-2'/> Anza Uzalishaji
-                    </Button>
-                    <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
-                        <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
-                            <ChevronsUp className='mr-2'/> Boresha hadi Level {(selectedSlot?.level || 0) + 1}
-                        </Button>
-                        <Separator className='my-3 bg-gray-600'/>
-                        <div className='text-xs space-y-1'>
-                            <p className='font-semibold mb-1'>Gharama ya Kuboresha:</p>
-                             <div className='space-y-1 text-xs'>
-                                {upgradeCosts.map(cost => {
+                    {buildDialogStep === 'details' && selectedBuildingForBuild && (
+                    <div className='py-4 space-y-4'>
+                        <p className='text-sm text-gray-400'>{selectedBuildingForBuild.description}</p>
+                        <Separator className='bg-gray-600'/>
+                        <div>
+                            <h3 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h3>
+                            <div className='space-y-1'>
+                                {buildCosts.map(cost => {
                                     const invItem = inventory.find(i => i.item === cost.name);
                                     const has = invItem?.quantity || 0;
                                     const needed = cost.quantity;
                                     const hasEnough = has >= needed;
                                     return (
-                                        <div key={cost.name} className='flex justify-between items-center p-1 rounded-md'>
-                                            <span className={cn('text-xs', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                {cost.name}
-                                            </span>
+                                        <div key={cost.name} className={cn('flex justify-between items-center p-1 rounded-md text-xs', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
+                                            <span>{cost.name}</span>
                                             <div className='flex items-center gap-1'>
-                                                <span className={cn('font-mono text-xs', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                    {has.toLocaleString()}/{needed.toLocaleString()}
+                                                <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                    {has.toLocaleString()} / {needed.toLocaleString()}
                                                 </span>
                                                 {!hasEnough && (
-                                                    <Button size="sm" variant="secondary" className="h-5 px-1.5 text-[10px]" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                    <Button size="sm" variant="secondary" className="h-5 text-[10px] px-1.5" onClick={() => onBuyMaterial(cost.name, needed - has)}>
                                                         Nunua
                                                     </Button>
                                                 )}
@@ -1025,10 +964,76 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             </div>
                         </div>
                     </div>
-                     <Button className='w-full justify-start' variant="destructive" onClick={() => setIsDemolishDialogOpen(true)}>
-                        <Trash2 className='mr-2'/> Futa Jengo
-                    </Button>
+                    )}
                 </div>
+            </ScrollArea>
+             {buildDialogStep === 'details' && (
+                <DialogFooter className="mt-auto pt-4">
+                    <Button
+                        className='w-full bg-green-600 hover:bg-green-700'
+                        onClick={handleConfirmBuild}
+                        disabled={!canAffordBuild}
+                    >
+                        Jenga kwa Dakika 15
+                    </Button>
+                </DialogFooter>
+             )}
+          </DialogContent>
+      </Dialog>
+        
+        {/* Management Dialog */}
+        <Dialog open={isManagementDialogOpen} onOpenChange={setIsManagementDialogOpen}>
+            <DialogContent className="bg-gray-900 border-gray-700 text-white flex flex-col max-h-[90vh]">
+                <DialogHeader>
+                    <DialogTitle>Simamia {selectedSlot?.building?.name}</DialogTitle>
+                    <DialogDescription>
+                        Chagua kitendo cha kufanya kwenye jengo hili.
+                    </DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="flex-grow">
+                    <div className='py-4 space-y-4 pr-6'>
+                        <Button className='w-full justify-start' variant="outline" onClick={handleOpenProductionDialog}>
+                            <Tractor className='mr-2'/> Anza Uzalishaji
+                        </Button>
+                        <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
+                            <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
+                                <ChevronsUp className='mr-2'/> Boresha hadi Level {(selectedSlot?.level || 0) + 1}
+                            </Button>
+                            <Separator className='my-3 bg-gray-600'/>
+                            <div className='space-y-1'>
+                                <p className='font-semibold mb-1 text-xs'>Gharama ya Kuboresha:</p>
+                                <div className='space-y-1'>
+                                    {upgradeCosts.map(cost => {
+                                        const invItem = inventory.find(i => i.item === cost.name);
+                                        const has = invItem?.quantity || 0;
+                                        const needed = cost.quantity;
+                                        const hasEnough = has >= needed;
+                                        return (
+                                            <div key={cost.name} className='flex justify-between items-center p-1 rounded-md text-xs'>
+                                                <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                    {cost.name}
+                                                </span>
+                                                <div className='flex items-center gap-1'>
+                                                    <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                        {has.toLocaleString()}/{needed.toLocaleString()}
+                                                    </span>
+                                                    {!hasEnough && (
+                                                        <Button size="sm" variant="secondary" className="h-5 px-1.5 text-[10px]" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                            Nunua
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                        <Button className='w-full justify-start' variant="destructive" onClick={() => setIsDemolishDialogOpen(true)}>
+                            <Trash2 className='mr-2'/> Futa Jengo
+                        </Button>
+                    </div>
+                </ScrollArea>
             </DialogContent>
         </Dialog>
 
@@ -1052,17 +1057,17 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
 
         {/* Production Dialog */}
         <Dialog open={isProductionDialogOpen} onOpenChange={setIsProductionDialogOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl">
+            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl flex flex-col max-h-[90vh]">
                 <DialogHeader>
                     <DialogTitle>Production: {selectedSlot?.building?.name} (Lvl {selectedSlot?.level})</DialogTitle>
                     <DialogDescription>
                         Select a product, enter quantity, and start production.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid grid-cols-3 gap-4 pt-4">
-                  {/* Recipe List */}
-                  <ScrollArea className="col-span-1 max-h-[60vh]">
-                    <div className="flex flex-col gap-2 pr-2">
+                 <ScrollArea className="flex-grow">
+                    <div className="grid grid-cols-3 gap-4 pt-4 pr-6">
+                    {/* Recipe List */}
+                    <div className="col-span-1 flex flex-col gap-2">
                         {buildingRecipes.length > 0 ? (
                             buildingRecipes.map((recipe) => (
                                 <Button
@@ -1081,122 +1086,124 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             <p className="text-sm text-gray-500">No recipes for this building.</p>
                         )}
                     </div>
-                  </ScrollArea>
-                  {/* Production Details */}
-                  <div className="col-span-2">
-                    {selectedRecipe ? (
-                        <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
-                            <h3 className='text-xl font-bold'>{selectedRecipe.output.name}</h3>
-                            
-                            {/* Inputs */}
-                            <div>
-                                <h4 className='font-semibold mb-2'>Inputs Required</h4>
-                                <div className='text-sm space-y-2 text-gray-300 list-disc list-inside'>
-                                  {selectedRecipe.inputs.length > 0 ? selectedRecipe.inputs.map(input => {
-                                    const invItem = inventory.find(i => i.item === input.name);
-                                    const has = invItem?.quantity || 0;
-                                    const needed = input.quantity * productionQuantity;
-                                    const hasEnough = has >= needed;
-                                    return (
-                                      <div key={input.name} className='flex justify-between items-center'>
-                                        <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                            {needed.toLocaleString()}x {input.name} (Una: {has.toLocaleString()})
-                                        </span>
-                                        {!hasEnough && (
-                                            <Button size="sm" variant="secondary" className="h-6 px-2" onClick={() => onBuyMaterial(input.name, needed - has)}>
-                                                Nunua
-                                            </Button>
-                                        )}
-                                      </div>
-                                    )
-                                  }) : <p className='text-sm text-gray-400 italic'>No inputs required.</p>}
+                    {/* Production Details */}
+                    <div className="col-span-2">
+                        {selectedRecipe ? (
+                            <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
+                                <h3 className='text-xl font-bold'>{selectedRecipe.output.name}</h3>
+                                
+                                {/* Inputs */}
+                                <div>
+                                    <h4 className='font-semibold mb-2'>Inputs Required</h4>
+                                    <div className='text-sm space-y-2 text-gray-300 list-disc list-inside'>
+                                    {selectedRecipe.inputs.length > 0 ? selectedRecipe.inputs.map(input => {
+                                        const invItem = inventory.find(i => i.item === input.name);
+                                        const has = invItem?.quantity || 0;
+                                        const needed = input.quantity * productionQuantity;
+                                        const hasEnough = has >= needed;
+                                        return (
+                                        <div key={input.name} className='flex justify-between items-center'>
+                                            <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                {needed.toLocaleString()}x {input.name} (Una: {has.toLocaleString()})
+                                            </span>
+                                            {!hasEnough && (
+                                                <Button size="sm" variant="secondary" className="h-6 px-2" onClick={() => onBuyMaterial(input.name, needed - has)}>
+                                                    Nunua
+                                                </Button>
+                                            )}
+                                        </div>
+                                        )
+                                    }) : <p className='text-sm text-gray-400 italic'>No inputs required.</p>}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* Quantity */}
-                            <div className='space-y-2'>
-                               <Label htmlFor='quantity'>Production Quantity</Label>
-                               <Input 
-                                  id="quantity"
-                                  type="number"
-                                  min="1"
-                                  value={productionQuantity}
-                                  onChange={(e) => setProductionQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                  className='bg-gray-700 border-gray-600'
-                               />
-                            </div>
-                            
-                            <Separator className='my-4 bg-gray-600'/>
-
-                            {/* Summary & Action */}
-                            <div className='space-y-3'>
-                                <div className='flex justify-between items-center'>
-                                  <span className='text-gray-400'>Total Cost:</span>
-                                  <span className='font-bold'>${calculateProductionCost(selectedRecipe, productionQuantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                {/* Quantity */}
+                                <div className='space-y-2'>
+                                <Label htmlFor='quantity'>Production Quantity</Label>
+                                <Input 
+                                    id="quantity"
+                                    type="number"
+                                    min="1"
+                                    value={productionQuantity}
+                                    onChange={(e) => setProductionQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className='bg-gray-700 border-gray-600'
+                                />
                                 </div>
-                                <div className='flex justify-between items-center'>
-                                  <span className='text-gray-400'>Est. Time:</span>
-                                  <span className='font-bold'>{formatTime(calculateProductionTime(productionQuantity))}</span>
-                                </div>
-                                <Button
-                                  className='w-full bg-green-600 hover:bg-green-700'
-                                  onClick={handleConfirmProduction}
-                                  disabled={!hasEnoughInputsForProduction(selectedRecipe, productionQuantity)}
-                                >
-                                  <CheckCircle className='mr-2'/>
-                                  Start Production
-                                </Button>
-                            </div>
+                                
+                                <Separator className='my-4 bg-gray-600'/>
 
-                        </div>
-                    ) : (
-                        <div className="flex items-center justify-center h-full text-center text-gray-500 p-4 rounded-lg bg-gray-800/50">
-                          <p>Select a recipe from the left to begin.</p>
-                        </div>
-                    )}
-                  </div>
-                </div>
+                                {/* Summary & Action */}
+                                <div className='space-y-3'>
+                                    <div className='flex justify-between items-center'>
+                                    <span className='text-gray-400'>Total Cost:</span>
+                                    <span className='font-bold'>${calculateProductionCost(selectedRecipe, productionQuantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className='flex justify-between items-center'>
+                                    <span className='text-gray-400'>Est. Time:</span>
+                                    <span className='font-bold'>{formatTime(calculateProductionTime(productionQuantity))}</span>
+                                    </div>
+                                    <Button
+                                    className='w-full bg-green-600 hover:bg-green-700'
+                                    onClick={handleConfirmProduction}
+                                    disabled={!hasEnoughInputsForProduction(selectedRecipe, productionQuantity)}
+                                    >
+                                    <CheckCircle className='mr-2'/>
+                                    Start Production
+                                    </Button>
+                                </div>
+
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-center text-gray-500 p-4 rounded-lg bg-gray-800/50">
+                            <p>Select a recipe from the left to begin.</p>
+                            </div>
+                        )}
+                    </div>
+                    </div>
+                 </ScrollArea>
             </DialogContent>
         </Dialog>
         
         {/* Boost Dialog */}
         <Dialog open={isBoostDialogOpen} onOpenChange={setIsBoostDialogOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white">
+            <DialogContent className="bg-gray-900 border-gray-700 text-white flex flex-col max-h-[90vh]">
                 <DialogHeader>
                     <DialogTitle>Harakisha Ujenzi</DialogTitle>
                      <DialogDescription>
                         Tumia Star Boosts kupunguza muda wa ujenzi. Unapata dakika 3 kwa kila nyota.
                     </DialogDescription>
                 </DialogHeader>
-                <div className='py-4 space-y-6 text-center'>
-                    <div className='grid grid-cols-2 gap-4'>
-                        <div className='p-3 bg-gray-800 rounded-lg'>
-                           <p className='text-sm text-gray-400'>Muda Uliosalia</p>
-                           <p className='font-bold font-mono text-lg'>{selectedSlot?.construction ? formatTime(selectedSlot.construction.endTime - now) : '00:00'}</p>
+                <ScrollArea className="flex-grow">
+                    <div className='py-4 space-y-6 text-center pr-6'>
+                        <div className='grid grid-cols-2 gap-4'>
+                            <div className='p-3 bg-gray-800 rounded-lg'>
+                            <p className='text-sm text-gray-400'>Muda Uliosalia</p>
+                            <p className='font-bold font-mono text-lg'>{selectedSlot?.construction ? formatTime(selectedSlot.construction.endTime - now) : '00:00'}</p>
+                            </div>
+                            <div className='p-3 bg-gray-800 rounded-lg'>
+                            <p className='text-sm text-gray-400'>Muda Utakaopungua</p>
+                            <p className='font-bold font-mono text-lg text-green-400'>{formatTime(timeReduction)}</p>
+                            </div>
                         </div>
-                         <div className='p-3 bg-gray-800 rounded-lg'>
-                           <p className='text-sm text-gray-400'>Muda Utakaopungua</p>
-                           <p className='font-bold font-mono text-lg text-green-400'>{formatTime(timeReduction)}</p>
+                        
+                        <div className='space-y-4'>
+                            <div className='flex justify-between items-center'>
+                                <Label htmlFor="boost-amount" className="text-left">Idadi ya Stars (Una: {stars})</Label>
+                                <span className='flex items-center gap-2 font-bold'>{boostAmount} <Star className='h-4 w-4 text-yellow-400' /></span>
+                            </div>
+                            <Slider
+                                id="boost-amount"
+                                min={0}
+                                max={maxStarsToUse}
+                                step={1}
+                                value={[boostAmount]}
+                                onValueChange={(value) => setBoostAmount(value[0])}
+                                disabled={maxStarsToUse === 0}
+                            />
                         </div>
                     </div>
-                    
-                    <div className='space-y-4'>
-                        <div className='flex justify-between items-center'>
-                            <Label htmlFor="boost-amount" className="text-left">Idadi ya Stars (Una: {stars})</Label>
-                            <span className='flex items-center gap-2 font-bold'>{boostAmount} <Star className='h-4 w-4 text-yellow-400' /></span>
-                        </div>
-                         <Slider
-                            id="boost-amount"
-                            min={0}
-                            max={maxStarsToUse}
-                            step={1}
-                            value={[boostAmount]}
-                            onValueChange={(value) => setBoostAmount(value[0])}
-                            disabled={maxStarsToUse === 0}
-                         />
-                    </div>
-                </div>
-                <DialogFooter>
+                </ScrollArea>
+                <DialogFooter className="mt-auto pt-4">
                     <Button variant="outline" onClick={() => setIsBoostDialogOpen(false)}>Ghairi</Button>
                     <Button 
                         className='bg-blue-600 hover:bg-blue-700' 
