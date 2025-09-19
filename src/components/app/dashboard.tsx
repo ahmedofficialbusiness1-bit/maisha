@@ -40,6 +40,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { encyclopediaData } from '@/lib/encyclopedia-data';
+import { useToast } from '@/hooks/use-toast';
 
 export type BuildingType = {
   id: string;
@@ -585,6 +586,7 @@ const formatTime = (ms: number) => {
 };
 
 export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding, onBuyMaterial }: DashboardProps) {
+  const { toast } = useToast();
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
   const [selectedBuildingForBuild, setSelectedBuildingForBuild] = React.useState<BuildingType | null>(null);
@@ -623,25 +625,27 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     setSelectedBuildingForBuild(null);
   };
 
+  const hasEnoughMaterials = (costs: {name: string, quantity: number}[]): boolean => {
+      return costs.every(cost => {
+          const inventoryItem = inventory.find(item => item.item === cost.name);
+          return inventoryItem && inventoryItem.quantity >= cost.quantity;
+      });
+  };
+
   const handleConfirmBuild = () => {
     if (selectedSlotIndex !== null && selectedBuildingForBuild) {
         const costs = buildingData[selectedBuildingForBuild.id].buildCost;
-        let allMaterialsBought = true;
-        for (const cost of costs) {
-            const invItem = inventory.find(i => i.item === cost.name);
-            const has = invItem?.quantity || 0;
-            if (has < cost.quantity) {
-                if (!onBuyMaterial(cost.name, cost.quantity - has)) {
-                    allMaterialsBought = false;
-                    break;
-                }
-            }
+        if (!hasEnoughMaterials(costs)) {
+            toast({
+                variant: "destructive",
+                title: "Uhaba wa Rasilimali",
+                description: `Huna vifaa vya kutosha kujenga. Tafadhali nunua vinavyokosekana.`,
+            });
+            return;
         }
-        if (allMaterialsBought) {
-            onBuild(selectedSlotIndex, selectedBuildingForBuild);
-        }
+        onBuild(selectedSlotIndex, selectedBuildingForBuild);
+        setIsBuildDialogOpen(false);
     }
-    setIsBuildDialogOpen(false);
   };
 
 
@@ -675,27 +679,26 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
           if (!slot || !slot.building) return;
 
           const inputs = selectedRecipe.inputs || [];
-          let allMaterialsBought = true;
-          for (const input of inputs) {
-              const requiredQuantity = input.quantity * productionQuantity;
-              const inventoryItem = inventory.find(i => i.item === input.name);
-              const hasQuantity = inventoryItem?.quantity || 0;
-              if (hasQuantity < requiredQuantity) {
-                  if (!onBuyMaterial(input.name, requiredQuantity - hasQuantity)) {
-                      allMaterialsBought = false;
-                      break;
-                  }
-              }
+          const neededInputs = inputs.map(input => ({
+            name: input.name,
+            quantity: input.quantity * productionQuantity
+          }));
+
+          if (!hasEnoughMaterials(neededInputs)) {
+             toast({
+                variant: "destructive",
+                title: "Uhaba wa Rasilimali",
+                description: `Huna vifaa vya kutosha kuanza uzalishaji. Tafadhali nunua vinavyokosekana.`,
+            });
+            return;
           }
 
-          if (allMaterialsBought) {
-              const buildingInfo = buildingData[slot.building.id];
-              const ratePerHr = buildingInfo.productionRate * (1 + (slot.level - 1) * 0.4);
-              const baseTimePerUnit = (3600 * 1000) / ratePerHr;
-              const totalDurationMs = baseTimePerUnit * productionQuantity;
-              
-              onStartProduction(selectedSlotIndex, selectedRecipe, productionQuantity, totalDurationMs);
-          }
+          const buildingInfo = buildingData[slot.building.id];
+          const ratePerHr = buildingInfo.productionRate * (1 + (slot.level - 1) * 0.4);
+          const baseTimePerUnit = (3600 * 1000) / ratePerHr;
+          const totalDurationMs = baseTimePerUnit * productionQuantity;
+          
+          onStartProduction(selectedSlotIndex, selectedRecipe, productionQuantity, totalDurationMs);
 
           setIsProductionDialogOpen(false);
           setSelectedRecipe(null);
@@ -723,22 +726,17 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         if (!slot?.building) return;
         const upgradeCosts = buildingData[slot.building.id].upgradeCost(slot.level + 1);
 
-        let allMaterialsBought = true;
-        for (const cost of upgradeCosts) {
-            const invItem = inventory.find(i => i.item === cost.name);
-            const has = invItem?.quantity || 0;
-            if (has < cost.quantity) {
-                if (!onBuyMaterial(cost.name, cost.quantity - has)) {
-                    allMaterialsBought = false;
-                    break;
-                }
-            }
+        if (!hasEnoughMaterials(upgradeCosts)) {
+            toast({
+                variant: "destructive",
+                title: "Uhaba wa Rasilimali",
+                description: `Huna vifaa vya kutosha kuboresha. Tafadhali nunua vinavyokosekana.`,
+            });
+            return;
         }
-        if (allMaterialsBought) {
-            onUpgradeBuilding(selectedSlotIndex);
-        }
+        onUpgradeBuilding(selectedSlotIndex);
+        setIsManagementDialogOpen(false);
     }
-    setIsManagementDialogOpen(false);
   }
 
   const selectedSlot = selectedSlotIndex !== null ? buildingSlots[selectedSlotIndex] : null;
@@ -746,20 +744,14 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     ? recipes.filter((recipe) => recipe.buildingId === selectedSlot.building!.id)
     : [];
 
-  const hasEnoughInputs = (recipe: Recipe, quantity: number) => {
+  const hasEnoughInputsForProduction = (recipe: Recipe, quantity: number) => {
     if (!recipe.inputs) return true;
     return recipe.inputs.every(input => {
         const inventoryItem = inventory.find(item => item.item === input.name);
-        return inventoryItem && inventoryItem.quantity >= (input.quantity * quantity);
+        const neededQuantity = input.quantity * quantity;
+        return inventoryItem && inventoryItem.quantity >= neededQuantity;
     });
   }
-
-  const hasEnoughMaterials = (costs: {name: string, quantity: number}[]): boolean => {
-      return costs.every(cost => {
-          const inventoryItem = inventory.find(item => item.item === cost.name);
-          return inventoryItem && inventoryItem.quantity >= cost.quantity;
-      });
-  };
 
   const getBuildingProductionRate = (slot: BuildingSlot | null): number => {
     if (!slot || !slot.building) return 0;
@@ -976,8 +968,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                       <Button
                           className='w-full bg-green-600 hover:bg-green-700'
                           onClick={handleConfirmBuild}
+                          disabled={!canAffordBuild}
                       >
-                          {canAffordBuild ? 'Jenga kwa Dakika 15' : 'Nunua Vifaa & Jenga'}
+                          Jenga kwa Dakika 15
                       </Button>
                   </DialogFooter>
               </div>
@@ -999,20 +992,34 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         <Tractor className='mr-2'/> Anza Uzalishaji
                     </Button>
                     <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
-                        <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade}>
-                            <ChevronsUp className='mr-2'/> {canAffordUpgrade ? `Boresha hadi Level ${(selectedSlot?.level || 0) + 1}` : 'Nunua Vifaa & Boresha'}
+                        <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
+                            <ChevronsUp className='mr-2'/> Boresha hadi Level {(selectedSlot?.level || 0) + 1}
                         </Button>
                         <Separator className='my-3 bg-gray-600'/>
-                        <div className='text-xs'>
+                        <div className='text-xs space-y-1'>
                             <p className='font-semibold mb-1'>Gharama ya Kuboresha:</p>
-                             <div className='flex flex-wrap gap-x-4 gap-y-1'>
+                             <div className='space-y-2'>
                                 {upgradeCosts.map(cost => {
                                     const invItem = inventory.find(i => i.item === cost.name);
                                     const has = invItem?.quantity || 0;
+                                    const needed = cost.quantity;
+                                    const hasEnough = has >= needed;
                                     return (
-                                        <span key={cost.name} className={cn(has >= cost.quantity ? 'text-gray-300' : 'text-red-400')}>
-                                            {cost.name}: {has.toLocaleString()}/{cost.quantity.toLocaleString()}
-                                        </span>
+                                        <div key={cost.name} className='flex justify-between items-center text-xs'>
+                                            <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                {cost.name}
+                                            </span>
+                                            <div className='flex items-center gap-2'>
+                                                <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                    {has.toLocaleString()}/{needed.toLocaleString()}
+                                                </span>
+                                                {!hasEnough && (
+                                                    <Button size="sm" variant="secondary" className="h-6 px-2" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                        Nunua
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
                                     )
                                 })}
                             </div>
@@ -1084,20 +1091,26 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             {/* Inputs */}
                             <div>
                                 <h4 className='font-semibold mb-2'>Inputs Required</h4>
-                                {selectedRecipe.inputs.length > 0 ? (
-                                    <ul className='text-sm space-y-1 text-gray-300 list-disc list-inside'>
-                                      {selectedRecipe.inputs.map(input => {
-                                        const invItem = inventory.find(i => i.item === input.name);
-                                        const has = invItem?.quantity || 0;
-                                        const needed = input.quantity * productionQuantity;
-                                        return (
-                                          <li key={input.name} className={cn(has < needed ? 'text-red-400' : '')}>
+                                <div className='text-sm space-y-2 text-gray-300 list-disc list-inside'>
+                                  {selectedRecipe.inputs.length > 0 ? selectedRecipe.inputs.map(input => {
+                                    const invItem = inventory.find(i => i.item === input.name);
+                                    const has = invItem?.quantity || 0;
+                                    const needed = input.quantity * productionQuantity;
+                                    const hasEnough = has >= needed;
+                                    return (
+                                      <div key={input.name} className='flex justify-between items-center'>
+                                        <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
                                             {needed.toLocaleString()}x {input.name} (Una: {has.toLocaleString()})
-                                          </li>
-                                        )
-                                      })}
-                                    </ul>
-                                ) : <p className='text-sm text-gray-400 italic'>No inputs required.</p>}
+                                        </span>
+                                        {!hasEnough && (
+                                            <Button size="sm" variant="secondary" className="h-6 px-2" onClick={() => onBuyMaterial(input.name, needed - has)}>
+                                                Nunua
+                                            </Button>
+                                        )}
+                                      </div>
+                                    )
+                                  }) : <p className='text-sm text-gray-400 italic'>No inputs required.</p>}
+                                </div>
                             </div>
 
                             {/* Quantity */}
@@ -1128,9 +1141,10 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                 <Button
                                   className='w-full bg-green-600 hover:bg-green-700'
                                   onClick={handleConfirmProduction}
+                                  disabled={!hasEnoughInputsForProduction(selectedRecipe, productionQuantity)}
                                 >
                                   <CheckCircle className='mr-2'/>
-                                  {hasEnoughInputs(selectedRecipe, productionQuantity) ? 'Start Production' : 'Buy Inputs & Start'}
+                                  Start Production
                                 </Button>
                             </div>
 
@@ -1197,5 +1211,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     </div>
   );
 }
+
+    
 
     
