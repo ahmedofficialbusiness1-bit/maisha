@@ -227,7 +227,7 @@ const getIcon = (name: string): React.ReactElement<LucideIcon> => {
 
 // This is the definitive, hardcoded price list for all items.
 const priceList: Record<string, number> = {
-  // User provided prices
+  // User provided prices (Agriculture & Food)
   'Maharage': 120,
   'Mchele': 100,
   'Unga wa ngano': 90,
@@ -255,28 +255,30 @@ const priceList: Record<string, number> = {
   'Karafuu': 200,
   'Pamba': 80,
   'Katani': 90,
-  'Maji': 3,
   'Mbegu': 25,
   
-  // Other prices (kept from previous logic)
-  'Umeme': 0.08,
+  // User provided prices (Construction)
+  'Nondo': 50,
+  'Zege': 70,
+  'Mbao': 40,
+  'Matofali': 25,
+  'Chuma': 150,
+  'Umeme': 100,
+  'Kokoto': 30,
+  'Mchanga': 15,
+  'Maji': 3,
+  'Saruji': 60,
+  'Mabati': 120,
+
+  // Other prices
   'Ngombe': 100,
   'Ngozi': 40,
   'Bwawa': 500,
   'Boat': 1000,
   'Mawe': 1.6,
-  'Mchanga': 1.2,
-  'Kokoto': 4,
   'Miti': 2,
-  'Mbao': 6,
   'Karatasi': 1,
   'Madini ya chuma': 8.0,
-  'Chuma': 25,
-  'Mabati': 50,
-  'Nondo': 60,
-  'Saruji': 15,
-  'Matofali': 5,
-  'Zege': 20,
   'Shaba': 15,
   'Almasi': 2500,
   'Dhahabu': 1800,
