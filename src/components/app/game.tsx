@@ -111,7 +111,7 @@ export function Game() {
 
   const initialData: UserData | null = null;
   // State Management
-  const [money, setMoney] = React.useState(initialData?.money ?? 1900000);
+  const [money, setMoney] = React.useState(initialData?.money ?? 100000000);
   const [stars, setStars] = React.useState(initialData?.stars ?? 50);
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialData?.inventory ?? initialInventoryItems);
   const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialData?.marketListings ?? initialPlayerListings);
