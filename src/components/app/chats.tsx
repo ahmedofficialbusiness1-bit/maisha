@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Send } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type Message = {
   id: string;
@@ -48,42 +49,62 @@ const sampleMessages: Message[] = [
   },
 ];
 
-function ChatGroup({ title, messages }: { title: string; messages: Message[] }) {
+function ChatGroup({ title, messages: initialMessages }: { title: string; messages: Message[] }) {
+  const [currentMessages, setCurrentMessages] = React.useState(initialMessages);
   const [newMessage, setNewMessage] = React.useState('');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  const scrollViewportRef = React.useRef<HTMLDivElement>(null);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (newMessage.trim()) {
-      // In a real app, this would send the message to a server
-      console.log(`Sending to ${title}:`, newMessage);
+      const sentMessage: Message = {
+        id: Date.now().toString(),
+        sender: { // In a real app, this would be the current logged-in user
+          name: 'Mchezaji',
+          avatar: 'https://picsum.photos/seed/mchezaji/40/40',
+          avatarHint: 'player avatar'
+        },
+        text: newMessage.trim(),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      
+      setCurrentMessages(prev => [...prev, sentMessage]);
       setNewMessage('');
     }
   };
   
-    React.useEffect(() => {
-        // scroll to bottom
-    }, [messages])
+  React.useEffect(() => {
+    // Scroll to the bottom whenever a new message is added
+    if (scrollViewportRef.current) {
+        scrollViewportRef.current.scrollTop = scrollViewportRef.current.scrollHeight;
+    }
+  }, [currentMessages]);
 
   return (
     <div className="flex flex-col h-[70vh]">
-      <ScrollArea className="flex-grow p-4">
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div key={message.id} className="flex items-start gap-3">
-              <Avatar>
-                <AvatarImage src={message.sender.avatar} alt={message.sender.name} data-ai-hint={message.sender.avatarHint} />
-                <AvatarFallback>{message.sender.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-grow rounded-lg bg-gray-800 p-3">
-                <div className="flex justify-between items-center">
-                  <p className="font-semibold text-sm text-blue-400">{message.sender.name}</p>
-                  <p className="text-xs text-gray-500">{message.timestamp}</p>
+      <ScrollArea className="flex-grow p-4" viewportRef={scrollViewportRef}>
+        <div className="space-y-4" ref={scrollAreaRef}>
+          {currentMessages.map((message, index) => {
+              const isPlayer = message.sender.name === 'Mchezaji';
+              return (
+                <div key={message.id} className={cn("flex items-start gap-3", isPlayer && "flex-row-reverse")}>
+                  <Avatar>
+                    <AvatarImage src={message.sender.avatar} alt={message.sender.name} data-ai-hint={message.sender.avatarHint} />
+                    <AvatarFallback>{message.sender.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className={cn(
+                      "flex-grow rounded-lg p-3 max-w-xs sm:max-w-md",
+                      isPlayer ? "bg-blue-800" : "bg-gray-800"
+                  )}>
+                    <div className={cn("flex justify-between items-center", isPlayer && "flex-row-reverse")}>
+                      <p className="font-semibold text-sm text-blue-400">{message.sender.name}</p>
+                      <p className="text-xs text-gray-500">{message.timestamp}</p>
+                    </div>
+                    <p className="text-sm text-gray-200 mt-1">{message.text}</p>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-200 mt-1">{message.text}</p>
-              </div>
-            </div>
-          ))}
+            )})}
         </div>
       </ScrollArea>
       <form onSubmit={handleSendMessage} className="flex items-center gap-2 border-t border-gray-700 p-4">
