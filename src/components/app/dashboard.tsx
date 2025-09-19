@@ -905,68 +905,66 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                   : 'Hakiki mahitaji na anza ujenzi.'}
               </DialogDescription>
             </DialogHeader>
-            <ScrollArea className="flex-grow">
-                <div className="pr-6">
-                    {buildDialogStep === 'list' && (
-                    <div className='pt-4 flex flex-col gap-4'>
-                        <div className='relative'>
-                            <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
-                            <Input 
-                                placeholder='Tafuta jengo...'
-                                value={buildingSearch}
-                                onChange={(e) => setBuildingSearch(e.target.value)}
-                                className='pl-10 bg-gray-800 border-gray-600'
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            {filteredBuildings.map((b) => (
-                                <Card 
-                                    key={b.id} 
-                                    className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-4 text-center"
-                                    onClick={() => handleSelectBuildingToShowDetails(b)}
-                                >
-                                {React.cloneElement(b.icon, { className: 'h-8 w-8' })}
-                                <p className="font-semibold mt-2 text-sm">{b.name}</p>
-                                </Card>
-                            ))}
-                        </div>
+            <div className='flex-grow overflow-y-auto -mr-6 pr-6'>
+                {buildDialogStep === 'list' && (
+                <div className='pt-4 flex flex-col gap-4'>
+                    <div className='relative'>
+                        <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
+                        <Input 
+                            placeholder='Tafuta jengo...'
+                            value={buildingSearch}
+                            onChange={(e) => setBuildingSearch(e.target.value)}
+                            className='pl-10 bg-gray-800 border-gray-600'
+                        />
                     </div>
-                    )}
-
-                    {buildDialogStep === 'details' && selectedBuildingForBuild && (
-                    <div className='py-4 space-y-4'>
-                        <p className='text-sm text-gray-400'>{selectedBuildingForBuild.description}</p>
-                        <Separator className='bg-gray-600'/>
-                        <div>
-                            <h3 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h3>
-                            <div className='space-y-1'>
-                                {buildCosts.map(cost => {
-                                    const invItem = inventory.find(i => i.item === cost.name);
-                                    const has = invItem?.quantity || 0;
-                                    const needed = cost.quantity;
-                                    const hasEnough = has >= needed;
-                                    return (
-                                        <div key={cost.name} className={cn('flex justify-between items-center p-1 rounded-md text-xs', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
-                                            <span>{cost.name}</span>
-                                            <div className='flex items-center gap-1'>
-                                                <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                    {has.toLocaleString()} / {needed.toLocaleString()}
-                                                </span>
-                                                {!hasEnough && (
-                                                    <Button size="sm" variant="secondary" className="h-5 text-[10px] px-1.5" onClick={() => onBuyMaterial(cost.name, needed - has)}>
-                                                        Nunua
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {filteredBuildings.map((b) => (
+                            <Card 
+                                key={b.id} 
+                                className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-4 text-center"
+                                onClick={() => handleSelectBuildingToShowDetails(b)}
+                            >
+                            {React.cloneElement(b.icon, { className: 'h-8 w-8' })}
+                            <p className="font-semibold mt-2 text-sm">{b.name}</p>
+                            </Card>
+                        ))}
                     </div>
-                    )}
                 </div>
-            </ScrollArea>
+                )}
+
+                {buildDialogStep === 'details' && selectedBuildingForBuild && (
+                <div className='py-4 space-y-4'>
+                    <p className='text-sm text-gray-400'>{selectedBuildingForBuild.description}</p>
+                    <Separator className='bg-gray-600'/>
+                    <div>
+                        <h3 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h3>
+                        <div className='space-y-1'>
+                            {buildCosts.map(cost => {
+                                const invItem = inventory.find(i => i.item === cost.name);
+                                const has = invItem?.quantity || 0;
+                                const needed = cost.quantity;
+                                const hasEnough = has >= needed;
+                                return (
+                                    <div key={cost.name} className={cn('flex justify-between items-center p-1 rounded-md text-xs', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
+                                        <span>{cost.name}</span>
+                                        <div className='flex items-center gap-1'>
+                                            <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                {has.toLocaleString()} / {needed.toLocaleString()}
+                                            </span>
+                                            {!hasEnough && (
+                                                <Button size="sm" variant="secondary" className="h-5 text-[10px] px-1.5" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                    Nunua
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </div>
+                )}
+            </div>
              {buildDialogStep === 'details' && (
                 <DialogFooter className="mt-auto pt-4">
                     <Button
@@ -990,8 +988,8 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         Chagua kitendo cha kufanya kwenye jengo hili.
                     </DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="flex-grow">
-                    <div className='py-4 space-y-4 pr-6'>
+                <div className='flex-grow overflow-y-auto -mr-6 pr-6'>
+                    <div className='py-4 space-y-4'>
                         <Button className='w-full justify-start' variant="outline" onClick={handleOpenProductionDialog}>
                             <Tractor className='mr-2'/> Anza Uzalishaji
                         </Button>
@@ -1033,7 +1031,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             <Trash2 className='mr-2'/> Futa Jengo
                         </Button>
                     </div>
-                </ScrollArea>
+                </div>
             </DialogContent>
         </Dialog>
 
@@ -1064,8 +1062,8 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         Select a product, enter quantity, and start production.
                     </DialogDescription>
                 </DialogHeader>
-                 <ScrollArea className="flex-grow">
-                    <div className="grid grid-cols-3 gap-4 pt-4 pr-6">
+                 <div className="flex-grow overflow-y-auto -mr-6 pr-6">
+                    <div className="grid grid-cols-3 gap-4 pt-4">
                     {/* Recipe List */}
                     <div className="col-span-1 flex flex-col gap-2">
                         {buildingRecipes.length > 0 ? (
@@ -1160,7 +1158,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         )}
                     </div>
                     </div>
-                 </ScrollArea>
+                 </div>
             </DialogContent>
         </Dialog>
         
@@ -1173,8 +1171,8 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         Tumia Star Boosts kupunguza muda wa ujenzi. Unapata dakika 3 kwa kila nyota.
                     </DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="flex-grow">
-                    <div className='py-4 space-y-6 text-center pr-6'>
+                <div className='flex-grow overflow-y-auto -mr-6 pr-6'>
+                    <div className='py-4 space-y-6 text-center'>
                         <div className='grid grid-cols-2 gap-4'>
                             <div className='p-3 bg-gray-800 rounded-lg'>
                             <p className='text-sm text-gray-400'>Muda Uliosalia</p>
@@ -1202,7 +1200,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             />
                         </div>
                     </div>
-                </ScrollArea>
+                </div>
                 <DialogFooter className="mt-auto pt-4">
                     <Button variant="outline" onClick={() => setIsBoostDialogOpen(false)}>Ghairi</Button>
                     <Button 
