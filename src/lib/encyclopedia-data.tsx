@@ -230,12 +230,11 @@ const getIcon = (name: string): React.ReactElement<LucideIcon> => {
 
 // 1. Base costs for fundamental, non-produced raw materials
 const baseMaterialCosts: Record<string, number> = {
-    'Maji': 0.01,
-    'Umeme': 0.02,
-    'Mawe': 0.2,
-    'Mchanga': 0.15,
-    'Madini ya chuma': 2, 
-    'Chuma': 5, // Base cost for simple iron
+    'Maji': 0.001,
+    'Umeme': 0.002,
+    'Mawe': 0.02,
+    'Mchanga': 0.015,
+    'Madini ya chuma': 0.2, 
     'Bwawa': 50, 
     'Boat': 100,
 };
@@ -319,7 +318,7 @@ const generatedEntries = recipes.map(recipe => {
     const costPerUnit = calculatedPrices.get(recipe.output.name) || 0;
 
     // Pricing: (cost * profit_margin)
-    const profitMargin = 1.05; // 5% base profit
+    const profitMargin = 1.30; // 30% base profit
     
     // Market cost is the production cost per unit, plus profit.
     let marketCost = costPerUnit * profitMargin;
