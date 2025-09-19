@@ -235,6 +235,7 @@ const baseMaterialCosts: Record<string, number> = {
     'Mawe': 0.2,
     'Mchanga': 0.15,
     'Madini ya chuma': 2, 
+    'Chuma': 5, // Base cost for simple iron
     'Bwawa': 50, 
     'Boat': 100,
 };

@@ -75,31 +75,31 @@ export const recipes: Recipe[] = [
   { id: 'chumvi', buildingId: 'kiwanda_cha_samaki', output: { name: 'Chumvi', quantity: 2 }, inputs: [{ name: 'Maji', quantity: 20 }] },
 
   // Ujenzi & Uchimbaji Recipes
-  { id: 'umeme', buildingId: 'kiwanda_cha_umeme', output: { name: 'Umeme', quantity: 150 }, inputs: [{ name: 'Mashine C1', quantity: 1 }, { name: 'Maji', quantity: 20 }] },
-  { id: 'maji', buildingId: 'kiwanda_cha_maji', output: { name: 'Maji', quantity: 150 }, inputs: [{ name: 'Mashine C2', quantity: 1 }, { name: 'Umeme', quantity: 20 }] },
+  { id: 'umeme', buildingId: 'kiwanda_cha_umeme', output: { name: 'Umeme', quantity: 150 }, inputs: [{ name: 'Maji', quantity: 20 }] },
+  { id: 'maji', buildingId: 'kiwanda_cha_maji', output: { name: 'Maji', quantity: 150 }, inputs: [{ name: 'Umeme', quantity: 20 }] },
   { id: 'mawe', buildingId: 'uchimbaji_mawe', output: { name: 'Mawe', quantity: 3 }, inputs: [] },
   { id: 'kokoto', buildingId: 'uchimbaji_mawe', output: { name: 'Kokoto', quantity: 2 }, inputs: [{ name: 'Mawe', quantity: 2 }] },
-  { id: 'mbao', buildingId: 'kiwanda_cha_mbao', output: { name: 'Mbao', quantity: 2 }, inputs: [{ name: 'Mashine A2', quantity: 1 }, { name: 'Miti', quantity: 4 }] },
+  { id: 'mbao', buildingId: 'kiwanda_cha_mbao', output: { name: 'Mbao', quantity: 2 }, inputs: [{ name: 'Miti', quantity: 4 }] },
   { id: 'mchanga', buildingId: 'uchimbaji_mchanga', output: { name: 'Mchanga', quantity: 3 }, inputs: [{ name: 'Maji', quantity: 3 }, { name: 'Umeme', quantity: 3 }] },
-  { id: 'chuma', buildingId: 'uchimbaji_chuma', output: { name: 'Chuma', quantity: 2 }, inputs: [{ name: 'Mashine B7', quantity: 1 }, { name: 'Umeme', quantity: 20 }, { name: 'Maji', quantity: 20 }, { name: 'Leseni B7', quantity: 1 }] },
-  { id: 'nondo', buildingId: 'kiwanda_cha_chuma', output: { name: 'Nondo', quantity: 2 }, inputs: [{ name: 'Mashine A4', quantity: 1 }, { name: 'Chuma', quantity: 4 }, { name: 'Umeme', quantity: 10 }] },
+  { id: 'chuma', buildingId: 'uchimbaji_chuma', output: { name: 'Chuma', quantity: 2 }, inputs: [{ name: 'Umeme', quantity: 20 }, { name: 'Maji', quantity: 20 }] },
+  { id: 'nondo', buildingId: 'kiwanda_cha_chuma', output: { name: 'Nondo', quantity: 2 }, inputs: [{ name: 'Chuma', quantity: 4 }, { name: 'Umeme', quantity: 10 }] },
   { id: 'saruji', buildingId: 'kiwanda_cha_saruji', output: { name: 'Saruji', quantity: 2 }, inputs: [{ name: 'Mchanga', quantity: 4 }, { name: 'Maji', quantity: 2 }] },
-  { id: 'matofali', buildingId: 'kiwanda_cha_matofali', output: { name: 'Matofali', quantity: 3 }, inputs: [{ name: 'Mashine A1', quantity: 1 }, { name: 'Saruji', quantity: 2 }, { name: 'Mchanga', quantity: 4 }, { name: 'Maji', quantity: 2 }, { name: 'Umeme', quantity: 2 }] },
-  { id: 'zege', buildingId: 'kiwanda_cha_matofali', output: { name: 'Zege', quantity: 2 }, inputs: [{ name: 'Mashine A3', quantity: 1 }, { name: 'Saruji', quantity: 4 }, { name: 'Maji', quantity: 4 }, { name: 'Kokoto', quantity: 6 }, { name: 'Umeme', quantity: 2 }] },
+  { id: 'matofali', buildingId: 'kiwanda_cha_matofali', output: { name: 'Matofali', quantity: 3 }, inputs: [{ name: 'Saruji', quantity: 2 }, { name: 'Mchanga', quantity: 4 }, { name: 'Maji', quantity: 2 }, { name: 'Umeme', quantity: 2 }] },
+  { id: 'zege', buildingId: 'kiwanda_cha_matofali', output: { name: 'Zege', quantity: 2 }, inputs: [{ name: 'Saruji', quantity: 4 }, { name: 'Maji', quantity: 4 }, { name: 'Kokoto', quantity: 6 }, { name: 'Umeme', quantity: 2 }] },
   { id: 'mabati', buildingId: 'kiwanda_cha_chuma', output: { name: 'Mabati', quantity: 2}, inputs: [{ name: 'Chuma', quantity: 4 }] },
 
   // Madini Recipes
-  { id: 'almasi', buildingId: 'uchimbaji_almasi', output: { name: 'Almasi', quantity: 1 }, inputs: [{ name: 'Mashine B1', quantity: 1}, { name: 'Maji', quantity: 100}, { name: 'Umeme', quantity: 100}, { name: 'Leseni B1', quantity: 1}] },
-  { id: 'dhahabu', buildingId: 'uchimbaji_dhahabu', output: { name: 'Dhahabu', quantity: 1 }, inputs: [{ name: 'Mashine B2', quantity: 1}, { name: 'Maji', quantity: 80}, { name: 'Umeme', quantity: 80}, { name: 'Leseni B2', quantity: 1}] },
-  { id: 'silver', buildingId: 'uchimbaji_silver', output: { name: 'Silver', quantity: 2 }, inputs: [{ name: 'Mashine B5', quantity: 1}, { name: 'Maji', quantity: 40}, { name: 'Umeme', quantity: 40}, { name: 'Leseni B5', quantity: 1}] },
-  { id: 'ruby', buildingId: 'uchimbaji_ruby', output: { name: 'Ruby', quantity: 1 }, inputs: [{ name: 'Mashine B3', quantity: 1}, { name: 'Maji', quantity: 70}, { name: 'Umeme', quantity: 70}, { name: 'Leseni B3', quantity: 1}] },
-  { id: 'tanzanite', buildingId: 'uchimbaji_tanzanite', output: { name: 'Tanzanite', quantity: 1 }, inputs: [{ name: 'Mashine B4', quantity: 1}, { name: 'Maji', quantity: 80}, { name: 'Umeme', quantity: 80}, { name: 'Leseni B4', quantity: 1}] },
-  { id: 'shaba', buildingId: 'uchimbaji_shaba', output: { name: 'Shaba', quantity: 2 }, inputs: [{ name: 'Mashine B6', quantity: 1}, { name: 'Maji', quantity: 30}, { name: 'Umeme', quantity: 30}, { name: 'Leseni B6', quantity: 1}] },
+  { id: 'almasi', buildingId: 'uchimbaji_almasi', output: { name: 'Almasi', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 100}, { name: 'Umeme', quantity: 100}] },
+  { id: 'dhahabu', buildingId: 'uchimbaji_dhahabu', output: { name: 'Dhahabu', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 80}, { name: 'Umeme', quantity: 80}] },
+  { id: 'silver', buildingId: 'uchimbaji_silver', output: { name: 'Silver', quantity: 2 }, inputs: [{ name: 'Maji', quantity: 40}, { name: 'Umeme', quantity: 40}] },
+  { id: 'ruby', buildingId: 'uchimbaji_ruby', output: { name: 'Ruby', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 70}, { name: 'Umeme', quantity: 70}] },
+  { id: 'tanzanite', buildingId: 'uchimbaji_tanzanite', output: { name: 'Tanzanite', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 80}, { name: 'Umeme', quantity: 80}] },
+  { id: 'shaba', buildingId: 'uchimbaji_shaba', output: { name: 'Shaba', quantity: 2 }, inputs: [{ name: 'Maji', quantity: 30}, { name: 'Umeme', quantity: 30}] },
 
   // Mafuta Recipes
-  { id: 'mafuta_ghafi', buildingId: 'uchimbaji_mafuta', output: { name: 'Mafuta Ghafi', quantity: 2 }, inputs: [{ name: 'Mashine A1', quantity: 1 }, { name: 'Maji', quantity: 20 }, { name: 'Umeme', quantity: 20 }] },
-  { id: 'disel', buildingId: 'kiwanda_cha_disel', output: { name: 'Disel', quantity: 2 }, inputs: [{ name: 'Mashine A2', quantity: 1 }, { name: 'Umeme', quantity: 40 }, { name: 'Mafuta Ghafi', quantity: 4 }] },
-  { id: 'petrol', buildingId: 'kiwanda_cha_petrol', output: { name: 'Petrol', quantity: 2 }, inputs: [{ name: 'Mashine A3', quantity: 1 }, { name: 'Umeme', quantity: 40 }, { name: 'Mafuta Ghafi', quantity: 4 }] },
+  { id: 'mafuta_ghafi', buildingId: 'uchimbaji_mafuta', output: { name: 'Mafuta Ghafi', quantity: 2 }, inputs: [{ name: 'Maji', quantity: 20 }, { name: 'Umeme', quantity: 20 }] },
+  { id: 'disel', buildingId: 'kiwanda_cha_disel', output: { name: 'Disel', quantity: 2 }, inputs: [{ name: 'Umeme', quantity: 40 }, { name: 'Mafuta Ghafi', quantity: 4 }] },
+  { id: 'petrol', buildingId: 'kiwanda_cha_petrol', output: { name: 'Petrol', quantity: 2 }, inputs: [{ name: 'Umeme', quantity: 40 }, { name: 'Mafuta Ghafi', quantity: 4 }] },
 
   // Kiwanda cha Karatasi
   { id: 'karatasi', buildingId: 'kiwanda_cha_karatasi', output: { name: 'Karatasi', quantity: 15 }, inputs: [{ name: 'Mbao', quantity: 4 }, { name: 'Maji', quantity: 10 }, { name: 'Umeme', quantity: 4 }] },
