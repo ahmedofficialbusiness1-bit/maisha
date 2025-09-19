@@ -940,7 +940,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                   <Separator className='bg-gray-600'/>
                   <div>
                       <h3 className='font-semibold mb-2 text-sm'>Vifaa Vinavyohitajika</h3>
-                      <ScrollArea className="max-h-[25vh] pr-2">
+                      <ScrollArea className="max-h-[25vh] pr-4 -mr-4">
                         <div className='space-y-1 text-xs pr-2'>
                             {buildCosts.map(cost => {
                                 const invItem = inventory.find(i => i.item === cost.name);
@@ -1000,7 +1000,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         <Separator className='my-3 bg-gray-600'/>
                         <div className='text-xs space-y-1'>
                             <p className='font-semibold mb-1'>Gharama ya Kuboresha:</p>
-                             <ScrollArea className="max-h-[25vh] pr-2">
+                             <ScrollArea className="max-h-[25vh] pr-4 -mr-4">
                                <div className='space-y-1 text-xs pr-2'>
                                   {upgradeCosts.map(cost => {
                                       const invItem = inventory.find(i => i.item === cost.name);
@@ -1215,5 +1215,3 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     </div>
   );
 }
-
-    
