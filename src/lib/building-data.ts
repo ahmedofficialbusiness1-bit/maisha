@@ -328,3 +328,5 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
 };
+
+    

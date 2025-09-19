@@ -246,3 +246,4 @@ export const recipes: Recipe[] = [
   { id: 'roketi', buildingId: 'kiwanda_cha_roketi', output: { name: 'Roketi', quantity: 1 }, inputs: [{ name: 'Fuselage', quantity: 1 }, { name: 'Wings', quantity: 4 }, { name: 'Tarakilishi', quantity: 1 }, { name: 'Cockpit', quantity: 1 }, { name: 'Attitude Control', quantity: 4 }, { name: 'Rocket Engine', quantity: 4 }, { name: 'Heat Shield', quantity: 1 }], cost: 10000000, requiredWorkers: [] },
 ];
 
+    
