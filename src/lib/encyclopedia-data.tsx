@@ -4,6 +4,7 @@
 
 
 
+
 import React from 'react';
 import { recipes, type Recipe } from './recipe-data';
 import { buildingData } from './building-data';
@@ -94,7 +95,21 @@ const itemIcons: Record<string, React.ReactElement<LucideIcon>> = {
     'Ngombe': <Package className="text-brown-400" />,
     'Nyama': <Beef className="text-red-700" />,
     'Sukari': <Wheat className="text-white" />,
-    'Juice': <CookingPot className="text-pink-500" />,
+    
+    'Wali wa Samaki': <Utensils className="text-white" />,
+    'Maharage na Ndizi': <Utensils className="text-white" />,
+    'Chipsi Nyama': <Utensils className="text-white" />,
+    'Pilau ya Nyama': <Utensils className="text-white" />,
+    'Ugali Maharage': <Utensils className="text-white" />,
+    'Ugali Samaki': <Utensils className="text-white" />,
+    'Chipsi Mayai': <Utensils className="text-white" />,
+    'Saladi ya Matunda': <Utensils className="text-white" />,
+    'Kachumbari': <Utensils className="text-white" />,
+    'Juisi Mchanganyiko': <Utensils className="text-white" />,
+    'Githeri': <Utensils className="text-white" />,
+    'Burger ya Kuku': <Utensils className="text-white" />,
+    'Sandwich ya Mayai': <Utensils className="text-white" />,
+
 
     // Mafuta
     'Mafuta Ghafi': <Droplets className="text-black" />,
@@ -244,7 +259,6 @@ const priceList: Record<string, number> = {
   'Nanasi': 6.00,
   'Parachichi': 4.00,
   'Miwa': 3.00,
-  'Juice': 19.00,
   'Chumvi': 3.00,
   'Sukari': 6.00,
   'Nyama': 11.00,
@@ -261,6 +275,22 @@ const priceList: Record<string, number> = {
   'Katani': 7.00,
   'Mbegu': 0.70,
   
+  // New Food Items
+  'Wali wa Samaki': 16.00,
+  'Maharage na Ndizi': 10.50,
+  'Chipsi Nyama': 19.00,
+  'Pilau ya Nyama': 23.00,
+  'Ugali Maharage': 7.40,
+  'Ugali Samaki': 15.90,
+  'Chipsi Mayai': 9.50,
+  'Saladi ya Matunda': 27.00,
+  'Kachumbari': 8.00,
+  'Juisi Mchanganyiko': 23.00,
+  'Githeri': 7.50,
+  'Burger ya Kuku': 16.70,
+  'Sandwich ya Mayai': 7.70,
+
+
   // Construction
   'Nondo': 7.00,
   'Zege': 5.00,
@@ -475,8 +505,21 @@ const itemCategorization: Record<string, string> = {
     'Chungwa': 'Agriculture', 'Korosho': 'Agriculture', 'Karafuu': 'Agriculture', 'Pamba': 'Raw Material',
     'Katani': 'Raw Material',
     'Yai': 'Food', 'Kuku': 'Agriculture', 'Ngombe': 'Agriculture', 'Nyama': 'Food',
-    'Sukari': 'Food', 'Juice': 'Food', 'Bwawa': 'Vifaa', 'Boat': 'Vifaa',
+    'Sukari': 'Food', 'Bwawa': 'Vifaa', 'Boat': 'Vifaa',
     'Samaki': 'Food', 'Chumvi': 'Food',
+    'Wali wa Samaki': 'Food',
+    'Maharage na Ndizi': 'Food',
+    'Chipsi Nyama': 'Food',
+    'Pilau ya Nyama': 'Food',
+    'Ugali Maharage': 'Food',
+    'Ugali Samaki': 'Food',
+    'Chipsi Mayai': 'Food',
+    'Saladi ya Matunda': 'Food',
+    'Kachumbari': 'Food',
+    'Juisi Mchanganyiko': 'Food',
+    'Githeri': 'Food',
+    'Burger ya Kuku': 'Food',
+    'Sandwich ya Mayai': 'Food',
     'Umeme': 'Raw Material', 'Maji': 'Raw Material',
     'Karatasi': 'Product', 'Cheti cha Madini': 'Documents',
 

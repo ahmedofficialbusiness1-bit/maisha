@@ -66,7 +66,19 @@ export const recipes: Recipe[] = [
   { id: 'sukari', buildingId: 'kiwanda_cha_sukari', output: { name: 'Sukari', quantity: 2 }, inputs: [{ name: 'Miwa', quantity: 4 }] },
 
   // Mgahawa Recipes
-  { id: 'juice', buildingId: 'mgahawa', output: { name: 'Juice', quantity: 2 }, inputs: [{ name: 'Embe', quantity: 2 }, { name: 'Nanasi', quantity: 2 }, { name: 'Parachichi', quantity: 2 }] },
+  { id: 'wali_wa_samaki', buildingId: 'mgahawa', output: { name: 'Wali wa Samaki', quantity: 1}, inputs: [{ name: 'Mchele', quantity: 1 }, { name: 'Samaki', quantity: 1 }, { name: 'Chumvi', quantity: 1 }, { name: 'Mboga mboga', quantity: 1 }]},
+  { id: 'maharage_na_ndizi', buildingId: 'mgahawa', output: { name: 'Maharage na Ndizi', quantity: 1}, inputs: [{ name: 'Maharage', quantity: 1 }, { name: 'Ndizi', quantity: 1 }, { name: 'Chumvi', quantity: 1 }, { name: 'Mboga mboga', quantity: 1 }]},
+  { id: 'chipsi_nyama', buildingId: 'mgahawa', output: { name: 'Chipsi Nyama', quantity: 1}, inputs: [{ name: 'Viazi mbatata', quantity: 1 }, { name: 'Nyama', quantity: 1 }, { name: 'Chumvi', quantity: 1 }, { name: 'Mboga mboga', quantity: 1 }]},
+  { id: 'pilau_ya_nyama', buildingId: 'mgahawa', output: { name: 'Pilau ya Nyama', quantity: 1}, inputs: [{ name: 'Mchele', quantity: 1 }, { name: 'Nyama', quantity: 1 }, { name: 'Chumvi', quantity: 1 }, { name: 'Mboga mboga', quantity: 1 }, { name: 'Sukari', quantity: 1 }]},
+  { id: 'ugali_maharage', buildingId: 'mgahawa', output: { name: 'Ugali Maharage', quantity: 1}, inputs: [{ name: 'Unga wa sembe', quantity: 1 }, { name: 'Maharage', quantity: 1 }, { name: 'Mboga mboga', quantity: 1 }, { name: 'Chumvi', quantity: 1 }]},
+  { id: 'ugali_samaki', buildingId: 'mgahawa', output: { name: 'Ugali Samaki', quantity: 1}, inputs: [{ name: 'Unga wa sembe', quantity: 1 }, { name: 'Samaki', quantity: 1 }, { name: 'Mboga mboga', quantity: 1 }, { name: 'Chumvi', quantity: 1 }]},
+  { id: 'chipsi_mayai', buildingId: 'mgahawa', output: { name: 'Chipsi Mayai', quantity: 1}, inputs: [{ name: 'Viazi mbatata', quantity: 1 }, { name: 'Yai', quantity: 1 }, { name: 'Chumvi', quantity: 1 }, { name: 'Mboga mboga', quantity: 1 }]},
+  { id: 'saladi_ya_matunda', buildingId: 'mgahawa', output: { name: 'Saladi ya Matunda', quantity: 1}, inputs: [{ name: 'Embe', quantity: 1 }, { name: 'Nanasi', quantity: 1 }, { name: 'Parachichi', quantity: 1 }, { name: 'Apple', quantity: 1 }, { name: 'Chungwa', quantity: 1 }, { name: 'Zabibu', quantity: 1 }]},
+  { id: 'kachumbari', buildingId: 'mgahawa', output: { name: 'Kachumbari', quantity: 1}, inputs: [{ name: 'Mboga mboga', quantity: 1 }, { name: 'Chumvi', quantity: 1 }, { name: 'Chungwa', quantity: 1 }]},
+  { id: 'juisi_mchanganyiko', buildingId: 'mgahawa', output: { name: 'Juisi Mchanganyiko', quantity: 1}, inputs: [{ name: 'Miwa', quantity: 1 }, { name: 'Embe', quantity: 1 }, { name: 'Nanasi', quantity: 1 }, { name: 'Parachichi', quantity: 1 }, { name: 'Chungwa', quantity: 1 }, { name: 'Apple', quantity: 1 }]},
+  { id: 'githeri', buildingId: 'mgahawa', output: { name: 'Githeri', quantity: 1}, inputs: [{ name: 'Maharage', quantity: 1 }, { name: 'Mchele', quantity: 1 }, { name: 'Mboga mboga', quantity: 1 }, { name: 'Chumvi', quantity: 1 }]},
+  { id: 'burger_ya_kuku', buildingId: 'mgahawa', output: { name: 'Burger ya Kuku', quantity: 1}, inputs: [{ name: 'Kuku', quantity: 1 }, { name: 'Unga wa ngano', quantity: 1 }, { name: 'Yai', quantity: 1 }, { name: 'Mboga mboga', quantity: 1 }, { name: 'Chumvi', quantity: 1 }]},
+  { id: 'sandwich_ya_mayai', buildingId: 'mgahawa', output: { name: 'Sandwich ya Mayai', quantity: 1}, inputs: [{ name: 'Yai', quantity: 1 }, { name: 'Unga wa ngano', quantity: 1 }, { name: 'Mboga mboga', quantity: 1 }, { name: 'Chumvi', quantity: 1 }]},
   
   // Kiwanda cha Samaki Recipes
   { id: 'bwawa', buildingId: 'kiwanda_cha_samaki', output: { name: 'Bwawa', quantity: 1 }, inputs: [] },
