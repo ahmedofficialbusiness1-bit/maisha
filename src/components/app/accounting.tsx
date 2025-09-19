@@ -97,14 +97,14 @@ export function Accounting({ transactions }: AccountingProps) {
                 <TableRow className="border-gray-700 hover:bg-gray-700/50 sticky top-0 bg-gray-800/95">
                   <TableHead className="text-white">Aina</TableHead>
                   <TableHead className="text-white">Maelezo</TableHead>
-                  <TableHead className="text-white">Muda</TableHead>
+                  <TableHead className="text-white hidden sm:table-cell">Muda</TableHead>
                   <TableHead className="text-right text-white">Kiasi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {transactions.map((t) => (
                   <TableRow key={t.id} className="border-gray-700 hover:bg-gray-700/50">
-                    <TableCell>
+                    <TableCell className="p-2 sm:p-4">
                       <span
                         className={cn(
                           'flex items-center gap-2 font-semibold',
@@ -112,15 +112,15 @@ export function Accounting({ transactions }: AccountingProps) {
                         )}
                       >
                         {t.type === 'income' ? <ArrowUpRight size={16} /> : <ArrowDownLeft size={16} />}
-                        {t.type === 'income' ? 'Mapato' : 'Matumizi'}
+                        <span className="hidden sm:inline">{t.type === 'income' ? 'Mapato' : 'Matumizi'}</span>
                       </span>
                     </TableCell>
-                    <TableCell className="text-gray-300">{t.description}</TableCell>
-                    <TableCell className="text-gray-400 text-xs">
+                    <TableCell className="text-gray-300 p-2 sm:p-4">{t.description}</TableCell>
+                    <TableCell className="text-gray-400 text-xs hidden sm:table-cell p-2 sm:p-4">
                         {new Date(t.timestamp).toLocaleString()}
                     </TableCell>
                     <TableCell className={cn(
-                        'text-right font-mono',
+                        'text-right font-mono p-2 sm:p-4',
                         t.type === 'income' ? 'text-green-400' : 'text-red-400'
                     )}>
                       {t.type === 'expense' ? '-' : ''}${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

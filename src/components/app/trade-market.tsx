@@ -334,7 +334,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                         selectedListing?.id === listing.id && "bg-blue-600/30"
                                       )}
                                     >
-                                        <TableCell className="font-medium">
+                                        <TableCell className="font-medium p-2 sm:p-4">
                                             <div className="flex items-center gap-2">
                                                 <Avatar className="h-8 w-8">
                                                     <AvatarImage src={listing.avatar} alt={listing.seller} data-ai-hint={listing.imageHint} />
@@ -343,14 +343,14 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                                 <span>{listing.seller}</span>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell className="text-right p-2 sm:p-4">
                                             <div className="flex items-center justify-end gap-1">
                                                 <span>{listing.quality}</span>
                                                 <Star className="h-4 w-4 text-yellow-400" />
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-right font-mono">{listing.quantity.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right font-mono">${listing.price.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</TableCell>
+                                        <TableCell className="text-right font-mono p-2 sm:p-4">{listing.quantity.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-mono p-2 sm:p-4">${listing.price.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</TableCell>
                                     </TableRow>
                                 ))}
                                 </TableBody>
@@ -370,41 +370,41 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
   );
 
     const renderStocksMarket = () => (
-        <div className="p-4 sm:p-6">
+        <div className="p-1 sm:p-2 md:p-4 lg:p-6">
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <CardTitle>Soko la Hisa</CardTitle>
                     <CardDescription>Nunua na uza hisa za makampuni mbalimbali yaliyosajiliwa.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-gray-700 hover:bg-gray-700/50">
                                 <TableHead className="text-white">Kampuni</TableHead>
-                                <TableHead className="text-right text-white">Ukadiriaji</TableHead>
-                                <TableHead className="text-right text-white">Bei ya Hisa</TableHead>
-                                <TableHead className="text-right text-white">Hisa Zinazopatikana</TableHead>
-                                <TableHead className="text-right text-white">Thamani ya Soko</TableHead>
+                                <TableHead className="text-right text-white hidden md:table-cell">Ukadiriaji</TableHead>
+                                <TableHead className="text-right text-white">Bei</TableHead>
+                                <TableHead className="text-right text-white hidden lg:table-cell">Hisa Zipo</TableHead>
+                                <TableHead className="text-right text-white hidden xl:table-cell">Thamani</TableHead>
                                 <TableHead className="text-right text-white">Vitendo</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {stockListings.map((stock) => (
                                 <TableRow key={stock.id} className="border-gray-700">
-                                    <TableCell>
-                                        <div className="flex items-center gap-3">
-                                            <Avatar>
+                                    <TableCell className="p-2 sm:p-4">
+                                        <div className="flex items-center gap-2 sm:gap-3">
+                                            <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                                                 <AvatarImage src={stock.logo} alt={stock.companyName} data-ai-hint={stock.imageHint} />
                                                 <AvatarFallback>{stock.ticker.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div>
-                                                <p className="font-bold">{stock.companyName}</p>
+                                                <p className="font-bold text-sm sm:text-base">{stock.companyName}</p>
                                                 <p className="text-xs text-gray-400">{stock.ticker}</p>
                                             </div>
                                         </div>
                                     </TableCell>
-                                     <TableCell className="text-right">
-                                        <div className={cn("flex items-center justify-end font-bold", 
+                                     <TableCell className="text-right hidden md:table-cell p-2 sm:p-4">
+                                        <div className={cn("flex items-center justify-end font-bold text-sm", 
                                             stock.creditRating.startsWith('A') ? 'text-green-400' : 
                                             stock.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
                                         )}>
@@ -412,11 +412,11 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                             <ShieldCheck className="ml-1 h-4 w-4" />
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right font-mono">${stock.stockPrice.toFixed(2)}</TableCell>
-                                    <TableCell className="text-right font-mono">{stock.sharesAvailable.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right font-mono">${stock.marketCap.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button size="sm" variant="secondary" className="bg-green-600 hover:bg-green-700" onClick={() => handleOpenBuyStockDialog(stock)}>Nunua</Button>
+                                    <TableCell className="text-right font-mono p-2 sm:p-4">${stock.stockPrice.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right font-mono hidden lg:table-cell p-2 sm:p-4">{stock.sharesAvailable.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-mono hidden xl:table-cell p-2 sm:p-4">${stock.marketCap.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right p-2 sm:p-4">
+                                        <Button size="sm" variant="secondary" className="bg-green-600 hover:bg-green-700 text-xs h-8" onClick={() => handleOpenBuyStockDialog(stock)}>Nunua</Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -428,20 +428,20 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
     );
 
     const renderBondsMarket = () => (
-        <div className="p-4 sm:p-6">
+        <div className="p-1 sm:p-2 md:p-4 lg:p-6">
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <CardTitle>Soko la Hatifungani</CardTitle>
                     <CardDescription>Wekeza kwenye hatifungani za serikali na makampuni kwa mapato ya kudumu.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-gray-700 hover:bg-gray-700/50">
                                 <TableHead className="text-white">Mtoaji</TableHead>
-                                <TableHead className="text-right text-white">Ukadiriaji</TableHead>
-                                <TableHead className="text-right text-white">Kiwango cha Kuponi</TableHead>
-                                <TableHead className="text-right text-white">Ukomavu</TableHead>
+                                <TableHead className="text-right text-white hidden md:table-cell">Ukadiriaji</TableHead>
+                                <TableHead className="text-right text-white">Kuponi</TableHead>
+                                <TableHead className="text-right text-white hidden lg:table-cell">Ukomavu</TableHead>
                                 <TableHead className="text-right text-white">Bei</TableHead>
                                 <TableHead className="text-right text-white">Vitendo</TableHead>
                             </TableRow>
@@ -449,17 +449,19 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         <TableBody>
                             {bondListings.map((bond) => (
                                 <TableRow key={bond.id} className="border-gray-700">
-                                    <TableCell>
+                                    <TableCell className="p-2 sm:p-4">
                                         <div className="flex items-center gap-3">
-                                            <Avatar>
+                                            <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                                                 <AvatarImage src={bond.issuerLogo} alt={bond.issuer} data-ai-hint={bond.imageHint} />
                                                 <AvatarFallback>{bond.issuer.charAt(0)}</AvatarFallback>
                                             </Avatar>
-                                            <p className="font-bold">{bond.issuer}</p>
+                                             <div>
+                                                <p className="font-bold text-sm sm:text-base">{bond.issuer}</p>
+                                            </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className={cn("flex items-center justify-end font-bold", 
+                                    <TableCell className="text-right hidden md:table-cell p-2 sm:p-4">
+                                        <div className={cn("flex items-center justify-end font-bold text-sm", 
                                             bond.creditRating.startsWith('A') ? 'text-green-400' : 
                                             bond.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
                                         )}>
@@ -467,11 +469,11 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                             <ShieldCheck className="ml-1 h-4 w-4" />
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right font-mono text-green-400">{bond.couponRate.toFixed(2)}%</TableCell>
-                                    <TableCell className="text-right font-mono">{new Date(bond.maturityDate).toLocaleDateString()}</TableCell>
-                                    <TableCell className="text-right font-mono">${bond.price.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button size="sm" variant="secondary" className="bg-blue-600 hover:bg-blue-700">Nunua</Button>
+                                    <TableCell className="text-right font-mono text-green-400 p-2 sm:p-4">{bond.couponRate.toFixed(2)}%</TableCell>
+                                    <TableCell className="text-right font-mono hidden lg:table-cell p-2 sm:p-4">{new Date(bond.maturityDate).toLocaleDateString()}</TableCell>
+                                    <TableCell className="text-right font-mono p-2 sm:p-4">${bond.price.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right p-2 sm:p-4">
+                                        <Button size="sm" variant="secondary" className="bg-blue-600 hover:bg-blue-700 text-xs h-8">Nunua</Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
