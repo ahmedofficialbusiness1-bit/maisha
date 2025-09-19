@@ -316,13 +316,11 @@ const generatedEntries = recipes.map(recipe => {
     // Get the pre-calculated production cost
     const costPerUnit = calculatedPrices.get(recipe.output.name) || 0;
 
-    // SimCompanies-style pricing: (cost * profit_margin) + time_value
+    // Pricing: (cost * profit_margin)
     const profitMargin = 1.05; // 5% base profit
-    const timeValueFactor = 0.003; // A factor to convert seconds to monetary value
-    const timeCost = baseTimePerUnit * timeValueFactor;
     
-    // Market cost is the production cost per unit, plus profit, plus time value
-    let marketCost = (costPerUnit * profitMargin) + timeCost;
+    // Market cost is the production cost per unit, plus profit.
+    let marketCost = costPerUnit * profitMargin;
     
     // Update the map with the FINAL market cost
     calculatedPrices.set(recipe.output.name, marketCost);
