@@ -39,7 +39,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { Worker } from '@/lib/worker-data.tsx';
 
 export type BuildingType = {
   id: string;
@@ -563,7 +562,6 @@ const buildingStyles: Record<string, { body: string; roof: string }> = {
 interface DashboardProps {
     buildingSlots: BuildingSlot[];
     inventory: InventoryItem[];
-    hiredWorkers: Worker[];
     stars: number;
     onBuild: (slotIndex: number, building: BuildingType) => void;
     onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
@@ -585,7 +583,7 @@ const formatTime = (ms: number) => {
     return `${minutes}:${seconds}`;
 };
 
-export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBuild, onStartProduction, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding, onBuyMaterial }: DashboardProps) {
+export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding, onBuyMaterial }: DashboardProps) {
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
   const [selectedBuildingForBuild, setSelectedBuildingForBuild] = React.useState<BuildingType | null>(null);
@@ -706,20 +704,6 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
     });
   }
 
-    const hasEnoughWorkers = (recipe: Recipe): { has: boolean, missing: string[] } => {
-        const missing: string[] = [];
-        if (!recipe.requiredWorkers) return { has: true, missing: [] };
-        const has = recipe.requiredWorkers.every(req => {
-            const available = hiredWorkers.filter(w => w.specialty === req.specialty).length;
-            if (available < req.count) {
-                missing.push(`${req.count}x ${req.specialty}`);
-                return false;
-            }
-            return true;
-        });
-        return { has, missing };
-    };
-
   const hasEnoughMaterials = (costs: {name: string, quantity: number}[]): boolean => {
       return costs.every(cost => {
           const inventoryItem = inventory.find(item => item.item === cost.name);
@@ -760,8 +744,6 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
 
   const buildCosts = selectedBuildingForBuild ? buildingData[selectedBuildingForBuild.id].buildCost : [];
   const canAffordBuild = hasEnoughMaterials(buildCosts);
-  
-  const workerCheck = selectedRecipe ? hasEnoughWorkers(selectedRecipe) : { has: true, missing: [] };
   
   const filteredBuildings = availableBuildings.filter(b =>
       b.name.toLowerCase().includes(buildingSearch.toLowerCase())
@@ -1057,24 +1039,6 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
                                     </ul>
                                 ) : <p className='text-sm text-gray-400 italic'>No inputs required.</p>}
                             </div>
-                            
-                            {/* Worker Requirements */}
-                            <div>
-                                <h4 className='font-semibold mb-2 flex items-center gap-2'><Users className='h-4 w-4' /> Workers Required</h4>
-                                {selectedRecipe.requiredWorkers && selectedRecipe.requiredWorkers.length > 0 ? (
-                                    <ul className='text-sm space-y-1 text-gray-300 list-disc list-inside'>
-                                      {selectedRecipe.requiredWorkers.map(req => {
-                                        const available = hiredWorkers.filter(w => w.specialty === req.specialty).length;
-                                        return (
-                                          <li key={req.specialty} className={cn(available < req.count ? 'text-red-400' : '')}>
-                                            {req.count}x {req.specialty} (Una: {available})
-                                          </li>
-                                        )
-                                      })}
-                                    </ul>
-                                ) : <p className='text-sm text-gray-400 italic'>No specific workers required.</p>}
-                            </div>
-
 
                             {/* Quantity */}
                             <div className='space-y-2'>
@@ -1103,14 +1067,13 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
                                 </div>
                                 <Button
                                   className='w-full bg-green-600 hover:bg-green-700'
-                                  disabled={!hasEnoughInputs(selectedRecipe, productionQuantity) || !workerCheck.has}
+                                  disabled={!hasEnoughInputs(selectedRecipe, productionQuantity)}
                                   onClick={handleConfirmProduction}
                                 >
                                   <CheckCircle className='mr-2'/>
                                   Start Production
                                 </Button>
                                 {!hasEnoughInputs(selectedRecipe, productionQuantity) && <p className='text-xs text-center text-red-400'>Not enough resources in inventory.</p>}
-                                {!workerCheck.has && <p className='text-xs text-center text-red-400'>Missing workers: {workerCheck.missing.join(', ')}</p>}
                             </div>
 
                         </div>
@@ -1176,3 +1139,5 @@ export function Dashboard({ buildingSlots, inventory, hiredWorkers, stars, onBui
     </div>
   );
 }
+
+    

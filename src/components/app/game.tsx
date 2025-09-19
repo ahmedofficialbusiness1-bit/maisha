@@ -7,13 +7,11 @@ import { Dashboard, type BuildingSlot, type BuildingType } from '@/components/ap
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
 import { TradeMarket, type PlayerListing, type StockListing, type BondListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
-import { HumanResources } from '@/components/app/human-resources';
 import type { Recipe } from '@/lib/recipe-data';
 import { recipes } from '@/lib/recipe-data';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data.tsx';
 import { buildingData } from '@/lib/building-data';
-import { workerData, type Worker } from '@/lib/worker-data.tsx';
 import { Chats } from '@/components/app/chats';
 
 const BUILDING_SLOTS = 20;
@@ -23,7 +21,7 @@ export type PlayerStock = {
     shares: number;
 }
 
-export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'hr';
+export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia';
 
 export type UserData = {
   money: number;
@@ -33,8 +31,6 @@ export type UserData = {
   companyData: StockListing[];
   bondListings: BondListing[];
   buildingSlots: BuildingSlot[];
-  availableWorkers: Worker[];
-  hiredWorkers: Worker[];
   playerStocks: PlayerStock[];
 };
 
@@ -115,42 +111,7 @@ export function Game() {
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialData?.companyData ?? initialCompanyData);
   const [bondListings, setBondListings] = React.useState<BondListing[]>(initialData?.bondListings ?? initialBondListings);
   const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(initialData?.buildingSlots ?? Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })));
-  const [availableWorkers, setAvailableWorkers] = React.useState<Worker[]>(initialData?.availableWorkers ?? workerData);
-  const [hiredWorkers, setHiredWorkers] = React.useState<Worker[]>(initialData?.hiredWorkers ?? []);
   const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>(initialData?.playerStocks ?? []);
-
-  const handleHireWorker = (workerId: string) => {
-    const workerToHire = availableWorkers.find(w => w.id === workerId);
-    if (!workerToHire || money < workerToHire.salary) {
-      toast({
-        variant: "destructive",
-        title: "Haiwezekani Kuajiri",
-        description: workerToHire ? "Huna pesa za kutosha kulipa mshahara wa awali." : "Mfanyakazi hapatikani.",
-      });
-      return;
-    }
-    setMoney(prev => prev - workerToHire.salary); // Initial salary payment
-    setHiredWorkers(prev => [...prev, workerToHire]);
-    setAvailableWorkers(prev => prev.filter(w => w.id !== workerId));
-    toast({
-      title: "Umeajiri Mfanyakazi Mpya!",
-      description: `${workerToHire.name} amejiunga na timu yako.`,
-    });
-  };
-
-  const handleFireWorker = (workerId: string) => {
-    const workerToFire = hiredWorkers.find(w => w.id === workerId);
-    if (!workerToFire) return;
-
-    setHiredWorkers(prev => prev.filter(w => w.id !== workerId));
-    setAvailableWorkers(prev => [...prev, workerToFire]);
-    toast({
-      variant: 'destructive',
-      title: "Mfanyakazi Amefukuzwa",
-      description: `${workerToFire.name} hayupo tena kazini.`,
-    });
-  };
-
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
     const costs = buildingData[building.id].buildCost;
@@ -297,19 +258,6 @@ export function Game() {
             description: `Huna pesa za kutosha kuanzisha uzalishaji. Unahitaji $${totalCost.toLocaleString()}.`,
         });
         return;
-    }
-
-    // Check for required workers
-    for (const req of recipe.requiredWorkers) {
-        const availableSpecialists = hiredWorkers.filter(w => w.specialty === req.specialty).length;
-        if (availableSpecialists < req.count) {
-            toast({
-                variant: "destructive",
-                title: "Uhaba wa Wafanyakazi",
-                description: `Unahitaji ${req.count} ${req.specialty} lakini una ${availableSpecialists} pekee.`,
-            });
-            return;
-        }
     }
 
     const now = Date.now();
@@ -552,29 +500,6 @@ export function Game() {
 
     }, 1000);
 
-     // Salary payment interval (every minute)
-    const salaryInterval = setInterval(() => {
-        const totalSalary = hiredWorkers.reduce((acc, worker) => acc + worker.salary, 0);
-        if (totalSalary > 0) {
-            setMoney(prevMoney => {
-                if (prevMoney < totalSalary) {
-                    toast({
-                        variant: "destructive",
-                        title: "Pesa haitoshi kulipa mishahara!",
-                        description: `Unahitaji $${totalSalary.toLocaleString()} lakini una $${prevMoney.toLocaleString()} pekee.`
-                    });
-                    // Here you might want to add logic to fire workers automatically
-                    return prevMoney;
-                }
-                toast({
-                    title: "Mishahara Imelipwa",
-                    description: `Umelipa jumla ya $${totalSalary.toLocaleString()} kwa wafanyakazi wako.`
-                });
-                return prevMoney - totalSalary;
-            });
-        }
-    }, 60000); // Every 60 seconds (1 minute)
-
     const dividendInterval = setInterval(() => {
         let totalDividends = 0;
         const dividendMessages: string[] = [];
@@ -626,11 +551,10 @@ export function Game() {
 
     return () => {
       clearInterval(interval);
-      clearInterval(salaryInterval);
       clearInterval(dividendInterval);
       clearInterval(marketFluctuationInterval);
     }
-  }, [toast, hiredWorkers, playerStocks, companyData]);
+  }, [toast, playerStocks, companyData]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
@@ -640,7 +564,6 @@ export function Game() {
           <Dashboard 
             buildingSlots={buildingSlots} 
             inventory={inventory}
-            hiredWorkers={hiredWorkers}
             stars={stars}
             onBuild={handleBuild}
             onStartProduction={handleStartProduction}
@@ -662,17 +585,10 @@ export function Game() {
         )}
         {view === 'chats' && <Chats />}
         {view === 'encyclopedia' && <Encyclopedia />}
-        {view === 'hr' && (
-          <HumanResources
-            availableWorkers={availableWorkers}
-            hiredWorkers={hiredWorkers}
-            money={money}
-            onHireWorker={handleHireWorker}
-            onFireWorker={handleFireWorker}
-          />
-        )}
       </main>
       <AppFooter activeView={view} setView={setView} />
     </div>
   );
 }
+
+    
