@@ -629,7 +629,7 @@ export function Game() {
                         id: Date.now() + Math.random(),
                         commodity: product.name,
                         seller: AI_PLAYER_NAME,
-                        quantity: 100, // Serekali always has 100 to start
+                        quantity: 10000, // Serekali always has 10000 to start
                         price: price,
                         avatar: 'https://picsum.photos/seed/tza-gov/40/40',
                         quality: 5,
