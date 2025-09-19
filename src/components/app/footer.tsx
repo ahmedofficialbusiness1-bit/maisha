@@ -9,7 +9,6 @@ import {
   CandlestickChart,
   MessageSquare,
   LayoutDashboard,
-  Scale,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -36,11 +35,6 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
       label: 'Market',
       icon: <CandlestickChart />,
     },
-    {
-      view: 'accounting' as View,
-      label: 'Accounting',
-      icon: <Scale />,
-    },
      {
       view: 'encyclopedia' as View,
       label: 'Encyclopedia',
@@ -54,7 +48,7 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
   ];
 
   return (
-    <footer className="sticky bottom-0 z-10 grid grid-cols-6 items-center justify-around border-t bg-gray-900/95 p-2 backdrop-blur-sm">
+    <footer className="sticky bottom-0 z-10 grid grid-cols-5 items-center justify-around border-t bg-gray-900/95 p-2 backdrop-blur-sm">
       {navItems.map((item) => (
         <Button
             key={item.view}
@@ -72,5 +66,3 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
     </footer>
   );
 }
-
-    
