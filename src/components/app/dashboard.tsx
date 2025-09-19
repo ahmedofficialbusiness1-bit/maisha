@@ -940,31 +940,29 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                   <Separator className='bg-gray-600'/>
                   <div>
                       <h3 className='font-semibold mb-2 text-sm'>Vifaa Vinavyohitajika</h3>
-                      <ScrollArea className="max-h-[25vh]">
-                        <div className='space-y-1 text-xs pr-2'>
-                            {buildCosts.map(cost => {
-                                const invItem = inventory.find(i => i.item === cost.name);
-                                const has = invItem?.quantity || 0;
-                                const needed = cost.quantity;
-                                const hasEnough = has >= needed;
-                                return (
-                                    <div key={cost.name} className={cn('flex justify-between items-center p-1 rounded-md', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
-                                        <span>{cost.name}</span>
-                                        <div className='flex items-center gap-1'>
-                                            <span className={cn('font-mono text-xs', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                              {has.toLocaleString()} / {needed.toLocaleString()}
-                                            </span>
-                                            {!hasEnough && (
-                                              <Button size="sm" variant="secondary" className="h-5 text-[10px] px-1.5" onClick={() => onBuyMaterial(cost.name, needed - has)}>
-                                                  Nunua
-                                              </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                      </ScrollArea>
+                      <div className='space-y-1 text-xs'>
+                          {buildCosts.map(cost => {
+                              const invItem = inventory.find(i => i.item === cost.name);
+                              const has = invItem?.quantity || 0;
+                              const needed = cost.quantity;
+                              const hasEnough = has >= needed;
+                              return (
+                                  <div key={cost.name} className={cn('flex justify-between items-center p-1 rounded-md', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
+                                      <span>{cost.name}</span>
+                                      <div className='flex items-center gap-1'>
+                                          <span className={cn('font-mono text-xs', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                            {has.toLocaleString()} / {needed.toLocaleString()}
+                                          </span>
+                                          {!hasEnough && (
+                                            <Button size="sm" variant="secondary" className="h-5 text-[10px] px-1.5" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                Nunua
+                                            </Button>
+                                          )}
+                                      </div>
+                                  </div>
+                              )
+                          })}
+                      </div>
                   </div>
                   <DialogFooter>
                       <Button
@@ -1000,33 +998,31 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         <Separator className='my-3 bg-gray-600'/>
                         <div className='text-xs space-y-1'>
                             <p className='font-semibold mb-1'>Gharama ya Kuboresha:</p>
-                             <ScrollArea className="max-h-[25vh]">
-                               <div className='space-y-1 text-xs pr-2'>
-                                  {upgradeCosts.map(cost => {
-                                      const invItem = inventory.find(i => i.item === cost.name);
-                                      const has = invItem?.quantity || 0;
-                                      const needed = cost.quantity;
-                                      const hasEnough = has >= needed;
-                                      return (
-                                          <div key={cost.name} className='flex justify-between items-center p-1 rounded-md'>
-                                              <span className={cn('text-xs', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                  {cost.name}
-                                              </span>
-                                              <div className='flex items-center gap-1'>
-                                                  <span className={cn('font-mono text-xs', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                      {has.toLocaleString()}/{needed.toLocaleString()}
-                                                  </span>
-                                                  {!hasEnough && (
-                                                      <Button size="sm" variant="secondary" className="h-5 px-1.5 text-[10px]" onClick={() => onBuyMaterial(cost.name, needed - has)}>
-                                                          Nunua
-                                                      </Button>
-                                                  )}
-                                              </div>
-                                          </div>
-                                      )
-                                  })}
-                              </div>
-                            </ScrollArea>
+                             <div className='space-y-1 text-xs'>
+                                {upgradeCosts.map(cost => {
+                                    const invItem = inventory.find(i => i.item === cost.name);
+                                    const has = invItem?.quantity || 0;
+                                    const needed = cost.quantity;
+                                    const hasEnough = has >= needed;
+                                    return (
+                                        <div key={cost.name} className='flex justify-between items-center p-1 rounded-md'>
+                                            <span className={cn('text-xs', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                {cost.name}
+                                            </span>
+                                            <div className='flex items-center gap-1'>
+                                                <span className={cn('font-mono text-xs', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                    {has.toLocaleString()}/{needed.toLocaleString()}
+                                                </span>
+                                                {!hasEnough && (
+                                                    <Button size="sm" variant="secondary" className="h-5 px-1.5 text-[10px]" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                        Nunua
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
                         </div>
                     </div>
                      <Button className='w-full justify-start' variant="destructive" onClick={() => setIsDemolishDialogOpen(true)}>
