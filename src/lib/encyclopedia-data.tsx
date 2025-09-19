@@ -270,6 +270,14 @@ const priceList: Record<string, number> = {
   'Saruji': 60,
   'Mabati': 120,
 
+  // Madini (User provided)
+  'Almasi': 1000,
+  'Dhahabu': 800,
+  'Silver': 500,
+  'Ruby': 600,
+  'Tanzanite': 1200,
+  'Shaba': 200,
+  
   // Other prices
   'Ngombe': 100,
   'Ngozi': 40,
@@ -279,12 +287,6 @@ const priceList: Record<string, number> = {
   'Miti': 2,
   'Karatasi': 1,
   'Madini ya chuma': 8.0,
-  'Shaba': 15,
-  'Almasi': 2500,
-  'Dhahabu': 1800,
-  'Silver': 400,
-  'Ruby': 1500,
-  'Tanzanite': 2000,
   'Mafuta Ghafi': 5,
   'Disel': 12,
   'Petrol': 12,
