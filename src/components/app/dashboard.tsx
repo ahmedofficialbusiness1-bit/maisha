@@ -922,32 +922,28 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                     <Separator className='bg-gray-600'/>
                     <div>
                         <h3 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h3>
-                        <div className='pr-2'>
-                          <ScrollArea className="max-h-[25vh]">
-                            <div className="space-y-1 pr-2">
-                                {buildCosts.map(cost => {
-                                    const invItem = inventory.find(i => i.item === cost.name);
-                                    const has = invItem?.quantity || 0;
-                                    const needed = cost.quantity;
-                                    const hasEnough = has >= needed;
-                                    return (
-                                        <div key={cost.name} className={cn('flex justify-between items-center p-1 rounded-md text-xs', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
-                                            <span>{cost.name}</span>
-                                            <div className='flex items-center gap-1'>
-                                                <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                    {has.toLocaleString()} / {needed.toLocaleString()}
-                                                </span>
-                                                {!hasEnough && (
-                                                    <Button size="sm" variant="secondary" className="h-5 text-[10px] px-1.5" onClick={() => onBuyMaterial(cost.name, needed - has)}>
-                                                        Nunua
-                                                    </Button>
-                                                )}
-                                            </div>
+                        <div className="space-y-1">
+                            {buildCosts.map(cost => {
+                                const invItem = inventory.find(i => i.item === cost.name);
+                                const has = invItem?.quantity || 0;
+                                const needed = cost.quantity;
+                                const hasEnough = has >= needed;
+                                return (
+                                    <div key={cost.name} className={cn('flex justify-between items-center p-1 rounded-md text-xs', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
+                                        <span>{cost.name}</span>
+                                        <div className='flex items-center gap-1'>
+                                            <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                {has.toLocaleString()} / {needed.toLocaleString()}
+                                            </span>
+                                            {!hasEnough && (
+                                                <Button size="sm" variant="secondary" className="h-5 text-[10px] px-1.5" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                    Nunua
+                                                </Button>
+                                            )}
                                         </div>
-                                    )
-                                })}
-                            </div>
-                          </ScrollArea>
+                                    </div>
+                                )
+                            })}
                         </div>
                     </div>
                 </div>
@@ -988,33 +984,31 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             <Separator className='my-3 bg-gray-600'/>
                             <div className='space-y-1'>
                                 <p className='font-semibold mb-1 text-xs'>Gharama ya Kuboresha:</p>
-                                <ScrollArea className='max-h-[20vh]'>
-                                    <div className="space-y-1 pr-2">
-                                        {upgradeCosts.map(cost => {
-                                            const invItem = inventory.find(i => i.item === cost.name);
-                                            const has = invItem?.quantity || 0;
-                                            const needed = cost.quantity;
-                                            const hasEnough = has >= needed;
-                                            return (
-                                                <div key={cost.name} className='flex justify-between items-center p-1 rounded-md text-xs'>
-                                                    <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                        {cost.name}
+                                <div className="space-y-1">
+                                    {upgradeCosts.map(cost => {
+                                        const invItem = inventory.find(i => i.item === cost.name);
+                                        const has = invItem?.quantity || 0;
+                                        const needed = cost.quantity;
+                                        const hasEnough = has >= needed;
+                                        return (
+                                            <div key={cost.name} className='flex justify-between items-center p-1 rounded-md text-xs'>
+                                                <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                    {cost.name}
+                                                </span>
+                                                <div className='flex items-center gap-1'>
+                                                    <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                        {has.toLocaleString()}/{needed.toLocaleString()}
                                                     </span>
-                                                    <div className='flex items-center gap-1'>
-                                                        <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                            {has.toLocaleString()}/{needed.toLocaleString()}
-                                                        </span>
-                                                        {!hasEnough && (
-                                                            <Button size="sm" variant="secondary" className="h-5 px-1.5 text-[10px]" onClick={() => onBuyMaterial(cost.name, needed - has)}>
-                                                                Nunua
-                                                            </Button>
-                                                        )}
-                                                    </div>
+                                                    {!hasEnough && (
+                                                        <Button size="sm" variant="secondary" className="h-5 px-1.5 text-[10px]" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                            Nunua
+                                                        </Button>
+                                                    )}
                                                 </div>
-                                            )
-                                        })}
-                                    </div>
-                                </ScrollArea>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
                             </div>
                         </div>
                         <Button className='w-full justify-start' variant="destructive" onClick={() => setIsDemolishDialogOpen(true)}>
