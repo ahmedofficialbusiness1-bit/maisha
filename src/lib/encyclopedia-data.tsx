@@ -248,8 +248,9 @@ const allProducibleItems = [...recipes.map(r => r.output.name), ...Object.keys(b
 // Function to get the price of an item, calculating it if not already in the map
 const getItemPrice = (itemName: string, recipes: Recipe[]): number | null => {
     // If we have a calculated, non-null price, return it
-    if (calculatedPrices.has(itemName) && calculatedPrices.get(itemName) !== null) {
-        return calculatedPrices.get(itemName)!;
+    if (calculatedPrices.has(itemName)) {
+        const price = calculatedPrices.get(itemName);
+        if (price !== null) return price;
     }
 
     // If we are already trying to calculate this, we have a circular dependency.
@@ -516,5 +517,3 @@ export const encyclopediaData: EncyclopediaEntry[] = generatedEntries.sort((a, b
     }
     return a.name.localeCompare(b.name);
 });
-
-    

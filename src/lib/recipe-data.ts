@@ -8,7 +8,6 @@ export type Recipe = {
 const machineRecipeInputs = [
     { name: 'Chuma', quantity: 60 },
     { name: 'Nondo', quantity: 30 },
-    { name: 'Mabati', quantity: 30 },
     { name: 'Saruji', quantity: 60 },
     { name: 'Matofali', quantity: 120 },
     { name: 'Maji', quantity: 60 },
@@ -87,7 +86,7 @@ export const recipes: Recipe[] = [
   { id: 'saruji', buildingId: 'kiwanda_cha_saruji', output: { name: 'Saruji', quantity: 2 }, inputs: [{ name: 'Mchanga', quantity: 4 }, { name: 'Maji', quantity: 2 }] },
   { id: 'matofali', buildingId: 'kiwanda_cha_matofali', output: { name: 'Matofali', quantity: 3 }, inputs: [{ name: 'Mashine A1', quantity: 1 }, { name: 'Saruji', quantity: 2 }, { name: 'Mchanga', quantity: 4 }, { name: 'Maji', quantity: 2 }, { name: 'Umeme', quantity: 2 }] },
   { id: 'zege', buildingId: 'kiwanda_cha_matofali', output: { name: 'Zege', quantity: 2 }, inputs: [{ name: 'Mashine A3', quantity: 1 }, { name: 'Saruji', quantity: 4 }, { name: 'Maji', quantity: 4 }, { name: 'Kokoto', quantity: 6 }, { name: 'Umeme', quantity: 2 }] },
-  { id: 'mabati', buildingId: 'kiwanda_cha_chuma', output: { name: 'Mabati', quantity: 2}, inputs: [{ name: 'Mashine A5', quantity: 1 }, { name: 'Shaba', quantity: 4 }] },
+  { id: 'mabati', buildingId: 'kiwanda_cha_chuma', output: { name: 'Mabati', quantity: 2}, inputs: [{ name: 'Chuma', quantity: 4 }] },
 
   // Madini Recipes
   { id: 'almasi', buildingId: 'uchimbaji_almasi', output: { name: 'Almasi', quantity: 1 }, inputs: [{ name: 'Mashine B1', quantity: 1}, { name: 'Maji', quantity: 100}, { name: 'Umeme', quantity: 100}, { name: 'Leseni B1', quantity: 1}] },
@@ -229,7 +228,3 @@ export const recipes: Recipe[] = [
   { id: 'heat_shield', buildingId: 'kiwanda_cha_anga', output: { name: 'Heat Shield', quantity: 1 }, inputs: [{ name: 'K7 Mashine', quantity: 2 }, { name: 'Nondo', quantity: 2000 }] },
   { id: 'roketi', buildingId: 'kiwanda_cha_roketi', output: { name: 'Roketi', quantity: 1 }, inputs: [{ name: 'Fuselage', quantity: 2 }, { name: 'Wings', quantity: 8 }, { name: 'Tarakilishi', quantity: 2 }, { name: 'Cockpit', quantity: 2 }, { name: 'Attitude Control', quantity: 8 }, { name: 'Rocket Engine', quantity: 8 }, { name: 'Heat Shield', quantity: 2 }] },
 ];
-
-    
-
-    
