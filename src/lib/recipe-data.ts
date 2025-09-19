@@ -84,9 +84,9 @@ export const recipes: Recipe[] = [
   { id: 'chuma', buildingId: 'uchimbaji_chuma', output: { name: 'Chuma', quantity: 2 }, inputs: [{ name: 'Umeme', quantity: 20 }, { name: 'Maji', quantity: 20 }, {name: 'Madini ya chuma', quantity: 2}] },
   { id: 'nondo', buildingId: 'kiwanda_cha_chuma', output: { name: 'Nondo', quantity: 2 }, inputs: [{ name: 'Chuma', quantity: 4 }, { name: 'Umeme', quantity: 10 }] },
   { id: 'saruji', buildingId: 'kiwanda_cha_saruji', output: { name: 'Saruji', quantity: 2 }, inputs: [{ name: 'Mchanga', quantity: 4 }, { name: 'Maji', quantity: 2 }] },
-  { id: 'matofali', buildingId: 'kiwanda_cha_matofali', output: { name: 'Matofali', quantity: 3 }, inputs: [{ name: 'Saruji', quantity: 2 }, { name: 'Mchanga', quantity: 4 }, { name: 'Maji', quantity: 2 }, { name: 'Umeme', quantity: 2 }] },
-  { id: 'zege', buildingId: 'kiwanda_cha_matofali', output: { name: 'Zege', quantity: 2 }, inputs: [{ name: 'Saruji', quantity: 4 }, { name: 'Maji', quantity: 4 }, { name: 'Kokoto', quantity: 6 }, { name: 'Umeme', quantity: 2 }] },
-  { id: 'mabati', buildingId: 'kiwanda_cha_chuma', output: { name: 'Mabati', quantity: 2}, inputs: [{ name: 'Chuma', quantity: 4 }] },
+  { id: 'matofali', buildingId: 'kiwanda_cha_matofali', output: { name: 'Matofali', quantity: 3 }, inputs: [{ name: 'Saruji', quantity: 1 }, { name: 'Mchanga', quantity: 2 }, { name: 'Maji', quantity: 1 }, { name: 'Umeme', quantity: 1 }] },
+  { id: 'zege', buildingId: 'kiwanda_cha_matofali', output: { name: 'Zege', quantity: 2 }, inputs: [{ name: 'Saruji', quantity: 2 }, { name: 'Maji', quantity: 2 }, { name: 'Kokoto', quantity: 3 }, { name: 'Umeme', quantity: 1 }] },
+  { id: 'mabati', buildingId: 'kiwanda_cha_chuma', output: { name: 'Mabati', quantity: 2}, inputs: [{ name: 'Chuma', quantity: 2 }] },
 
   // Madini Recipes
   { id: 'almasi', buildingId: 'uchimbaji_almasi', output: { name: 'Almasi', quantity: 1 }, inputs: [{ name: 'Maji', quantity: 100}, { name: 'Umeme', quantity: 100}] },
