@@ -75,13 +75,13 @@ export function AppHeader({ money, stars, setView }: AppHeaderProps) {
         
         {/* Star Boost */}
         <div className="flex items-center gap-1 rounded-full bg-yellow-400/20 p-1 sm:p-2 border border-yellow-400/50">
-            <Star className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-400" />
+            <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
             <span className="font-bold text-white text-xs sm:text-base">{stars}</span>
         </div>
 
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-10 sm:w-10">
-          <Bell className="h-4 w-4 sm:h-6 sm:w-6" />
+          <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
           <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-red-500" />
           <span className="sr-only">Notifications</span>
         </Button>
@@ -90,7 +90,7 @@ export function AppHeader({ money, stars, setView }: AppHeaderProps) {
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
-                    <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span className="sr-only">Open menu</span>
                 </Button>
             </DropdownMenuTrigger>
