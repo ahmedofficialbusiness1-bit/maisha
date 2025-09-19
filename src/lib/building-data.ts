@@ -1,4 +1,5 @@
 
+      
 export type BuildingConfig = {
     productionRate: number; // units per hour at level 1
     buildCost: { name: string; quantity: number }[];
@@ -656,6 +657,8 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
 };
+
+    
 
     
 
