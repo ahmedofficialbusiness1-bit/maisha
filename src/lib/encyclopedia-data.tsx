@@ -225,111 +225,103 @@ const getIcon = (name: string): React.ReactElement<LucideIcon> => {
 
 
 // -----------------------------------------------------------------------------
-// DYNAMIC PRICING CALCULATION (REFACTORED)
+// NEW, REFACTORED PRICING LOGIC
 // -----------------------------------------------------------------------------
-
 const PROFIT_MARGIN = 0.30; // 30%
 
-// Base costs for fundamental, non-produced raw materials.
 const baseMaterialCosts: Record<string, number> = {
-    'Maji': 0.04,
-    'Umeme': 0.08,
-    'Mawe': 0.8,
-    'Mchanga': 0.60,
-    'Madini ya chuma': 8.0, 
-    'Chuma': 8.00, // Assuming base Chuma can be sourced directly
-    'Bwawa': 500, 
+    'Maji': 0.02,
+    'Umeme': 0.04,
+    'Mawe': 1.6,
+    'Mchanga': 1.20,
+    'Madini ya chuma': 16.0,
+    'Bwawa': 500,
     'Boat': 1000,
 };
 
-// Map to store FINAL market prices. This is the single source of truth for prices.
+// A map to store the final calculated market price for every item.
 const marketPrices = new Map<string, number>();
+// A map to act as a cache (memoization) to avoid re-calculating prices.
+const priceMemo = new Map<string, number>();
+// A map to look up recipes by their output name quickly.
+const recipeMap = new Map<string, Recipe>(recipes.map(r => [r.output.name, r]));
 
-// Set initial market prices for base materials.
-// The cost of a base material IS its market price. There's no production cost to add margin to.
-for (const name in baseMaterialCosts) {
-    marketPrices.set(name, baseMaterialCosts[name]);
+/**
+ * Recursively calculates the market price of an item.
+ * It finds the item's recipe, calculates the cost of its inputs (recursing if necessary),
+ * and then adds a 30% profit margin.
+ * Base materials that don't have recipes get their price from `baseMaterialCosts`.
+ */
+function getMarketPrice(itemName: string): number {
+    // 1. If price is already calculated, return it from the cache.
+    if (priceMemo.has(itemName)) {
+        return priceMemo.get(itemName)!;
+    }
+
+    // 2. If the item is a base material, its market price is its base cost.
+    if (baseMaterialCosts[itemName] !== undefined) {
+        priceMemo.set(itemName, baseMaterialCosts[itemName]);
+        return baseMaterialCosts[itemName];
+    }
+
+    // 3. Find the recipe for the item.
+    const recipe = recipeMap.get(itemName);
+    if (!recipe) {
+        // If an item has no recipe and is not a base material, it's an error in data.
+        // We'll throw an error to make it obvious during development.
+        throw new Error(`Pricing error: No recipe or base cost found for item "${itemName}".`);
+    }
+
+    // 4. Calculate the total production cost by summing the market prices of all inputs.
+    // This is the recursive step.
+    const productionCost = recipe.inputs.reduce((total, input) => {
+        // Recursively get the market price for each input.
+        const inputMarketPrice = getMarketPrice(input.name);
+        return total + (inputMarketPrice * input.quantity);
+    }, 0);
+
+    // 5. Calculate the cost per single unit of output.
+    const costPerUnit = productionCost / recipe.output.quantity;
+    
+    // 6. Calculate the final market price by adding the profit margin.
+    // Market Price = Production Cost + (Production Cost * Profit Margin)
+    const marketPrice = costPerUnit + (costPerUnit * PROFIT_MARGIN);
+
+    // 7. Cache the result and return it.
+    priceMemo.set(itemName, marketPrice);
+    return marketPrice;
 }
+
+
+// --- Main Execution ---
+
+// Get a list of all unique items from recipes and base costs.
+const allItems = new Set<string>([
+    ...recipes.flatMap(r => [r.output.name, ...r.inputs.map(i => i.name)]),
+    ...Object.keys(baseMaterialCosts)
+]);
+
+// Calculate the market price for every single item.
+allItems.forEach(itemName => {
+    try {
+        const price = getMarketPrice(itemName);
+        marketPrices.set(itemName, price);
+    } catch (e) {
+        console.error(e);
+        // If an error occurred, set a fallback price to avoid crashing the app.
+        marketPrices.set(itemName, 9999999);
+    }
+});
 
 
 // --- Generate Encyclopedia Entries using the final calculated prices ---
-
-const allItems = new Set<string>(recipes.flatMap(r => [r.output.name, ...r.inputs.map(i => i.name)]));
-Object.keys(baseMaterialCosts).forEach(item => allItems.add(item)); // Add base materials to the set as well
-
-// A set to keep track of which items have had their prices calculated
-const pricedItems = new Set(Object.keys(baseMaterialCosts));
-
-
-let itemsToPrice = Array.from(allItems).filter(item => !pricedItems.has(item));
-let iterations = 0;
-const MAX_ITERATIONS = 50; // Increased for safety with long chains
-
-while (itemsToPrice.length > 0 && iterations < MAX_ITERATIONS) {
-    const remainingItems = [];
-
-    for (const itemName of itemsToPrice) {
-        // If already priced, skip
-        if (pricedItems.has(itemName)) continue;
-
-        const recipe = recipes.find(r => r.output.name === itemName);
-        if (!recipe) {
-            // This item has no recipe and isn't a base material, should not happen if data is correct
-            // But if it does, let's mark it as priced to avoid infinite loop
-            pricedItems.add(itemName);
-            marketPrices.set(itemName, 9999999); // Assign a high price for visibility
-            continue;
-        }
-
-        let productionCost = 0;
-        let allInputsPriced = true;
-
-        // Calculate production cost from the MARKET PRICE of inputs
-        for (const input of recipe.inputs) {
-            if (marketPrices.has(input.name)) {
-                productionCost += marketPrices.get(input.name)! * input.quantity;
-            } else {
-                // If an input isn't priced yet, we can't price this item.
-                allInputsPriced = false;
-                break;
-            }
-        }
-
-        if (allInputsPriced) {
-            const costPerUnit = productionCost / recipe.output.quantity;
-            const profit = costPerUnit * PROFIT_MARGIN;
-            const marketPrice = costPerUnit + profit;
-            
-            marketPrices.set(itemName, marketPrice);
-            pricedItems.add(itemName);
-        } else {
-            // Add to the list to be re-evaluated in the next iteration
-            remainingItems.push(itemName);
-        }
-    }
-
-    // If no progress was made, break the loop
-    if (remainingItems.length === itemsToPrice.length) {
-        // Default price for unpriceable items
-        remainingItems.forEach(item => {
-            marketPrices.set(item, 9_999_999)
-            pricedItems.add(item)
-        });
-        break;
-    }
-
-    itemsToPrice = remainingItems;
-    iterations++;
-}
-
-
 const finalEntries: EncyclopediaEntry[] = [];
 allItems.forEach(itemName => {
-    const recipe = recipes.find(r => r.output.name === itemName);
+    const recipe = recipeMap.get(itemName);
     const marketCost = marketPrices.get(itemName) || 0;
     
     let properties: { label: string; value: string }[] = [
-        { label: 'Market Cost', value: `$${marketCost.toLocaleString(undefined, {minimumFractionDigits: 2})}` }
+        { label: 'Market Cost', value: `$${marketCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}` }
     ];
 
     if (recipe) {
@@ -341,11 +333,10 @@ allItems.forEach(itemName => {
         const productionCostPerUnit = inputCost / recipe.output.quantity;
 
         const buildingInfo = buildingData[recipe.buildingId];
-        // Note: Production rate affects how MANY units are made, not the cost of ONE unit. Time is separate.
-        const baseTimePerUnit = buildingInfo ? (3600) / (buildingInfo.productionRate) : 0; // Time per batch
+        const baseTimePerUnit = buildingInfo ? (3600) / (buildingInfo.productionRate) : 0; // Time in seconds for one batch
         
-        properties.unshift({ label: 'Production Cost', value: `$${productionCostPerUnit.toLocaleString(undefined, {minimumFractionDigits: 2})}` });
-        properties.push({ label: 'Base Production Time', value: `${baseTimePerUnit.toFixed(2)}s per batch` });
+        properties.unshift({ label: 'Production Cost', value: `$${productionCostPerUnit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}` });
+        properties.push({ label: 'Base Production Time', value: `${(baseTimePerUnit / recipe.output.quantity).toFixed(2)}s per unit` });
         properties.push({ label: 'Output per Batch', value: `${recipe.output.quantity.toLocaleString()} unit(s)` });
         properties.push({ label: 'Building', value: recipe.buildingId.charAt(0).toUpperCase() + recipe.buildingId.slice(1).replace(/_/g, ' ') });
 
@@ -374,7 +365,7 @@ allItems.forEach(itemName => {
 });
 
 
-// 4. Final Categorization and Sorting
+// Final Categorization and Sorting
 const categoryOrder = ['Space', 'Vehicles', 'Spares', 'Electronics', 'Construction', 'Vifaa', 'Documents', 'Madini', 'Mafuta', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
 const itemCategorization: Record<string, string> = {
     'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction', 'Mabati': 'Construction',
