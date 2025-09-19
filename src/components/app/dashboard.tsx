@@ -617,6 +617,15 @@ const buildingStyles: Record<string, { body: string; roof: string }> = {
     default: { body: 'bg-gray-700/80', roof: 'border-b-gray-600/90' }
 };
 
+const SHOP_BUILDING_IDS = [
+    'duka_kuu',
+    'duka_la_ujenzi',
+    'duka_la_nguo_na_vito',
+    'duka_la_electroniki',
+    'duka_la_magari',
+    'duka_la_anga',
+];
+
 interface DashboardProps {
     buildingSlots: BuildingSlot[];
     inventory: InventoryItem[];
@@ -692,6 +701,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     if (selectedSlotIndex !== null && selectedBuildingForBuild) {
         const costs = buildingData[selectedBuildingForBuild.id].buildCost;
         if (!hasEnoughMaterials(costs)) {
+            // This should ideally be handled by disabling the button, but as a fallback.
             return;
         }
         onBuild(selectedSlotIndex, selectedBuildingForBuild);
@@ -736,6 +746,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
           }));
 
           if (!hasEnoughMaterials(neededInputs)) {
+             // This should be handled by disabling the button.
              return;
           }
 
@@ -773,6 +784,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         const upgradeCosts = buildingData[slot.building.id].upgradeCost(slot.level + 1);
 
         if (!hasEnoughMaterials(upgradeCosts)) {
+            // Button should be disabled, but as a fallback.
             return;
         }
         onUpgradeBuilding(selectedSlotIndex);
@@ -781,6 +793,8 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   }
 
   const selectedSlot = selectedSlotIndex !== null ? buildingSlots[selectedSlotIndex] : null;
+  const isSelectedBuildingShop = selectedSlot?.building ? SHOP_BUILDING_IDS.includes(selectedSlot.building.id) : false;
+  
   const buildingRecipes = selectedSlot?.building
     ? recipes.filter((recipe) => recipe.buildingId === selectedSlot.building!.id)
     : [];
@@ -1031,8 +1045,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                 </DialogHeader>
                 <div className='flex-grow overflow-y-auto -mr-6 pr-6'>
                     <div className='py-4 space-y-4'>
-                        <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
-                            <Tractor className='mr-2'/> Anza Uzalishaji
+                         <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
+                            {isSelectedBuildingShop ? <Store className='mr-2'/> : <Tractor className='mr-2'/>} 
+                            {isSelectedBuildingShop ? "Anza Kuuza" : "Anza Uzalishaji"}
                         </Button>
                         <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
                             <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
