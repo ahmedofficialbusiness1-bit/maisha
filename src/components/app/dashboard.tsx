@@ -939,22 +939,22 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                   <p className='text-sm text-gray-400'>{selectedBuildingForBuild.description}</p>
                   <Separator className='bg-gray-600'/>
                   <div>
-                      <h3 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h3>
-                      <div className='space-y-2'>
+                      <h3 className='font-semibold mb-2 text-sm'>Vifaa Vinavyohitajika</h3>
+                      <div className='space-y-1 text-xs'>
                           {buildCosts.map(cost => {
                               const invItem = inventory.find(i => i.item === cost.name);
                               const has = invItem?.quantity || 0;
                               const needed = cost.quantity;
                               const hasEnough = has >= needed;
                               return (
-                                  <div key={cost.name} className={cn('flex justify-between items-center p-2 rounded-md', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
+                                  <div key={cost.name} className={cn('flex justify-between items-center p-1.5 rounded-md', hasEnough ? 'bg-gray-800/50' : 'bg-red-900/30')}>
                                       <span>{cost.name}</span>
                                       <div className='flex items-center gap-2'>
                                           <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
                                             {has.toLocaleString()} / {needed.toLocaleString()}
                                           </span>
                                           {!hasEnough && (
-                                            <Button size="sm" variant="secondary" className="h-7" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                            <Button size="sm" variant="secondary" className="h-6 text-xs px-2" onClick={() => onBuyMaterial(cost.name, needed - has)}>
                                                 Nunua
                                             </Button>
                                           )}
@@ -998,14 +998,14 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         <Separator className='my-3 bg-gray-600'/>
                         <div className='text-xs space-y-1'>
                             <p className='font-semibold mb-1'>Gharama ya Kuboresha:</p>
-                             <div className='space-y-2'>
+                             <div className='space-y-1 text-xs'>
                                 {upgradeCosts.map(cost => {
                                     const invItem = inventory.find(i => i.item === cost.name);
                                     const has = invItem?.quantity || 0;
                                     const needed = cost.quantity;
                                     const hasEnough = has >= needed;
                                     return (
-                                        <div key={cost.name} className='flex justify-between items-center text-xs'>
+                                        <div key={cost.name} className='flex justify-between items-center'>
                                             <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
                                                 {cost.name}
                                             </span>
@@ -1014,7 +1014,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                                     {has.toLocaleString()}/{needed.toLocaleString()}
                                                 </span>
                                                 {!hasEnough && (
-                                                    <Button size="sm" variant="secondary" className="h-6 px-2" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                    <Button size="sm" variant="secondary" className="h-6 px-2 text-xs" onClick={() => onBuyMaterial(cost.name, needed - has)}>
                                                         Nunua
                                                     </Button>
                                                 )}
