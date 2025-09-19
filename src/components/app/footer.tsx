@@ -1,14 +1,13 @@
-
 'use client';
 
 import * as React from 'react';
-import type { View } from '@/app/page';
+import type { View } from '@/components/app/game';
 import { Button } from '@/components/ui/button';
 import {
   Archive,
   BookOpen,
   CandlestickChart,
-  Cpu,
+  MessageSquare,
   LayoutDashboard,
   Users,
 } from 'lucide-react';
@@ -48,9 +47,9 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
       icon: <BookOpen />,
     },
     {
-      view: 'simulator' as View,
-      label: 'Simulator',
-      icon: <Cpu />,
+      view: 'chats' as View,
+      label: 'Chats',
+      icon: <MessageSquare />,
     },
   ];
 

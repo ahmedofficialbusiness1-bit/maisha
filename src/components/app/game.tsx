@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data.tsx';
 import { buildingData } from '@/lib/building-data';
 import { workerData, type Worker } from '@/lib/worker-data.tsx';
-import { CommoditySimulator } from '@/components/app/commodity-simulator';
+import { Chats } from '@/components/app/chats';
 
 const BUILDING_SLOTS = 20;
 
@@ -23,7 +23,20 @@ export type PlayerStock = {
     shares: number;
 }
 
-export type View = 'dashboard' | 'inventory' | 'market' | 'simulator' | 'encyclopedia' | 'hr';
+export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'hr';
+
+export type UserData = {
+  money: number;
+  stars: number;
+  inventory: InventoryItem[];
+  marketListings: PlayerListing[];
+  companyData: StockListing[];
+  bondListings: BondListing[];
+  buildingSlots: BuildingSlot[];
+  availableWorkers: Worker[];
+  hiredWorkers: Worker[];
+  playerStocks: PlayerStock[];
+};
 
 const initialInventoryItems: InventoryItem[] = [
   { item: 'Maji', quantity: 15000, marketPrice: 0.02 },
@@ -93,17 +106,18 @@ export function Game() {
 
   const [view, setView] = React.useState<View>('dashboard');
 
+  const initialData: UserData | null = null;
   // State Management
-  const [money, setMoney] = React.useState(1900000);
-  const [stars, setStars] = React.useState(50);
-  const [inventory, setInventory] = React.useState<InventoryItem[]>(initialInventoryItems);
-  const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialPlayerListings);
-  const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
-  const [bondListings, setBondListings] = React.useState<BondListing[]>(initialBondListings);
-  const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })));
-  const [availableWorkers, setAvailableWorkers] = React.useState<Worker[]>(workerData);
-  const [hiredWorkers, setHiredWorkers] = React.useState<Worker[]>([]);
-  const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>([]);
+  const [money, setMoney] = React.useState(initialData?.money ?? 1900000);
+  const [stars, setStars] = React.useState(initialData?.stars ?? 50);
+  const [inventory, setInventory] = React.useState<InventoryItem[]>(initialData?.inventory ?? initialInventoryItems);
+  const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialData?.marketListings ?? initialPlayerListings);
+  const [companyData, setCompanyData] = React.useState<StockListing[]>(initialData?.companyData ?? initialCompanyData);
+  const [bondListings, setBondListings] = React.useState<BondListing[]>(initialData?.bondListings ?? initialBondListings);
+  const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(initialData?.buildingSlots ?? Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })));
+  const [availableWorkers, setAvailableWorkers] = React.useState<Worker[]>(initialData?.availableWorkers ?? workerData);
+  const [hiredWorkers, setHiredWorkers] = React.useState<Worker[]>(initialData?.hiredWorkers ?? []);
+  const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>(initialData?.playerStocks ?? []);
 
   const handleHireWorker = (workerId: string) => {
     const workerToHire = availableWorkers.find(w => w.id === workerId);
@@ -646,7 +660,7 @@ export function Game() {
             onBuyStock={handleBuyStock}
           />
         )}
-        {view === 'simulator' && <CommoditySimulator />}
+        {view === 'chats' && <Chats />}
         {view === 'encyclopedia' && <Encyclopedia />}
         {view === 'hr' && (
           <HumanResources
