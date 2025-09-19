@@ -35,7 +35,7 @@ export type UserData = {
 };
 
 const initialInventoryItems: InventoryItem[] = [
-  { item: 'Maji', quantity: 15000, marketPrice: 0.02 },
+  { item: 'Maji', quantity: 15000, marketPrice: 0.01 },
   { item: 'Mbegu', quantity: 8000, marketPrice: 0.1 },
   { item: 'Yai', quantity: 25000, marketPrice: 1.25 },
   { item: 'Bwawa', quantity: 10, marketPrice: 125 },
@@ -75,11 +75,12 @@ const initialInventoryItems: InventoryItem[] = [
   { item: 'Shaba', quantity: 100, marketPrice: 62.5 },
   { item: 'Miti', quantity: 1000, marketPrice: 1.5 },
   { item: 'Saruji', quantity: 1000, marketPrice: 6.25 },
-  { item: 'Chuma', quantity: 200, marketPrice: 125 },
+  { item: 'Chuma', quantity: 200, marketPrice: 2.00 },
   { item: 'Kokoto', quantity: 1000, marketPrice: 2.5 },
-  { item: 'Mawe', quantity: 1000, marketPrice: 0.5 },
-  { item: 'Umeme', quantity: 10000, marketPrice: 0.03 },
-  { item: 'Mchanga', quantity: 1000, marketPrice: 0.4 },
+  { item: 'Mawe', quantity: 1000, marketPrice: 0.2 },
+  { item: 'Umeme', quantity: 10000, marketPrice: 0.01 },
+  { item: 'Mchanga', quantity: 1000, marketPrice: 0.15 },
+  { item: 'Madini ya chuma', quantity: 1000, marketPrice: 2 },
 ];
 
 const initialPlayerListings: PlayerListing[] = [
@@ -96,6 +97,8 @@ const initialBondListings: BondListing[] = [
     { id: 1, issuer: 'Serikali ya Tanzania', faceValue: 1000, couponRate: 5.5, maturityDate: '2030-12-31', price: 980, quantityAvailable: 500, creditRating: 'A+', issuerLogo: 'https://picsum.photos/seed/tza-gov/40/40', imageHint: 'government seal' },
     { id: 2, issuer: 'Kilimo Fresh Inc.', faceValue: 1000, couponRate: 7.2, maturityDate: '2028-06-30', price: 1010, quantityAvailable: 2000, creditRating: 'BBB', issuerLogo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo' },
 ];
+
+const AI_PLAYER_NAME = 'Serekali';
 
 export function Game() {
   const { toast } = useToast();
@@ -237,8 +240,7 @@ export function Game() {
   const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
     const inputs = recipe.inputs || [];
     
-    // Calculate total production cost from inputs
-    let totalCost = 0;
+    // Check for required inputs and calculate cost
     for (const input of inputs) {
         const inventoryItem = inventory.find(i => i.item === input.name);
         const requiredQuantity = input.quantity * quantity;
@@ -251,19 +253,6 @@ export function Game() {
             });
             return;
         }
-        
-        const encyclopediaEntry = encyclopediaData.find(e => e.name === input.name);
-        const pricePerUnit = parseFloat(encyclopediaEntry?.properties.find(p => p.label === "Market Cost")?.value.replace('$', '') || '0');
-        totalCost += pricePerUnit * requiredQuantity;
-    }
-    
-    if (money < totalCost) {
-        toast({
-            variant: "destructive",
-            title: "Pesa haitoshi",
-            description: `Huna pesa za kutosha kulipia gharama za uzalishaji ($${totalCost.toLocaleString()}).`,
-        });
-        return;
     }
     
     const now = Date.now();
@@ -279,9 +268,6 @@ export function Game() {
       }
       return newInventory.filter(item => item.quantity > 0);
     });
-
-    // Deduct cost from player's money - No longer needed as cost is embodied in inputs
-    // setMoney(prevMoney => prevMoney - totalCost);
 
     // Set production state on building
     setBuildingSlots(prev => {
@@ -561,6 +547,65 @@ export function Game() {
       clearInterval(marketFluctuationInterval);
     }
   }, [toast, playerStocks, companyData]);
+  
+  // "Serekali" AI Market Maker Logic
+  React.useEffect(() => {
+    const allPossibleProducts = encyclopediaData;
+    const playerListedCommodities = new Set(
+        marketListings
+            .filter(l => l.seller !== AI_PLAYER_NAME)
+            .map(l => l.commodity)
+    );
+
+    setMarketListings(currentListings => {
+        let updated = false;
+        let newListings = [...currentListings];
+
+        // 1. Add Serekali listings for unlisted products
+        allPossibleProducts.forEach(product => {
+            if (!playerListedCommodities.has(product.name)) {
+                // Check if Serekali has already listed this
+                const serekaliListingExists = newListings.some(
+                    l => l.seller === AI_PLAYER_NAME && l.commodity === product.name
+                );
+                if (!serekaliListingExists) {
+                    const priceProp = product.properties.find(p => p.label === 'Market Cost');
+                    const price = priceProp ? parseFloat(priceProp.value.replace('$', '')) : 1_000_000;
+                    
+                    const newListing: PlayerListing = {
+                        id: Date.now() + Math.random(),
+                        commodity: product.name,
+                        seller: AI_PLAYER_NAME,
+                        quantity: 100, // Serekali always has 100 to start
+                        price: price,
+                        avatar: 'https://picsum.photos/seed/tza-gov/40/40',
+                        quality: 5,
+                        imageHint: 'government seal',
+                    };
+                    newListings.push(newListing);
+                    updated = true;
+                }
+            }
+        });
+        
+        // 2. Remove Serekali listings if a player has listed the same product
+        const listingsToRemove = new Set<number>();
+        newListings.forEach(listing => {
+            if (listing.seller === AI_PLAYER_NAME && playerListedCommodities.has(listing.commodity)) {
+                listingsToRemove.add(listing.id);
+                updated = true;
+            }
+        });
+        
+        if (updated) {
+            return newListings.filter(l => !listingsToRemove.has(l.id));
+        }
+
+        return currentListings; // No changes
+    });
+
+  }, [marketListings]);
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">

@@ -120,6 +120,9 @@ const productCategories = encyclopediaData.reduce((acc, item) => {
     return acc;
 }, {} as Record<string, EncyclopediaEntry[]>);
 
+const AI_PLAYER_NAME = 'Serekali';
+
+
 interface TradeMarketProps {
   playerListings: PlayerListing[];
   stockListings: StockListing[];
@@ -151,7 +154,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
   };
 
 
-  const filteredListings = playerListings.filter(listing => listing.commodity === selectedProduct?.name);
+  const filteredListings = playerListings.filter(listing => listing.commodity === selectedProduct?.name && listing.seller !== AI_PLAYER_NAME);
   
   const handleProductSelect = (product: EncyclopediaEntry) => {
     setSelectedProduct(product);
