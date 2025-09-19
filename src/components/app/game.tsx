@@ -421,12 +421,17 @@ export function Game() {
     setMarketListings(prevListings => {
         let newListings = [...prevListings];
         purchases.forEach(purchase => {
+            // Do not deplete Serekali's stock
+            if (purchase.from.seller === AI_PLAYER_NAME) {
+                return; 
+            }
+            
             const listingIndex = newListings.findIndex(l => l.id === purchase.from.id);
             if (listingIndex > -1) {
                 newListings[listingIndex].quantity -= purchase.quantity;
             }
         });
-        return newListings.filter(l => l.quantity > 0);
+        return newListings.filter(l => l.quantity > 0 || l.seller === AI_PLAYER_NAME);
     });
 
     toast({
@@ -504,14 +509,19 @@ export function Game() {
 
     // 3. Update market listing
     setMarketListings(prevListings => {
+        // Do not deplete Serekali's stock
+        if (listing.seller === AI_PLAYER_NAME) {
+            return prevListings;
+        }
+
         const newListings = prevListings.map(l => {
             if (l.id === listing.id) {
                 return { ...l, quantity: l.quantity - quantity };
             }
             return l;
         });
-        // Remove listing if quantity is zero
-        return newListings.filter(l => l.quantity > 0);
+        // Remove listing if quantity is zero, but never remove Serekali
+        return newListings.filter(l => l.quantity > 0 || l.seller === AI_PLAYER_NAME);
     });
 
     // 4. (Future) Credit the seller. For now, only Serekali and others are sellers.
@@ -660,60 +670,41 @@ export function Game() {
   // "Serekali" AI Market Maker Logic
   React.useEffect(() => {
     const allPossibleProducts = encyclopediaData;
-    const playerListedCommodities = new Set(
-        marketListings
-            .filter(l => l.seller !== AI_PLAYER_NAME)
-            .map(l => l.commodity)
-    );
 
     setMarketListings(currentListings => {
+        const serekaliListingsMap = new Map(
+            currentListings.filter(l => l.seller === AI_PLAYER_NAME).map(l => [l.commodity, l])
+        );
+        const playerListings = currentListings.filter(l => l.seller !== AI_PLAYER_NAME);
         let updated = false;
-        let newListings = [...currentListings];
-
-        // 1. Add Serekali listings for unlisted products
-        allPossibleProducts.forEach(product => {
-            if (!playerListedCommodities.has(product.name)) {
-                // Check if Serekali has already listed this
-                const serekaliListingExists = newListings.some(
-                    l => l.seller === AI_PLAYER_NAME && l.commodity === product.name
-                );
-                if (!serekaliListingExists) {
-                    const priceProp = product.properties.find(p => p.label === 'Market Cost');
-                    const price = priceProp ? parseFloat(priceProp.value.replace('$', '')) : 1_000_000;
-                    
-                    const newListing: PlayerListing = {
-                        id: Date.now() + Math.random(),
-                        commodity: product.name,
-                        seller: AI_PLAYER_NAME,
-                        quantity: 10000, // Serekali always has 10000 to start
-                        price: price,
-                        avatar: 'https://picsum.photos/seed/tza-gov/40/40',
-                        quality: 5,
-                        imageHint: 'government seal',
-                    };
-                    newListings.push(newListing);
-                    updated = true;
-                }
-            }
-        });
         
-        // 2. Remove Serekali listings if a player has listed the same product
-        const listingsToRemove = new Set<number>();
-        newListings.forEach(listing => {
-            if (listing.seller === AI_PLAYER_NAME && playerListedCommodities.has(listing.commodity)) {
-                listingsToRemove.add(listing.id);
+        allPossibleProducts.forEach(product => {
+            if (!serekaliListingsMap.has(product.name)) {
+                const priceProp = product.properties.find(p => p.label === 'Market Cost');
+                const price = priceProp ? parseFloat(priceProp.value.replace('$', '')) : 1_000_000;
+                
+                const newListing: PlayerListing = {
+                    id: Date.now() + Math.random(),
+                    commodity: product.name,
+                    seller: AI_PLAYER_NAME,
+                    quantity: 10000, 
+                    price: price,
+                    avatar: 'https://picsum.photos/seed/tza-gov/40/40',
+                    quality: 5,
+                    imageHint: 'government seal',
+                };
+                serekaliListingsMap.set(product.name, newListing);
                 updated = true;
             }
         });
-        
+
         if (updated) {
-            return newListings.filter(l => !listingsToRemove.has(l.id));
+            return [...playerListings, ...Array.from(serekaliListingsMap.values())];
         }
 
         return currentListings; // No changes
     });
-
-  }, [marketListings]);
+  }, []); // Run only once to initialize Serekali listings
 
 
   return (
