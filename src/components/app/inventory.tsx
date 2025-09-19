@@ -53,21 +53,30 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState<InventoryItem | null>(null);
   const [quantity, setQuantity] = React.useState(1);
+  const [price, setPrice] = React.useState(0);
   const [officialPrice, setOfficialPrice] = React.useState(0);
+  const [priceFloor, setPriceFloor] = React.useState(0);
+  const [priceCeiling, setPriceCeiling] = React.useState(0);
   
   const handleOpenSellDialog = (item: InventoryItem) => {
     const entry = encyclopediaData.find(e => e.name === item.item);
-    const price = entry ? parseFloat(entry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : item.marketPrice;
+    const officialMarketPrice = entry ? parseFloat(entry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : item.marketPrice;
+    
+    const floor = officialMarketPrice * 0.85;
+    const ceiling = officialMarketPrice * 1.15;
 
     setSelectedItem(item);
-    setOfficialPrice(price);
+    setOfficialPrice(officialMarketPrice);
+    setPrice(officialMarketPrice);
+    setPriceFloor(floor);
+    setPriceCeiling(ceiling);
     setQuantity(1);
     setIsSellDialogOpen(true);
   };
 
   const handleConfirmPost = () => {
     if (selectedItem) {
-      onPostToMarket(selectedItem, quantity, officialPrice);
+      onPostToMarket(selectedItem, quantity, price);
       setIsSellDialogOpen(false);
     }
   };
@@ -140,7 +149,7 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
           <DialogHeader>
             <DialogTitle>Sell {selectedItem?.item} on the Market</DialogTitle>
             <DialogDescription>
-              Set the quantity to sell. The price is fixed to the official market rate.
+              Set the quantity and price to list your item on the player market.
             </DialogDescription>
           </DialogHeader>
           {selectedItem && (
@@ -162,18 +171,23 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
                     <Input 
                         id="price" 
                         type="number"
-                        value={officialPrice}
-                        disabled
-                        className="col-span-3 bg-gray-800 border-gray-600 disabled:opacity-75"
+                        value={price}
+                        onChange={(e) => setPrice(Math.max(priceFloor, Math.min(Number(e.target.value), priceCeiling)))}
+                        min={priceFloor}
+                        max={priceCeiling}
+                        step="0.01"
+                        className="col-span-3 bg-gray-800 border-gray-600"
                     />
                 </div>
                 <div className='col-span-4 text-xs text-center text-gray-400'>
-                    <p>Official Market Price (Bei Elekezi): ${officialPrice.toFixed(2)}</p>
+                     <p>Official Market Price (Bei Elekezi): ${officialPrice.toFixed(2)}</p>
+                     <p>Allowed Range: ${priceFloor.toFixed(2)} - ${priceCeiling.toFixed(2)}</p>
                 </div>
                 <Separator className="my-2 bg-gray-700"/>
                 <div className='text-center'>
                     <p className="text-lg font-bold">Total Sale Value</p>
-                    <p className='text-2xl font-mono text-green-400'>${(quantity * officialPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <p className='text-2xl font-mono text-green-400'>${(quantity * price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <p className="text-xs text-gray-500 mt-1">A 5% market tax will be deducted upon sale.</p>
                 </div>
              </div>
           )}
