@@ -30,30 +30,35 @@ export function Encyclopedia() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-white">
-      {/* Left Panel: Navigation */}
-      <div className="md:col-span-1">
-        <Card className="bg-gray-800/60 border-gray-700 flex flex-col h-full">
-          <CardHeader>
-            <CardTitle>Kamusi ya Mchezo</CardTitle>
-            <CardDescription className="text-gray-400">
-              Jifunze kuhusu bidhaa, majengo, na mengine.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-grow flex flex-col">
+    <div className="flex flex-col gap-4 text-white">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Kamusi ya Mchezo</h1>
+        <p className="text-muted-foreground">
+            Jifunze kuhusu bidhaa, majengo, na mengine.
+        </p>
+      </div>
+
+      <Card className="bg-gray-800/60 border-gray-700">
+        <CardHeader>
+          <CardTitle>Orodha ya Vipengele</CardTitle>
+           <CardDescription className="text-gray-400">
+             Tafuta na chagua kipengele ili kuona maelezo yake.
+           </CardDescription>
+        </CardHeader>
+        <CardContent>
             <div className='relative mb-4'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
                 <Input 
-                    placeholder="Tafuta bidhaa..."
+                    placeholder="Tafuta kipengele..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full bg-gray-700 border-gray-600 pl-10"
                 />
             </div>
-            <ScrollArea className="flex-grow">
-              <div className="flex flex-col gap-2 pr-2">
-                {filteredData.map((item) => (
-                  <Button 
+          <ScrollArea className="h-48">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 pr-4">
+              {filteredData.map((item) => (
+                <Button 
                     key={item.id} 
                     variant="outline"
                     className={cn(
@@ -62,21 +67,17 @@ export function Encyclopedia() {
                     )}
                     onClick={() => handleSelectEntry(item)}
                   >
-                    {item.name}
-                  </Button>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
+                  {item.name}
+                </Button>
+              ))}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
 
-      {/* Right Panel: Content Display */}
-      <div className="md:col-span-2">
-        <Card className="bg-gray-800/60 border-gray-700 min-h-[400px]">
-          {selectedEntry ? (
-            <ScrollArea className="h-[75vh]">
-              <CardHeader>
+      {selectedEntry && (
+        <Card className="bg-gray-800/60 border-gray-700">
+            <CardHeader>
                 <div className="flex items-center gap-4">
                   <Image
                     src={selectedEntry.imageUrl}
@@ -91,8 +92,8 @@ export function Encyclopedia() {
                     <CardDescription className="text-gray-400">{selectedEntry.category}</CardDescription>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4 px-6 pb-6">
+            </CardHeader>
+            <CardContent className="space-y-4 px-6 pb-6">
                 <p className="text-gray-300">{selectedEntry.description}</p>
                 <Separator className="my-4 bg-white/20" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -127,15 +128,9 @@ export function Encyclopedia() {
                         </div>
                     </div>
                 )}
-              </CardContent>
-            </ScrollArea>
-          ) : (
-            <div className="flex items-center justify-center h-full p-6">
-              <p className="text-muted-foreground">Chagua kipengele ili kuona maelezo au tafuta hapo juu.</p>
-            </div>
-          )}
+            </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   );
 }
