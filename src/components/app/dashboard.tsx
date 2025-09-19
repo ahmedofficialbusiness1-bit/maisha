@@ -729,7 +729,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         if (!hasEnoughMaterials(upgradeCosts)) {
             toast({
                 variant: "destructive",
-                title: "Uhaba wa Rasilimali",
+                title: "Uhaba wa Vifaa",
                 description: `Huna vifaa vya kutosha kuboresha. Tafadhali nunua vinavyokosekana.`,
             });
             return;
@@ -917,8 +917,8 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         className='pl-10 bg-gray-800 border-gray-600'
                     />
                 </div>
-                <ScrollArea className="max-h-[60vh] pr-4 -mr-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <ScrollArea className="max-h-[60vh]">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pr-4">
                         {filteredBuildings.map((b) => (
                             <Card 
                                 key={b.id} 
