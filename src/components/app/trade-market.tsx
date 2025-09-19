@@ -154,7 +154,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
   };
 
 
-  const filteredListings = playerListings.filter(listing => listing.commodity === selectedProduct?.name && listing.seller !== AI_PLAYER_NAME);
+  const filteredListings = playerListings.filter(listing => listing.commodity === selectedProduct?.name);
   
   const handleProductSelect = (product: EncyclopediaEntry) => {
     setSelectedProduct(product);
