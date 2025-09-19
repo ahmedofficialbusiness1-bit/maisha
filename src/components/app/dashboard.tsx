@@ -924,7 +924,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                 className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-4 text-center"
                                 onClick={() => handleSelectBuildingToShowDetails(b)}
                             >
-                            {React.cloneElement(b.icon, { className: 'h-8 w-8' })}
+                            {React.cloneElement(b.icon, { className: 'h-6 w-6' })}
                             <p className="font-semibold mt-2 text-sm">{b.name}</p>
                             </Card>
                         ))}
@@ -938,7 +938,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                     <Separator className='bg-gray-600'/>
                     <div>
                         <h3 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h3>
-                        <div className='space-y-1'>
+                        <div className="space-y-1">
                             {buildCosts.map(cost => {
                                 const invItem = inventory.find(i => i.item === cost.name);
                                 const has = invItem?.quantity || 0;
@@ -1000,7 +1000,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             <Separator className='my-3 bg-gray-600'/>
                             <div className='space-y-1'>
                                 <p className='font-semibold mb-1 text-xs'>Gharama ya Kuboresha:</p>
-                                <div className='space-y-1'>
+                                <div className="space-y-1">
                                     {upgradeCosts.map(cost => {
                                         const invItem = inventory.find(i => i.item === cost.name);
                                         const has = invItem?.quantity || 0;
