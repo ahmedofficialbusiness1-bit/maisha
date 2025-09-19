@@ -239,11 +239,12 @@ export function Game() {
     // 1. Check for required inputs
     for (const input of inputs) {
         const inventoryItem = inventory.find(i => i.item === input.name);
-        if (!inventoryItem || inventoryItem.quantity < (input.quantity * quantity)) {
+        const requiredQuantity = input.quantity * quantity;
+        if (!inventoryItem || inventoryItem.quantity < requiredQuantity) {
             toast({
                 variant: "destructive",
                 title: "Uhaba wa Rasilimali",
-                description: `Huna ${input.name} za kutosha kuanzisha uzalishaji.`,
+                description: `Huna ${input.name} za kutosha kuanzisha uzalishaji. Unahitaji ${requiredQuantity.toLocaleString()}.`,
             });
             return;
         }
@@ -590,5 +591,3 @@ export function Game() {
     </div>
   );
 }
-
-    
