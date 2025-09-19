@@ -365,42 +365,77 @@ export function Game() {
       });
   };
 
-  const handleBuyMaterial = (materialName: string, quantityNeeded: number) => {
-    const entry = encyclopediaData.find(e => e.name === materialName);
-    const priceProp = entry?.properties.find(p => p.label === "Market Cost");
-    if (!priceProp) {
-        toast({ variant: "destructive", title: "Hitilafu", description: `Bei ya ${materialName} haipatikani.`});
-        return;
+ const handleBuyMaterial = (materialName: string, quantityToBuy: number): boolean => {
+    const listingsForMaterial = marketListings
+      .filter(l => l.commodity === materialName)
+      .sort((a, b) => a.price - b.price); // Sort by cheapest first
+
+    if (listingsForMaterial.length === 0) {
+      toast({ variant: 'destructive', title: 'Bidhaa Haipo Sokoni', description: `Samahani, ${materialName} haipatikani sokoni kwa sasa.` });
+      return false;
     }
 
-    const pricePerUnit = parseFloat(priceProp.value.replace('$', ''));
-    const totalCost = pricePerUnit * quantityNeeded;
+    let quantityLeftToBuy = quantityToBuy;
+    let totalCost = 0;
+    const purchases: { from: PlayerListing, quantity: number }[] = [];
 
+    // Figure out what can be bought
+    for (const listing of listingsForMaterial) {
+        if (quantityLeftToBuy <= 0) break;
+        
+        const quantityToBuyFromThisSeller = Math.min(listing.quantity, quantityLeftToBuy);
+        
+        purchases.push({ from: listing, quantity: quantityToBuyFromThisSeller });
+        totalCost += quantityToBuyFromThisSeller * listing.price;
+        quantityLeftToBuy -= quantityToBuyFromThisSeller;
+    }
+
+    if (quantityLeftToBuy > 0) {
+        toast({ variant: 'destructive', title: 'Kiasi Hakitoshi Sokoni', description: `Ni ${quantityToBuy - quantityLeftToBuy}x ${materialName} pekee zinazopatikana sokoni.` });
+        return false;
+    }
+    
     if (money < totalCost) {
-        toast({ variant: "destructive", title: "Pesa Haitoshi", description: `Unahitaji $${totalCost.toLocaleString()} kununua ${quantityNeeded.toLocaleString()}x ${materialName}.`});
-        return;
+        toast({ variant: 'destructive', title: 'Pesa Haitoshi', description: `Unahitaji $${totalCost.toLocaleString()} kununua ${quantityToBuy}x ${materialName}.` });
+        return false;
     }
 
+    // --- Execute the purchases ---
     setMoney(prevMoney => prevMoney - totalCost);
-    addTransaction('expense', totalCost, `Bought ${quantityNeeded.toLocaleString()}x ${materialName}`);
+    addTransaction('expense', totalCost, `Bought ${quantityToBuy.toLocaleString()}x ${materialName} from market`);
 
+    // Add to inventory
     setInventory(prevInventory => {
-        const newInventory = [...prevInventory];
-        const itemIndex = newInventory.findIndex(i => i.item === materialName);
+      const newInventory = [...prevInventory];
+      const itemIndex = newInventory.findIndex(i => i.item === materialName);
+      if (itemIndex > -1) {
+        newInventory[itemIndex].quantity += quantityToBuy;
+      } else {
+        const encyclopediaEntry = encyclopediaData.find(e => e.name === materialName);
+        newInventory.push({ item: materialName, quantity: quantityToBuy, marketPrice: encyclopediaEntry?.properties.find(p => p.label.includes("Market Cost"))?.value ? parseFloat(encyclopediaEntry.properties.find(p => p.label.includes("Market Cost"))!.value.replace('$', '')) : 0 });
+      }
+      return newInventory;
+    });
 
-        if (itemIndex > -1) {
-            newInventory[itemIndex].quantity += quantityNeeded;
-        } else {
-            newInventory.push({ item: materialName, quantity: quantityNeeded, marketPrice: pricePerUnit });
-        }
-        return newInventory;
+    // Update market listings
+    setMarketListings(prevListings => {
+        let newListings = [...prevListings];
+        purchases.forEach(purchase => {
+            const listingIndex = newListings.findIndex(l => l.id === purchase.from.id);
+            if (listingIndex > -1) {
+                newListings[listingIndex].quantity -= purchase.quantity;
+            }
+        });
+        return newListings.filter(l => l.quantity > 0);
     });
 
     toast({
         title: "Manunuzi Yamekamilika",
-        description: `Umenunua ${quantityNeeded.toLocaleString()}x ${materialName} kwa $${totalCost.toLocaleString()}.`
+        description: `Umenunua ${quantityToBuy.toLocaleString()}x ${materialName} kwa $${totalCost.toLocaleString()}.`
     });
-  };
+
+    return true;
+};
 
   const handleBuyStock = (stock: StockListing, quantity: number) => {
       const totalCost = stock.stockPrice * quantity;

@@ -569,7 +569,7 @@ interface DashboardProps {
     onBoostConstruction: (slotIndex: number, starsToUse: number) => void;
     onUpgradeBuilding: (slotIndex: number) => void;
     onDemolishBuilding: (slotIndex: number) => void;
-    onBuyMaterial: (materialName: string, quantity: number) => void;
+    onBuyMaterial: (materialName: string, quantity: number) => boolean;
 }
 
 const formatTime = (ms: number) => {
@@ -625,7 +625,21 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
 
   const handleConfirmBuild = () => {
     if (selectedSlotIndex !== null && selectedBuildingForBuild) {
-      onBuild(selectedSlotIndex, selectedBuildingForBuild);
+        const costs = buildingData[selectedBuildingForBuild.id].buildCost;
+        let allMaterialsBought = true;
+        for (const cost of costs) {
+            const invItem = inventory.find(i => i.item === cost.name);
+            const has = invItem?.quantity || 0;
+            if (has < cost.quantity) {
+                if (!onBuyMaterial(cost.name, cost.quantity - has)) {
+                    allMaterialsBought = false;
+                    break;
+                }
+            }
+        }
+        if (allMaterialsBought) {
+            onBuild(selectedSlotIndex, selectedBuildingForBuild);
+        }
     }
     setIsBuildDialogOpen(false);
   };
@@ -659,12 +673,30 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       if(selectedSlotIndex !== null && selectedRecipe && productionQuantity > 0) {
           const slot = buildingSlots[selectedSlotIndex];
           if (!slot || !slot.building) return;
-          const buildingInfo = buildingData[slot.building.id];
-          const ratePerHr = buildingInfo.productionRate * (1 + (slot.level - 1) * 0.4);
-          const baseTimePerUnit = (3600 * 1000) / ratePerHr;
-          const totalDurationMs = baseTimePerUnit * productionQuantity;
 
-          onStartProduction(selectedSlotIndex, selectedRecipe, productionQuantity, totalDurationMs);
+          const inputs = selectedRecipe.inputs || [];
+          let allMaterialsBought = true;
+          for (const input of inputs) {
+              const requiredQuantity = input.quantity * productionQuantity;
+              const inventoryItem = inventory.find(i => i.item === input.name);
+              const hasQuantity = inventoryItem?.quantity || 0;
+              if (hasQuantity < requiredQuantity) {
+                  if (!onBuyMaterial(input.name, requiredQuantity - hasQuantity)) {
+                      allMaterialsBought = false;
+                      break;
+                  }
+              }
+          }
+
+          if (allMaterialsBought) {
+              const buildingInfo = buildingData[slot.building.id];
+              const ratePerHr = buildingInfo.productionRate * (1 + (slot.level - 1) * 0.4);
+              const baseTimePerUnit = (3600 * 1000) / ratePerHr;
+              const totalDurationMs = baseTimePerUnit * productionQuantity;
+              
+              onStartProduction(selectedSlotIndex, selectedRecipe, productionQuantity, totalDurationMs);
+          }
+
           setIsProductionDialogOpen(false);
           setSelectedRecipe(null);
       }
@@ -687,7 +719,24 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   
   const handleTriggerUpgrade = () => {
     if(selectedSlotIndex !== null) {
-        onUpgradeBuilding(selectedSlotIndex);
+        const slot = buildingSlots[selectedSlotIndex];
+        if (!slot?.building) return;
+        const upgradeCosts = buildingData[slot.building.id].upgradeCost(slot.level + 1);
+
+        let allMaterialsBought = true;
+        for (const cost of upgradeCosts) {
+            const invItem = inventory.find(i => i.item === cost.name);
+            const has = invItem?.quantity || 0;
+            if (has < cost.quantity) {
+                if (!onBuyMaterial(cost.name, cost.quantity - has)) {
+                    allMaterialsBought = false;
+                    break;
+                }
+            }
+        }
+        if (allMaterialsBought) {
+            onUpgradeBuilding(selectedSlotIndex);
+        }
     }
     setIsManagementDialogOpen(false);
   }
@@ -926,10 +975,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                   <DialogFooter>
                       <Button
                           className='w-full bg-green-600 hover:bg-green-700'
-                          disabled={!canAffordBuild}
                           onClick={handleConfirmBuild}
                       >
-                          Jenga kwa Dakika 15
+                          {canAffordBuild ? 'Jenga kwa Dakika 15' : 'Nunua Vifaa & Jenga'}
                       </Button>
                   </DialogFooter>
               </div>
@@ -951,8 +999,8 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         <Tractor className='mr-2'/> Anza Uzalishaji
                     </Button>
                     <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
-                        <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
-                            <ChevronsUp className='mr-2'/> Boresha hadi Level { (selectedSlot?.level || 0) + 1}
+                        <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade}>
+                            <ChevronsUp className='mr-2'/> {canAffordUpgrade ? `Boresha hadi Level ${(selectedSlot?.level || 0) + 1}` : 'Nunua Vifaa & Boresha'}
                         </Button>
                         <Separator className='my-3 bg-gray-600'/>
                         <div className='text-xs'>
@@ -1079,13 +1127,11 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                 </div>
                                 <Button
                                   className='w-full bg-green-600 hover:bg-green-700'
-                                  disabled={!hasEnoughInputs(selectedRecipe, productionQuantity)}
                                   onClick={handleConfirmProduction}
                                 >
                                   <CheckCircle className='mr-2'/>
-                                  Start Production
+                                  {hasEnoughInputs(selectedRecipe, productionQuantity) ? 'Start Production' : 'Buy Inputs & Start'}
                                 </Button>
-                                {!hasEnoughInputs(selectedRecipe, productionQuantity) && <p className='text-xs text-center text-red-400'>Not enough resources in inventory.</p>}
                             </div>
 
                         </div>
