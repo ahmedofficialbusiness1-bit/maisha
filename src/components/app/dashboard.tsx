@@ -990,7 +990,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                 </DialogHeader>
                 <div className='flex-grow overflow-y-auto -mr-6 pr-6'>
                     <div className='py-4 space-y-4'>
-                        <Button className='w-full justify-start' variant="outline" onClick={handleOpenProductionDialog}>
+                        <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
                             <Tractor className='mr-2'/> Anza Uzalishaji
                         </Button>
                         <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
