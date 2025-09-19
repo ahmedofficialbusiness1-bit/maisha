@@ -230,14 +230,14 @@ const getIcon = (name: string): React.ReactElement<LucideIcon> => {
 
 // 1. Base costs for fundamental, non-produced raw materials
 const baseMaterialCosts: Record<string, number> = {
-    'Maji': 0.01,
-    'Umeme': 0.02,
-    'Mawe': 0.2,
-    'Mchanga': 0.15,
-    'Madini ya chuma': 2.0, 
-    'Chuma': 2.00,
-    'Bwawa': 125, 
-    'Boat': 250,
+    'Maji': 0.02,
+    'Umeme': 0.04,
+    'Mawe': 0.4,
+    'Mchanga': 0.30,
+    'Madini ya chuma': 4.0, 
+    'Chuma': 4.00,
+    'Bwawa': 250, 
+    'Boat': 500,
 };
 
 // Map to store calculated prices to avoid re-computation
