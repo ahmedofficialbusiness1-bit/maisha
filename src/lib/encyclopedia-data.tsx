@@ -230,14 +230,13 @@ const getIcon = (name: string): React.ReactElement<LucideIcon> => {
 
 // 1. Base costs for fundamental, non-produced raw materials
 const baseMaterialCosts: Record<string, number> = {
-    'Maji': 0.02,
-    'Umeme': 0.03,
-    // Mbegu is produced, so it gets its cost from its recipe
-    'Mawe': 0.5,
-    'Mchanga': 0.4,
-    'Madini ya chuma': 5, // This is a mined resource, give it a base value
-    'Bwawa': 125, // Assuming these are bought, not crafted initially
-    'Boat': 250,
+    'Maji': 0.01,
+    'Umeme': 0.02,
+    'Mawe': 0.2,
+    'Mchanga': 0.15,
+    'Madini ya chuma': 2, 
+    'Bwawa': 50, 
+    'Boat': 100,
 };
 
 // Map to store calculated prices to avoid re-computation
@@ -248,8 +247,14 @@ const allProducibleItems = [...recipes.map(r => r.output.name), ...Object.keys(b
 
 // Function to get the price of an item, calculating it if not already in the map
 const getItemPrice = (itemName: string, recipes: Recipe[]): number | null => {
-    if (calculatedPrices.has(itemName)) {
+    // If we have a calculated, non-null price, return it
+    if (calculatedPrices.has(itemName) && calculatedPrices.get(itemName) !== null) {
         return calculatedPrices.get(itemName)!;
+    }
+
+    // If we are already trying to calculate this, we have a circular dependency.
+    if (calculatedPrices.get(itemName) === null) {
+        return null;
     }
 
     // To prevent infinite loops, pre-set a null value.
@@ -257,7 +262,9 @@ const getItemPrice = (itemName: string, recipes: Recipe[]): number | null => {
 
     const recipe = recipes.find(r => r.output.name === itemName);
     if (!recipe) {
-        return null; // Return null if no recipe, will be handled later.
+        // It's not a base material and has no recipe. We can't price it.
+        // Keep it null and it will be handled later.
+        return null;
     }
 
     // Calculate production cost from inputs
@@ -265,7 +272,9 @@ const getItemPrice = (itemName: string, recipes: Recipe[]): number | null => {
     for (const input of recipe.inputs) {
         const inputPrice = getItemPrice(input.name, recipes);
         if (inputPrice === null) {
-            return null; // If any input can't be priced, this item can't be priced yet.
+            // If any input can't be priced, this item can't be priced yet.
+            // We return null and will try again in the next iteration.
+            return null;
         }
         inputCost += inputPrice * input.quantity;
     }
@@ -279,13 +288,12 @@ const getItemPrice = (itemName: string, recipes: Recipe[]): number | null => {
 };
 
 // Iteratively calculate prices to resolve dependencies
-const ITERATIONS = 10; // Increased iterations for complex chains
+const ITERATIONS = 15; // Increased iterations for complex chains
 for (let i = 0; i < ITERATIONS; i++) {
     allProducibleItems.forEach(itemName => {
-        // Recalculate price in each iteration
-        const price = getItemPrice(itemName, recipes);
-        if (price !== null) {
-            calculatedPrices.set(itemName, price);
+        // We only try to calculate if it's not a base material or if it failed before
+        if (!baseMaterialCosts.hasOwnProperty(itemName) || calculatedPrices.get(itemName) === null) {
+            getItemPrice(itemName, recipes);
         }
     });
 }
@@ -310,7 +318,7 @@ const generatedEntries = recipes.map(recipe => {
 
     // SimCompanies-style pricing: (cost * profit_margin) + time_value
     const profitMargin = 1.05; // 5% base profit
-    const timeValueFactor = 0.01; // A factor to convert seconds to monetary value
+    const timeValueFactor = 0.003; // A factor to convert seconds to monetary value
     const timeCost = baseTimePerUnit * timeValueFactor;
     
     // Market cost is the production cost per unit, plus profit, plus time value
