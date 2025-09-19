@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import * as React from 'react';
@@ -123,9 +122,6 @@ export function Game() {
   const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(initialData?.buildingSlots ?? Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })));
   const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>(initialData?.playerStocks ?? []);
   const [transactions, setTransactions] = React.useState<Transaction[]>(initialData?.transactions ?? []);
-
-  // Demand tracking for Serekali AI
-  const [serekaliDemand, setSerekaliDemand] = React.useState<Record<string, number>>({});
 
 
    const addTransaction = (type: 'income' | 'expense', amount: number, description: string) => {
@@ -429,14 +425,9 @@ export function Game() {
     setMarketListings(prevListings => {
         let newListings = [...prevListings];
         purchases.forEach(purchase => {
-            // Do not deplete Serekali's stock
+            // Do not deplete Serekali's stock, as it has infinite quantity
             if (purchase.from.seller === AI_PLAYER_NAME) {
-                 // Track demand for Serekali's items
-                setSerekaliDemand(prevDemand => ({
-                    ...prevDemand,
-                    [purchase.from.commodity]: (prevDemand[purchase.from.commodity] || 0) + purchase.quantity,
-                }));
-                return; 
+                 return; 
             }
             
             const listingIndex = newListings.findIndex(l => l.id === purchase.from.id);
@@ -524,11 +515,6 @@ export function Game() {
     setMarketListings(prevListings => {
         // Do not deplete Serekali's stock
         if (listing.seller === AI_PLAYER_NAME) {
-            // Track demand for Serekali's items
-            setSerekaliDemand(prevDemand => ({
-                ...prevDemand,
-                [listing.commodity]: (prevDemand[listing.commodity] || 0) + quantity,
-            }));
             return prevListings;
         }
 
@@ -543,7 +529,6 @@ export function Game() {
     });
 
     // 4. (Future) Credit the seller. For now, only Serekali and others are sellers.
-    // If seller is not Serekali, we can assume it's another player.
     // For now, the money just "leaves the system".
 
     toast({ title: 'Manunuzi Yamekamilika', description: `Umenunua ${quantity.toLocaleString()}x ${listing.commodity} kwa $${totalCost.toLocaleString()}.` });
@@ -690,70 +675,31 @@ export function Game() {
     const allPossibleProducts = encyclopediaData;
 
     setMarketListings(currentListings => {
-        const serekaliListingsMap = new Map(
-            currentListings.filter(l => l.seller === AI_PLAYER_NAME).map(l => [l.commodity, l])
-        );
-        const playerListings = currentListings.filter(l => l.seller !== AI_PLAYER_NAME);
+        const serekaliListingsMap = new Map<string, PlayerListing>();
         
         allPossibleProducts.forEach(product => {
-            if (!serekaliListingsMap.has(product.name)) {
-                const priceProp = product.properties.find(p => p.label === 'Market Cost');
-                const price = priceProp ? parseFloat(priceProp.value.replace('$', '')) : 1_000_000;
-                
-                const newListing: PlayerListing = {
-                    id: Date.now() + Math.random(),
-                    commodity: product.name,
-                    seller: AI_PLAYER_NAME,
-                    quantity: 1500000, 
-                    price: price,
-                    avatar: 'https://picsum.photos/seed/tza-gov/40/40',
-                    quality: 5,
-                    imageHint: 'government seal',
-                };
-                serekaliListingsMap.set(product.name, newListing);
-            }
+            const priceProp = product.properties.find(p => p.label === 'Market Cost');
+            const price = priceProp ? parseFloat(priceProp.value.replace('$', '').replace(/,/g, '')) : 1_000_000;
+            
+            const newListing: PlayerListing = {
+                id: Date.now() + Math.random(),
+                commodity: product.name,
+                seller: AI_PLAYER_NAME,
+                quantity: 999999999, // Infinite quantity
+                price: price,
+                avatar: 'https://picsum.photos/seed/tza-gov/40/40',
+                quality: 5,
+                imageHint: 'government seal',
+            };
+            serekaliListingsMap.set(product.name, newListing);
         });
+        
+        // Filter out old Serekali listings and keep player listings
+        const playerListings = currentListings.filter(l => l.seller !== AI_PLAYER_NAME);
 
         return [...playerListings, ...Array.from(serekaliListingsMap.values())];
     });
   }, []); 
-
-  // Serekali Price Adjustment Logic (Supply & Demand Simulation)
-  React.useEffect(() => {
-    const adjustmentInterval = setInterval(() => {
-        setMarketListings(prevListings => {
-            const playerListings = prevListings.filter(l => l.seller !== AI_PLAYER_NAME);
-            const serekaliListings = prevListings.filter(l => l.seller === AI_PLAYER_NAME);
-
-            const adjustedSerekaliListings = serekaliListings.map(listing => {
-                const demand = serekaliDemand[listing.commodity] || 0;
-                const basePriceEntry = encyclopediaData.find(e => e.name === listing.commodity);
-                const basePrice = basePriceEntry ? parseFloat(basePriceEntry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '') || '0') : listing.price;
-                
-                let newPrice = listing.price;
-
-                if (demand > 0) {
-                    // Price increases with demand
-                    const increaseFactor = 0.005; // 0.5% price increase per demand cycle
-                    newPrice *= (1 + increaseFactor);
-                } else {
-                    // Price slowly decays back to base price if no demand
-                    const decayFactor = 0.999; // 0.1% decay
-                    newPrice = Math.max(basePrice, newPrice * decayFactor);
-                }
-
-                return { ...listing, price: newPrice };
-            });
-            
-            // Reset demand for the next cycle
-            setSerekaliDemand({});
-
-            return [...playerListings, ...adjustedSerekaliListings];
-        });
-    }, 5 * 60 * 1000); // Adjust prices every 5 minutes
-
-    return () => clearInterval(adjustmentInterval);
-  }, [serekaliDemand]);
 
 
 
