@@ -1211,7 +1211,3 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     </div>
   );
 }
-
-    
-
-    
