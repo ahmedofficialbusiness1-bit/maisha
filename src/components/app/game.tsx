@@ -101,8 +101,8 @@ const initialPlayerListings: PlayerListing[] = [
 const initialPlayerStocks: PlayerStock[] = [];
 
 const initialCompanyData: StockListing[] = [
-    { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, sharesAvailable: 10000, marketCap: 450.75 * (10000 + (initialPlayerStocks.find(s => s.ticker === 'UCHUMI')?.shares || 0)), logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 500000, dividendYield: 0.015 },
-    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, sharesAvailable: 50000, marketCap: 120.50 * (50000 + (initialPlayerStocks.find(s => s.ticker === 'KILIMO')?.shares || 0)), logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 250000, dividendYield: 0.021 },
+    { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, totalShares: 10000, marketCap: 450.75 * 10000, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 500000, dividendYield: 0.015 },
+    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, totalShares: 50000, marketCap: 120.50 * 50000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 250000, dividendYield: 0.021 },
 ];
 
 const initialBondListings: BondListing[] = [
@@ -544,6 +544,14 @@ export function Game() {
     return true;
 };
 
+    const calculateAvailableShares = (stock: StockListing) => {
+        const ownedByPlayers = playerStocks
+            .filter(ps => ps.ticker === stock.ticker)
+            .reduce((sum, ps) => sum + ps.shares, 0);
+        const maxSellable = Math.floor(stock.totalShares * 0.70);
+        return Math.max(0, maxSellable - ownedByPlayers);
+    }
+
   const handleBuyStock = (stock: StockListing, quantity: number) => {
       const totalCost = stock.stockPrice * quantity;
       if (money < totalCost) {
@@ -551,6 +559,16 @@ export function Game() {
           variant: "destructive",
           title: "Pesa Hazitoshi",
           description: `Unahitaji $${totalCost.toLocaleString()} kununua hisa hizi.`,
+        });
+        return;
+      }
+
+      const availableShares = calculateAvailableShares(stock);
+      if (quantity > availableShares) {
+        toast({
+          variant: "destructive",
+          title: "Hisa Hazitoshi",
+          description: `Ni hisa ${availableShares.toLocaleString()} pekee zinazopatikana kwa sasa.`,
         });
         return;
       }
@@ -567,13 +585,6 @@ export function Game() {
               return [...prev, { ticker: stock.ticker, shares: quantity }];
           }
       });
-      
-      // Update company's available shares
-      setCompanyData(prev => prev.map(c => 
-          c.ticker === stock.ticker 
-          ? { ...c, sharesAvailable: c.sharesAvailable - quantity }
-          : c
-      ));
 
       toast({
         title: "Umefanikiwa Kununua Hisa",
@@ -726,7 +737,7 @@ export function Game() {
             if (company && playerStock.shares > 0) {
                 // Calculate dividend per share
                 // (dailyRevenue * dividendYield) / totalShares
-                const totalShares = company.sharesAvailable + playerStocks.reduce((acc, ps) => (ps.ticker === company.ticker ? acc + ps.shares : acc), 0) // This is a simplification
+                const totalShares = company.totalShares;
                 const dividendPerShare = (company.dailyRevenue * company.dividendYield) / totalShares;
                 const dividendForPlayer = dividendPerShare * playerStock.shares;
 
@@ -752,8 +763,7 @@ export function Game() {
             
             const newPrice = Math.max(1, company.stockPrice * (1 + priceChangePercent));
             const newRevenue = Math.max(1000, company.dailyRevenue * (1 + revenueChangePercent));
-            const totalShares = company.sharesAvailable + (playerStocks.find(ps => ps.ticker === company.ticker)?.shares || 0);
-            const newMarketCap = newPrice * totalShares;
+            const newMarketCap = newPrice * company.totalShares;
 
             return {
                 ...company,
@@ -845,7 +855,10 @@ export function Game() {
         {view === 'market' && (
           <TradeMarket 
             playerListings={marketListings} 
-            stockListings={companyData}
+            stockListings={companyData.map(stock => ({
+                ...stock,
+                sharesAvailable: calculateAvailableShares(stock)
+            }))}
             bondListings={bondListings}
             inventory={inventory} 
             onBuyStock={handleBuyStock}
@@ -863,5 +876,3 @@ export function Game() {
     </div>
   );
 }
-
-    

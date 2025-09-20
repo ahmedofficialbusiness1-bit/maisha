@@ -48,7 +48,8 @@ export type StockListing = {
     ticker: string;
     companyName: string;
     stockPrice: number;
-    sharesAvailable: number;
+    totalShares: number;
+    sharesAvailable?: number; // Optional, can be calculated
     marketCap: number;
     logo: string;
     imageHint: string;
@@ -402,7 +403,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right font-mono p-2 sm:p-4">${stock.stockPrice.toFixed(2)}</TableCell>
-                                    <TableCell className="text-right font-mono p-2 sm:p-4">{stock.sharesAvailable.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-mono p-2 sm:p-4">{stock.sharesAvailable?.toLocaleString()}</TableCell>
                                     <TableCell className="text-right font-mono p-2 sm:p-4">${stock.marketCap.toLocaleString()}</TableCell>
                                     <TableCell className="text-right p-2 sm:p-4">
                                         <div className={cn("flex items-center justify-end font-bold text-sm", 
@@ -437,7 +438,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         <TableHeader>
                             <TableRow className="border-gray-700 hover:bg-gray-700/50">
                                 <TableHead className="text-white">Mtoaji</TableHead>
-                                <TableHead className="text-right text-white">Ukadiriaji</TableHead>
+                                <TableHead className="text-right text-white">Rating</TableHead>
                                 <TableHead className="text-right text-white">Kuponi</TableHead>
                                 <TableHead className="text-right text-white">Ukomavu</TableHead>
                                 <TableHead className="text-right text-white">Bei</TableHead>
@@ -522,7 +523,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         id="quantity" 
                         type="number"
                         value={buyStockQuantity}
-                        onChange={(e) => setBuyStockQuantity(Math.max(1, Math.min(Number(e.target.value), selectedStock.sharesAvailable)))}
+                        onChange={(e) => setBuyStockQuantity(Math.max(1, Math.min(Number(e.target.value), selectedStock.sharesAvailable || 0)))}
                         min="1"
                         max={selectedStock.sharesAvailable}
                         className="col-span-3 bg-gray-800 border-gray-600"
@@ -542,7 +543,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             <Button variant="outline" onClick={() => setIsBuyStockDialogOpen(false)}>Ghairi</Button>
             <Button 
               className="bg-green-600 hover:bg-green-700 text-white"
-              disabled={!selectedStock || buyStockQuantity <= 0 || buyStockQuantity > selectedStock.sharesAvailable}
+              disabled={!selectedStock || buyStockQuantity <= 0 || buyStockQuantity > (selectedStock.sharesAvailable || 0)}
               onClick={handleConfirmBuyStock}
             >
               Thibitisha Ununuzi
