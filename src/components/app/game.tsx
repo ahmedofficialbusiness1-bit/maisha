@@ -51,54 +51,6 @@ export type UserData = {
 };
 
 const initialInventoryItems: InventoryItem[] = [
-    // Using the price list to set initial market prices
-    { item: 'Maji', quantity: 15000, marketPrice: 0.10 },
-    { item: 'Mbegu', quantity: 8000, marketPrice: 0.70 },
-    { item: 'Yai', quantity: 25000, marketPrice: 1.50 },
-    { item: 'Bwawa', quantity: 10, marketPrice: 500 },
-    { item: 'Boat', quantity: 5, marketPrice: 1000 },
-    { item: 'Mbao', quantity: 500, marketPrice: 6.00 },
-    { item: 'Matofali', quantity: 1000, marketPrice: 1.00 },
-    { item: 'Nondo', quantity: 200, marketPrice: 7.00 },
-    { item: 'Zege', quantity: 100, marketPrice: 5.00 },
-    { item: 'A1 Mashine', quantity: 10, marketPrice: 2300.00 },
-    { item: 'A2 Mashine', quantity: 10, marketPrice: 2600.00 },
-    { item: 'A3 Mashine', quantity: 10, marketPrice: 3200.00 },
-    { item: 'A4 Mashine', quantity: 10, marketPrice: 3600.00 },
-    { item: 'A5 Mashine', quantity: 10, marketPrice: 4200.00 },
-    { item: 'B1 Mashine', quantity: 10, marketPrice: 1220.00 },
-    { item: 'B2 Mashine', quantity: 10, marketPrice: 1300.00 },
-    { item: 'B3 Mashine', quantity: 10, marketPrice: 1400.00 },
-    { item: 'B4 Mashine', quantity: 10, marketPrice: 1500.00 },
-    { item: 'B5 Mashine', quantity: 10, marketPrice: 1600.00 },
-    { item: 'B6 Mashine', quantity: 10, marketPrice: 1700.00 },
-    { item: 'B7 Mashine', quantity: 10, marketPrice: 1800.00 },
-    { item: 'C1 Mashine', quantity: 10, marketPrice: 3000.00 },
-    { item: 'C2 Mashine', quantity: 10, marketPrice: 5000.00 },
-    { item: 'K1 Mashine', quantity: 2, marketPrice: 6000.00 },
-    { item: 'K2 Mashine', quantity: 2, marketPrice: 8000.00 },
-    { item: 'K3 Mashine', quantity: 2, marketPrice: 12000.00 },
-    { item: 'K4 Mashine', quantity: 2, marketPrice: 15000.00 },
-    { item: 'K5 Mashine', quantity: 2, marketPrice: 17000.00 },
-    { item: 'K6 Mashine', quantity: 2, marketPrice: 20000.00 },
-    { item: 'K7 Mashine', quantity: 2, marketPrice: 20000.00 },
-    { item: 'Leseni B1', quantity: 10, marketPrice: 5000.00 },
-    { item: 'Leseni B2', quantity: 10, marketPrice: 5100.00 },
-    { item: 'Leseni B3', quantity: 10, marketPrice: 5200.00 },
-    { item: 'Leseni B4', quantity: 10, marketPrice: 5300.00 },
-    { item: 'Leseni B5', quantity: 10, marketPrice: 5400.00 },
-    { item: 'Leseni B6', quantity: 10, marketPrice: 5500.00 },
-    { item: 'Leseni B7', quantity: 10, marketPrice: 5600.00 },
-    { item: 'Shaba', quantity: 100, marketPrice: 100.00 },
-    { item: 'Miti', quantity: 1000, marketPrice: 0.5 },
-    { item: 'Saruji', quantity: 1000, marketPrice: 3.00 },
-    { item: 'Chuma', quantity: 200, marketPrice: 8.00 },
-    { item: 'Kokoto', quantity: 1000, marketPrice: 1.60 },
-    { item: 'Mawe', quantity: 1000, marketPrice: 0.2 },
-    { item: 'Umeme', quantity: 10000, marketPrice: 0.20 },
-    { item: 'Mchanga', quantity: 1000, marketPrice: 0.80 },
-    { item: 'Madini ya chuma', quantity: 1000, marketPrice: 0.9 },
-    { item: 'Gari', quantity: 300, marketPrice: 7000 },
 ];
 
 const initialPlayerListings: PlayerListing[] = [
@@ -147,8 +99,8 @@ export function Game() {
   const [playerName, setPlayerName] = React.useState(initialData?.playerName ?? 'Mchezaji');
   const [playerAvatar, setPlayerAvatar] = React.useState(initialData?.playerAvatar ?? 'https://picsum.photos/seed/player/100/100');
   const [privateNotes, setPrivateNotes] = React.useState(initialData?.privateNotes ?? 'Welcome to my company profile! I specialize in producing high-quality goods.');
-  const [money, setMoney] = React.useState(initialData?.money ?? 100000000);
-  const [stars, setStars] = React.useState(initialData?.stars ?? 50);
+  const [money, setMoney] = React.useState(initialData?.money ?? 10000);
+  const [stars, setStars] = React.useState(initialData?.stars ?? 5);
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialData?.inventory ?? initialInventoryItems);
   const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialData?.marketListings ?? initialPlayerListings);
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialData?.companyData ?? initialCompanyData);

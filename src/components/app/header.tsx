@@ -83,8 +83,8 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
           <div className="hidden sm:flex flex-col">
             <span className="font-semibold text-sm">{playerName}</span>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">Level 5</span>
-              <Progress value={45} className="h-1.5 w-16 bg-gray-700" />
+              <span className="text-xs text-gray-400">Level 1</span>
+              <Progress value={0} className="h-1.5 w-16 bg-gray-700" />
             </div>
           </div>
         </div>
