@@ -789,7 +789,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         return; // Not enough in inventory
       }
       
-      const totalDurationMs = calculateSaleTime(productionQuantity);
+      const totalDurationMs = calculateSaleTime(productionQuantity, sellingPrice);
       onStartSelling(selectedSlotIndex, selectedInventoryItem, productionQuantity, sellingPrice, totalDurationMs);
     }
     
@@ -871,14 +871,13 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       return totalSeconds * 1000; // time in ms
   }
 
-  const calculateSaleTime = (quantity: number): number => {
-    if (!selectedInventoryItem) return 0;
-
-    const productInfo = encyclopediaData.find(e => e.name === selectedInventoryItem.item);
-    const isTierOne = !productInfo?.recipe; // Tier 1 if it has no recipe
+ const calculateSaleTime = (quantity: number, pricePerItem: number): number => {
+    // New logic: time depends on value. More expensive items take longer.
+    const baseTime = 5; // 5 seconds base time for any sale transaction
     
-    const timePerItem = isTierOne ? 0.5 : 2.5; // 0.5s for T1, 2.5s for others
-    const baseTime = 5; // 5 second base time for any sale
+    // Logarithmic scaling to prevent extremely long times for very expensive items.
+    // Math.max(0.1, ...) ensures even very cheap items have some sell time.
+    const timePerItem = Math.max(0.1, Math.log10(pricePerItem || 1) * 0.5);
 
     const totalSeconds = baseTime + (timePerItem * quantity);
     return totalSeconds * 1000; // Total time in ms
@@ -1323,7 +1322,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                   </div>
                                   <div className='flex justify-between items-center'>
                                     <span className='text-gray-400'>Muda wa Kuuza:</span>
-                                    <span className='font-bold'>{formatTime(calculateSaleTime(productionQuantity))}</span>
+                                    <span className='font-bold'>{formatTime(calculateSaleTime(productionQuantity, sellingPrice))}</span>
                                   </div>
                                   <Button
                                     className='w-full bg-green-600 hover:bg-green-700'
@@ -1397,3 +1396,5 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     </div>
   );
 }
+
+    
