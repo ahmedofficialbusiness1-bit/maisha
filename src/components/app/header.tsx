@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor } from 'lucide-react';
+import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut } from 'lucide-react';
 import { useMemo } from 'react';
 import type { View } from './game';
 import {
@@ -18,6 +18,7 @@ import {
 import type { Notification } from './game';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { signOut } from '@/app/auth/actions';
 
 interface AppHeaderProps {
     money: number;
@@ -168,6 +169,15 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                     <User className="mr-2 h-4 w-4" />
                     <span>Wasifu</span>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator className='bg-gray-600'/>
+                 <form action={signOut}>
+                  <DropdownMenuItem asChild>
+                    <button type="submit" className="w-full">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Toka</span>
+                    </button>
+                  </DropdownMenuItem>
+                </form>
             </DropdownMenuContent>
         </DropdownMenu>
 
