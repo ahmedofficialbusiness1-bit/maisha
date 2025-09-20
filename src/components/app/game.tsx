@@ -111,7 +111,7 @@ const initialPlayerStocks: PlayerStock[] = [];
 
 const initialCompanyData: StockListing[] = [
     { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, totalShares: 250000, marketCap: 450.75 * 250000, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 100000, dividendYield: 0.015 },
-    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, totalShares: 1000000, marketCap: 120.50 * 1000000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 150000, dividendYield: 0.021 },
+    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, totalShares: 1000000, marketCap: 120.50 * 1000000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 150000, dividendYield: 0.015 },
 ];
 
 const initialBondListings: BondListing[] = [
@@ -181,7 +181,6 @@ export function Game() {
     if(data.avatarUrl) setPlayerAvatar(data.avatarUrl);
     setPrivateNotes(data.privateNotes || '');
     setView('dashboard'); // Go back to dashboard after saving
-    toast({ title: 'Wasifu Umehifadhiwa', description: 'Mabadiliko yako yamehifadhiwa.' });
   }
 
    const addTransaction = (type: 'income' | 'expense', amount: number, description: string) => {
@@ -203,11 +202,6 @@ export function Game() {
     for (const cost of costs) {
         const inventoryItem = inventory.find(i => i.item === cost.name);
         if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
-            toast({
-                variant: "destructive",
-                title: "Vifaa Havitoshi",
-                description: `Unahitaji ${cost.quantity.toLocaleString()}x ${cost.name} ili kujenga.`,
-            });
             return;
         }
     }
@@ -242,10 +236,6 @@ export function Game() {
         return newSlots;
     });
 
-    toast({
-        title: "Ujenzi Umeanza!",
-        description: `${building.name} inajengwa na itakuwa tayari baada ya dakika 15.`,
-    });
     addNotification(`Ujenzi wa ${building.name} umeanza.`, 'construction');
   };
   
@@ -259,11 +249,6 @@ export function Game() {
     for (const cost of costs) {
       const inventoryItem = inventory.find(i => i.item === cost.name);
       if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
-        toast({
-            variant: "destructive",
-            title: "Vifaa Havitoshi",
-            description: `Unahitaji ${cost.quantity.toLocaleString()}x ${cost.name} ili kuboresha.`,
-        });
         return;
       }
     }
@@ -298,10 +283,6 @@ export function Game() {
       return newSlots;
     });
 
-    toast({
-        title: "Uboreshaji Umeanza!",
-        description: `${slot.building.name} inaboreshwa hadi Level ${slot.level + 1}.`,
-    });
     addNotification(`Uboreshaji wa ${slot.building.name} hadi Lvl ${slot.level + 1} umeanza.`, 'construction');
   };
 
@@ -311,11 +292,6 @@ export function Game() {
         const newSlots = [...prev];
         newSlots[slotIndex] = { building: null, level: 0 };
         return newSlots;
-    });
-    toast({
-        title: "Jengo Limefutwa",
-        description: `${buildingName} limeondolewa kwenye kiwanja.`,
-        variant: "destructive"
     });
   };
 
@@ -329,11 +305,6 @@ export function Game() {
         const requiredQuantity = input.quantity * quantity;
 
         if (!inventoryItem || inventoryItem.quantity < requiredQuantity) {
-             toast({
-                variant: "destructive",
-                title: "Vifaa Havitoshi",
-                description: `Unahitaji ${requiredQuantity.toLocaleString()}x ${input.name} ili kuzalisha.`,
-            });
             return;
         }
     }
@@ -367,10 +338,6 @@ export function Game() {
       return newInventory;
     });
 
-    toast({
-        title: "Uzalishaji Umekamilika",
-        description: `Umezalisha ${recipe.output.quantity * quantity}x ${recipe.output.name}.`,
-    });
     addNotification(`Umezalisha ${recipe.output.quantity * quantity}x ${recipe.output.name}.`, 'sale');
   };
 
@@ -378,11 +345,6 @@ export function Game() {
      // 1. Check if player has enough of the item
      const inventoryItem = inventory.find(i => i.item === item.item);
      if (!inventoryItem || inventoryItem.quantity < quantity) {
-       toast({
-         variant: "destructive",
-         title: "Bidhaa Hazitoshi",
-         description: `Huna ${quantity.toLocaleString()}x ${item.item} za kutosha ghalani.`
-       });
        return; // Not enough to sell
      }
  
@@ -418,10 +380,6 @@ export function Game() {
        return newSlots;
      });
 
-     toast({
-        title: "Mauzo Yameanza!",
-        description: `Unauza ${quantity.toLocaleString()}x ${item.item}. Utapokea pesa mauzo yakikamilika.`,
-    });
     addNotification(`Unaanza kuuza ${quantity.toLocaleString()}x ${item.item}.`, 'sale');
   }
 
@@ -450,10 +408,6 @@ export function Game() {
       return [newListing, ...prevListings];
     });
 
-    toast({
-        title: "Bidhaa Iko Sokoni!",
-        description: `Umeweka ${quantity.toLocaleString()}x ${item.item} sokoni kwa bei ya $${price.toFixed(2)} kila kimoja.`
-    });
     addNotification(`Umeweka ${quantity.toLocaleString()}x ${item.item} sokoni.`, 'sale');
   };
   
@@ -462,11 +416,6 @@ export function Game() {
       const timeReduction = starsToUse * timeReductionPerStar;
 
       if (stars < starsToUse) {
-          toast({
-              variant: "destructive",
-              title: "Star Boosts Hazitoshi",
-              description: "Huna Star Boosts za kutosha kufanya hivyo.",
-          });
           return;
       }
       
@@ -480,10 +429,6 @@ export function Game() {
           return newSlots;
       });
 
-      toast({
-        title: "Ujenzi Umeharakishwa!",
-        description: `Umetumia ${starsToUse} Star Boosts kupunguza muda wa ujenzi.`,
-      });
   };
 
  const handleBuyMaterial = (materialName: string, quantityToBuy: number): boolean => {
@@ -492,11 +437,6 @@ export function Game() {
       .sort((a, b) => a.price - b.price); // Sort by cheapest first
 
     if (listingsForMaterial.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "Bidhaa Haipatikani",
-        description: `Hakuna anayeuza ${materialName} sokoni kwa sasa.`,
-      });
       return false;
     }
 
@@ -516,20 +456,10 @@ export function Game() {
     }
 
     if (quantityLeftToBuy > 0) {
-        toast({
-            variant: "destructive",
-            title: "Kiasi Hakitoshi Sokoni",
-            description: `Ni ${ (quantityToBuy - quantityLeftToBuy).toLocaleString()}x ${materialName} pekee zinapatikana sokoni.`,
-        });
         return false;
     }
     
     if (money < totalCost) {
-        toast({
-            variant: "destructive",
-            title: "Pesa Hazitoshi",
-            description: `Unahitaji $${totalCost.toLocaleString()} kununua, lakini una $${money.toLocaleString()}.`,
-        });
         return false;
     }
 
@@ -567,10 +497,6 @@ export function Game() {
         return newListings.filter(l => l.quantity > 0);
     });
 
-    toast({
-      title: "Ununuzi Umekamilika",
-      description: `Umenunua ${quantityToBuy.toLocaleString()}x ${materialName} kwa $${totalCost.toLocaleString()}.`,
-    });
     addNotification(`Umenunua ${quantityToBuy.toLocaleString()}x ${materialName} kwa $${totalCost.toLocaleString()}.`, 'purchase');
 
     return true;
@@ -587,21 +513,11 @@ export function Game() {
   const handleBuyStock = (stock: StockListing, quantity: number) => {
       const totalCost = stock.stockPrice * quantity;
       if (money < totalCost) {
-        toast({
-          variant: "destructive",
-          title: "Pesa Hazitoshi",
-          description: `Unahitaji $${totalCost.toLocaleString()} kununua hisa hizi.`,
-        });
         return;
       }
 
       const availableShares = calculateAvailableShares(stock);
       if (quantity > availableShares) {
-        toast({
-          variant: "destructive",
-          title: "Hisa Hazitoshi",
-          description: `Ni hisa ${availableShares.toLocaleString()} pekee zinazopatikana kwa sasa.`,
-        });
         return;
       }
 
@@ -618,31 +534,17 @@ export function Game() {
           }
       });
 
-      toast({
-        title: "Umefanikiwa Kununua Hisa",
-        description: `Umenunua hisa ${quantity.toLocaleString()} za ${stock.companyName}.`
-      });
       addNotification(`Umenunua hisa ${quantity.toLocaleString()} za ${stock.companyName}.`, 'purchase');
   }
 
   const handleBuyFromMarket = (listing: PlayerListing, quantity: number) => {
     if (listing.seller === playerName) {
-        toast({
-            variant: "destructive",
-            title: "Huwezi Kujinunulia",
-            description: "Huwezi kununua bidhaa kutoka kwako mwenyewe.",
-        });
         return;
     }
 
     const totalCost = listing.price * quantity;
 
     if (money < totalCost) {
-        toast({
-            variant: "destructive",
-            title: "Pesa Hazitoshi",
-            description: `Unahitaji $${totalCost.toLocaleString()} kununua, lakini una $${money.toLocaleString()}.`,
-        });
         return;
     }
 
@@ -685,10 +587,6 @@ export function Game() {
         return newListings.filter(l => l.quantity > 0);
     });
 
-     toast({
-      title: "Ununuzi Umekamilika",
-      description: `Umenunua ${quantity.toLocaleString()}x ${listing.commodity} kutoka kwa ${listing.seller}.`,
-    });
     addNotification(`Umenunua ${quantity.toLocaleString()}x ${listing.commodity} kutoka kwa ${listing.seller}.`, 'purchase');
   };
   
