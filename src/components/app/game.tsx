@@ -153,10 +153,6 @@ export function Game() {
     setPlayerName(data.playerName);
     if(data.avatarUrl) setPlayerAvatar(data.avatarUrl);
     setPrivateNotes(data.privateNotes || '');
-    toast({
-        title: "Wasifu Umebadilishwa",
-        description: "Taarifa zako za wasifu zimefanikiwa kubadilishwa.",
-    });
     setView('dashboard'); // Go back to dashboard after saving
   }
 
@@ -803,7 +799,7 @@ export function Game() {
     }, 0);
 
     // 4. Calculate Net Worth
-    const netWorth = money + inventoryValue + buildingValue + stockValue;
+    const netWorth = money + inventoryValue + buildingValue;
     
     // 5. Determine Rating
     let rating = 'C';
