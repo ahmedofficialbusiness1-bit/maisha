@@ -1,9 +1,10 @@
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Bell, Menu, Star, Coins, Scale, User } from 'lucide-react';
+import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign } from 'lucide-react';
 import { useMemo } from 'react';
 import type { View } from './game';
 import {
@@ -14,6 +15,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import type { Notification } from './game';
+import { ScrollArea } from '../ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 interface AppHeaderProps {
     money: number;
@@ -21,6 +25,8 @@ interface AppHeaderProps {
     playerName: string;
     playerAvatar: string;
     setView: (view: View) => void;
+    notifications: Notification[];
+    onNotificationsRead: () => void;
 }
 
 function formatCurrency(value: number): string {
@@ -33,8 +39,15 @@ function formatCurrency(value: number): string {
     return `$${value}`;
 }
 
-export function AppHeader({ money, stars, playerName, playerAvatar, setView }: AppHeaderProps) {
+export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead }: AppHeaderProps) {
     const formattedMoney = useMemo(() => formatCurrency(money), [money]);
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    const handleOpenNotifications = () => {
+        if (unreadCount > 0) {
+            onNotificationsRead();
+        }
+    }
   
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-2 border-b border-gray-700/50 bg-gray-900/95 px-2 text-white backdrop-blur-sm sm:h-20 sm:px-4">
@@ -82,11 +95,58 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView }: A
         </div>
 
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative h-7 w-7 sm:h-8 sm:w-8">
-          <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-red-500" />
-          <span className="sr-only">Notifications</span>
-        </Button>
+        <DropdownMenu onOpenChange={(open) => open && handleOpenNotifications()}>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative h-7 w-7 sm:h-8 sm:w-8">
+                  <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  {unreadCount > 0 && (
+                     <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold">
+                        {unreadCount}
+                     </span>
+                  )}
+                  <span className="sr-only">Notifications</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white w-80">
+                <DropdownMenuLabel className="flex justify-between items-center">
+                    <span>Notifications</span>
+                    {notifications.length > 0 && (
+                        <Button variant="link" className="p-0 h-auto text-xs" onClick={onNotificationsRead}>
+                            Mark all as read
+                        </Button>
+                    )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className='bg-gray-600'/>
+                <ScrollArea className="h-96">
+                    {notifications.length > 0 ? (
+                        notifications.map(n => (
+                            <DropdownMenuItem key={n.id} className="gap-3 items-start focus:bg-gray-700/80">
+                                <div className="flex-shrink-0 mt-1">
+                                    {n.icon === 'construction' && <Hammer className="h-4 w-4 text-orange-400" />}
+                                    {n.icon === 'sale' && <CircleDollarSign className="h-4 w-4 text-green-400" />}
+                                    {n.icon === 'purchase' && <CircleDollarSign className="h-4 w-4 text-red-400" />}
+                                    {n.icon === 'dividend' && <Coins className="h-4 w-4 text-yellow-400" />}
+                                </div>
+                                <div className="flex-grow">
+                                    <p className="text-sm leading-tight">{n.message}</p>
+                                    <p className="text-xs text-gray-400 mt-1">{new Date(n.timestamp).toLocaleTimeString()}</p>
+                                </div>
+                                {!n.read && <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0 mt-1.5"></div>}
+                            </DropdownMenuItem>
+                        ))
+                    ) : (
+                        <div className="text-center text-sm text-gray-400 p-4">
+                            No notifications yet.
+                        </div>
+                    )}
+                </ScrollArea>
+                <DropdownMenuSeparator className='bg-gray-600'/>
+                 <DropdownMenuItem className="justify-center focus:bg-gray-700/80">
+                    <CheckCheck className="mr-2 h-4 w-4" />
+                    <span>View All</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
         
         {/* Hamburger Menu */}
         <DropdownMenu>
@@ -114,3 +174,5 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView }: A
     </header>
   );
 }
+
+    

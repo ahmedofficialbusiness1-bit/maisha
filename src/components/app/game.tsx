@@ -27,6 +27,15 @@ export type PlayerStock = {
 
 export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting' | 'profile';
 
+export type Notification = {
+    id: string;
+    message: string;
+    timestamp: number;
+    read: boolean;
+    icon: 'construction' | 'sale' | 'purchase' | 'dividend';
+};
+
+
 export type UserData = {
   playerName: string;
   playerAvatar: string;
@@ -149,13 +158,30 @@ export function Game() {
   const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(initialData?.buildingSlots ?? Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })));
   const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>(initialData?.playerStocks ?? initialPlayerStocks);
   const [transactions, setTransactions] = React.useState<Transaction[]>(initialData?.transactions ?? []);
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const processedSalesRef = React.useRef<Set<string>>(new Set());
+
+  const addNotification = (message: string, icon: Notification['icon']) => {
+    const newNotification: Notification = {
+        id: `${Date.now()}-${Math.random()}`,
+        message,
+        timestamp: Date.now(),
+        read: false,
+        icon,
+    };
+    setNotifications(prev => [newNotification, ...prev].slice(0, 50)); // Keep last 50
+  };
+
+  const handleMarkNotificationsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  }
 
   const handleUpdateProfile = (data: ProfileData) => {
     setPlayerName(data.playerName);
     if(data.avatarUrl) setPlayerAvatar(data.avatarUrl);
     setPrivateNotes(data.privateNotes || '');
     setView('dashboard'); // Go back to dashboard after saving
+    toast({ title: 'Wasifu Umehifadhiwa', description: 'Mabadiliko yako yamehifadhiwa.' });
   }
 
    const addTransaction = (type: 'income' | 'expense', amount: number, description: string) => {
@@ -220,6 +246,7 @@ export function Game() {
         title: "Ujenzi Umeanza!",
         description: `${building.name} inajengwa na itakuwa tayari baada ya dakika 15.`,
     });
+    addNotification(`Ujenzi wa ${building.name} umeanza.`, 'construction');
   };
   
     const handleUpgradeBuilding = (slotIndex: number) => {
@@ -275,6 +302,7 @@ export function Game() {
         title: "Uboreshaji Umeanza!",
         description: `${slot.building.name} inaboreshwa hadi Level ${slot.level + 1}.`,
     });
+    addNotification(`Uboreshaji wa ${slot.building.name} hadi Lvl ${slot.level + 1} umeanza.`, 'construction');
   };
 
   const handleDemolishBuilding = (slotIndex: number) => {
@@ -343,6 +371,7 @@ export function Game() {
         title: "Uzalishaji Umekamilika",
         description: `Umezalisha ${recipe.output.quantity * quantity}x ${recipe.output.name}.`,
     });
+    addNotification(`Umezalisha ${recipe.output.quantity * quantity}x ${recipe.output.name}.`, 'sale');
   };
 
   const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => {
@@ -393,6 +422,7 @@ export function Game() {
         title: "Mauzo Yameanza!",
         description: `Unauza ${quantity.toLocaleString()}x ${item.item}. Utapokea pesa mauzo yakikamilika.`,
     });
+    addNotification(`Unaanza kuuza ${quantity.toLocaleString()}x ${item.item}.`, 'sale');
   }
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
@@ -424,6 +454,7 @@ export function Game() {
         title: "Bidhaa Iko Sokoni!",
         description: `Umeweka ${quantity.toLocaleString()}x ${item.item} sokoni kwa bei ya $${price.toFixed(2)} kila kimoja.`
     });
+    addNotification(`Umeweka ${quantity.toLocaleString()}x ${item.item} sokoni.`, 'sale');
   };
   
   const handleBoostConstruction = (slotIndex: number, starsToUse: number) => {
@@ -540,6 +571,7 @@ export function Game() {
       title: "Ununuzi Umekamilika",
       description: `Umenunua ${quantityToBuy.toLocaleString()}x ${materialName} kwa $${totalCost.toLocaleString()}.`,
     });
+    addNotification(`Umenunua ${quantityToBuy.toLocaleString()}x ${materialName} kwa $${totalCost.toLocaleString()}.`, 'purchase');
 
     return true;
 };
@@ -590,6 +622,7 @@ export function Game() {
         title: "Umefanikiwa Kununua Hisa",
         description: `Umenunua hisa ${quantity.toLocaleString()} za ${stock.ticker}.`
       });
+      addNotification(`Umenunua hisa ${quantity.toLocaleString()} za ${stock.ticker}.`, 'purchase');
   }
 
   const handleBuyFromMarket = (listing: PlayerListing, quantity: number) => {
@@ -656,6 +689,7 @@ export function Game() {
       title: "Ununuzi Umekamilika",
       description: `Umenunua ${quantity.toLocaleString()}x ${listing.commodity} kutoka kwa ${listing.seller}.`,
     });
+    addNotification(`Umenunua ${quantity.toLocaleString()}x ${listing.commodity} kutoka kwa ${listing.seller}.`, 'purchase');
   };
   
    // AI Player (Serekali) automatic market seeding
@@ -705,6 +739,7 @@ export function Game() {
                 if (saleValue > 0) {
                     setMoney(prevMoney => prevMoney + saleValue);
                     addTransaction('income', saleValue, `Sold ${totalQuantity.toLocaleString()}x ${itemName}`);
+                    addNotification(`Umepokea $${saleValue.toLocaleString()} kwa kuuza ${totalQuantity.toLocaleString()}x ${itemName}.`, 'sale');
                 }
                 
                 newSlots[index] = { ...slot, sell: undefined };
@@ -715,6 +750,7 @@ export function Game() {
           // Check for completed construction
           if (slot && slot.construction && now >= slot.construction.endTime) {
             slotsChanged = true;
+            addNotification(`Ujenzi wa ${slot.building?.name} Lvl ${slot.construction.targetLevel} umekamilika!`, 'construction');
             newSlots[index] = { 
                 ...slot, 
                 level: slot.construction.targetLevel,
@@ -751,7 +787,7 @@ export function Game() {
         if (totalDividends > 0) {
             setMoney(prev => prev + totalDividends);
             addTransaction('income', totalDividends, `Dividend Payout (${dividendMessages.join(', ')})`);
-            
+            addNotification(`Umepokea $${totalDividends.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} kama gawio la hisa.`, 'dividend');
         }
     }, 24 * 60 * 60000); // Every 24 hours to simulate a "day"
 
@@ -835,7 +871,15 @@ export function Game() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
-      <AppHeader money={money} stars={stars} setView={setView} playerName={playerName} playerAvatar={playerAvatar} />
+      <AppHeader 
+        money={money} 
+        stars={stars} 
+        setView={setView} 
+        playerName={playerName} 
+        playerAvatar={playerAvatar} 
+        notifications={notifications}
+        onNotificationsRead={handleMarkNotificationsRead}
+      />
       <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-gray-800/50">
         {view === 'dashboard' && (
           <Dashboard 
@@ -876,3 +920,5 @@ export function Game() {
     </div>
   );
 }
+
+    
