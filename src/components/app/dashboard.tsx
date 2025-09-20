@@ -789,7 +789,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         return; // Not enough in inventory
       }
       
-      const totalDurationMs = calculateSaleTime(productionQuantity, sellingPrice);
+      const totalDurationMs = calculateSaleTime(productionQuantity);
       onStartSelling(selectedSlotIndex, selectedInventoryItem, productionQuantity, sellingPrice, totalDurationMs);
     }
     
@@ -871,16 +871,22 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       return totalSeconds * 1000; // time in ms
   }
 
- const calculateSaleTime = (quantity: number, pricePerItem: number): number => {
-    // New logic: time depends on value. More expensive items take longer.
-    const baseTime = 5; // 5 seconds base time for any sale transaction
-    
-    // Logarithmic scaling to prevent extremely long times for very expensive items.
-    // Math.max(0.1, ...) ensures even very cheap items have some sell time.
-    const timePerItem = Math.max(0.1, Math.log10(pricePerItem || 1) * 0.5);
+ const calculateSaleTime = (quantity: number): number => {
+      if (!selectedSlot || !selectedInventoryItem) return 0;
+      
+      const recipe = recipes.find(r => r.output.name === selectedInventoryItem.item);
+      // If there's no recipe, it's a base item, assume a fast default production time.
+      const buildingId = recipe ? recipe.buildingId : 'shamba';
+      const buildingInfo = buildingData[buildingId];
+      if (!buildingInfo) return 5000 * quantity;
 
-    const totalSeconds = baseTime + (timePerItem * quantity);
-    return totalSeconds * 1000; // Total time in ms
+      // Time in seconds for one batch, adjusted by level
+      const ratePerHr = buildingInfo.productionRate * (1 + (selectedSlot.level - 1) * 0.4);
+      if (ratePerHr <= 0) return 5000 * quantity; 
+      
+      const baseTimePerBatch = (3600) / ratePerHr;
+      const totalSeconds = baseTimePerBatch * quantity;
+      return totalSeconds * 1000; // time in ms
   }
   
   const calculateProductionCost = (recipe: Recipe, quantity: number): number => {
@@ -1322,7 +1328,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                   </div>
                                   <div className='flex justify-between items-center'>
                                     <span className='text-gray-400'>Muda wa Kuuza:</span>
-                                    <span className='font-bold'>{formatTime(calculateSaleTime(productionQuantity, sellingPrice))}</span>
+                                    <span className='font-bold'>{formatTime(calculateSaleTime(productionQuantity))}</span>
                                   </div>
                                   <Button
                                     className='w-full bg-green-600 hover:bg-green-700'
@@ -1396,5 +1402,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     </div>
   );
 }
+
+    
 
     
