@@ -720,13 +720,11 @@ export function Game() {
     const netWorth = money + inventoryValue + buildingValue;
     
     // 5. Determine Rating
-    let rating = 'C';
-    if (netWorth > 1_000_000_000) rating = 'AAA';
-    else if (netWorth > 500_000_000) rating = 'AA';
-    else if (netWorth > 100_000_000) rating = 'A';
-    else if (netWorth > 50_000_000) rating = 'BBB';
-    else if (netWorth > 10_000_000) rating = 'BB';
-    else if (netWorth > 1_000_000) rating = 'B';
+    let rating = 'F';
+    if (netWorth > 50_000_000) rating = 'A';
+    else if (netWorth > 5_000_000) rating = 'B';
+    else if (netWorth > 500_000) rating = 'C';
+    else if (netWorth > 50_000) rating = 'D';
 
     // 6. Determine Ranking (simulated)
     const baseRanking = 50000;

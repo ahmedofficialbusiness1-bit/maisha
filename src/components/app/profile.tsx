@@ -249,7 +249,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                         <InfoItem label="Ranking" value={metrics.ranking} />
                         <InfoItem label="Rating" value={metrics.rating} />
                         <InfoItem label="Net Worth" value={`$${metrics.netWorth.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`} />
-                        <InfoItem label="Credit Rating" value="AA-"/>
+                        <InfoItem label="Credit Rating" value={metrics.rating} />
                         <InfoItem label="Government orders Tier" value="T1" />
                         <InfoItem label="Established" value={new Date().toLocaleDateString()} />
                         <InfoItem label="Last seen" value="Today" />
