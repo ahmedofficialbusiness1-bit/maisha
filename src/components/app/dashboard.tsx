@@ -872,13 +872,16 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   }
 
   const calculateSaleTime = (quantity: number): number => {
-      if (!selectedSlot || !selectedInventoryItem) return 0;
-      const productInfo = encyclopediaData.find(e => e.name === selectedInventoryItem.item);
-      const productionTimeProp = productInfo?.properties.find(p => p.label === 'Base Production Time');
-      if (!productionTimeProp) return 5000 * quantity; // Fallback: 5 seconds per item
+    if (!selectedInventoryItem) return 0;
 
-      const timePerUnitSeconds = parseFloat(productionTimeProp.value);
-      return timePerUnitSeconds * quantity * 1000; // Total time in ms
+    const productInfo = encyclopediaData.find(e => e.name === selectedInventoryItem.item);
+    const isTierOne = !productInfo?.recipe; // Tier 1 if it has no recipe
+    
+    const timePerItem = isTierOne ? 0.5 : 2.5; // 0.5s for T1, 2.5s for others
+    const baseTime = 5; // 5 second base time for any sale
+
+    const totalSeconds = baseTime + (timePerItem * quantity);
+    return totalSeconds * 1000; // Total time in ms
   }
   
   const calculateProductionCost = (recipe: Recipe, quantity: number): number => {
