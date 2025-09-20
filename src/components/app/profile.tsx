@@ -179,7 +179,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                           name="avatarUrl"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Picha ya Wasifu (Logo)</FormLabel>
+                              <FormLabel>Picha ya Wasifu (Nembo)</FormLabel>
                                <FormControl>
                                 <div id={field.name}>
                                   <Input
