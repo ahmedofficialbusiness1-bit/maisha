@@ -5,7 +5,7 @@
 import * as React from 'react';
 import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
-import { Dashboard, type BuildingSlot, type BuildingType } from '@/components/app/dashboard';
+import { Dashboard, type BuildingSlot, type BuildingType, type SellInfo } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
 import { TradeMarket, type PlayerListing, type StockListing, type BondListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
@@ -302,7 +302,7 @@ export function Game() {
     });
   };
 
-  const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, durationMs: number) => {
+  const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => {
      // 1. Check if player has enough of the item
      const inventoryItem = inventory.find(i => i.item === item.item);
      if (!inventoryItem || inventoryItem.quantity < quantity) {
@@ -320,9 +320,9 @@ export function Game() {
      });
  
      const now = Date.now();
+     const totalSaleValue = quantity * price;
  
      // 3. Set selling state on the building slot
-     // We use the recipeId field in sell state to store the item name for simplicity
      setBuildingSlots(prev => {
        const newSlots = [...prev];
        const slot = newSlots[slotIndex];
@@ -330,8 +330,9 @@ export function Game() {
          newSlots[slotIndex] = {
            ...slot,
            sell: {
-             recipeId: item.item, // Using recipeId to store the item name being sold
+             recipeId: item.item,
              quantity: quantity,
+             saleValue: totalSaleValue,
              startTime: now,
              endTime: now + durationMs,
            }
@@ -575,15 +576,11 @@ export function Game() {
 
             if (!processedSalesRef.current.has(saleId)) {
                 slotsChanged = true;
-                const itemName = slot.sell.recipeId;
-                const productInfo = encyclopediaData.find(e => e.name === itemName);
-                const pricePerUnit = productInfo ? parseFloat(productInfo.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : 0;
-                const totalQuantity = slot.sell.quantity;
-                const totalSaleValue = totalQuantity * pricePerUnit;
+                const { recipeId: itemName, quantity: totalQuantity, saleValue } = slot.sell;
 
-                if (totalSaleValue > 0) {
-                    setMoney(prevMoney => prevMoney + totalSaleValue);
-                    addTransaction('income', totalSaleValue, `Sold ${totalQuantity.toLocaleString()}x ${itemName}`);
+                if (saleValue > 0) {
+                    setMoney(prevMoney => prevMoney + saleValue);
+                    addTransaction('income', saleValue, `Sold ${totalQuantity.toLocaleString()}x ${itemName}`);
                 }
                 
                 newSlots[index] = { ...slot, sell: undefined };

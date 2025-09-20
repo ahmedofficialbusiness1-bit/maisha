@@ -54,8 +54,9 @@ export type BuildingType = {
 };
 
 export type SellInfo = {
-    recipeId: string; // For shops, this will be the item name. For producers, the recipe ID.
+    recipeId: string; // For shops, this will be the item name.
     quantity: number;
+    saleValue: number; // Store the final sale value
     startTime: number;
     endTime: number;
 };
@@ -635,7 +636,7 @@ interface DashboardProps {
     stars: number;
     onBuild: (slotIndex: number, building: BuildingType) => void;
     onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
-    onStartSelling: (slotIndex: number, item: InventoryItem, quantity: number, durationMs: number) => void;
+    onStartSelling: (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => void;
     onBoostConstruction: (slotIndex: number, starsToUse: number) => void;
     onUpgradeBuilding: (slotIndex: number) => void;
     onDemolishBuilding: (slotIndex: number) => void;
@@ -672,6 +673,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   const [selectedRecipe, setSelectedRecipe] = React.useState<Recipe | null>(null);
   const [selectedInventoryItem, setSelectedInventoryItem] = React.useState<InventoryItem | null>(null);
   const [productionQuantity, setProductionQuantity] = React.useState(1);
+  const [sellingPrice, setSellingPrice] = React.useState(0);
+  const [priceFloor, setPriceFloor] = React.useState(0);
+  const [priceCeiling, setPriceCeiling] = React.useState(0);
   
   const [boostAmount, setBoostAmount] = React.useState(0);
   
@@ -745,9 +749,18 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   }
   
   const handleSelectInventoryItem = (item: InventoryItem) => {
+    const entry = encyclopediaData.find(e => e.name === item.item);
+    const officialMarketPrice = entry ? parseFloat(entry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : item.marketPrice;
+
+    const floor = officialMarketPrice * 0.85;
+    const ceiling = officialMarketPrice * 1.15;
+      
     setSelectedInventoryItem(item);
     setSelectedRecipe(null);
     setProductionQuantity(1);
+    setSellingPrice(officialMarketPrice);
+    setPriceFloor(floor);
+    setPriceCeiling(ceiling);
   }
 
   const handleConfirmProductionOrSale = () => {
@@ -777,7 +790,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       }
       
       const totalDurationMs = calculateSaleTime(productionQuantity);
-      onStartSelling(selectedSlotIndex, selectedInventoryItem, productionQuantity, totalDurationMs);
+      onStartSelling(selectedSlotIndex, selectedInventoryItem, productionQuantity, sellingPrice, totalDurationMs);
     }
     
     setIsProductionDialogOpen(false);
@@ -878,13 +891,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     }
     return totalCost;
   };
-  
-  const calculateSaleValue = (item: InventoryItem, quantity: number): number => {
-    const productInfo = encyclopediaData.find(e => e.name === item.item);
-    const pricePerUnit = productInfo ? parseFloat(productInfo.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : 0;
-    return pricePerUnit * quantity;
-  };
-
 
   const handleCardClick = (slot: BuildingSlot, index: number) => {
     if (slot.construction) {
@@ -1165,7 +1171,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                 <DialogHeader>
                     <DialogTitle>{isSelectedBuildingShop ? 'Uza Bidhaa' : 'Uzalishaji'}: {selectedSlot?.building?.name} (Lvl {selectedSlot?.level})</DialogTitle>
                     <DialogDescription>
-                        {isSelectedBuildingShop ? 'Chagua bidhaa kutoka kwenye ghala, weka kiasi, na anza kuuza.' : 'Chagua bidhaa, weka kiasi, na anza mchakato wa uzalishaji.'}
+                        {isSelectedBuildingShop ? 'Chagua bidhaa, weka kiasi na bei, na anza kuuza.' : 'Chagua bidhaa, weka kiasi, na anza mchakato wa uzalishaji.'}
                     </DialogDescription>
                 </DialogHeader>
                  <div className="flex-grow overflow-y-auto -mr-6 pr-6">
@@ -1274,21 +1280,43 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                 </div>
                             </div>
                         ) : selectedInventoryItem ? ( // SHOP VIEW
-                          <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
+                           <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
                               <h3 className='text-xl font-bold'>{selectedInventoryItem.item}</h3>
-                              <div className='space-y-2'>
-                                <Label htmlFor='quantity-sell'>Idadi ya Kuuza (Una: {selectedInventoryItem.quantity.toLocaleString()})</Label>
-                                <Input 
-                                    id="quantity-sell" type="number" min="1" max={selectedInventoryItem.quantity} value={productionQuantity}
-                                    onChange={(e) => setProductionQuantity(Math.max(1, Math.min(parseInt(e.target.value) || 1, selectedInventoryItem.quantity)))}
-                                    className='bg-gray-700 border-gray-600'
-                                />
+                              
+                              <div className='grid grid-cols-2 gap-4'>
+                                <div className='space-y-2'>
+                                    <Label htmlFor='quantity-sell'>Idadi (Una: {selectedInventoryItem.quantity.toLocaleString()})</Label>
+                                    <Input 
+                                        id="quantity-sell" type="number" min="1" max={selectedInventoryItem.quantity} value={productionQuantity}
+                                        onChange={(e) => setProductionQuantity(Math.max(1, Math.min(parseInt(e.target.value) || 1, selectedInventoryItem.quantity)))}
+                                        className='bg-gray-700 border-gray-600'
+                                    />
+                                </div>
+                                <div className='space-y-2'>
+                                    <Label htmlFor='price-sell'>Bei kwa Kipande</Label>
+                                    <Input 
+                                        id="price-sell" type="number"
+                                        value={sellingPrice}
+                                        onChange={(e) => setSellingPrice(parseFloat(e.target.value) || 0)}
+                                        onBlur={(e) => setSellingPrice(Math.max(priceFloor, Math.min(parseFloat(e.target.value) || 0, priceCeiling)))}
+                                        min={priceFloor}
+                                        max={priceCeiling}
+                                        step="0.01"
+                                        className='bg-gray-700 border-gray-600'
+                                    />
+                                </div>
                               </div>
-                              <Separator className='my-4 bg-gray-600'/>
+                                <div className='text-xs text-center text-gray-400'>
+                                    <p>Bei Elekezi: ${selectedInventoryItem.marketPrice.toFixed(2)}</p>
+                                    <p>Kikomo: ${priceFloor.toFixed(2)} - ${priceCeiling.toFixed(2)}</p>
+                                </div>
+
+                              <Separator className='my-2 bg-gray-600'/>
+
                               <div className='space-y-3'>
                                   <div className='flex justify-between items-center'>
                                     <span className='text-gray-400'>Thamani ya Mauzo:</span>
-                                    <span className='font-bold text-green-400'>${calculateSaleValue(selectedInventoryItem, productionQuantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className='font-bold text-green-400'>${(productionQuantity * sellingPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                   </div>
                                   <div className='flex justify-between items-center'>
                                     <span className='text-gray-400'>Muda wa Kuuza:</span>
