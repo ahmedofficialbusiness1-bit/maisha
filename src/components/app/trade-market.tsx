@@ -379,10 +379,9 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         <TableHeader>
                             <TableRow className="border-gray-700 hover:bg-gray-700/50">
                                 <TableHead className="text-white">Kampuni</TableHead>
-                                <TableHead className="text-right text-white hidden md:table-cell">Ukadiriaji</TableHead>
                                 <TableHead className="text-right text-white">Bei</TableHead>
-                                <TableHead className="text-right text-white hidden lg:table-cell">Hisa Zipo</TableHead>
-                                <TableHead className="text-right text-white hidden xl:table-cell">Thamani</TableHead>
+                                <TableHead className="text-right text-white">Hisa Zipo</TableHead>
+                                <TableHead className="text-right text-white">Thamani ya Kampuni</TableHead>
                                 <TableHead className="text-right text-white">Vitendo</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -401,18 +400,9 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                             </div>
                                         </div>
                                     </TableCell>
-                                     <TableCell className="text-right hidden md:table-cell p-2 sm:p-4">
-                                        <div className={cn("flex items-center justify-end font-bold text-sm", 
-                                            stock.creditRating.startsWith('A') ? 'text-green-400' : 
-                                            stock.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
-                                        )}>
-                                            {stock.creditRating}
-                                            <ShieldCheck className="ml-1 h-4 w-4" />
-                                        </div>
-                                    </TableCell>
                                     <TableCell className="text-right font-mono p-2 sm:p-4">${stock.stockPrice.toFixed(2)}</TableCell>
-                                    <TableCell className="text-right font-mono hidden lg:table-cell p-2 sm:p-4">{stock.sharesAvailable.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right font-mono hidden xl:table-cell p-2 sm:p-4">${stock.marketCap.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-mono p-2 sm:p-4">{stock.sharesAvailable.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-mono p-2 sm:p-4">${stock.marketCap.toLocaleString()}</TableCell>
                                     <TableCell className="text-right p-2 sm:p-4">
                                         <Button size="sm" variant="secondary" className="bg-green-600 hover:bg-green-700 text-xs h-8" onClick={() => handleOpenBuyStockDialog(stock)}>Nunua</Button>
                                     </TableCell>
@@ -437,9 +427,9 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         <TableHeader>
                             <TableRow className="border-gray-700 hover:bg-gray-700/50">
                                 <TableHead className="text-white">Mtoaji</TableHead>
-                                <TableHead className="text-right text-white hidden md:table-cell">Ukadiriaji</TableHead>
+                                <TableHead className="text-right text-white">Ukadiriaji</TableHead>
                                 <TableHead className="text-right text-white">Kuponi</TableHead>
-                                <TableHead className="text-right text-white hidden lg:table-cell">Ukomavu</TableHead>
+                                <TableHead className="text-right text-white">Ukomavu</TableHead>
                                 <TableHead className="text-right text-white">Bei</TableHead>
                                 <TableHead className="text-right text-white">Vitendo</TableHead>
                             </TableRow>
@@ -458,7 +448,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                             </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right hidden md:table-cell p-2 sm:p-4">
+                                    <TableCell className="text-right p-2 sm:p-4">
                                         <div className={cn("flex items-center justify-end font-bold text-sm", 
                                             bond.creditRating.startsWith('A') ? 'text-green-400' : 
                                             bond.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
@@ -468,7 +458,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right font-mono text-green-400 p-2 sm:p-4">{bond.couponRate.toFixed(2)}%</TableCell>
-                                    <TableCell className="text-right font-mono hidden lg:table-cell p-2 sm:p-4">{new Date(bond.maturityDate).toLocaleDateString()}</TableCell>
+                                    <TableCell className="text-right font-mono p-2 sm:p-4">{new Date(bond.maturityDate).toLocaleDateString()}</TableCell>
                                     <TableCell className="text-right font-mono p-2 sm:p-4">${bond.price.toLocaleString()}</TableCell>
                                     <TableCell className="text-right p-2 sm:p-4">
                                         <Button size="sm" variant="secondary" className="bg-blue-600 hover:bg-blue-700 text-xs h-8">Nunua</Button>
@@ -487,7 +477,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
     <div className="flex flex-col gap-4 text-white -m-4 sm:-m-6">
       <PriceTicker inventory={inventory} />
       
-        <Tabs defaultValue="commodities" className="w-full pt-4">
+        <Tabs defaultValue="stocks" className="w-full pt-4">
             <div className="px-4 sm:px-6">
                 <TabsList className="grid w-full grid-cols-3 bg-gray-800/80">
                     <TabsTrigger value="commodities"><LandPlot className='mr-2 h-4 w-4'/>Bidhaa</TabsTrigger>
