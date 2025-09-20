@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -26,6 +27,8 @@ import {
 } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { toast } from '@/hooks/use-toast';
+import { Textarea } from '../ui/textarea';
+import { Clipboard, Pencil } from 'lucide-react';
 
 const profileFormSchema = z.object({
   playerName: z
@@ -37,6 +40,7 @@ const profileFormSchema = z.object({
       message: 'Jina lisizidi herufi 30.',
     }),
   avatarUrl: z.string().url({ message: 'Tafadhali weka URL sahihi ya picha.' }).optional().or(z.literal('')),
+  privateNotes: z.string().max(500, { message: 'Maelezo yasizidi herufi 500.'}).optional(),
 });
 
 export type ProfileData = z.infer<typeof profileFormSchema>;
@@ -47,6 +51,8 @@ interface PlayerProfileProps {
 }
 
 export function PlayerProfile({ onSave, currentProfile }: PlayerProfileProps) {
+  const [isEditing, setIsEditing] = React.useState(false);
+
   const form = useForm<ProfileData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: currentProfile,
@@ -56,69 +62,110 @@ export function PlayerProfile({ onSave, currentProfile }: PlayerProfileProps) {
 
   function onSubmit(data: ProfileData) {
     onSave(data);
+    setIsEditing(false);
   }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(currentProfile.playerName);
+    toast({ title: 'Copied!', description: 'Player name copied to clipboard.' });
+  }
+
+  const handleEditToggle = () => {
+    if (isEditing) {
+        form.reset(currentProfile); // Reset changes if canceling
+    }
+    setIsEditing(!isEditing);
+  }
+
 
   return (
     <div className="flex flex-col gap-4 text-white">
-       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Wasifu wa Mchezaji</h1>
-        <p className="text-muted-foreground">
-          Badilisha taarifa zako za umma hapa.
-        </p>
-      </div>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card className="bg-gray-800/60 border-gray-700">
-            <CardHeader>
-              <CardTitle>Badilisha Wasifu</CardTitle>
-              <CardDescription className="text-gray-400">
-                Fanya mabadiliko kwenye wasifu wako. Bonyeza hifadhi ukimaliza.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16 border-2 border-yellow-400">
-                        <AvatarImage src={avatarUrl} alt={currentProfile.playerName} data-ai-hint="player avatar" />
-                        <AvatarFallback>{currentProfile.playerName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow space-y-2">
-                        <FormField
-                            control={form.control}
-                            name="avatarUrl"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>URL ya Picha (Avatar)</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="https://mfano.com/picha.png" {...field} className='bg-gray-700 border-gray-600' />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+            <CardHeader className="flex-row gap-4 items-center">
+                <Avatar className="h-20 w-20 border-2 border-yellow-400 rounded-md">
+                    <AvatarImage src={avatarUrl} alt={currentProfile.playerName} data-ai-hint="player logo" className="rounded-none" />
+                    <AvatarFallback className="rounded-md">{currentProfile.playerName.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className='flex-grow space-y-1'>
+                    <div className='flex items-center gap-2'>
+                        <div className='h-3 w-3 rounded-full bg-green-500'></div>
+                        <span className='text-sm font-semibold text-green-400'>Online</span>
+                    </div>
+                    <h1 className="text-2xl font-bold tracking-tight">{currentProfile.playerName}</h1>
+                    <p className="text-muted-foreground">Sole trader</p>
+                     <div className='flex items-center gap-4 pt-2'>
+                        <Button variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleCopy}>
+                            <Clipboard className='h-4 w-4 mr-1' /> Copy to Clipboard
+                        </Button>
+                        <Button variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleEditToggle}>
+                            <Pencil className='h-4 w-4 mr-1' /> {isEditing ? 'Cancel Edit' : 'Edit Account'}
+                        </Button>
                     </div>
                 </div>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-6">
+                {isEditing ? (
+                    <>
+                    <FormField
+                        control={form.control}
+                        name="playerName"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Jina la Kampuni</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Jina la kampuni yako..." {...field} className='bg-gray-700 border-gray-600'/>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="avatarUrl"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>URL ya Picha (Logo)</FormLabel>
+                            <FormControl>
+                                <Input placeholder="https://mfano.com/picha.png" {...field} className='bg-gray-700 border-gray-600' />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    </>
+                ) : null}
 
-              <FormField
-                control={form.control}
-                name="playerName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Jina la Uchezaji</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Jina lako..." {...field} className='bg-gray-700 border-gray-600'/>
-                    </FormControl>
-                    <FormDescription className="text-gray-500">
-                      Hili ndilo jina lako la umma.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
+              <div>
+                <div className='bg-gray-900/70 p-2 mb-2 rounded-t-md'>
+                    <h3 className='font-semibold text-sm'>Maelezo ya kibinafsi kuhusu {currentProfile.playerName}</h3>
+                </div>
+                {isEditing ? (
+                    <FormField
+                        control={form.control}
+                        name="privateNotes"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormControl>
+                                <Textarea placeholder="Andika kuhusu kampuni yako, bidhaa unazozalisha, na karibisha wateja..." {...field} className='bg-gray-700/80 border-gray-600 rounded-t-none min-h-[150px]'/>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                ) : (
+                    <div className='p-4 bg-gray-700/50 rounded-b-md min-h-[150px] whitespace-pre-wrap text-sm'>
+                        {currentProfile.privateNotes || <p className='text-gray-400 italic'>No private notes set.</p>}
+                    </div>
                 )}
-              />
+              </div>
             </CardContent>
-            <CardFooter>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">Hifadhi Mabadiliko</Button>
-            </CardFooter>
+            {isEditing && (
+                <CardFooter>
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700">Hifadhi Mabadiliko</Button>
+                </CardFooter>
+            )}
           </Card>
         </form>
       </Form>

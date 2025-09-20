@@ -31,6 +31,7 @@ export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedi
 export type UserData = {
   playerName: string;
   playerAvatar: string;
+  privateNotes: string;
   money: number;
   stars: number;
   inventory: InventoryItem[];
@@ -137,6 +138,7 @@ export function Game() {
   // State Management
   const [playerName, setPlayerName] = React.useState(initialData?.playerName ?? 'Mchezaji');
   const [playerAvatar, setPlayerAvatar] = React.useState(initialData?.playerAvatar ?? 'https://picsum.photos/seed/player/100/100');
+  const [privateNotes, setPrivateNotes] = React.useState(initialData?.privateNotes ?? 'Welcome to my company profile! I specialize in producing high-quality goods.');
   const [money, setMoney] = React.useState(initialData?.money ?? 100000000);
   const [stars, setStars] = React.useState(initialData?.stars ?? 50);
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialData?.inventory ?? initialInventoryItems);
@@ -151,6 +153,7 @@ export function Game() {
   const handleUpdateProfile = (data: ProfileData) => {
     setPlayerName(data.playerName);
     setPlayerAvatar(data.avatarUrl);
+    setPrivateNotes(data.privateNotes);
     toast({
         title: "Wasifu Umebadilishwa",
         description: "Taarifa zako za wasifu zimefanikiwa kubadilishwa.",
@@ -806,7 +809,7 @@ export function Game() {
         {view === 'chats' && <Chats />}
         {view === 'encyclopedia' && <Encyclopedia />}
         {view === 'accounting' && <Accounting transactions={transactions} />}
-        {view === 'profile' && <PlayerProfile onSave={handleUpdateProfile} currentProfile={{ playerName, avatarUrl: playerAvatar}} />}
+        {view === 'profile' && <PlayerProfile onSave={handleUpdateProfile} currentProfile={{ playerName, avatarUrl: playerAvatar, privateNotes }} />}
 
       </main>
       <AppFooter activeView={view} setView={setView} />
