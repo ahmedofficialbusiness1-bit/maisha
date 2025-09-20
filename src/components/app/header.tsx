@@ -18,6 +18,8 @@ import {
 interface AppHeaderProps {
     money: number;
     stars: number;
+    playerName: string;
+    playerAvatar: string;
     setView: (view: View) => void;
 }
 
@@ -31,7 +33,7 @@ function formatCurrency(value: number): string {
     return `$${value}`;
 }
 
-export function AppHeader({ money, stars, setView }: AppHeaderProps) {
+export function AppHeader({ money, stars, playerName, playerAvatar, setView }: AppHeaderProps) {
     const formattedMoney = useMemo(() => formatCurrency(money), [money]);
   
   return (
@@ -61,11 +63,11 @@ export function AppHeader({ money, stars, setView }: AppHeaderProps) {
         {/* Player Profile & Level */}
         <div className="flex items-center gap-2">
           <Avatar className="h-7 w-7 sm:h-8 sm:w-8 border-2 border-yellow-400">
-            <AvatarImage src="https://picsum.photos/seed/player/100/100" data-ai-hint="player avatar" />
-            <AvatarFallback>P</AvatarFallback>
+            <AvatarImage src={playerAvatar} data-ai-hint="player avatar" />
+            <AvatarFallback>{playerName.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="hidden sm:flex flex-col">
-            <span className="font-semibold text-sm">Mchezaji</span>
+            <span className="font-semibold text-sm">{playerName}</span>
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-400">Level 5</span>
               <Progress value={45} className="h-1.5 w-16 bg-gray-700" />

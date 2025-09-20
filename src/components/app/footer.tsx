@@ -9,6 +9,7 @@ import {
   CandlestickChart,
   MessageSquare,
   LayoutDashboard,
+  User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -45,10 +46,15 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
       label: 'Chats',
       icon: <MessageSquare className="h-5 w-5" />,
     },
+    {
+      view: 'profile' as View,
+      label: 'Profile',
+      icon: <User className="h-5 w-5" />,
+    }
   ];
 
   return (
-    <footer className="sticky bottom-0 z-10 grid grid-cols-5 items-center justify-around border-t bg-gray-900/95 py-1 px-2 backdrop-blur-sm">
+    <footer className="sticky bottom-0 z-10 grid grid-cols-6 items-center justify-around border-t bg-gray-900/95 py-1 px-2 backdrop-blur-sm">
       {navItems.map((item) => (
         <Button
             key={item.view}

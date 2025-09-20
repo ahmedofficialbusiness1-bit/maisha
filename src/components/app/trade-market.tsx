@@ -120,8 +120,6 @@ const productCategories = encyclopediaData.reduce((acc, item) => {
     return acc;
 }, {} as Record<string, EncyclopediaEntry[]>);
 
-const PLAYER_NAME = 'Mchezaji';
-
 
 interface TradeMarketProps {
   playerListings: PlayerListing[];
@@ -130,9 +128,10 @@ interface TradeMarketProps {
   inventory: InventoryItem[];
   onBuyStock: (stock: StockListing, quantity: number) => void;
   onBuyFromMarket: (listing: PlayerListing, quantity: number) => void;
+  playerName: string;
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -173,7 +172,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
   }
   
   const handleSelectListing = (listing: PlayerListing) => {
-    if (listing.seller === PLAYER_NAME) return;
+    if (listing.seller === playerName) return;
     setSelectedListing(listing);
     setBuyQuantity(listing.quantity);
   }
@@ -329,7 +328,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                       onClick={() => handleSelectListing(listing)}
                                       className={cn(
                                         "border-gray-700 hover:bg-gray-700/50",
-                                        listing.seller === PLAYER_NAME ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
+                                        listing.seller === playerName ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
                                         selectedListing?.id === listing.id && "bg-blue-600/30"
                                       )}
                                     >

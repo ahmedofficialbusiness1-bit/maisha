@@ -16,6 +16,8 @@ import { encyclopediaData } from '@/lib/encyclopedia-data.tsx';
 import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
+import { PlayerProfile, type ProfileData } from '@/components/app/profile';
+
 
 const BUILDING_SLOTS = 20;
 
@@ -24,9 +26,11 @@ export type PlayerStock = {
     shares: number;
 }
 
-export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting';
+export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting' | 'profile';
 
 export type UserData = {
+  playerName: string;
+  playerAvatar: string;
   money: number;
   stars: number;
   inventory: InventoryItem[];
@@ -105,7 +109,7 @@ const initialBondListings: BondListing[] = [
 ];
 
 const AI_PLAYER_NAME = 'Serekali';
-const PLAYER_NAME = 'Mchezaji';
+
 
 export const productCategoryToShopMap: Record<string, string> = {
     'Space': 'duka_la_anga',
@@ -126,11 +130,13 @@ export const productCategoryToShopMap: Record<string, string> = {
 
 
 export function Game() {
-
+  const { toast } = useToast();
   const [view, setView] = React.useState<View>('dashboard');
 
   const initialData: UserData | null = null;
   // State Management
+  const [playerName, setPlayerName] = React.useState(initialData?.playerName ?? 'Mchezaji');
+  const [playerAvatar, setPlayerAvatar] = React.useState(initialData?.playerAvatar ?? 'https://picsum.photos/seed/player/100/100');
   const [money, setMoney] = React.useState(initialData?.money ?? 100000000);
   const [stars, setStars] = React.useState(initialData?.stars ?? 50);
   const [inventory, setInventory] = React.useState<InventoryItem[]>(initialData?.inventory ?? initialInventoryItems);
@@ -142,6 +148,15 @@ export function Game() {
   const [transactions, setTransactions] = React.useState<Transaction[]>(initialData?.transactions ?? []);
   const processedSalesRef = React.useRef<Set<string>>(new Set());
 
+  const handleUpdateProfile = (data: ProfileData) => {
+    setPlayerName(data.playerName);
+    setPlayerAvatar(data.avatarUrl);
+    toast({
+        title: "Wasifu Umebadilishwa",
+        description: "Taarifa zako za wasifu zimefanikiwa kubadilishwa.",
+    });
+    setView('dashboard'); // Go back to dashboard after saving
+  }
 
    const addTransaction = (type: 'income' | 'expense', amount: number, description: string) => {
     const newTransaction: Transaction = {
@@ -162,7 +177,11 @@ export function Game() {
     for (const cost of costs) {
         const inventoryItem = inventory.find(i => i.item === cost.name);
         if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
-            
+            toast({
+                variant: "destructive",
+                title: "Vifaa Havitoshi",
+                description: `Unahitaji ${cost.quantity.toLocaleString()}x ${cost.name} ili kujenga.`,
+            });
             return;
         }
     }
@@ -197,7 +216,10 @@ export function Game() {
         return newSlots;
     });
 
-    
+    toast({
+        title: "Ujenzi Umeanza!",
+        description: `${building.name} inajengwa na itakuwa tayari baada ya dakika 15.`,
+    });
   };
   
     const handleUpgradeBuilding = (slotIndex: number) => {
@@ -210,7 +232,11 @@ export function Game() {
     for (const cost of costs) {
       const inventoryItem = inventory.find(i => i.item === cost.name);
       if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
-        
+        toast({
+            variant: "destructive",
+            title: "Vifaa Havitoshi",
+            description: `Unahitaji ${cost.quantity.toLocaleString()}x ${cost.name} ili kuboresha.`,
+        });
         return;
       }
     }
@@ -245,7 +271,10 @@ export function Game() {
       return newSlots;
     });
 
-    
+    toast({
+        title: "Uboreshaji Umeanza!",
+        description: `${slot.building.name} inaboreshwa hadi Level ${slot.level + 1}.`,
+    });
   };
 
   const handleDemolishBuilding = (slotIndex: number) => {
@@ -255,7 +284,11 @@ export function Game() {
         newSlots[slotIndex] = { building: null, level: 0 };
         return newSlots;
     });
-    
+    toast({
+        title: "Jengo Limefutwa",
+        description: `${buildingName} limeondolewa kwenye kiwanja.`,
+        variant: "destructive"
+    });
   };
 
 
@@ -268,6 +301,11 @@ export function Game() {
         const requiredQuantity = input.quantity * quantity;
 
         if (!inventoryItem || inventoryItem.quantity < requiredQuantity) {
+             toast({
+                variant: "destructive",
+                title: "Vifaa Havitoshi",
+                description: `Unahitaji ${requiredQuantity.toLocaleString()}x ${input.name} ili kuzalisha.`,
+            });
             return;
         }
     }
@@ -300,12 +338,22 @@ export function Game() {
       }
       return newInventory;
     });
+
+    toast({
+        title: "Uzalishaji Umekamilika",
+        description: `Umezalisha ${recipe.output.quantity * quantity}x ${recipe.output.name}.`,
+    });
   };
 
   const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => {
      // 1. Check if player has enough of the item
      const inventoryItem = inventory.find(i => i.item === item.item);
      if (!inventoryItem || inventoryItem.quantity < quantity) {
+       toast({
+         variant: "destructive",
+         title: "Bidhaa Hazitoshi",
+         description: `Huna ${quantity.toLocaleString()}x ${item.item} za kutosha ghalani.`
+       });
        return; // Not enough to sell
      }
  
@@ -340,6 +388,11 @@ export function Game() {
        }
        return newSlots;
      });
+
+     toast({
+        title: "Mauzo Yameanza!",
+        description: `Unauza ${quantity.toLocaleString()}x ${item.item}. Utapokea pesa mauzo yakikamilika.`,
+    });
   }
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
@@ -357,14 +410,19 @@ export function Game() {
       const newListing: PlayerListing = {
         id: prevListings.length + Date.now(), // simple unique id
         commodity: item.item,
-        seller: PLAYER_NAME, // current player
+        seller: playerName, // current player
         quantity,
         price,
-        avatar: 'https://picsum.photos/seed/mchezaji/40/40',
+        avatar: playerAvatar,
         quality: 5,
         imageHint: 'player avatar'
       };
       return [newListing, ...prevListings];
+    });
+
+    toast({
+        title: "Bidhaa Iko Sokoni!",
+        description: `Umeweka ${quantity.toLocaleString()}x ${item.item} sokoni kwa bei ya $${price.toFixed(2)} kila kimoja.`
     });
   };
   
@@ -373,6 +431,11 @@ export function Game() {
       const timeReduction = starsToUse * timeReductionPerStar;
 
       if (stars < starsToUse) {
+          toast({
+              variant: "destructive",
+              title: "Star Boosts Hazitoshi",
+              description: "Huna Star Boosts za kutosha kufanya hivyo.",
+          });
           return;
       }
       
@@ -385,6 +448,11 @@ export function Game() {
           }
           return newSlots;
       });
+
+      toast({
+        title: "Ujenzi Umeharakishwa!",
+        description: `Umetumia ${starsToUse} Star Boosts kupunguza muda wa ujenzi.`,
+      });
   };
 
  const handleBuyMaterial = (materialName: string, quantityToBuy: number): boolean => {
@@ -393,6 +461,11 @@ export function Game() {
       .sort((a, b) => a.price - b.price); // Sort by cheapest first
 
     if (listingsForMaterial.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Bidhaa Haipatikani",
+        description: `Hakuna anayeuza ${materialName} sokoni kwa sasa.`,
+      });
       return false;
     }
 
@@ -412,10 +485,20 @@ export function Game() {
     }
 
     if (quantityLeftToBuy > 0) {
+        toast({
+            variant: "destructive",
+            title: "Kiasi Hakitoshi Sokoni",
+            description: `Ni ${ (quantityToBuy - quantityLeftToBuy).toLocaleString()}x ${materialName} pekee zinapatikana sokoni.`,
+        });
         return false;
     }
     
     if (money < totalCost) {
+        toast({
+            variant: "destructive",
+            title: "Pesa Hazitoshi",
+            description: `Unahitaji $${totalCost.toLocaleString()} kununua, lakini una $${money.toLocaleString()}.`,
+        });
         return false;
     }
 
@@ -453,12 +536,22 @@ export function Game() {
         return newListings.filter(l => l.quantity > 0);
     });
 
+    toast({
+      title: "Ununuzi Umekamilika",
+      description: `Umenunua ${quantityToBuy.toLocaleString()}x ${materialName} kwa $${totalCost.toLocaleString()}.`,
+    });
+
     return true;
 };
 
   const handleBuyStock = (stock: StockListing, quantity: number) => {
       const totalCost = stock.stockPrice * quantity;
       if (money < totalCost) {
+        toast({
+          variant: "destructive",
+          title: "Pesa Hazitoshi",
+          description: `Unahitaji $${totalCost.toLocaleString()} kununua hisa hizi.`,
+        });
         return;
       }
 
@@ -481,16 +574,31 @@ export function Game() {
           ? { ...c, sharesAvailable: c.sharesAvailable - quantity }
           : c
       ));
+
+      toast({
+        title: "Umefanikiwa Kununua Hisa",
+        description: `Umenunua hisa ${quantity.toLocaleString()} za ${stock.ticker}.`
+      });
   }
 
   const handleBuyFromMarket = (listing: PlayerListing, quantity: number) => {
-    if (listing.seller === PLAYER_NAME) {
+    if (listing.seller === playerName) {
+        toast({
+            variant: "destructive",
+            title: "Huwezi Kujinunulia",
+            description: "Huwezi kununua bidhaa kutoka kwako mwenyewe.",
+        });
         return;
     }
 
     const totalCost = listing.price * quantity;
 
     if (money < totalCost) {
+        toast({
+            variant: "destructive",
+            title: "Pesa Hazitoshi",
+            description: `Unahitaji $${totalCost.toLocaleString()} kununua, lakini una $${money.toLocaleString()}.`,
+        });
         return;
     }
 
@@ -531,6 +639,11 @@ export function Game() {
         });
         // Remove listing if quantity is zero, but never remove Serekali
         return newListings.filter(l => l.quantity > 0);
+    });
+
+     toast({
+      title: "Ununuzi Umekamilika",
+      description: `Umenunua ${quantity.toLocaleString()}x ${listing.commodity} kutoka kwa ${listing.seller}.`,
     });
   };
   
@@ -662,7 +775,7 @@ export function Game() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
-      <AppHeader money={money} stars={stars} setView={setView} />
+      <AppHeader money={money} stars={stars} setView={setView} playerName={playerName} playerAvatar={playerAvatar} />
       <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-gray-800/50">
         {view === 'dashboard' && (
           <Dashboard 
@@ -687,11 +800,14 @@ export function Game() {
             inventory={inventory} 
             onBuyStock={handleBuyStock}
             onBuyFromMarket={handleBuyFromMarket}
+            playerName={playerName}
           />
         )}
         {view === 'chats' && <Chats />}
         {view === 'encyclopedia' && <Encyclopedia />}
         {view === 'accounting' && <Accounting transactions={transactions} />}
+        {view === 'profile' && <PlayerProfile onSave={handleUpdateProfile} currentProfile={{ playerName, avatarUrl: playerAvatar}} />}
+
       </main>
       <AppFooter activeView={view} setView={setView} />
     </div>
