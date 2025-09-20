@@ -127,10 +127,10 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                         <h1 className="text-2xl font-bold tracking-tight">{currentProfile.playerName}</h1>
                         <p className="text-muted-foreground">Sole trader</p>
                         <div className='flex items-center gap-4 pt-2'>
-                            <Button variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleCopy}>
+                            <Button type="button" variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleCopy}>
                                 <Clipboard className='h-4 w-4 mr-1' /> Copy to Clipboard
                             </Button>
-                            <Button variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleEditToggle}>
+                            <Button type="button" variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleEditToggle}>
                                 <Pencil className='h-4 w-4 mr-1' /> {isEditing ? 'Cancel Edit' : 'Edit Account'}
                             </Button>
                         </div>
@@ -226,5 +226,3 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
     </div>
   );
 }
-
-    
