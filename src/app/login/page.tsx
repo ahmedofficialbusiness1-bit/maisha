@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
-export function LoginPage() {
+export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white p-4">
       <Card className="w-full max-w-sm bg-gray-800/60 border-gray-700">
