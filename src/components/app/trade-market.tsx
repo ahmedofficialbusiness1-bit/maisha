@@ -49,7 +49,6 @@ export type StockListing = {
     companyName: string;
     stockPrice: number;
     totalShares: number;
-    sharesAvailable?: number; // Optional, can be calculated
     marketCap: number;
     logo: string;
     imageHint: string;
@@ -124,7 +123,7 @@ const productCategories = encyclopediaData.reduce((acc, item) => {
 
 interface TradeMarketProps {
   playerListings: PlayerListing[];
-  stockListings: StockListing[];
+  stockListings: (StockListing & { sharesAvailable: number })[];
   bondListings: BondListing[];
   inventory: InventoryItem[];
   onBuyStock: (stock: StockListing, quantity: number) => void;
@@ -138,13 +137,13 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const [isBuyStockDialogOpen, setIsBuyStockDialogOpen] = React.useState(false);
-  const [selectedStock, setSelectedStock] = React.useState<StockListing | null>(null);
+  const [selectedStock, setSelectedStock] = React.useState<(StockListing & { sharesAvailable: number }) | null>(null);
   const [buyStockQuantity, setBuyStockQuantity] = React.useState(1);
   
   const [buyQuantity, setBuyQuantity] = React.useState(0);
   const [selectedListing, setSelectedListing] = React.useState<PlayerListing | null>(null);
 
-  const handleOpenBuyStockDialog = (stock: StockListing) => {
+  const handleOpenBuyStockDialog = (stock: (StockListing & { sharesAvailable: number })) => {
     setSelectedStock(stock);
     setBuyStockQuantity(1);
     setIsBuyStockDialogOpen(true);
