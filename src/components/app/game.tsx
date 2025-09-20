@@ -532,6 +532,35 @@ export function Game() {
     });
   };
   
+   // AI Player (Serekali) automatic market seeding
+   React.useEffect(() => {
+    const aiListings: PlayerListing[] = encyclopediaData
+      .filter(entry => entry.properties.some(p => p.label === 'Market Cost'))
+      .map((entry, index) => {
+          const marketCostProp = entry.properties.find(p => p.label === 'Market Cost');
+          const price = marketCostProp ? parseFloat(marketCostProp.value.replace('$', '').replace(/,/g, '')) : 0;
+          
+          return {
+              id: 10000 + index, // Unique ID range for AI
+              commodity: entry.name,
+              seller: AI_PLAYER_NAME,
+              quantity: 999999, // Infinite quantity
+              price: price,
+              avatar: 'https://picsum.photos/seed/serekali/40/40',
+              quality: 5,
+              imageHint: 'government seal'
+          };
+      })
+      .filter(listing => listing.price > 0); // Only list items with a price
+
+    setMarketListings(prev => [
+        ...prev.filter(p => p.seller !== AI_PLAYER_NAME), // Remove old AI listings
+        ...aiListings,
+        ...prev.filter(p => p.seller === AI_PLAYER_NAME), // Add new AI listings
+    ].filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)); // remove duplicates
+
+  }, [encyclopediaData]); // Re-run if encyclopedia data changes
+
    React.useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
