@@ -140,6 +140,7 @@ export function Game() {
   const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(initialData?.buildingSlots ?? Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })));
   const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>(initialData?.playerStocks ?? []);
   const [transactions, setTransactions] = React.useState<Transaction[]>(initialData?.transactions ?? []);
+  const processedSalesRef = React.useRef<Set<string>>(new Set());
 
 
    const addTransaction = (type: 'income' | 'expense', amount: number, description: string) => {
@@ -562,51 +563,46 @@ export function Game() {
    React.useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
-      let constructionCompleted: string[] = [];
 
       setBuildingSlots(prevSlots => {
         let slotsChanged = false;
-        const newSlots = prevSlots.map(slot => {
+        const newSlots = [...prevSlots];
+        
+        newSlots.forEach((slot, index) => {
           // Check for completed sales
           if (slot && slot.sell && now >= slot.sell.endTime) {
-            slotsChanged = true;
-            
-            const itemName = slot.sell!.recipeId; // recipeId is used to store item name for shops
-            
-            const productInfo = encyclopediaData.find(e => e.name === itemName);
-            const pricePerUnit = productInfo ? parseFloat(productInfo.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : 0;
-            
-            const totalQuantity = slot.sell.quantity;
-            const totalSaleValue = totalQuantity * pricePerUnit;
+            const saleId = `${index}-${slot.sell.startTime}`;
 
-            if (totalSaleValue > 0) {
-                setMoney(prevMoney => prevMoney + totalSaleValue);
-                addTransaction('income', totalSaleValue, `Sold ${totalQuantity.toLocaleString()}x ${itemName}`);
+            if (!processedSalesRef.current.has(saleId)) {
+                slotsChanged = true;
+                const itemName = slot.sell.recipeId;
+                const productInfo = encyclopediaData.find(e => e.name === itemName);
+                const pricePerUnit = productInfo ? parseFloat(productInfo.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : 0;
+                const totalQuantity = slot.sell.quantity;
+                const totalSaleValue = totalQuantity * pricePerUnit;
+
+                if (totalSaleValue > 0) {
+                    setMoney(prevMoney => prevMoney + totalSaleValue);
+                    addTransaction('income', totalSaleValue, `Sold ${totalQuantity.toLocaleString()}x ${itemName}`);
+                }
+                
+                newSlots[index] = { ...slot, sell: undefined };
+                processedSalesRef.current.add(saleId);
             }
-            
-            return { ...slot, sell: undefined };
           }
           
           // Check for completed construction
           if (slot && slot.construction && now >= slot.construction.endTime) {
             slotsChanged = true;
-            if(slot.building) {
-                constructionCompleted.push(slot.building.name);
-            }
-            return { 
+            newSlots[index] = { 
                 ...slot, 
                 level: slot.construction.targetLevel,
                 construction: undefined 
             };
           }
-
-          return slot;
         });
 
-        if (slotsChanged) {
-            return newSlots;
-        }
-        return prevSlots;
+        return slotsChanged ? newSlots : prevSlots;
       });
 
     }, 1000);
