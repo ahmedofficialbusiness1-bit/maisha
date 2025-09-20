@@ -46,9 +46,16 @@ const profileFormSchema = z.object({
 
 export type ProfileData = z.infer<typeof profileFormSchema>;
 
+export type PlayerMetrics = {
+    netWorth: number;
+    ranking: string;
+    rating: string;
+};
+
 interface PlayerProfileProps {
   onSave: (data: ProfileData) => void;
   currentProfile: ProfileData;
+  metrics: PlayerMetrics;
 }
 
 function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
@@ -61,7 +68,7 @@ function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 
-export function PlayerProfile({ onSave, currentProfile }: PlayerProfileProps) {
+export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [localTime, setLocalTime] = React.useState('');
 
@@ -78,6 +85,10 @@ export function PlayerProfile({ onSave, currentProfile }: PlayerProfileProps) {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+  
+   React.useEffect(() => {
+    form.reset(currentProfile);
+  }, [currentProfile, form]);
 
   function onSubmit(data: ProfileData) {
     onSave(data);
@@ -196,8 +207,9 @@ export function PlayerProfile({ onSave, currentProfile }: PlayerProfileProps) {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className='grid grid-cols-2 gap-x-4 gap-y-3'>
-                        <InfoItem label="Ranking" value="#15296" />
-                        <InfoItem label="Rating" value="AA-" />
+                        <InfoItem label="Ranking" value={metrics.ranking} />
+                        <InfoItem label="Rating" value={metrics.rating} />
+                        <InfoItem label="Net Worth" value={`$${metrics.netWorth.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`} />
                         <InfoItem label="Government orders Tier" value="T1" />
                         <InfoItem label="Established" value={new Date().toLocaleDateString()} />
                         <InfoItem label="Last seen" value="Today" />

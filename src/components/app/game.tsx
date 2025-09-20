@@ -16,7 +16,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data.tsx';
 import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
-import { PlayerProfile, type ProfileData } from '@/components/app/profile';
+import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
 
 
 const BUILDING_SLOTS = 20;
@@ -775,6 +775,55 @@ export function Game() {
   }, [playerStocks, companyData]);
 
 
+  const calculatePlayerMetrics = React.useCallback((): PlayerMetrics => {
+    // 1. Calculate Inventory Value
+    const inventoryValue = inventory.reduce((acc, item) => {
+        return acc + (item.quantity * item.marketPrice);
+    }, 0);
+
+    // 2. Calculate Building Value
+    const buildingValue = buildingSlots.reduce((acc, slot) => {
+        if (slot.building) {
+            const costs = buildingData[slot.building.id]?.buildCost;
+            if (costs) {
+                const buildCostValue = costs.reduce((costAcc, cost) => {
+                    const itemPrice = encyclopediaData.find(e => e.name === cost.name)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || 0;
+                    return costAcc + (cost.quantity * parseFloat(itemPrice.toString()));
+                }, 0);
+                // Add value for each level
+                return acc + (buildCostValue * Math.pow(1.5, slot.level));
+            }
+        }
+        return acc;
+    }, 0);
+    
+    // 3. Calculate Stock Value
+    const stockValue = playerStocks.reduce((acc, pStock) => {
+        const stockInfo = companyData.find(c => c.ticker === pStock.ticker);
+        return acc + (pStock.shares * (stockInfo?.stockPrice || 0));
+    }, 0);
+
+    // 4. Calculate Net Worth
+    const netWorth = money + inventoryValue + buildingValue + stockValue;
+    
+    // 5. Determine Rating
+    let rating = 'C';
+    if (netWorth > 1_000_000_000) rating = 'AAA';
+    else if (netWorth > 500_000_000) rating = 'AA';
+    else if (netWorth > 100_000_000) rating = 'A';
+    else if (netWorth > 50_000_000) rating = 'BBB';
+    else if (netWorth > 10_000_000) rating = 'BB';
+    else if (netWorth > 1_000_000) rating = 'B';
+
+    // 6. Determine Ranking (simulated)
+    const baseRanking = 50000;
+    const rank = Math.max(1, Math.floor(baseRanking / (Math.log10(netWorth) || 1)));
+
+    return { netWorth, ranking: `#${rank.toLocaleString()}`, rating };
+  }, [money, inventory, buildingSlots, playerStocks, companyData]);
+  
+  const playerMetrics = calculatePlayerMetrics();
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
@@ -809,7 +858,7 @@ export function Game() {
         {view === 'chats' && <Chats />}
         {view === 'encyclopedia' && <Encyclopedia />}
         {view === 'accounting' && <Accounting transactions={transactions} />}
-        {view === 'profile' && <PlayerProfile onSave={handleUpdateProfile} currentProfile={{ playerName, avatarUrl: playerAvatar, privateNotes }} />}
+        {view === 'profile' && <PlayerProfile onSave={handleUpdateProfile} currentProfile={{ playerName, avatarUrl: playerAvatar, privateNotes }} metrics={playerMetrics} />}
 
       </main>
       <AppFooter activeView={view} setView={setView} />
