@@ -382,7 +382,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                 <TableHead className="text-right text-white">Bei</TableHead>
                                 <TableHead className="text-right text-white">Hisa Zipo</TableHead>
                                 <TableHead className="text-right text-white">Thamani ya Kampuni</TableHead>
-                                <TableHead className="text-right text-white">Ukadiriaji</TableHead>
+                                <TableHead className="text-right text-white">Rating</TableHead>
                                 <TableHead className="text-right text-white">Vitendo</TableHead>
                             </TableRow>
                         </TableHeader>
