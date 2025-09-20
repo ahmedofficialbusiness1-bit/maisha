@@ -16,6 +16,8 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import { Search } from 'lucide-react';
+import { productCategoryToShopMap } from './game';
+import { availableBuildings } from './dashboard';
 
 export function Encyclopedia() {
   const [selectedEntry, setSelectedEntry] = React.useState<EncyclopediaEntry | null>(encyclopediaData[0] || null);
@@ -28,6 +30,9 @@ export function Encyclopedia() {
   const handleSelectEntry = (entry: EncyclopediaEntry) => {
     setSelectedEntry(entry);
   };
+  
+  const relevantShopId = selectedEntry ? productCategoryToShopMap[selectedEntry.category] || 'duka_kuu' : null;
+  const relevantShop = relevantShopId ? availableBuildings.find(b => b.id === relevantShopId) : null;
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -75,62 +80,89 @@ export function Encyclopedia() {
         </CardContent>
       </Card>
 
-      {selectedEntry && (
-        <Card className="bg-gray-800/60 border-gray-700">
-            <CardHeader>
-                <div className="flex items-center gap-4">
-                  <Image
-                    src={selectedEntry.imageUrl}
-                    alt={selectedEntry.name}
-                    width={80}
-                    height={80}
-                    className="rounded-lg border-2 border-gray-600 object-cover"
-                    data-ai-hint={selectedEntry.imageHint}
-                  />
-                  <div>
-                    <CardTitle className="text-3xl">{selectedEntry.name}</CardTitle>
-                    <CardDescription className="text-gray-400">{selectedEntry.category}</CardDescription>
-                  </div>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4 px-6 pb-6">
-                <p className="text-gray-300">{selectedEntry.description}</p>
-                <Separator className="my-4 bg-white/20" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {selectedEntry.properties.map(prop => (
-                        <div key={prop.label} className="bg-gray-900/50 p-3 rounded-lg">
-                            <p className="text-sm font-semibold text-gray-400">{prop.label}</p>
-                            <p className="text-lg font-mono">{prop.value}</p>
-                        </div>
-                    ))}
-                </div>
-                
-                {selectedEntry.recipe && selectedEntry.recipe.inputs.length > 0 && (
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+        {selectedEntry && (
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <div className="flex items-center gap-4">
+                    <Image
+                        src={selectedEntry.imageUrl}
+                        alt={selectedEntry.name}
+                        width={80}
+                        height={80}
+                        className="rounded-lg border-2 border-gray-600 object-cover"
+                        data-ai-hint={selectedEntry.imageHint}
+                    />
                     <div>
-                        <h3 className="text-lg font-semibold mt-4 mb-2">Recipe</h3>
-                        <div className="bg-gray-900/50 p-4 rounded-lg flex items-center justify-center gap-4 flex-wrap">
-                            <div className="flex items-center justify-center gap-2 flex-wrap">
-                                {selectedEntry.recipe.inputs.map((input, index) => (
-                                    <React.Fragment key={input.name}>
-                                        <div className="text-center">
-                                            <Image src={input.imageUrl} alt={input.name} width={40} height={40} className="mx-auto rounded-md" />
-                                            <p className="text-xs mt-1">{input.quantity}x {input.name}</p>
-                                        </div>
-                                        {index < selectedEntry.recipe!.inputs.length - 1 && <p className="text-xl font-bold">+</p>}
-                                    </React.Fragment>
-                                ))}
+                        <CardTitle className="text-3xl">{selectedEntry.name}</CardTitle>
+                        <CardDescription className="text-gray-400">{selectedEntry.category}</CardDescription>
+                    </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-4 px-6 pb-6">
+                    <p className="text-gray-300">{selectedEntry.description}</p>
+                    <Separator className="my-4 bg-white/20" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {selectedEntry.properties.map(prop => (
+                            <div key={prop.label} className="bg-gray-900/50 p-3 rounded-lg">
+                                <p className="text-sm font-semibold text-gray-400">{prop.label}</p>
+                                <p className="text-lg font-mono">{prop.value}</p>
                             </div>
-                            <p className="text-2xl font-bold mx-2">→</p>
-                            <div className="text-center">
-                                <Image src={selectedEntry.imageUrl} alt={selectedEntry.name} width={48} height={48} className="mx-auto rounded-md" />
-                                <p className="text-xs mt-1">{selectedEntry.properties.find(p => p.label === "Output Quantity")?.value.split(' ')[0] || 1}x {selectedEntry.name}</p>
+                        ))}
+                    </div>
+                    
+                    {selectedEntry.recipe && selectedEntry.recipe.inputs.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-semibold mt-4 mb-2">Recipe</h3>
+                            <div className="bg-gray-900/50 p-4 rounded-lg flex items-center justify-center gap-4 flex-wrap">
+                                <div className="flex items-center justify-center gap-2 flex-wrap">
+                                    {selectedEntry.recipe.inputs.map((input, index) => (
+                                        <React.Fragment key={input.name}>
+                                            <div className="text-center">
+                                                <Image src={input.imageUrl} alt={input.name} width={40} height={40} className="mx-auto rounded-md" />
+                                                <p className="text-xs mt-1">{input.quantity}x {input.name}</p>
+                                            </div>
+                                            {index < selectedEntry.recipe!.inputs.length - 1 && <p className="text-xl font-bold">+</p>}
+                                        </React.Fragment>
+                                    ))}
+                                </div>
+                                <p className="text-2xl font-bold mx-2">→</p>
+                                <div className="text-center">
+                                    <Image src={selectedEntry.imageUrl} alt={selectedEntry.name} width={48} height={48} className="mx-auto rounded-md" />
+                                    <p className="text-xs mt-1">{selectedEntry.properties.find(p => p.label === "Output per Batch")?.value.split(' ')[0] || 1}x {selectedEntry.name}</p>
+                                </div>
                             </div>
                         </div>
+                    )}
+                </CardContent>
+            </Card>
+        )}
+        
+        {relevantShop && (
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Duka Linalohusika</CardTitle>
+                    <CardDescription>Bidhaa hii huuzwa kupitia duka hili.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className='flex items-center gap-4 p-4 rounded-lg bg-gray-900/50'>
+                         <Image
+                            src={relevantShop.image}
+                            alt={relevantShop.name}
+                            width={80}
+                            height={80}
+                            className="rounded-lg border-2 border-gray-600 object-cover"
+                            data-ai-hint={relevantShop.imageHint}
+                         />
+                         <div>
+                            <h3 className='text-xl font-bold text-white'>{relevantShop.name}</h3>
+                            <p className='text-sm text-gray-400'>{relevantShop.description}</p>
+                         </div>
                     </div>
-                )}
-            </CardContent>
-        </Card>
-      )}
+                </CardContent>
+            </Card>
+        )}
+      </div>
     </div>
   );
 }

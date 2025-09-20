@@ -73,7 +73,7 @@ export type BuildingSlot = {
     construction?: ConstructionInfo;
 };
 
-const availableBuildings: BuildingType[] = [
+export const availableBuildings: BuildingType[] = [
     {
         id: 'duka_kuu',
         name: 'Duka Kuu',
@@ -708,7 +708,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
 
   const handleConfirmBuild = () => {
     if (selectedSlotIndex !== null && selectedBuildingForBuild) {
-        const costs = buildingData[selectedBuildingForBuild.id].buildCost;
+        const costs = buildingData[selectedBuildingForBuild.id]?.buildCost;
         if (!hasEnoughMaterials(costs)) {
             return;
         }
@@ -1088,7 +1088,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         
         {/* Management Dialog */}
         <Dialog open={isManagementDialogOpen} onOpenChange={setIsManagementDialogOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white flex flex-col max-h-[90vh]">
+            <DialogContent className="bg-gray-900 border-gray-700 text-white">
                 <DialogHeader>
                     <DialogTitle>Simamia {selectedSlot?.building?.name}</DialogTitle>
                     <DialogDescription>
@@ -1316,41 +1316,39 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         
         {/* Boost Dialog */}
         <Dialog open={isBoostDialogOpen} onOpenChange={setIsBoostDialogOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white flex flex-col max-h-[90vh]">
+            <DialogContent className="bg-gray-900 border-gray-700 text-white">
                 <DialogHeader>
                     <DialogTitle>Harakisha Ujenzi</DialogTitle>
                      <DialogDescription>
                         Tumia Star Boosts kupunguza muda wa ujenzi. Unapata dakika 3 kwa kila nyota.
                     </DialogDescription>
                 </DialogHeader>
-                <div className='flex-grow overflow-y-auto -mr-6 pr-6'>
-                    <div className='py-4 space-y-6 text-center'>
-                        <div className='grid grid-cols-2 gap-4'>
-                            <div className='p-3 bg-gray-800 rounded-lg'>
-                            <p className='text-sm text-gray-400'>Muda Uliosalia</p>
-                            <p className='font-bold font-mono text-lg'>{selectedSlot?.construction ? formatTime(selectedSlot.construction.endTime - now) : '00:00'}</p>
-                            </div>
-                            <div className='p-3 bg-gray-800 rounded-lg'>
-                            <p className='text-sm text-gray-400'>Muda Utakaopungua</p>
-                            <p className='font-bold font-mono text-lg text-green-400'>{formatTime(timeReduction)}</p>
-                            </div>
+                <div className='py-4 space-y-6 text-center'>
+                    <div className='grid grid-cols-2 gap-4'>
+                        <div className='p-3 bg-gray-800 rounded-lg'>
+                        <p className='text-sm text-gray-400'>Muda Uliosalia</p>
+                        <p className='font-bold font-mono text-lg'>{selectedSlot?.construction ? formatTime(selectedSlot.construction.endTime - now) : '00:00'}</p>
                         </div>
-                        
-                        <div className='space-y-4'>
-                            <div className='flex justify-between items-center'>
-                                <Label htmlFor="boost-amount" className="text-left">Idadi ya Stars (Una: {stars})</Label>
-                                <span className='flex items-center gap-2 font-bold'>{boostAmount} <Star className='h-4 w-4 text-yellow-400' /></span>
-                            </div>
-                            <Slider
-                                id="boost-amount"
-                                min={0}
-                                max={maxStarsToUse}
-                                step={1}
-                                value={[boostAmount]}
-                                onValueChange={(value) => setBoostAmount(value[0])}
-                                disabled={maxStarsToUse === 0}
-                            />
+                        <div className='p-3 bg-gray-800 rounded-lg'>
+                        <p className='text-sm text-gray-400'>Muda Utakaopungua</p>
+                        <p className='font-bold font-mono text-lg text-green-400'>{formatTime(timeReduction)}</p>
                         </div>
+                    </div>
+                    
+                    <div className='space-y-4'>
+                        <div className='flex justify-between items-center'>
+                            <Label htmlFor="boost-amount" className="text-left">Idadi ya Stars (Una: {stars})</Label>
+                            <span className='flex items-center gap-2 font-bold'>{boostAmount} <Star className='h-4 w-4 text-yellow-400' /></span>
+                        </div>
+                        <Slider
+                            id="boost-amount"
+                            min={0}
+                            max={maxStarsToUse}
+                            step={1}
+                            value={[boostAmount]}
+                            onValueChange={(value) => setBoostAmount(value[0])}
+                            disabled={maxStarsToUse === 0}
+                        />
                     </div>
                 </div>
                 <DialogFooter className="mt-auto pt-4">

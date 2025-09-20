@@ -154,7 +154,8 @@ export function Game() {
   };
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
-    const costs = buildingData[building.id].buildCost;
+    const costs = buildingData[building.id]?.buildCost;
+    if (!costs) return;
     
     // 1. Check for required build materials
     for (const cost of costs) {
