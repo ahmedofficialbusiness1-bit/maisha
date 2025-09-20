@@ -5,12 +5,13 @@ import { UserRecord } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-// This is the only place where we initialize firebase-admin
-// to avoid library conflicts.
-if (!admin.apps.length) {
-  admin.initializeApp();
+// Helper function to initialize Firebase Admin SDK
+function initializeFirebaseAdmin() {
+  if (!admin.apps.length) {
+    admin.initializeApp();
+  }
+  return admin.auth();
 }
-const adminAuth = admin.auth();
 
 type FormState = {
   success: boolean;
@@ -21,6 +22,7 @@ export async function signUpWithEmailAndPassword(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
+  const adminAuth = initializeFirebaseAdmin();
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const displayName = formData.get('displayName') as string;
@@ -45,6 +47,7 @@ export async function signInWithEmailAndPassword(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
+  const adminAuth = initializeFirebaseAdmin();
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
@@ -87,6 +90,7 @@ export async function signInWithEmailAndPassword(
 
 
 async function setCookie(user: UserRecord) {
+  const adminAuth = initializeFirebaseAdmin();
   const customToken = await adminAuth.createCustomToken(user.uid);
   cookies().set('customToken', customToken, {
     httpOnly: true,
