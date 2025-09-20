@@ -41,11 +41,11 @@ export default function RegisterPage() {
         <CardContent>
           <form action={formAction} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="displayName">Jina la Mchezaji</Label>
+              <Label htmlFor="displayName">Jina la Kampuni</Label>
               <Input
                 id="displayName"
                 name="displayName"
-                placeholder="Jina Lako"
+                placeholder="Jina la Kampuni Yako"
                 required
                 className="bg-gray-700 border-gray-600"
               />
