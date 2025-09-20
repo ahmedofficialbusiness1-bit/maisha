@@ -382,6 +382,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                 <TableHead className="text-right text-white">Bei</TableHead>
                                 <TableHead className="text-right text-white">Hisa Zipo</TableHead>
                                 <TableHead className="text-right text-white">Thamani ya Kampuni</TableHead>
+                                <TableHead className="text-right text-white">Ukadiriaji</TableHead>
                                 <TableHead className="text-right text-white">Vitendo</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -403,6 +404,15 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                     <TableCell className="text-right font-mono p-2 sm:p-4">${stock.stockPrice.toFixed(2)}</TableCell>
                                     <TableCell className="text-right font-mono p-2 sm:p-4">{stock.sharesAvailable.toLocaleString()}</TableCell>
                                     <TableCell className="text-right font-mono p-2 sm:p-4">${stock.marketCap.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right p-2 sm:p-4">
+                                        <div className={cn("flex items-center justify-end font-bold text-sm", 
+                                            stock.creditRating.startsWith('A') ? 'text-green-400' : 
+                                            stock.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
+                                        )}>
+                                            {stock.creditRating}
+                                            <ShieldCheck className="ml-1 h-4 w-4" />
+                                        </div>
+                                    </TableCell>
                                     <TableCell className="text-right p-2 sm:p-4">
                                         <Button size="sm" variant="secondary" className="bg-green-600 hover:bg-green-700 text-xs h-8" onClick={() => handleOpenBuyStockDialog(stock)}>Nunua</Button>
                                     </TableCell>
