@@ -169,7 +169,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                             <FormItem>
                               <FormLabel>Picha ya Wasifu (Logo)</FormLabel>
                                <FormControl>
-                                <>
+                                <div>
                                   <Input
                                     type="file"
                                     className="hidden"
@@ -186,7 +186,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                                     <Upload className="mr-2 h-4 w-4" />
                                     Pakia Picha
                                   </Button>
-                                </>
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
