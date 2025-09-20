@@ -620,9 +620,9 @@ export function Game() {
 
       toast({
         title: "Umefanikiwa Kununua Hisa",
-        description: `Umenunua hisa ${quantity.toLocaleString()} za ${stock.ticker}.`
+        description: `Umenunua hisa ${quantity.toLocaleString()} za ${stock.companyName}.`
       });
-      addNotification(`Umenunua hisa ${quantity.toLocaleString()} za ${stock.ticker}.`, 'purchase');
+      addNotification(`Umenunua hisa ${quantity.toLocaleString()} za ${stock.companyName}.`, 'purchase');
   }
 
   const handleBuyFromMarket = (listing: PlayerListing, quantity: number) => {
@@ -920,5 +920,7 @@ export function Game() {
     </div>
   );
 }
+
+    
 
     
