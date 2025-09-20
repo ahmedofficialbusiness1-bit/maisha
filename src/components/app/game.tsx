@@ -136,10 +136,9 @@ export function Game() {
           await saveUserData(user.uid, initialData);
         }
       } else {
+        // User is not signed in. The middleware will handle the redirect.
         setCurrentUser(null);
         setGameState(null);
-        // Redirect to login if not authenticated
-        window.location.href = '/login';
       }
       setIsLoading(false);
     });
@@ -818,5 +817,3 @@ export function Game() {
     </div>
   );
 }
-
-    
