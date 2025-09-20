@@ -98,9 +98,11 @@ const initialPlayerListings: PlayerListing[] = [
     { id: 2, commodity: 'Yai', seller: 'MKG CIE', quantity: 100, price: 1.50, avatar: 'https://picsum.photos/seed/mkg/40/40', quality: 0, imageHint: 'company logo' },
 ];
 
+const initialPlayerStocks: PlayerStock[] = [];
+
 const initialCompanyData: StockListing[] = [
-    { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, sharesAvailable: 10000, marketCap: 4507500, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 500000, dividendYield: 0.015 },
-    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, sharesAvailable: 50000, marketCap: 6025000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 250000, dividendYield: 0.021 },
+    { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, sharesAvailable: 10000, marketCap: 450.75 * (10000 + (initialPlayerStocks.find(s => s.ticker === 'UCHUMI')?.shares || 0)), logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 500000, dividendYield: 0.015 },
+    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, sharesAvailable: 50000, marketCap: 120.50 * (50000 + (initialPlayerStocks.find(s => s.ticker === 'KILIMO')?.shares || 0)), logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 250000, dividendYield: 0.021 },
 ];
 
 const initialBondListings: BondListing[] = [
@@ -145,7 +147,7 @@ export function Game() {
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialData?.companyData ?? initialCompanyData);
   const [bondListings, setBondListings] = React.useState<BondListing[]>(initialData?.bondListings ?? initialBondListings);
   const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(initialData?.buildingSlots ?? Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })));
-  const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>(initialData?.playerStocks ?? []);
+  const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>(initialData?.playerStocks ?? initialPlayerStocks);
   const [transactions, setTransactions] = React.useState<Transaction[]>(initialData?.transactions ?? []);
   const processedSalesRef = React.useRef<Set<string>>(new Set());
 
@@ -750,7 +752,8 @@ export function Game() {
             
             const newPrice = Math.max(1, company.stockPrice * (1 + priceChangePercent));
             const newRevenue = Math.max(1000, company.dailyRevenue * (1 + revenueChangePercent));
-            const newMarketCap = newPrice * (company.sharesAvailable + playerStocks.find(ps => ps.ticker === company.ticker)?.shares || 0);
+            const totalShares = company.sharesAvailable + (playerStocks.find(ps => ps.ticker === company.ticker)?.shares || 0);
+            const newMarketCap = newPrice * totalShares;
 
             return {
                 ...company,
@@ -860,3 +863,5 @@ export function Game() {
     </div>
   );
 }
+
+    
