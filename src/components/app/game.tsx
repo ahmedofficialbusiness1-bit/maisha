@@ -637,37 +637,6 @@ export function Game() {
       clearInterval(marketFluctuationInterval);
     }
   }, [playerStocks, companyData]);
-  
-  // "Serekali" AI Market Maker Logic
-  React.useEffect(() => {
-    const allPossibleProducts = encyclopediaData;
-
-    setMarketListings(currentListings => {
-        const serekaliListingsMap = new Map<string, PlayerListing>();
-        
-        allPossibleProducts.forEach(product => {
-            const priceProp = product.properties.find(p => p.label === 'Market Cost');
-            const price = priceProp ? parseFloat(priceProp.value.replace('$', '').replace(/,/g, '')) : 1_000_000;
-            
-            const newListing: PlayerListing = {
-                id: Date.now() + Math.random(),
-                commodity: product.name,
-                seller: AI_PLAYER_NAME,
-                quantity: 999999999, // Infinite quantity
-                price: price,
-                avatar: 'https://picsum.photos/seed/tza-gov/40/40',
-                quality: 5,
-                imageHint: 'government seal',
-            };
-            serekaliListingsMap.set(product.name, newListing);
-        });
-        
-        // Filter out old Serekali listings and keep player listings
-        const playerListings = currentListings.filter(l => l.seller !== AI_PLAYER_NAME);
-
-        return [...playerListings, ...Array.from(serekaliListingsMap.values())];
-    });
-  }, []); 
 
 
 

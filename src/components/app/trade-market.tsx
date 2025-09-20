@@ -120,7 +120,6 @@ const productCategories = encyclopediaData.reduce((acc, item) => {
     return acc;
 }, {} as Record<string, EncyclopediaEntry[]>);
 
-const AI_PLAYER_NAME = 'Serekali';
 const PLAYER_NAME = 'Mchezaji';
 
 
