@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Bell, Menu, Star, Coins, Scale } from 'lucide-react';
+import { Bell, Menu, Star, Coins, Scale, User } from 'lucide-react';
 import { useMemo } from 'react';
 import type { View } from './game';
 import {
@@ -103,7 +103,10 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView }: A
                     <Scale className="mr-2 h-4 w-4" />
                     <span>Uhasibu</span>
                 </DropdownMenuItem>
-                {/* Add other menu items here in the future */}
+                 <DropdownMenuItem onSelect={() => setView('profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Wasifu</span>
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
 
