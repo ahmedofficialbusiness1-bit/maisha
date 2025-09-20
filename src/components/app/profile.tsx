@@ -29,6 +29,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Textarea } from '../ui/textarea';
 import { Clipboard, Pencil, Upload } from 'lucide-react';
 import { Separator } from '../ui/separator';
+import { cn } from '@/lib/utils';
 
 const profileFormSchema = z.object({
   playerName: z
@@ -49,6 +50,8 @@ export type PlayerMetrics = {
     netWorth: number;
     ranking: string;
     rating: string;
+    buildingValue: number;
+    stockValue: number;
 };
 
 interface PlayerProfileProps {
@@ -57,11 +60,20 @@ interface PlayerProfileProps {
   metrics: PlayerMetrics;
 }
 
-function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
+function InfoItem({ label, value, smallText = false }: { label: string; value: React.ReactNode, smallText?: boolean }) {
     return (
         <>
-            <div className="text-sm text-gray-400">{label}</div>
-            <div className="text-sm font-semibold text-white">{value}</div>
+            <div className={cn("text-sm", smallText && "text-xs")}>{label}</div>
+            <div className={cn("text-sm font-semibold text-white", smallText && "text-xs text-right")}>{value}</div>
+        </>
+    );
+}
+
+function ValuationItem({ label, value }: { label: React.ReactNode; value: string }) {
+    return (
+        <>
+            <div className="text-sm text-gray-400 flex items-center">{label}</div>
+            <div className="text-sm font-semibold text-white text-right font-mono">{value}</div>
         </>
     );
 }
@@ -169,7 +181,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                             <FormItem>
                               <FormLabel>Picha ya Wasifu (Logo)</FormLabel>
                                <FormControl>
-                                <div>
+                                <div id={field.name}>
                                   <Input
                                     type="file"
                                     className="hidden"
@@ -227,7 +239,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
             </Card>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-4">
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <CardTitle>Info</CardTitle>
@@ -246,6 +258,48 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                     </div>
                 </CardContent>
             </Card>
+             <Card className="bg-gray-800/60 border-gray-700">
+                <CardContent className="p-4 space-y-4">
+                    {/* Bonus Section */}
+                    <div className="grid grid-cols-[auto_1fr] gap-x-4 items-center">
+                        <h3 className="font-bold whitespace-nowrap">Bonus</h3>
+                        <Separator className="bg-gray-600" />
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 pl-4">
+                        <div className="text-sm text-gray-300">Production speed</div>
+                        <div className="text-sm font-mono text-right">1% +0%</div>
+                        <div className="text-sm text-gray-300">Sales speed</div>
+                        <div className="text-sm font-mono text-right">3% +0%</div>
+                    </div>
+
+                    <Separator className="bg-gray-700 my-2" />
+
+                    {/* Valuation Section */}
+                    <div className="grid grid-cols-[auto_1fr] gap-x-4 items-center">
+                        <h3 className="font-bold whitespace-nowrap">Valuation</h3>
+                        <Separator className="bg-gray-600" />
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 pl-4">
+                        <ValuationItem label={<span className='text-xs'>(at {localTime})</span>} value="" />
+                        <ValuationItem label="Company value" value={`$${metrics.netWorth.toLocaleString()}`} />
+                        <ValuationItem label="Buildings value" value={`$${metrics.buildingValue.toLocaleString()}`} />
+                        <ValuationItem label="Patents value" value="$0" />
+                    </div>
+                    
+                    <Separator className="bg-gray-700 my-2" />
+
+                     {/* Liabilities Section */}
+                    <div className="grid grid-cols-[auto_1fr] gap-x-4 items-center">
+                        <h3 className="font-bold whitespace-nowrap">Liabilities</h3>
+                        <Separator className="bg-gray-600" />
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 pl-4">
+                        <ValuationItem label={<span className='text-xs'>(at {localTime})</span>} value="" />
+                        <ValuationItem label="No liabilities" value="" />
+                    </div>
+
+                </CardContent>
+             </Card>
           </div>
 
         </form>

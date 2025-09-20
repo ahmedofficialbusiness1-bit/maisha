@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -152,8 +151,8 @@ export function Game() {
 
   const handleUpdateProfile = (data: ProfileData) => {
     setPlayerName(data.playerName);
-    setPlayerAvatar(data.avatarUrl);
-    setPrivateNotes(data.privateNotes);
+    if(data.avatarUrl) setPlayerAvatar(data.avatarUrl);
+    setPrivateNotes(data.privateNotes || '');
     toast({
         title: "Wasifu Umebadilishwa",
         description: "Taarifa zako za wasifu zimefanikiwa kubadilishwa.",
@@ -819,7 +818,7 @@ export function Game() {
     const baseRanking = 50000;
     const rank = Math.max(1, Math.floor(baseRanking / (Math.log10(netWorth) || 1)));
 
-    return { netWorth, ranking: `#${rank.toLocaleString()}`, rating };
+    return { netWorth, ranking: `#${rank.toLocaleString()}`, rating, buildingValue, stockValue };
   }, [money, inventory, buildingSlots, playerStocks, companyData]);
   
   const playerMetrics = calculatePlayerMetrics();
