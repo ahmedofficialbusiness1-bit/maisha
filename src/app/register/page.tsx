@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useFormState } from 'react-dom';
-import { useEffect } from 'react';
+import { useActionState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,7 +16,7 @@ import { signUpWithEmailAndPassword } from '@/app/auth/actions';
 import { useToast } from '@/hooks/use-toast';
 
 export default function RegisterPage() {
-  const [state, formAction] = useFormState(signUpWithEmailAndPassword, null);
+  const [state, formAction] = useActionState(signUpWithEmailAndPassword, null);
   const { toast } = useToast();
 
   useEffect(() => {

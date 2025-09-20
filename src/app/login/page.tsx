@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useFormState } from 'react-dom';
+import { useActionState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,11 +13,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { signInWithEmailAndPassword } from '@/app/auth/actions';
-import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const [state, formAction] = useFormState(signInWithEmailAndPassword, null);
+  const [state, formAction] = useActionState(signInWithEmailAndPassword, null);
   const { toast } = useToast();
 
   useEffect(() => {
