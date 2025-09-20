@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign } from 'lucide-react';
+import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor } from 'lucide-react';
 import { useMemo } from 'react';
 import type { View } from './game';
 import {
@@ -124,6 +124,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                                 <div className="flex-shrink-0 mt-1">
                                     {n.icon === 'construction' && <Hammer className="h-4 w-4 text-orange-400" />}
                                     {n.icon === 'sale' && <CircleDollarSign className="h-4 w-4 text-green-400" />}
+                                    {n.icon === 'production' && <Tractor className="h-4 w-4 text-blue-400" />}
                                     {n.icon === 'purchase' && <CircleDollarSign className="h-4 w-4 text-red-400" />}
                                     {n.icon === 'dividend' && <Coins className="h-4 w-4 text-yellow-400" />}
                                 </div>
@@ -174,5 +175,3 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
     </header>
   );
 }
-
-    

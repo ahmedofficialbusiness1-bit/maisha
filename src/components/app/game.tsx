@@ -4,13 +4,12 @@
 import * as React from 'react';
 import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
-import { Dashboard, type BuildingSlot, type BuildingType, type SellInfo } from '@/components/app/dashboard';
+import { Dashboard, type BuildingSlot, type BuildingType, type ActivityInfo } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
 import { TradeMarket, type PlayerListing, type StockListing, type BondListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { recipes } from '@/lib/recipe-data';
-import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data.tsx';
 import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
@@ -32,7 +31,7 @@ export type Notification = {
     message: string;
     timestamp: number;
     read: boolean;
-    icon: 'construction' | 'sale' | 'purchase' | 'dividend';
+    icon: 'construction' | 'sale' | 'purchase' | 'dividend' | 'production';
 };
 
 
@@ -141,7 +140,6 @@ export const productCategoryToShopMap: Record<string, string> = {
 
 
 export function Game() {
-  const { toast } = useToast();
   const [view, setView] = React.useState<View>('dashboard');
 
   const initialData: UserData | null = null;
@@ -159,7 +157,7 @@ export function Game() {
   const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>(initialData?.playerStocks ?? initialPlayerStocks);
   const [transactions, setTransactions] = React.useState<Transaction[]>(initialData?.transactions ?? []);
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
-  const processedSalesRef = React.useRef<Set<string>>(new Set());
+  const processedActivitiesRef = React.useRef<Set<string>>(new Set());
 
   const addNotification = (message: string, icon: Notification['icon']) => {
     const newNotification: Notification = {
@@ -322,23 +320,29 @@ export function Game() {
       return newInventory.filter(item => item.quantity > 0);
     });
     
-    // Add product to inventory
-    setInventory(prevInventory => {
-      const newInventory = [...prevInventory];
-      const itemIndex = newInventory.findIndex(i => i.item === recipe.output.name);
-      const totalOutput = recipe.output.quantity * quantity;
-      
-      if (itemIndex > -1) {
-        newInventory[itemIndex].quantity += totalOutput;
-      } else {
-        const productInfo = encyclopediaData.find(e => e.name === recipe.output.name);
-        const price = productInfo ? parseFloat(productInfo.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : 0;
-        newInventory.push({ item: recipe.output.name, quantity: totalOutput, marketPrice: price });
-      }
-      return newInventory;
-    });
+     const now = Date.now();
+ 
+     // Set activity state on the building slot
+     setBuildingSlots(prev => {
+       const newSlots = [...prev];
+       const slot = newSlots[slotIndex];
+       if (slot && slot.building && !slot.activity) {
+         newSlots[slotIndex] = {
+           ...slot,
+           activity: {
+             type: 'produce',
+             recipeId: recipe.output.name, // The item being produced
+             quantity: recipe.output.quantity * quantity,
+             saleValue: 0, // No sale value for production
+             startTime: now,
+             endTime: now + durationMs,
+           }
+         };
+       }
+       return newSlots;
+     });
 
-    addNotification(`Umezalisha ${recipe.output.quantity * quantity}x ${recipe.output.name}.`, 'sale');
+    addNotification(`Umeanza kuzalisha ${recipe.output.quantity * quantity}x ${recipe.output.name}.`, 'production');
   };
 
   const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => {
@@ -365,10 +369,11 @@ export function Game() {
      setBuildingSlots(prev => {
        const newSlots = [...prev];
        const slot = newSlots[slotIndex];
-       if (slot && slot.building && !slot.sell) {
+       if (slot && slot.building && !slot.activity) {
          newSlots[slotIndex] = {
            ...slot,
-           sell: {
+           activity: {
+             type: 'sell',
              recipeId: item.item,
              quantity: quantity,
              saleValue: totalSaleValue,
@@ -626,22 +631,36 @@ export function Game() {
         const newSlots = [...prevSlots];
         
         newSlots.forEach((slot, index) => {
-          // Check for completed sales
-          if (slot && slot.sell && now >= slot.sell.endTime) {
-            const saleId = `${index}-${slot.sell.startTime}`;
+          // Check for completed activities
+          if (slot && slot.activity && now >= slot.activity.endTime) {
+            const activityId = `${index}-${slot.activity.startTime}`;
 
-            if (!processedSalesRef.current.has(saleId)) {
+            if (!processedActivitiesRef.current.has(activityId)) {
                 slotsChanged = true;
-                const { recipeId: itemName, quantity: totalQuantity, saleValue } = slot.sell;
+                const { type, recipeId: itemName, quantity: totalQuantity, saleValue } = slot.activity;
 
-                if (saleValue > 0) {
+                if (type === 'sell' && saleValue > 0) {
                     setMoney(prevMoney => prevMoney + saleValue);
                     addTransaction('income', saleValue, `Sold ${totalQuantity.toLocaleString()}x ${itemName}`);
                     addNotification(`Umepokea $${saleValue.toLocaleString()} kwa kuuza ${totalQuantity.toLocaleString()}x ${itemName}.`, 'sale');
+                } else if (type === 'produce') {
+                    setInventory(prevInventory => {
+                        const newInventory = [...prevInventory];
+                        const itemIndex = newInventory.findIndex(i => i.item === itemName);
+                        if (itemIndex > -1) {
+                            newInventory[itemIndex].quantity += totalQuantity;
+                        } else {
+                            const productInfo = encyclopediaData.find(e => e.name === itemName);
+                            const price = productInfo ? parseFloat(productInfo.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : 0;
+                            newInventory.push({ item: itemName, quantity: totalQuantity, marketPrice: price });
+                        }
+                        return newInventory;
+                    });
+                     addNotification(`Uzalishaji wa ${totalQuantity.toLocaleString()}x ${itemName} umekamilika.`, 'production');
                 }
                 
-                newSlots[index] = { ...slot, sell: undefined };
-                processedSalesRef.current.add(saleId);
+                newSlots[index] = { ...slot, activity: undefined };
+                processedActivitiesRef.current.add(activityId);
             }
           }
           
@@ -818,7 +837,3 @@ export function Game() {
     </div>
   );
 }
-
-    
-
-    

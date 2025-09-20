@@ -53,10 +53,11 @@ export type BuildingType = {
   imageHint: string;
 };
 
-export type SellInfo = {
+export type ActivityInfo = {
+    type: 'sell' | 'produce';
     recipeId: string; // For shops, this will be the item name.
     quantity: number;
-    saleValue: number; // Store the final sale value
+    saleValue: number; // Store the final sale value for sales
     startTime: number;
     endTime: number;
 };
@@ -70,7 +71,7 @@ export type ConstructionInfo = {
 export type BuildingSlot = {
     building: BuildingType | null;
     level: number;
-    sell?: SellInfo;
+    activity?: ActivityInfo;
     construction?: ConstructionInfo;
 };
 
@@ -903,7 +904,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   const handleCardClick = (slot: BuildingSlot, index: number) => {
     if (slot.construction) {
         handleOpenBoostDialog(index);
-    } else if (slot.building && !slot.sell) {
+    } else if (slot.building && !slot.activity) {
         handleOpenManagementDialog(index);
     }
   }
@@ -933,7 +934,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {buildingSlots.map((slot, index) => {
-            const currentRecipeName = slot.sell ? slot.sell!.recipeId : null;
+            const currentActivityName = slot.activity ? slot.activity!.recipeId : null;
             const style = slot.building ? (buildingStyles[slot.building.id] || buildingStyles.default) : buildingStyles.default;
             return slot.building ? (
             <Card
@@ -961,27 +962,32 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                 </div>
 
 
-                {slot.sell && (
+                {slot.activity?.type === 'sell' && (
                    <div className="absolute top-2 left-2 p-1 bg-green-500/80 rounded-full animate-pulse">
                       <CircleDollarSign className="h-4 w-4 text-white" />
                    </div>
+                )}
+                {slot.activity?.type === 'produce' && (
+                    <div className="absolute top-2 left-2 p-1 bg-blue-500/80 rounded-full animate-pulse">
+                        <Tractor className="h-4 w-4 text-white" />
+                    </div>
                 )}
                 {slot.construction && (
                    <div className="absolute top-2 left-2 p-1 bg-orange-500/80 rounded-full animate-pulse">
                       <Hammer className="h-4 w-4 text-white" />
                    </div>
                 )}
-                {!slot.sell && !slot.construction && (
+                {!slot.activity && !slot.construction && (
                    <div className="absolute top-2 right-2 p-1 bg-gray-900/80 rounded-full">
                        <Settings className="h-4 w-4 text-white" />
                    </div>
                 )}
                 <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
                     <p className="text-xs font-bold truncate">{slot.building.name} (Lvl {slot.level || 0})</p>
-                    {slot.sell && currentRecipeName ? (
+                    {slot.activity && currentActivityName ? (
                         <div className='text-xs font-mono text-green-300 flex items-center justify-center gap-2'>
-                           <span>{formatTime(slot.sell.endTime - now)}</span>
-                           <span>| {currentRecipeName}</span>
+                           <span>{formatTime(slot.activity.endTime - now)}</span>
+                           <span>| {currentActivityName}</span>
                         </div>
                     ) : slot.construction ? (
                         <div className='text-xs font-mono text-orange-300 flex items-center justify-center gap-2'>
@@ -1402,7 +1408,3 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     </div>
   );
 }
-
-    
-
-    
