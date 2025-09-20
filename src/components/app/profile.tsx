@@ -26,9 +26,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { toast } from '@/hooks/use-toast';
 import { Textarea } from '../ui/textarea';
-import { Clipboard, Pencil } from 'lucide-react';
+import { Clipboard, Pencil, Upload } from 'lucide-react';
 import { Separator } from '../ui/separator';
 
 const profileFormSchema = z.object({
@@ -40,7 +39,7 @@ const profileFormSchema = z.object({
     .max(30, {
       message: 'Jina lisizidi herufi 30.',
     }),
-  avatarUrl: z.string().url({ message: 'Tafadhali weka URL sahihi ya picha.' }).optional().or(z.literal('')),
+  avatarUrl: z.string().optional().or(z.literal('')),
   privateNotes: z.string().max(500, { message: 'Maelezo yasizidi herufi 500.'}).optional(),
 });
 
@@ -76,7 +75,8 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
     resolver: zodResolver(profileFormSchema),
     defaultValues: currentProfile,
   });
-
+  
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const avatarUrl = form.watch('avatarUrl');
 
   React.useEffect(() => {
@@ -105,6 +105,17 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
     }
     setIsEditing(!isEditing);
   }
+  
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        form.setValue('avatarUrl', e.target?.result as string, { shouldDirty: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
 
   return (
@@ -152,17 +163,34 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                             )}
                         />
                         <FormField
-                            control={form.control}
-                            name="avatarUrl"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>URL ya Picha (Logo)</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="https://mfano.com/picha.png" {...field} className='bg-gray-700 border-gray-600' />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
+                          control={form.control}
+                          name="avatarUrl"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Picha ya Wasifu (Logo)</FormLabel>
+                               <FormControl>
+                                <>
+                                  <Input
+                                    type="file"
+                                    className="hidden"
+                                    ref={fileInputRef}
+                                    onChange={handleImageUpload}
+                                    accept="image/*"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full justify-center bg-gray-700 border-gray-600 hover:bg-gray-600"
+                                    onClick={() => fileInputRef.current?.click()}
+                                  >
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Pakia Picha
+                                  </Button>
+                                </>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
                         </>
                     ) : null}
