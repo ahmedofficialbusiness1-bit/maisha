@@ -18,7 +18,6 @@ import {
 import type { Notification } from './game';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { signOut } from '@/app/auth/actions';
 
 interface AppHeaderProps {
     money: number;
@@ -169,15 +168,6 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                     <User className="mr-2 h-4 w-4" />
                     <span>Wasifu</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className='bg-gray-600'/>
-                 <form action={signOut}>
-                  <DropdownMenuItem asChild>
-                    <button type="submit" className="w-full">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Toka</span>
-                    </button>
-                  </DropdownMenuItem>
-                </form>
             </DropdownMenuContent>
         </DropdownMenu>
 

@@ -3,7 +3,6 @@
 
 import * as React from 'react';
 import { useDebouncedCallback } from 'use-debounce';
-import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
 import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot, type BuildingType, type ActivityInfo } from '@/components/app/dashboard';
@@ -17,8 +16,6 @@ import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
-import { auth } from '@/lib/firebase/client';
-import { loadUserData, saveUserData } from '@/lib/firebase/service';
 import { Skeleton } from '../ui/skeleton';
 
 
@@ -73,9 +70,9 @@ const initialBondListings: BondListing[] = [
 
 const AI_PLAYER_NAME = 'Serekali';
 
-const getInitialUserData = (user: User): UserData => ({
-    playerName: user.displayName || 'Mchezaji Mpya',
-    playerAvatar: user.photoURL || `https://picsum.photos/seed/${user.uid}/100/100`,
+const getInitialUserData = (): UserData => ({
+    playerName: 'Mchezaji Mpya',
+    playerAvatar: `https://picsum.photos/seed/player/100/100`,
     privateNotes: 'Karibu kwenye wasifu wangu! Mimi ni mtaalamu wa kuzalisha bidhaa bora.',
     money: 10000,
     stars: 5,
@@ -110,54 +107,15 @@ export const productCategoryToShopMap: Record<string, string> = {
 
 export function Game() {
   const [view, setView] = React.useState<View>('dashboard');
-  const [currentUser, setCurrentUser] = React.useState<User | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [gameState, setGameState] = React.useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [gameState, setGameState] = React.useState<UserData>(getInitialUserData());
 
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
 
-  // Debounced save function
-  const debouncedSave = useDebouncedCallback((uid: string, data: UserData) => {
-    saveUserData(uid, data);
-  }, 1500); // Save 1.5 seconds after the last change
-
-  // Effect to handle auth state and load/initialize data
-  React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
-        const userData = await loadUserData(user.uid);
-        if (userData) {
-          setGameState(userData);
-        } else {
-          // New user, create initial data
-          const initialData = getInitialUserData(user);
-          setGameState(initialData);
-          await saveUserData(user.uid, initialData);
-        }
-      } else {
-        // User is not signed in. The middleware will handle the redirect.
-        setCurrentUser(null);
-        setGameState(null);
-      }
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Effect to save game state whenever it changes
-  React.useEffect(() => {
-    if (gameState && currentUser && !isLoading) {
-      debouncedSave(currentUser.uid, gameState);
-    }
-  }, [gameState, currentUser, isLoading, debouncedSave]);
-
-  
   // Update state using a single function to ensure consistency
   const updateState = (updater: (prevState: UserData) => UserData) => {
     setGameState(prevState => {
-        if (!prevState) return null;
+        if (!prevState) return getInitialUserData();
         return updater(prevState);
     });
   };
@@ -208,7 +166,6 @@ export function Game() {
   };
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
-    if (!gameState) return;
     const costs = buildingData[building.id]?.buildCost;
     if (!costs) return;
     
@@ -253,7 +210,6 @@ export function Game() {
   };
   
     const handleUpgradeBuilding = (slotIndex: number) => {
-    if (!gameState) return;
     const slot = gameState.buildingSlots[slotIndex];
     if (!slot || !slot.building) return;
 
@@ -309,7 +265,6 @@ export function Game() {
 
 
   const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
-    if (!gameState) return;
     const inputs = recipe.inputs || [];
     
     for (const input of inputs) {
@@ -360,7 +315,6 @@ export function Game() {
   };
 
   const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => {
-    if (!gameState) return;
      const inventoryItem = gameState.inventory.find(i => i.item === item.item);
      if (!inventoryItem || inventoryItem.quantity < quantity) {
        return;
@@ -404,8 +358,6 @@ export function Game() {
   }
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
-    if (!gameState) return;
-    
     updateState(prev => {
         const newInventory = prev.inventory.map(invItem =>
             invItem.item === item.item
@@ -435,7 +387,7 @@ export function Game() {
   };
   
   const handleBoostConstruction = (slotIndex: number, starsToUse: number) => {
-      if (!gameState || gameState.stars < starsToUse) return;
+      if (gameState.stars < starsToUse) return;
       
       const timeReductionPerStar = 3 * 60 * 1000;
       const timeReduction = starsToUse * timeReductionPerStar;
@@ -451,8 +403,6 @@ export function Game() {
   };
 
  const handleBuyMaterial = (materialName: string, quantityToBuy: number): boolean => {
-    if (!gameState) return false;
-
     const listingsForMaterial = gameState.marketListings
       .filter(l => l.commodity === materialName)
       .sort((a, b) => a.price - b.price);
@@ -508,7 +458,6 @@ export function Game() {
 };
 
     const calculateAvailableShares = (stock: StockListing) => {
-        if (!gameState) return 0;
         const ownedByPlayers = gameState.playerStocks
             .filter(ps => ps.ticker === stock.ticker)
             .reduce((sum, ps) => sum + ps.shares, 0);
@@ -517,7 +466,6 @@ export function Game() {
     }
 
   const handleBuyStock = (stock: StockListing, quantity: number) => {
-      if (!gameState) return;
       const totalCost = stock.stockPrice * quantity;
       if (gameState.money < totalCost) return;
 
@@ -542,7 +490,7 @@ export function Game() {
   }
 
   const handleBuyFromMarket = (listing: PlayerListing, quantity: number) => {
-    if (!gameState || listing.seller === gameState.playerName) return;
+    if (listing.seller === gameState.playerName) return;
 
     const totalCost = listing.price * quantity;
     if (gameState.money < totalCost) return;
@@ -583,7 +531,6 @@ export function Game() {
   
    // AI Player (Serekali) automatic market seeding
    React.useEffect(() => {
-    if (!gameState) return;
     const aiListings: PlayerListing[] = encyclopediaData
       .filter(entry => entry.properties.some(p => p.label === 'Market Cost'))
       .map((entry, index) => {
@@ -614,8 +561,6 @@ export function Game() {
 
    React.useEffect(() => {
     const interval = setInterval(() => {
-        if (!gameState) return;
-
         const now = Date.now();
         let changed = false;
         const newState = { ...gameState };
@@ -660,7 +605,6 @@ export function Game() {
     }, 1000);
 
     const dividendInterval = setInterval(() => {
-        if (!gameState) return;
         let totalDividends = 0;
         const dividendMessages: string[] = [];
 
@@ -686,7 +630,6 @@ export function Game() {
     }, 24 * 60 * 60000);
 
     const marketFluctuationInterval = setInterval(() => {
-        if (!gameState) return;
         updateState(prev => {
             const newCompanyData = prev.companyData.map(company => {
                 const priceChangePercent = (Math.random() - 0.49) * 0.05;
@@ -712,8 +655,6 @@ export function Game() {
 
 
   const calculatePlayerMetrics = React.useCallback((): PlayerMetrics => {
-    if (!gameState) return { netWorth: 0, ranking: '#?', rating: 'F', buildingValue: 0, stockValue: 0 };
-    
     const inventoryValue = gameState.inventory.reduce((acc, item) => acc + (item.quantity * item.marketPrice), 0);
     const buildingValue = gameState.buildingSlots.reduce((acc, slot) => {
         if (slot.building) {
@@ -750,7 +691,7 @@ export function Game() {
   
   const playerMetrics = calculatePlayerMetrics();
 
-  if (isLoading || !gameState) {
+  if (isLoading) {
     return (
         <div className="flex flex-col min-h-screen bg-gray-900 p-8 items-center justify-center">
             <Skeleton className="h-16 w-full mb-4" />
