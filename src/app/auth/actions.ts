@@ -1,45 +1,73 @@
 'use server';
 
-import * as admin from 'firebase-admin';
 import { UserRecord } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-
-// Helper function to initialize Firebase Admin SDK
-function initializeFirebaseAdmin() {
-  if (!admin.apps.length) {
-    admin.initializeApp();
-  }
-  return admin.auth();
-}
 
 type FormState = {
   success: boolean;
   message: string;
 } | null;
 
+const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+if (!FIREBASE_API_KEY) {
+  throw new Error('NEXT_PUBLIC_FIREBASE_API_KEY is not set');
+}
+
 export async function signUpWithEmailAndPassword(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const adminAuth = initializeFirebaseAdmin();
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const displayName = formData.get('displayName') as string;
 
+  const signUpEndpoint = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`;
+
   try {
-    const userCredential = await adminAuth.createUser({
-      email,
-      password,
-      displayName,
+    const response = await fetch(signUpEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        returnSecureToken: true,
+      }),
     });
-    await setCookie(userCredential);
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error?.message || 'Usajili umeshindwa.');
+    }
+    
+    // The user is created, now update their display name.
+    const updateProfileEndpoint = `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${FIREBASE_API_KEY}`;
+    await fetch(updateProfileEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            idToken: result.idToken,
+            displayName: displayName,
+            returnSecureToken: false
+        })
+    });
+
+
+    cookies().set('idToken', result.idToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24, // 24 hours
+    });
+
   } catch (e: any) {
     return {
       success: false,
-      message: e.message || 'An unknown error occurred.',
+      message: e.message || 'Kosa lisilojulikana limetokea.',
     };
   }
+
   redirect('/game');
 }
 
@@ -47,14 +75,10 @@ export async function signInWithEmailAndPassword(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const adminAuth = initializeFirebaseAdmin();
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
-  // This is a workaround to sign in with email and password using the Admin SDK
-  // The Admin SDK does not have a direct signInWithEmailAndPassword method.
-  // We make a REST API call to the Firebase Auth endpoint.
-  const signInEndpoint = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`;
+  const signInEndpoint = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`;
 
   try {
     const response = await fetch(signInEndpoint, {
@@ -72,16 +96,20 @@ export async function signInWithEmailAndPassword(
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.error?.message || 'Authentication failed.');
+      throw new Error(result.error?.message || 'Uthibitishaji umeshindwa.');
     }
-
-    const user = await adminAuth.getUserByEmail(email);
-    await setCookie(user);
+    
+    cookies().set('idToken', result.idToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24, // 24 hours
+    });
 
   } catch (e: any) {
     return {
       success: false,
-      message: e.message || 'An unknown error occurred.',
+      message: e.message || 'Kosa lisilojulikana limetokea.',
     };
   }
 
@@ -89,18 +117,7 @@ export async function signInWithEmailAndPassword(
 }
 
 
-async function setCookie(user: UserRecord) {
-  const adminAuth = initializeFirebaseAdmin();
-  const customToken = await adminAuth.createCustomToken(user.uid);
-  cookies().set('customToken', customToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    maxAge: 60 * 60 * 24, // 24 hours
-  });
-}
-
 export async function signOut() {
-  cookies().delete('customToken');
+  cookies().delete('idToken');
   redirect('/login');
 }
