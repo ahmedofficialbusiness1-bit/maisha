@@ -97,7 +97,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
 
   const handleCopy = () => {
     navigator.clipboard.writeText(currentProfile.playerName);
-    toast({ title: 'Copied!', description: 'Player name copied to clipboard.' });
   }
 
   const handleEditToggle = () => {
