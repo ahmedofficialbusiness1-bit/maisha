@@ -1,9 +1,17 @@
 'use server';
 
-import { adminAuth } from '@/lib/firebase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import * as admin from 'firebase-admin';
+
+// Initialize Firebase Admin SDK
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
+const adminAuth = admin.auth();
+
 
 const signUpSchema = z.object({
   playerName: z.string().min(3, { message: 'Player name must be at least 3 characters long' }),
