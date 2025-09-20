@@ -226,3 +226,5 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
     </div>
   );
 }
+
+    
