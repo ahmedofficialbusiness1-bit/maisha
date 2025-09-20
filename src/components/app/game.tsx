@@ -556,10 +556,8 @@ export function Game() {
     setMarketListings(prev => [
         ...prev.filter(p => p.seller !== AI_PLAYER_NAME), // Remove old AI listings
         ...aiListings,
-        ...prev.filter(p => p.seller === AI_PLAYER_NAME), // Add new AI listings
-    ].filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)); // remove duplicates
-
-  }, [encyclopediaData]); // Re-run if encyclopedia data changes
+    ]);
+  }, []);
 
    React.useEffect(() => {
     const interval = setInterval(() => {
