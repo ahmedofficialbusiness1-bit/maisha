@@ -2,6 +2,8 @@
 'use client';
 
 import * as React from 'react';
+import { useDebouncedCallback } from 'use-debounce';
+import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
 import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot, type BuildingType, type ActivityInfo } from '@/components/app/dashboard';
@@ -15,6 +17,9 @@ import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
+import { auth } from '@/lib/firebase/client';
+import { loadUserData, saveUserData } from '@/lib/firebase/service';
+import { Skeleton } from '../ui/skeleton';
 
 
 const BUILDING_SLOTS = 20;
@@ -48,17 +53,13 @@ export type UserData = {
   buildingSlots: BuildingSlot[];
   playerStocks: PlayerStock[];
   transactions: Transaction[];
+  notifications: Notification[];
 };
-
-const initialInventoryItems: InventoryItem[] = [
-];
 
 const initialPlayerListings: PlayerListing[] = [
     { id: 1, commodity: 'Maji', seller: 'Flexy suyo', quantity: 450, price: 0.10, avatar: 'https://picsum.photos/seed/flexy/40/40', quality: 1, imageHint: 'player avatar' },
     { id: 2, commodity: 'Yai', seller: 'MKG CIE', quantity: 100, price: 1.50, avatar: 'https://picsum.photos/seed/mkg/40/40', quality: 0, imageHint: 'company logo' },
 ];
-
-const initialPlayerStocks: PlayerStock[] = [];
 
 const initialCompanyData: StockListing[] = [
     { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, totalShares: 250000, marketCap: 450.75 * 250000, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 100000, dividendYield: 0.015 },
@@ -71,6 +72,22 @@ const initialBondListings: BondListing[] = [
 ];
 
 const AI_PLAYER_NAME = 'Serekali';
+
+const getInitialUserData = (user: User): UserData => ({
+    playerName: user.displayName || 'Mchezaji Mpya',
+    playerAvatar: user.photoURL || `https://picsum.photos/seed/${user.uid}/100/100`,
+    privateNotes: 'Karibu kwenye wasifu wangu! Mimi ni mtaalamu wa kuzalisha bidhaa bora.',
+    money: 10000,
+    stars: 5,
+    inventory: [],
+    marketListings: initialPlayerListings, // These could be global or also user-specific
+    companyData: initialCompanyData,
+    bondListings: initialBondListings,
+    buildingSlots: Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })),
+    playerStocks: [],
+    transactions: [],
+    notifications: [],
+});
 
 
 export const productCategoryToShopMap: Record<string, string> = {
@@ -93,23 +110,58 @@ export const productCategoryToShopMap: Record<string, string> = {
 
 export function Game() {
   const [view, setView] = React.useState<View>('dashboard');
+  const [currentUser, setCurrentUser] = React.useState<User | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [gameState, setGameState] = React.useState<UserData | null>(null);
 
-  const initialData: UserData | null = null;
-  // State Management
-  const [playerName, setPlayerName] = React.useState(initialData?.playerName ?? 'Mchezaji');
-  const [playerAvatar, setPlayerAvatar] = React.useState(initialData?.playerAvatar ?? 'https://picsum.photos/seed/player/100/100');
-  const [privateNotes, setPrivateNotes] = React.useState(initialData?.privateNotes ?? 'Welcome to my company profile! I specialize in producing high-quality goods.');
-  const [money, setMoney] = React.useState(initialData?.money ?? 10000);
-  const [stars, setStars] = React.useState(initialData?.stars ?? 5);
-  const [inventory, setInventory] = React.useState<InventoryItem[]>(initialData?.inventory ?? initialInventoryItems);
-  const [marketListings, setMarketListings] = React.useState<PlayerListing[]>(initialData?.marketListings ?? initialPlayerListings);
-  const [companyData, setCompanyData] = React.useState<StockListing[]>(initialData?.companyData ?? initialCompanyData);
-  const [bondListings, setBondListings] = React.useState<BondListing[]>(initialData?.bondListings ?? initialBondListings);
-  const [buildingSlots, setBuildingSlots] = React.useState<BuildingSlot[]>(initialData?.buildingSlots ?? Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })));
-  const [playerStocks, setPlayerStocks] = React.useState<PlayerStock[]>(initialData?.playerStocks ?? initialPlayerStocks);
-  const [transactions, setTransactions] = React.useState<Transaction[]>(initialData?.transactions ?? []);
-  const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
+
+  // Debounced save function
+  const debouncedSave = useDebouncedCallback((uid: string, data: UserData) => {
+    saveUserData(uid, data);
+  }, 1500); // Save 1.5 seconds after the last change
+
+  // Effect to handle auth state and load/initialize data
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUser(user);
+        const userData = await loadUserData(user.uid);
+        if (userData) {
+          setGameState(userData);
+        } else {
+          // New user, create initial data
+          const initialData = getInitialUserData(user);
+          setGameState(initialData);
+          await saveUserData(user.uid, initialData);
+        }
+      } else {
+        setCurrentUser(null);
+        setGameState(null);
+        // Redirect to login if not authenticated
+        window.location.href = '/login';
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Effect to save game state whenever it changes
+  React.useEffect(() => {
+    if (gameState && currentUser && !isLoading) {
+      debouncedSave(currentUser.uid, gameState);
+    }
+  }, [gameState, currentUser, isLoading, debouncedSave]);
+
+  
+  // Update state using a single function to ensure consistency
+  const updateState = (updater: (prevState: UserData) => UserData) => {
+    setGameState(prevState => {
+        if (!prevState) return null;
+        return updater(prevState);
+    });
+  };
 
   const addNotification = (message: string, icon: Notification['icon']) => {
     const newNotification: Notification = {
@@ -119,17 +171,26 @@ export function Game() {
         read: false,
         icon,
     };
-    setNotifications(prev => [newNotification, ...prev].slice(0, 50)); // Keep last 50
+    updateState(prev => ({
+        ...prev,
+        notifications: [newNotification, ...prev.notifications].slice(0, 50)
+    }));
   };
 
   const handleMarkNotificationsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    updateState(prev => ({
+        ...prev,
+        notifications: prev.notifications.map(n => ({ ...n, read: true }))
+    }));
   }
 
   const handleUpdateProfile = (data: ProfileData) => {
-    setPlayerName(data.playerName);
-    if(data.avatarUrl) setPlayerAvatar(data.avatarUrl);
-    setPrivateNotes(data.privateNotes || '');
+    updateState(prev => ({
+        ...prev,
+        playerName: data.playerName,
+        playerAvatar: data.avatarUrl || prev.playerAvatar,
+        privateNotes: data.privateNotes || ''
+    }));
     setView('dashboard'); // Go back to dashboard after saving
   }
 
@@ -141,117 +202,119 @@ export function Game() {
       description,
       timestamp: Date.now(),
     };
-    setTransactions(prev => [newTransaction, ...prev]);
+    updateState(prev => ({
+        ...prev,
+        transactions: [newTransaction, ...prev.transactions]
+    }));
   };
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
+    if (!gameState) return;
     const costs = buildingData[building.id]?.buildCost;
     if (!costs) return;
     
-    // 1. Check for required build materials
     for (const cost of costs) {
-        const inventoryItem = inventory.find(i => i.item === cost.name);
+        const inventoryItem = gameState.inventory.find(i => i.item === cost.name);
         if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
             return;
         }
     }
 
-    // 2. Deduct build materials from inventory
-    setInventory(prevInventory => {
-      const newInventory = [...prevInventory];
-      for (const cost of costs) {
-        const itemIndex = newInventory.findIndex(i => i.item === cost.name);
-        if (itemIndex > -1) {
-          newInventory[itemIndex].quantity -= cost.quantity;
-        }
-      }
-      return newInventory.filter(item => item.quantity > 0);
-    });
-    
     const now = Date.now();
-    const constructionTimeMs = 15 * 60 * 1000; // 15 minutes
+    const constructionTimeMs = 15 * 60 * 1000;
 
-    // 3. Place building into construction state
-    setBuildingSlots(prev => {
-        const newSlots = [...prev];
+    updateState(prev => {
+        const newInventory = [...prev.inventory];
+        for (const cost of costs) {
+            const itemIndex = newInventory.findIndex(i => i.item === cost.name);
+            if (itemIndex > -1) {
+            newInventory[itemIndex].quantity -= cost.quantity;
+            }
+        }
+        
+        const newSlots = [...prev.buildingSlots];
         newSlots[slotIndex] = { 
             building, 
-            level: 0, // It's at level 0 while constructing
+            level: 0,
             construction: {
                 startTime: now,
                 endTime: now + constructionTimeMs,
                 targetLevel: 1
             }
         };
-        return newSlots;
+
+        return { 
+            ...prev, 
+            inventory: newInventory.filter(item => item.quantity > 0),
+            buildingSlots: newSlots 
+        };
     });
 
     addNotification(`Ujenzi wa ${building.name} umeanza.`, 'construction');
   };
   
     const handleUpgradeBuilding = (slotIndex: number) => {
-    const slot = buildingSlots[slotIndex];
+    if (!gameState) return;
+    const slot = gameState.buildingSlots[slotIndex];
     if (!slot || !slot.building) return;
 
     const costs = buildingData[slot.building.id].upgradeCost(slot.level + 1);
 
-    // 1. Check for required upgrade materials
     for (const cost of costs) {
-      const inventoryItem = inventory.find(i => i.item === cost.name);
+      const inventoryItem = gameState.inventory.find(i => i.item === cost.name);
       if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
         return;
       }
     }
 
-    // 2. Deduct upgrade materials from inventory
-    setInventory(prevInventory => {
-      const newInventory = [...prevInventory];
-      for (const cost of costs) {
-        const itemIndex = newInventory.findIndex(i => i.item === cost.name);
-        if (itemIndex > -1) {
-          newInventory[itemIndex].quantity -= cost.quantity;
-        }
-      }
-      return newInventory.filter(item => item.quantity > 0);
-    });
-
     const now = Date.now();
-    // Time doubles for each new level, based on the initial 15 minutes
     const constructionTimeMs = (15 * 60 * 1000) * Math.pow(2, slot.level);
 
-    // 3. Place building into construction state for upgrade
-    setBuildingSlots(prev => {
-      const newSlots = [...prev];
-      newSlots[slotIndex] = {
-        ...slot,
-        construction: {
-          startTime: now,
-          endTime: now + constructionTimeMs,
-          targetLevel: slot.level + 1
+    updateState(prev => {
+        const newInventory = [...prev.inventory];
+        for (const cost of costs) {
+            const itemIndex = newInventory.findIndex(i => i.item === cost.name);
+            if (itemIndex > -1) {
+            newInventory[itemIndex].quantity -= cost.quantity;
+            }
         }
-      };
-      return newSlots;
+        
+        const newSlots = [...prev.buildingSlots];
+        newSlots[slotIndex] = {
+            ...slot,
+            construction: {
+            startTime: now,
+            endTime: now + constructionTimeMs,
+            targetLevel: slot.level + 1
+            }
+        };
+
+        return { 
+            ...prev,
+            inventory: newInventory.filter(item => item.quantity > 0),
+            buildingSlots: newSlots
+        };
     });
 
     addNotification(`Uboreshaji wa ${slot.building.name} hadi Lvl ${slot.level + 1} umeanza.`, 'construction');
   };
 
   const handleDemolishBuilding = (slotIndex: number) => {
-    const buildingName = buildingSlots[slotIndex]?.building?.name || 'Jengo';
-    setBuildingSlots(prev => {
-        const newSlots = [...prev];
+    const buildingName = gameState?.buildingSlots[slotIndex]?.building?.name || 'Jengo';
+    updateState(prev => {
+        const newSlots = [...prev.buildingSlots];
         newSlots[slotIndex] = { building: null, level: 0 };
-        return newSlots;
+        return { ...prev, buildingSlots: newSlots };
     });
   };
 
 
   const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
+    if (!gameState) return;
     const inputs = recipe.inputs || [];
     
-    // Check for required inputs
     for (const input of inputs) {
-        const inventoryItem = inventory.find(i => i.item === input.name);
+        const inventoryItem = gameState.inventory.find(i => i.item === input.name);
         const requiredQuantity = input.quantity * quantity;
 
         if (!inventoryItem || inventoryItem.quantity < requiredQuantity) {
@@ -259,208 +322,195 @@ export function Game() {
         }
     }
     
-    // Deduct inputs from inventory
-    setInventory(prevInventory => {
-      const newInventory = [...prevInventory];
-      for (const input of inputs) {
-        const itemIndex = newInventory.findIndex(i => i.item === input.name);
-        const requiredQuantity = input.quantity * quantity;
-        if (itemIndex > -1) {
-          newInventory[itemIndex].quantity -= requiredQuantity;
-        }
-      }
-      return newInventory.filter(item => item.quantity > 0);
-    });
-    
      const now = Date.now();
  
-     // Set activity state on the building slot
-     setBuildingSlots(prev => {
-       const newSlots = [...prev];
-       const slot = newSlots[slotIndex];
-       if (slot && slot.building && !slot.activity) {
-         newSlots[slotIndex] = {
-           ...slot,
-           activity: {
-             type: 'produce',
-             recipeId: recipe.output.name, // The item being produced
-             quantity: recipe.output.quantity * quantity,
-             saleValue: 0, // No sale value for production
-             startTime: now,
-             endTime: now + durationMs,
-           }
-         };
-       }
-       return newSlots;
+     updateState(prev => {
+        const newInventory = [...prev.inventory];
+        for (const input of inputs) {
+            const itemIndex = newInventory.findIndex(i => i.item === input.name);
+            const requiredQuantity = input.quantity * quantity;
+            if (itemIndex > -1) {
+            newInventory[itemIndex].quantity -= requiredQuantity;
+            }
+        }
+
+        const newSlots = [...prev.buildingSlots];
+        const slot = newSlots[slotIndex];
+        if (slot && slot.building && !slot.activity) {
+            newSlots[slotIndex] = {
+            ...slot,
+            activity: {
+                type: 'produce',
+                recipeId: recipe.output.name,
+                quantity: recipe.output.quantity * quantity,
+                saleValue: 0,
+                startTime: now,
+                endTime: now + durationMs,
+            }
+            };
+        }
+        
+        return {
+            ...prev,
+            inventory: newInventory.filter(item => item.quantity > 0),
+            buildingSlots: newSlots,
+        }
      });
 
     addNotification(`Umeanza kuzalisha ${recipe.output.quantity * quantity}x ${recipe.output.name}.`, 'production');
   };
 
   const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => {
-     // 1. Check if player has enough of the item
-     const inventoryItem = inventory.find(i => i.item === item.item);
+    if (!gameState) return;
+     const inventoryItem = gameState.inventory.find(i => i.item === item.item);
      if (!inventoryItem || inventoryItem.quantity < quantity) {
-       return; // Not enough to sell
+       return;
      }
- 
-     // 2. Deduct the item from inventory
-     setInventory(prevInventory => {
-       return prevInventory.map(invItem => {
-         if (invItem.item === item.item) {
-           return { ...invItem, quantity: invItem.quantity - quantity };
-         }
-         return invItem;
-       }).filter(invItem => invItem.quantity > 0); // Remove if quantity is zero
-     });
  
      const now = Date.now();
      const totalSaleValue = quantity * price;
  
-     // 3. Set selling state on the building slot
-     setBuildingSlots(prev => {
-       const newSlots = [...prev];
-       const slot = newSlots[slotIndex];
-       if (slot && slot.building && !slot.activity) {
-         newSlots[slotIndex] = {
-           ...slot,
-           activity: {
-             type: 'sell',
-             recipeId: item.item,
-             quantity: quantity,
-             saleValue: totalSaleValue,
-             startTime: now,
-             endTime: now + durationMs,
-           }
-         };
-       }
-       return newSlots;
+     updateState(prev => {
+        const newInventory = prev.inventory.map(invItem => {
+            if (invItem.item === item.item) {
+                return { ...invItem, quantity: invItem.quantity - quantity };
+            }
+            return invItem;
+        }).filter(invItem => invItem.quantity > 0);
+
+        const newSlots = [...prev.buildingSlots];
+        const slot = newSlots[slotIndex];
+        if (slot && slot.building && !slot.activity) {
+            newSlots[slotIndex] = {
+            ...slot,
+            activity: {
+                type: 'sell',
+                recipeId: item.item,
+                quantity: quantity,
+                saleValue: totalSaleValue,
+                startTime: now,
+                endTime: now + durationMs,
+            }
+            };
+        }
+        
+        return {
+            ...prev,
+            inventory: newInventory,
+            buildingSlots: newSlots,
+        }
      });
 
     addNotification(`Unaanza kuuza ${quantity.toLocaleString()}x ${item.item}.`, 'sale');
   }
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
-    // 1. Update inventory
-    setInventory(prevInventory =>
-      prevInventory.map(invItem =>
-        invItem.item === item.item
-          ? { ...invItem, quantity: invItem.quantity - quantity }
-          : invItem
-      ).filter(item => item.quantity > 0)
-    );
+    if (!gameState) return;
+    
+    updateState(prev => {
+        const newInventory = prev.inventory.map(invItem =>
+            invItem.item === item.item
+            ? { ...invItem, quantity: invItem.quantity - quantity }
+            : invItem
+        ).filter(item => item.quantity > 0);
 
-    // 2. Add to market listings
-    setMarketListings(prevListings => {
-      const newListing: PlayerListing = {
-        id: prevListings.length + Date.now(), // simple unique id
-        commodity: item.item,
-        seller: playerName, // current player
-        quantity,
-        price,
-        avatar: playerAvatar,
-        quality: 5,
-        imageHint: 'player avatar'
-      };
-      return [newListing, ...prevListings];
+        const newListing: PlayerListing = {
+            id: prev.marketListings.length + Date.now(),
+            commodity: item.item,
+            seller: prev.playerName,
+            quantity,
+            price,
+            avatar: prev.playerAvatar,
+            quality: 5,
+            imageHint: 'player avatar'
+        };
+
+        return {
+            ...prev,
+            inventory: newInventory,
+            marketListings: [newListing, ...prev.marketListings]
+        }
     });
 
     addNotification(`Umeweka ${quantity.toLocaleString()}x ${item.item} sokoni.`, 'sale');
   };
   
   const handleBoostConstruction = (slotIndex: number, starsToUse: number) => {
-      const timeReductionPerStar = 3 * 60 * 1000; // 3 minutes per star
+      if (!gameState || gameState.stars < starsToUse) return;
+      
+      const timeReductionPerStar = 3 * 60 * 1000;
       const timeReduction = starsToUse * timeReductionPerStar;
 
-      if (stars < starsToUse) {
-          return;
-      }
-      
-      setStars(prev => prev - starsToUse);
-      setBuildingSlots(prev => {
-          const newSlots = [...prev];
+      updateState(prev => {
+          const newSlots = [...prev.buildingSlots];
           const slot = newSlots[slotIndex];
           if (slot?.construction) {
               slot.construction.endTime -= timeReduction;
           }
-          return newSlots;
+          return { ...prev, stars: prev.stars - starsToUse, buildingSlots: newSlots };
       });
-
   };
 
  const handleBuyMaterial = (materialName: string, quantityToBuy: number): boolean => {
-    const listingsForMaterial = marketListings
-      .filter(l => l.commodity === materialName)
-      .sort((a, b) => a.price - b.price); // Sort by cheapest first
+    if (!gameState) return false;
 
-    if (listingsForMaterial.length === 0) {
-      return false;
-    }
+    const listingsForMaterial = gameState.marketListings
+      .filter(l => l.commodity === materialName)
+      .sort((a, b) => a.price - b.price);
+
+    if (listingsForMaterial.length === 0) return false;
 
     let quantityLeftToBuy = quantityToBuy;
     let totalCost = 0;
     const purchases: { from: PlayerListing, quantity: number }[] = [];
 
-    // Figure out what can be bought
     for (const listing of listingsForMaterial) {
         if (quantityLeftToBuy <= 0) break;
-        
         const quantityToBuyFromThisSeller = Math.min(listing.quantity, quantityLeftToBuy);
-        
         purchases.push({ from: listing, quantity: quantityToBuyFromThisSeller });
         totalCost += quantityToBuyFromThisSeller * listing.price;
         quantityLeftToBuy -= quantityToBuyFromThisSeller;
     }
 
-    if (quantityLeftToBuy > 0) {
-        return false;
-    }
-    
-    if (money < totalCost) {
-        return false;
-    }
+    if (quantityLeftToBuy > 0) return false;
+    if (gameState.money < totalCost) return false;
 
-    // --- Execute the purchases ---
-    setMoney(prevMoney => prevMoney - totalCost);
-    addTransaction('expense', totalCost, `Bought ${quantityToBuy.toLocaleString()}x ${materialName} from market`);
-
-    // Add to inventory
-    setInventory(prevInventory => {
-      const newInventory = [...prevInventory];
-      const itemIndex = newInventory.findIndex(i => i.item === materialName);
-      if (itemIndex > -1) {
-        newInventory[itemIndex].quantity += quantityToBuy;
-      } else {
-        const encyclopediaEntry = encyclopediaData.find(e => e.name === materialName);
-        newInventory.push({ item: materialName, quantity: quantityToBuy, marketPrice: encyclopediaEntry?.properties.find(p => p.label.includes("Market Cost"))?.value ? parseFloat(encyclopediaEntry.properties.find(p => p.label.includes("Market Cost"))!.value.replace('$', '')) : 0 });
-      }
-      return newInventory;
-    });
-
-    // Update market listings
-    setMarketListings(prevListings => {
-        let newListings = [...prevListings];
+    updateState(prev => {
+        const newInventory = [...prev.inventory];
+        const itemIndex = newInventory.findIndex(i => i.item === materialName);
+        if (itemIndex > -1) {
+            newInventory[itemIndex].quantity += quantityToBuy;
+        } else {
+            const encyclopediaEntry = encyclopediaData.find(e => e.name === materialName);
+            newInventory.push({ item: materialName, quantity: quantityToBuy, marketPrice: encyclopediaEntry?.properties.find(p => p.label.includes("Market Cost"))?.value ? parseFloat(encyclopediaEntry.properties.find(p => p.label.includes("Market Cost"))!.value.replace('$', '')) : 0 });
+        }
+        
+        let newMarketListings = [...prev.marketListings];
         purchases.forEach(purchase => {
-            // Do not deplete Serekali's stock, as it has infinite quantity
-            if (purchase.from.seller === AI_PLAYER_NAME) {
-                 return; 
-            }
-            
-            const listingIndex = newListings.findIndex(l => l.id === purchase.from.id);
+            if (purchase.from.seller === AI_PLAYER_NAME) return;
+            const listingIndex = newMarketListings.findIndex(l => l.id === purchase.from.id);
             if (listingIndex > -1) {
-                newListings[listingIndex].quantity -= purchase.quantity;
+                newMarketListings[listingIndex].quantity -= purchase.quantity;
             }
         });
-        return newListings.filter(l => l.quantity > 0);
+
+        addTransaction('expense', totalCost, `Bought ${quantityToBuy.toLocaleString()}x ${materialName} from market`);
+
+        return {
+            ...prev,
+            money: prev.money - totalCost,
+            inventory: newInventory,
+            marketListings: newMarketListings.filter(l => l.quantity > 0)
+        };
     });
 
     addNotification(`Umenunua ${quantityToBuy.toLocaleString()}x ${materialName} kwa $${totalCost.toLocaleString()}.`, 'purchase');
-
     return true;
 };
 
     const calculateAvailableShares = (stock: StockListing) => {
-        const ownedByPlayers = playerStocks
+        if (!gameState) return 0;
+        const ownedByPlayers = gameState.playerStocks
             .filter(ps => ps.ticker === stock.ticker)
             .reduce((sum, ps) => sum + ps.shares, 0);
         const maxSellable = Math.floor(stock.totalShares * 0.70);
@@ -468,51 +518,40 @@ export function Game() {
     }
 
   const handleBuyStock = (stock: StockListing, quantity: number) => {
+      if (!gameState) return;
       const totalCost = stock.stockPrice * quantity;
-      if (money < totalCost) {
-        return;
-      }
+      if (gameState.money < totalCost) return;
 
       const availableShares = calculateAvailableShares(stock);
-      if (quantity > availableShares) {
-        return;
-      }
+      if (quantity > availableShares) return;
 
-      setMoney(prev => prev - totalCost);
-      addTransaction('expense', totalCost, `Bought ${quantity.toLocaleString()} shares of ${stock.ticker}`);
-      
-      // Update player's stock portfolio
-      setPlayerStocks(prev => {
-          const existingStock = prev.find(s => s.ticker === stock.ticker);
-          if (existingStock) {
-              return prev.map(s => s.ticker === stock.ticker ? { ...s, shares: s.shares + quantity } : s);
-          } else {
-              return [...prev, { ticker: stock.ticker, shares: quantity }];
-          }
+      updateState(prev => {
+        addTransaction('expense', totalCost, `Bought ${quantity.toLocaleString()} shares of ${stock.ticker}`);
+        
+        const existingStock = prev.playerStocks.find(s => s.ticker === stock.ticker);
+        let newPlayerStocks: PlayerStock[];
+        if (existingStock) {
+            newPlayerStocks = prev.playerStocks.map(s => s.ticker === stock.ticker ? { ...s, shares: s.shares + quantity } : s);
+        } else {
+            newPlayerStocks = [...prev.playerStocks, { ticker: stock.ticker, shares: quantity }];
+        }
+
+        return { ...prev, money: prev.money - totalCost, playerStocks: newPlayerStocks };
       });
 
       addNotification(`Umenunua hisa ${quantity.toLocaleString()} za ${stock.companyName}.`, 'purchase');
   }
 
   const handleBuyFromMarket = (listing: PlayerListing, quantity: number) => {
-    if (listing.seller === playerName) {
-        return;
-    }
+    if (!gameState || listing.seller === gameState.playerName) return;
 
     const totalCost = listing.price * quantity;
+    if (gameState.money < totalCost) return;
 
-    if (money < totalCost) {
-        return;
-    }
+    updateState(prev => {
+        addTransaction('expense', totalCost, `Bought ${quantity.toLocaleString()}x ${listing.commodity} from market`);
 
-    // 1. Deduct money from player
-    setMoney(prev => prev - totalCost);
-    addTransaction('expense', totalCost, `Bought ${quantity.toLocaleString()}x ${listing.commodity} from market`);
-
-
-    // 2. Add item to player's inventory
-    setInventory(prevInventory => {
-        const newInventory = [...prevInventory];
+        const newInventory = [...prev.inventory];
         const itemIndex = newInventory.findIndex(i => i.item === listing.commodity);
         if (itemIndex > -1) {
             newInventory[itemIndex].quantity += quantity;
@@ -524,24 +563,20 @@ export function Game() {
                 marketPrice: encyclopediaEntry?.properties.find(p => p.label.includes("Market Cost"))?.value.replace('$', '') ? parseFloat(encyclopediaEntry.properties.find(p => p.label.includes("Market Cost"))!.value.replace('$', '')) : 0,
             });
         }
-        return newInventory;
-    });
-
-    // 3. Update market listing
-    setMarketListings(prevListings => {
-        // Do not deplete Serekali's stock
-        if (listing.seller === AI_PLAYER_NAME) {
-            return prevListings;
+        
+        let newMarketListings = prev.marketListings;
+        if (listing.seller !== AI_PLAYER_NAME) {
+            newMarketListings = prev.marketListings.map(l => 
+                l.id === listing.id ? { ...l, quantity: l.quantity - quantity } : l
+            ).filter(l => l.quantity > 0);
         }
-
-        const newListings = prevListings.map(l => {
-            if (l.id === listing.id) {
-                return { ...l, quantity: l.quantity - quantity };
-            }
-            return l;
-        });
-        // Remove listing if quantity is zero, but never remove Serekali
-        return newListings.filter(l => l.quantity > 0);
+        
+        return {
+            ...prev,
+            money: prev.money - totalCost,
+            inventory: newInventory,
+            marketListings: newMarketListings
+        };
     });
 
     addNotification(`Umenunua ${quantity.toLocaleString()}x ${listing.commodity} kutoka kwa ${listing.seller}.`, 'purchase');
@@ -549,6 +584,7 @@ export function Game() {
   
    // AI Player (Serekali) automatic market seeding
    React.useEffect(() => {
+    if (!gameState) return;
     const aiListings: PlayerListing[] = encyclopediaData
       .filter(entry => entry.properties.some(p => p.label === 'Market Cost'))
       .map((entry, index) => {
@@ -566,82 +602,72 @@ export function Game() {
               imageHint: 'government seal'
           };
       })
-      .filter(listing => listing.price > 0); // Only list items with a price
+      .filter(listing => listing.price > 0);
 
-    setMarketListings(prev => [
-        ...prev.filter(p => p.seller !== AI_PLAYER_NAME), // Remove old AI listings
-        ...aiListings,
-    ]);
+    updateState(prev => ({
+        ...prev,
+        marketListings: [
+            ...prev.marketListings.filter(p => p.seller !== AI_PLAYER_NAME),
+            ...aiListings,
+        ]
+    }));
   }, []);
 
    React.useEffect(() => {
     const interval = setInterval(() => {
-      const now = Date.now();
+        if (!gameState) return;
 
-      setBuildingSlots(prevSlots => {
-        let slotsChanged = false;
-        const newSlots = [...prevSlots];
-        
-        newSlots.forEach((slot, index) => {
-          // Check for completed activities
-          if (slot && slot.activity && now >= slot.activity.endTime) {
-            const activityId = `${index}-${slot.activity.startTime}`;
+        const now = Date.now();
+        let changed = false;
+        const newState = { ...gameState };
 
-            if (!processedActivitiesRef.current.has(activityId)) {
-                slotsChanged = true;
-                const { type, recipeId: itemName, quantity: totalQuantity, saleValue } = slot.activity;
+        const updatedSlots = newState.buildingSlots.map((slot, index) => {
+            if (slot && slot.activity && now >= slot.activity.endTime) {
+                const activityId = `${index}-${slot.activity.startTime}`;
+                if (!processedActivitiesRef.current.has(activityId)) {
+                    changed = true;
+                    processedActivitiesRef.current.add(activityId);
+                    const { type, recipeId: itemName, quantity: totalQuantity, saleValue } = slot.activity;
 
-                if (type === 'sell' && saleValue > 0) {
-                    setMoney(prevMoney => prevMoney + saleValue);
-                    addTransaction('income', saleValue, `Sold ${totalQuantity.toLocaleString()}x ${itemName}`);
-                    addNotification(`Umepokea $${saleValue.toLocaleString()} kwa kuuza ${totalQuantity.toLocaleString()}x ${itemName}.`, 'sale');
-                } else if (type === 'produce') {
-                    setInventory(prevInventory => {
-                        const newInventory = [...prevInventory];
-                        const itemIndex = newInventory.findIndex(i => i.item === itemName);
+                    if (type === 'sell' && saleValue > 0) {
+                        newState.money += saleValue;
+                        addTransaction('income', saleValue, `Sold ${totalQuantity.toLocaleString()}x ${itemName}`);
+                        addNotification(`Umepokea $${saleValue.toLocaleString()} kwa kuuza ${totalQuantity.toLocaleString()}x ${itemName}.`, 'sale');
+                    } else if (type === 'produce') {
+                        const itemIndex = newState.inventory.findIndex(i => i.item === itemName);
                         if (itemIndex > -1) {
-                            newInventory[itemIndex].quantity += totalQuantity;
+                            newState.inventory[itemIndex].quantity += totalQuantity;
                         } else {
                             const productInfo = encyclopediaData.find(e => e.name === itemName);
                             const price = productInfo ? parseFloat(productInfo.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : 0;
-                            newInventory.push({ item: itemName, quantity: totalQuantity, marketPrice: price });
+                            newState.inventory.push({ item: itemName, quantity: totalQuantity, marketPrice: price });
                         }
-                        return newInventory;
-                    });
-                     addNotification(`Uzalishaji wa ${totalQuantity.toLocaleString()}x ${itemName} umekamilika.`, 'production');
+                        addNotification(`Uzalishaji wa ${totalQuantity.toLocaleString()}x ${itemName} umekamilika.`, 'production');
+                    }
+                    return { ...slot, activity: undefined };
                 }
-                
-                newSlots[index] = { ...slot, activity: undefined };
-                processedActivitiesRef.current.add(activityId);
             }
-          }
-          
-          // Check for completed construction
-          if (slot && slot.construction && now >= slot.construction.endTime) {
-            slotsChanged = true;
-            addNotification(`Ujenzi wa ${slot.building?.name} Lvl ${slot.construction.targetLevel} umekamilika!`, 'construction');
-            newSlots[index] = { 
-                ...slot, 
-                level: slot.construction.targetLevel,
-                construction: undefined 
-            };
-          }
+            if (slot && slot.construction && now >= slot.construction.endTime) {
+                changed = true;
+                addNotification(`Ujenzi wa ${slot.building?.name} Lvl ${slot.construction.targetLevel} umekamilika!`, 'construction');
+                return { ...slot, level: slot.construction.targetLevel, construction: undefined };
+            }
+            return slot;
         });
 
-        return slotsChanged ? newSlots : prevSlots;
-      });
-
+        if (changed) {
+            updateState(prev => ({...prev, buildingSlots: updatedSlots, money: newState.money, inventory: newState.inventory }));
+        }
     }, 1000);
 
     const dividendInterval = setInterval(() => {
+        if (!gameState) return;
         let totalDividends = 0;
         const dividendMessages: string[] = [];
 
-        playerStocks.forEach(playerStock => {
-            const company = companyData.find(c => c.ticker === playerStock.ticker);
+        gameState.playerStocks.forEach(playerStock => {
+            const company = gameState.companyData.find(c => c.ticker === playerStock.ticker);
             if (company && playerStock.shares > 0) {
-                // Calculate dividend per share
-                // (dailyRevenue * dividendYield) / totalShares
                 const totalShares = company.totalShares;
                 const dividendPerShare = (company.dailyRevenue * company.dividendYield) / totalShares;
                 const dividendForPlayer = dividendPerShare * playerStock.shares;
@@ -654,30 +680,28 @@ export function Game() {
         });
 
         if (totalDividends > 0) {
-            setMoney(prev => prev + totalDividends);
+            updateState(prev => ({...prev, money: prev.money + totalDividends}));
             addTransaction('income', totalDividends, `Dividend Payout (${dividendMessages.join(', ')})`);
             addNotification(`Umepokea $${totalDividends.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} kama gawio la hisa.`, 'dividend');
         }
-    }, 24 * 60 * 60000); // Every 24 hours to simulate a "day"
+    }, 24 * 60 * 60000);
 
-    // Stock market fluctuation interval
     const marketFluctuationInterval = setInterval(() => {
-        setCompanyData(prevData => prevData.map(company => {
-            const priceChangePercent = (Math.random() - 0.49) * 0.05; // -2.5% to +2.5%
-            const revenueChangePercent = (Math.random() - 0.45) * 0.1; // -5% to +5%
-            
-            const newPrice = Math.max(1, company.stockPrice * (1 + priceChangePercent));
-            const newRevenue = Math.max(1000, company.dailyRevenue * (1 + revenueChangePercent));
-            const newMarketCap = newPrice * company.totalShares;
+        if (!gameState) return;
+        updateState(prev => {
+            const newCompanyData = prev.companyData.map(company => {
+                const priceChangePercent = (Math.random() - 0.49) * 0.05;
+                const revenueChangePercent = (Math.random() - 0.45) * 0.1;
+                
+                const newPrice = Math.max(1, company.stockPrice * (1 + priceChangePercent));
+                const newRevenue = Math.max(1000, company.dailyRevenue * (1 + revenueChangePercent));
+                const newMarketCap = newPrice * company.totalShares;
 
-            return {
-                ...company,
-                stockPrice: newPrice,
-                dailyRevenue: newRevenue,
-                marketCap: newMarketCap
-            };
-        }));
-    }, 60 * 60000); // Every hour
+                return { ...company, stockPrice: newPrice, dailyRevenue: newRevenue, marketCap: newMarketCap };
+            });
+            return {...prev, companyData: newCompanyData };
+        });
+    }, 60 * 60000);
 
 
     return () => {
@@ -685,17 +709,14 @@ export function Game() {
       clearInterval(dividendInterval);
       clearInterval(marketFluctuationInterval);
     }
-  }, [playerStocks, companyData]);
+  }, [gameState]);
 
 
   const calculatePlayerMetrics = React.useCallback((): PlayerMetrics => {
-    // 1. Calculate Inventory Value
-    const inventoryValue = inventory.reduce((acc, item) => {
-        return acc + (item.quantity * item.marketPrice);
-    }, 0);
-
-    // 2. Calculate Building Value
-    const buildingValue = buildingSlots.reduce((acc, slot) => {
+    if (!gameState) return { netWorth: 0, ranking: '#?', rating: 'F', buildingValue: 0, stockValue: 0 };
+    
+    const inventoryValue = gameState.inventory.reduce((acc, item) => acc + (item.quantity * item.marketPrice), 0);
+    const buildingValue = gameState.buildingSlots.reduce((acc, slot) => {
         if (slot.building) {
             const costs = buildingData[slot.building.id]?.buildCost;
             if (costs) {
@@ -703,56 +724,66 @@ export function Game() {
                     const itemPrice = encyclopediaData.find(e => e.name === cost.name)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || 0;
                     return costAcc + (cost.quantity * parseFloat(itemPrice.toString()));
                 }, 0);
-                // Add value for each level
                 return acc + (buildCostValue * Math.pow(1.5, slot.level));
             }
         }
         return acc;
     }, 0);
     
-    // 3. Calculate Stock Value
-    const stockValue = playerStocks.reduce((acc, pStock) => {
-        const stockInfo = companyData.find(c => c.ticker === pStock.ticker);
+    const stockValue = gameState.playerStocks.reduce((acc, pStock) => {
+        const stockInfo = gameState.companyData.find(c => c.ticker === pStock.ticker);
         return acc + (pStock.shares * (stockInfo?.stockPrice || 0));
     }, 0);
 
-    // 4. Calculate Net Worth
-    const netWorth = money + inventoryValue + buildingValue;
+    const netWorth = gameState.money + inventoryValue + buildingValue;
     
-    // 5. Determine Rating
     let rating = 'F';
     if (netWorth > 50_000_000) rating = 'A';
     else if (netWorth > 5_000_000) rating = 'B';
     else if (netWorth > 500_000) rating = 'C';
     else if (netWorth > 50_000) rating = 'D';
 
-    // 6. Determine Ranking (simulated)
     const baseRanking = 50000;
     const rank = Math.max(1, Math.floor(baseRanking / (Math.log10(netWorth) || 1)));
 
     return { netWorth, ranking: `#${rank.toLocaleString()}`, rating, buildingValue, stockValue };
-  }, [money, inventory, buildingSlots, playerStocks, companyData]);
+  }, [gameState]);
   
   const playerMetrics = calculatePlayerMetrics();
+
+  if (isLoading || !gameState) {
+    return (
+        <div className="flex flex-col min-h-screen bg-gray-900 p-8 items-center justify-center">
+            <Skeleton className="h-16 w-full mb-4" />
+            <div className="flex-grow w-full grid grid-cols-5 gap-4">
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+            </div>
+        </div>
+    );
+  }
 
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
       <AppHeader 
-        money={money} 
-        stars={stars} 
+        money={gameState.money} 
+        stars={gameState.stars} 
         setView={setView} 
-        playerName={playerName} 
-        playerAvatar={playerAvatar} 
-        notifications={notifications}
+        playerName={gameState.playerName} 
+        playerAvatar={gameState.playerAvatar} 
+        notifications={gameState.notifications}
         onNotificationsRead={handleMarkNotificationsRead}
       />
       <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-gray-800/50">
         {view === 'dashboard' && (
           <Dashboard 
-            buildingSlots={buildingSlots} 
-            inventory={inventory}
-            stars={stars}
+            buildingSlots={gameState.buildingSlots} 
+            inventory={gameState.inventory}
+            stars={gameState.stars}
             onBuild={handleBuild}
             onStartProduction={handleStartProduction}
             onStartSelling={handleStartSelling}
@@ -762,28 +793,30 @@ export function Game() {
             onBuyMaterial={handleBuyMaterial}
           />
         )}
-        {view === 'inventory' && <Inventory inventoryItems={inventory} onPostToMarket={handlePostToMarket} />}
+        {view === 'inventory' && <Inventory inventoryItems={gameState.inventory} onPostToMarket={handlePostToMarket} />}
         {view === 'market' && (
           <TradeMarket 
-            playerListings={marketListings} 
-            stockListings={companyData.map(stock => ({
+            playerListings={gameState.marketListings} 
+            stockListings={gameState.companyData.map(stock => ({
                 ...stock,
                 sharesAvailable: calculateAvailableShares(stock)
             }))}
-            bondListings={bondListings}
-            inventory={inventory} 
+            bondListings={gameState.bondListings}
+            inventory={gameState.inventory} 
             onBuyStock={handleBuyStock}
             onBuyFromMarket={handleBuyFromMarket}
-            playerName={playerName}
+            playerName={gameState.playerName}
           />
         )}
         {view === 'chats' && <Chats />}
         {view === 'encyclopedia' && <Encyclopedia />}
-        {view === 'accounting' && <Accounting transactions={transactions} />}
-        {view === 'profile' && <PlayerProfile onSave={handleUpdateProfile} currentProfile={{ playerName, avatarUrl: playerAvatar, privateNotes }} metrics={playerMetrics} />}
+        {view === 'accounting' && <Accounting transactions={gameState.transactions} />}
+        {view === 'profile' && <PlayerProfile onSave={handleUpdateProfile} currentProfile={{ playerName: gameState.playerName, avatarUrl: gameState.playerAvatar, privateNotes: gameState.privateNotes }} metrics={playerMetrics} />}
 
       </main>
       <AppFooter activeView={view} setView={setView} />
     </div>
   );
 }
+
+    
