@@ -70,7 +70,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     shamba: {
-        productionRate: 200,
+        productionRate: 20,
         buildCost: [
             { name: 'Mabati', quantity: 150 },
             { name: 'Mbao', quantity: 450 },
@@ -82,7 +82,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     zizi: {
-        productionRate: 60,
+        productionRate: 6,
         buildCost: [
             { name: 'Mabati', quantity: 300 },
             { name: 'Mbao', quantity: 1200 },
@@ -95,7 +95,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_samaki: {
-        productionRate: 100, 
+        productionRate: 10, 
         buildCost: [
             { name: 'Mabati', quantity: 750 },
             { name: 'Mbao', quantity: 600 },
@@ -107,7 +107,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_chuma: {
-        productionRate: 40,
+        productionRate: 4,
         buildCost: [
             { name: 'Nondo', quantity: 2250 },
             { name: 'Zege', quantity: 1500 },
@@ -119,7 +119,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_matofali: {
-        productionRate: 160,
+        productionRate: 16,
         buildCost: [
             { name: 'Mbao', quantity: 1500 },
             { name: 'Nondo', quantity: 750 },
@@ -131,7 +131,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_mbao: {
-        productionRate: 180,
+        productionRate: 18,
         buildCost: [
             { name: 'Nondo', quantity: 300 },
             { name: 'Matofali', quantity: 1500 },
@@ -143,7 +143,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_umeme: {
-        productionRate: 1000,
+        productionRate: 100,
         buildCost: [
             { name: 'Nondo', quantity: 3000 },
             { name: 'Zege', quantity: 2250 },
@@ -155,7 +155,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
      kiwanda_cha_maji: {
-        productionRate: 1000,
+        productionRate: 100,
         buildCost: [
             { name: 'Nondo', quantity: 1200 },
             { name: 'Matofali', quantity: 3000 },
@@ -167,7 +167,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_saruji: {
-        productionRate: 140,
+        productionRate: 14,
         buildCost: [
             { name: 'Nondo', quantity: 1500 },
             { name: 'Matofali', quantity: 4500 },
@@ -179,7 +179,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     uchimbaji_chuma: {
-        productionRate: 80,
+        productionRate: 8,
         buildCost: [
             { name: 'Mbao', quantity: 2250 },
             { name: 'Nondo', quantity: 750 },
@@ -191,7 +191,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     uchimbaji_mawe: {
-        productionRate: 300,
+        productionRate: 30,
         buildCost: [
             { name: 'Mbao', quantity: 1500 },
             { name: 'Mabati', quantity: 300 },
@@ -203,7 +203,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     uchimbaji_mchanga: {
-        productionRate: 300,
+        productionRate: 30,
         buildCost: [
             { name: 'Mbao', quantity: 1500 },
             { name: 'Mabati', quantity: 300 },
@@ -215,7 +215,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_sukari: {
-        productionRate: 120,
+        productionRate: 12,
         buildCost: [
             { name: 'Matofali', quantity: 3000 },
             { name: 'Nondo', quantity: 1200 },
@@ -227,7 +227,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     mgahawa: {
-        productionRate: 50,
+        productionRate: 5,
         buildCost: [
             { name: 'Matofali', quantity: 2250 },
             { name: 'Mbao', quantity: 1500 },
@@ -239,7 +239,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     uchimbaji_almasi: {
-        productionRate: 10,
+        productionRate: 1,
         buildCost: [
             { name: 'Zege', quantity: 7500 }, 
             { name: 'Nondo', quantity: 3000 },
@@ -251,7 +251,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     uchimbaji_dhahabu: {
-        productionRate: 16,
+        productionRate: 1.6,
         buildCost: [
             { name: 'Zege', quantity: 6750 }, 
             { name: 'Nondo', quantity: 2700 },
@@ -263,7 +263,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     uchimbaji_silver: {
-        productionRate: 30,
+        productionRate: 3,
         buildCost: [
             { name: 'Zege', quantity: 4500 }, 
             { name: 'Nondo', quantity: 1800 },
@@ -275,7 +275,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     uchimbaji_ruby: {
-        productionRate: 20,
+        productionRate: 2,
         buildCost: [
             { name: 'Zege', quantity: 6000 }, 
             { name: 'Nondo', quantity: 2250 },
@@ -287,7 +287,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     uchimbaji_tanzanite: {
-        productionRate: 24,
+        productionRate: 2.4,
         buildCost: [
             { name: 'Zege', quantity: 5250 }, 
             { name: 'Nondo', quantity: 2100 },
@@ -299,7 +299,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     uchimbaji_shaba: {
-        productionRate: 50,
+        productionRate: 5,
         buildCost: [
             { name: 'Zege', quantity: 3750 }, 
             { name: 'Nondo', quantity: 1500 },
@@ -311,7 +311,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_mashine: {
-        productionRate: 2, // Produces 1 machine per hour at level 1
+        productionRate: 0.2, // Produces 1 machine per hour at level 1
         buildCost: [
             { name: 'Zege', quantity: 3000 }, 
             { name: 'Nondo', quantity: 1500 },
@@ -323,7 +323,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     ofisi_ya_leseni: {
-        productionRate: 10, // Produces 5 licenses per hour at level 1
+        productionRate: 1, // Produces 5 licenses per hour at level 1
         buildCost: [
             { name: 'Matofali', quantity: 2250 }, 
             { name: 'Mbao', quantity: 1500 },
@@ -335,7 +335,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_karatasi: {
-        productionRate: 200, // Produces 100 paper units per hour
+        productionRate: 20, // Produces 100 paper units per hour
         buildCost: [
             { name: 'Mbao', quantity: 1500 }, 
             { name: 'Matofali', quantity: 750 },
@@ -347,7 +347,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     wizara_ya_madini: {
-        productionRate: 4, // Produces 2 certificates per hour at level 1
+        productionRate: 0.4, // Produces 2 certificates per hour at level 1
         buildCost: [
             { name: 'Zege', quantity: 4500 }, 
             { name: 'Nondo', quantity: 2250 }, 
@@ -359,7 +359,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_vitambaa: {
-        productionRate: 100,
+        productionRate: 10,
         buildCost: [
             { name: 'Mbao', quantity: 1500 }, 
             { name: 'Matofali', quantity: 1500 },
@@ -371,7 +371,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_ngozi: {
-        productionRate: 60,
+        productionRate: 6,
         buildCost: [
             { name: 'Mbao', quantity: 1800 }, 
             { name: 'Matofali', quantity: 1200 },
@@ -383,7 +383,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_nguo: {
-        productionRate: 40,
+        productionRate: 4,
         buildCost: [
             { name: 'Matofali', quantity: 3000 }, 
             { name: 'Nondo', quantity: 750 },
@@ -395,7 +395,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_saa: {
-        productionRate: 20,
+        productionRate: 2,
         buildCost: [
             { name: 'Nondo', quantity: 1500 }, 
             { name: 'Zege', quantity: 750 },
@@ -407,7 +407,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_vioo: {
-        productionRate: 80,
+        productionRate: 8,
         buildCost: [
             { name: 'Matofali', quantity: 2250 }, 
             { name: 'Zege', quantity: 1500 },
@@ -419,7 +419,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_chokaa: {
-        productionRate: 120,
+        productionRate: 12,
         buildCost: [
             { name: 'Mawe', quantity: 6000 }, 
             { name: 'Mbao', quantity: 750 },
@@ -432,7 +432,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_gundi: {
-        productionRate: 160,
+        productionRate: 16,
         buildCost: [
             { name: 'Mbao', quantity: 1200 }, 
             { name: 'Matofali', quantity: 1200 },
@@ -444,7 +444,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     sonara: {
-        productionRate: 10,
+        productionRate: 1,
         buildCost: [
             { name: 'Zege', quantity: 4500 }, 
             { name: 'Nondo', quantity: 1500 },
@@ -456,7 +456,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     uchimbaji_mafuta: {
-        productionRate: 40,
+        productionRate: 4,
         buildCost: [
             { name: 'Nondo', quantity: 4500 }, 
             { name: 'Zege', quantity: 3000 },
@@ -468,7 +468,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_disel: {
-        productionRate: 30,
+        productionRate: 3,
         buildCost: [
             { name: 'Nondo', quantity: 3750 }, 
             { name: 'Zege', quantity: 2250 }, 
@@ -480,7 +480,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_petrol: {
-        productionRate: 30,
+        productionRate: 3,
         buildCost: [
             { name: 'Nondo', quantity: 3750 }, 
             { name: 'Zege', quantity: 2250 }, 
@@ -493,7 +493,7 @@ export const buildingData: Record<string, BuildingConfig> = {
     },
     // Electronics
     kiwanda_cha_tv: {
-        productionRate: 10,
+        productionRate: 1,
         buildCost: [
             { name: 'Zege', quantity: 1500 }, 
             { name: 'Nondo', quantity: 3000 },
@@ -505,7 +505,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_tablet: {
-        productionRate: 20,
+        productionRate: 2,
         buildCost: [
             { name: 'Zege', quantity: 1500 }, 
             { name: 'Nondo', quantity: 3000 },
@@ -517,7 +517,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_smartphone: {
-        productionRate: 30,
+        productionRate: 3,
         buildCost: [
             { name: 'Zege', quantity: 1500 }, 
             { name: 'Nondo', quantity: 3000 },
@@ -529,7 +529,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_laptop: {
-        productionRate: 16,
+        productionRate: 1.6,
         buildCost: [
             { name: 'Zege', quantity: 1500 }, 
             { name: 'Nondo', quantity: 3000 },
@@ -541,7 +541,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_processor: {
-        productionRate: 40,
+        productionRate: 4,
         buildCost: [
             { name: 'Zege', quantity: 4500 }, 
             { name: 'Nondo', quantity: 4500 },
@@ -553,7 +553,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_betri: {
-        productionRate: 60,
+        productionRate: 6,
         buildCost: [
             { name: 'Zege', quantity: 2250 }, 
             { name: 'Nondo', quantity: 2250 },
@@ -565,7 +565,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_display: {
-        productionRate: 50,
+        productionRate: 5,
         buildCost: [
             { name: 'Zege', quantity: 3000 }, 
             { name: 'Nondo', quantity: 2250 },
@@ -577,7 +577,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_motherboard: {
-        productionRate: 40,
+        productionRate: 4,
         buildCost: [
             { name: 'Zege', quantity: 3750 }, 
             { name: 'Nondo', quantity: 3000 },
@@ -589,7 +589,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_vifaa_vya_ndani: {
-        productionRate: 100,
+        productionRate: 10,
         buildCost: [
             { name: 'Zege', quantity: 1500 }, 
             { name: 'Nondo', quantity: 1500 },
@@ -601,7 +601,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_usanidi: {
-        productionRate: 80,
+        productionRate: 8,
         buildCost: [
             { name: 'Zege', quantity: 2250 }, 
             { name: 'Nondo', quantity: 2250 },
@@ -614,7 +614,7 @@ export const buildingData: Record<string, BuildingConfig> = {
     },
     // Vehicle Chain
     kiwanda_cha_spare: {
-        productionRate: 20,
+        productionRate: 2,
         buildCost: [
             { name: 'Nondo', quantity: 3000 }, 
             { name: 'Zege', quantity: 1500 },
@@ -626,7 +626,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_gari: {
-        productionRate: 4,
+        productionRate: 0.4,
         buildCost: [
             { name: 'Nondo', quantity: 7500 }, 
             { name: 'Zege', quantity: 4500 },
@@ -638,7 +638,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_pikipiki: {
-        productionRate: 10,
+        productionRate: 1,
         buildCost: [
             { name: 'Nondo', quantity: 4500 }, 
             { name: 'Zege', quantity: 2250 },
@@ -650,7 +650,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_ndege: {
-        productionRate: 2,
+        productionRate: 0.2,
         buildCost: [
             { name: 'Nondo', quantity: 150000 }, 
             { name: 'Zege', quantity: 75000 },
@@ -662,7 +662,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_meli: {
-        productionRate: 2,
+        productionRate: 0.2,
         buildCost: [
             { name: 'Nondo', quantity: 225000 },
             { name: 'Zege', quantity: 120000 },
@@ -675,7 +675,7 @@ export const buildingData: Record<string, BuildingConfig> = {
     },
     // Space Chain
     kiwanda_cha_k_mashine: {
-        productionRate: 1,
+        productionRate: 0.1,
         buildCost: [
             { name: 'Nondo', quantity: 30000 }, 
             { name: 'Zege', quantity: 15000 },
@@ -687,7 +687,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_anga: {
-        productionRate: 0.4,
+        productionRate: 0.04,
         buildCost: [
             { name: 'Nondo', quantity: 750000 }, 
             { name: 'Zege', quantity: 375000 },
@@ -699,7 +699,7 @@ export const buildingData: Record<string, BuildingConfig> = {
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     kiwanda_cha_roketi: {
-        productionRate: 0.2,
+        productionRate: 0.02,
         buildCost: [
             { name: 'Nondo', quantity: 1500000 }, 
             { name: 'Zege', quantity: 750000 },
