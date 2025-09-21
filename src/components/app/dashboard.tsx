@@ -1181,57 +1181,56 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
 
         {/* Production/Selling Dialog */}
         <Dialog open={isProductionDialogOpen} onOpenChange={setIsProductionDialogOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl flex flex-col max-h-[90vh]">
+            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>{isSelectedBuildingShop ? 'Uza Bidhaa' : 'Uzalishaji'}: {selectedSlot?.building?.name} (Lvl {selectedSlot?.level})</DialogTitle>
                     <DialogDescription>
                         {isSelectedBuildingShop ? 'Chagua bidhaa, weka kiasi na bei, na anza kuuza.' : 'Chagua bidhaa, weka kiasi, na anza mchakato wa uzalishaji.'}
                     </DialogDescription>
                 </DialogHeader>
-                 <div className="flex-grow overflow-y-auto -mr-6 pr-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                <div className="grid grid-cols-3 gap-4 pt-4">
                     {/* Recipe/Item List */}
-                    <div className="md:col-span-1 flex flex-col gap-2">
+                    <div className="col-span-1 flex flex-col gap-2">
                         {isSelectedBuildingShop ? (
                             shopInventory.length > 0 ? (
-                                <ScrollArea className="h-full max-h-48 md:max-h-full">
-                                    <div className="flex flex-col gap-2 pr-4">
-                                        {shopInventory.map((item) => (
-                                            <Button
-                                                key={item.item}
-                                                variant="outline"
-                                                className={cn(
-                                                    "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
-                                                    selectedInventoryItem?.item === item.item && "bg-blue-600 border-blue-400"
-                                                )}
-                                                onClick={() => handleSelectInventoryItem(item)}
-                                            >
-                                                {item.item}
-                                            </Button>
-                                        ))}
-                                    </div>
+                                <ScrollArea className="h-96">
+                                <div className="flex flex-col gap-2 pr-4">
+                                {shopInventory.map((item) => (
+                                    <Button
+                                    key={item.item}
+                                    variant="outline"
+                                    className={cn(
+                                        "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
+                                        selectedInventoryItem?.item === item.item && "bg-blue-600 border-blue-400"
+                                    )}
+                                    onClick={() => handleSelectInventoryItem(item)}
+                                    >
+                                    {item.item}
+                                    </Button>
+                                ))}
+                                </div>
                                 </ScrollArea>
                             ) : (
                                 <p className="text-sm text-gray-500">Hakuna bidhaa zinazohusiana na duka hili kwenye ghala.</p>
                             )
                         ) : (
-                            buildingRecipes.length > 0 ? (
-                                <ScrollArea className="h-full max-h-48 md:max-h-full">
-                                    <div className="flex flex-col gap-2 pr-4">
-                                        {buildingRecipes.map((recipe) => (
-                                            <Button
-                                                key={recipe.id}
-                                                variant="outline"
-                                                className={cn(
-                                                    "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
-                                                    selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
-                                                )}
-                                                onClick={() => handleSelectRecipe(recipe)}
-                                            >
-                                                {recipe.output.name}
-                                            </Button>
-                                        ))}
-                                    </div>
+                             buildingRecipes.length > 0 ? (
+                                <ScrollArea className="h-96">
+                                <div className="flex flex-col gap-2 pr-4">
+                                {buildingRecipes.map((recipe) => (
+                                    <Button
+                                    key={recipe.id}
+                                    variant="outline"
+                                    className={cn(
+                                        "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
+                                        selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
+                                    )}
+                                    onClick={() => handleSelectRecipe(recipe)}
+                                    >
+                                    {recipe.output.name}
+                                    </Button>
+                                ))}
+                                </div>
                                 </ScrollArea>
                             ) : (
                                 <p className="text-sm text-gray-500">Hakuna mapishi kwa jengo hili.</p>
@@ -1239,7 +1238,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         )}
                     </div>
                     {/* Production/Sale Details */}
-                    <div className="md:col-span-2">
+                    <div className="col-span-2">
                         {selectedRecipe ? ( // PRODUCER VIEW
                             <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
                                 <h3 className='text-xl font-bold'>{selectedRecipe.output.name}</h3>
@@ -1351,8 +1350,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             </div>
                         )}
                     </div>
-                    </div>
-                 </div>
+                </div>
             </DialogContent>
         </Dialog>
         
