@@ -87,8 +87,6 @@ export const recipes: Recipe[] = [
   { id: 'chumvi', buildingId: 'kiwanda_cha_samaki', output: { name: 'Chumvi', quantity: 2 }, inputs: [{ name: 'Maji', quantity: 20 }] },
 
   // Ujenzi & Uchimbaji Recipes
-  { id: 'umeme', buildingId: 'kiwanda_cha_umeme', output: { name: 'Umeme', quantity: 150 }, inputs: [{ name: 'Maji', quantity: 20 }] },
-  { id: 'maji', buildingId: 'kiwanda_cha_maji', output: { name: 'Maji', quantity: 150 }, inputs: [{ name: 'Umeme', quantity: 20 }] },
   { id: 'mawe', buildingId: 'uchimbaji_mawe', output: { name: 'Mawe', quantity: 3 }, inputs: [] },
   { id: 'kokoto', buildingId: 'uchimbaji_mawe', output: { name: 'Kokoto', quantity: 2 }, inputs: [{ name: 'Mawe', quantity: 2 }] },
   { id: 'mbao', buildingId: 'kiwanda_cha_mbao', output: { name: 'Mbao', quantity: 2 }, inputs: [{ name: 'Miti', quantity: 4 }] },

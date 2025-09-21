@@ -241,10 +241,12 @@ const getIcon = (name: string): React.ReactElement<LucideIcon> => {
 // A map to look up recipes by their output name quickly.
 const recipeMap = new Map<string, Recipe>(recipes.map(r => [r.output.name, r]));
 
-// Get a list of all unique items from recipes.
+// Get a list of all unique items from recipes and other base items
 const allItems = new Set<string>([
-    ...recipes.flatMap(r => [r.output.name, ...r.inputs.map(i => i.name)])
+    ...recipes.flatMap(r => [r.output.name, ...r.inputs.map(i => i.name)]),
+    'Maji', 'Umeme' // Manually add base items not in recipes
 ]);
+
 
 // This is the definitive, hardcoded price list for BASE items.
 const basePriceList: Record<string, number> = {
@@ -256,6 +258,8 @@ const basePriceList: Record<string, number> = {
   'Bwawa': 500,
   'Boat': 1000,
   'Mawe': 0.2,
+  'Maji': 0.05, // Added base price
+  'Umeme': 0.15, // Added base price
 };
 
 
@@ -275,6 +279,10 @@ while (itemsToCalculate.length > 0 && iterations < MAX_ITERATIONS) {
         const recipe = recipeMap.get(itemName);
         if (!recipe) {
             // Should be a base item, but if not in basePriceList, we can't price it.
+            if (!calculatedPrices[itemName]) {
+              // console.warn(`Item "${itemName}" has no recipe and no base price. Setting to 0.`);
+              calculatedPrices[itemName] = 0;
+            }
             priceCalculationCompleted.add(itemName); 
             return;
         }
