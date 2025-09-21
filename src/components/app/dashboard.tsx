@@ -867,8 +867,8 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       const ratePerHr = buildingInfo.productionRate * (1 + (selectedSlot.level - 1) * 0.4);
       if (ratePerHr <= 0) return Infinity; // Avoid division by zero for non-producing buildings
       
-      const baseTimePerBatch = (3600) / ratePerHr;
-      const totalSeconds = baseTimePerBatch * quantity;
+      const totalBatches = quantity;
+      const totalSeconds = (totalBatches / ratePerHr) * 3600;
       return totalSeconds * 1000; // time in ms
   }
 
@@ -882,11 +882,11 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       if (!buildingInfo) return 5000 * quantity;
 
       // Time in seconds for one batch, adjusted by level
-      const ratePerHr = buildingInfo.productionRate * (1 + (selectedSlot.level - 1) * 0.4);
+      const ratePerHr = (buildingInfo.productionRate * 5) * (1 + (selectedSlot.level - 1) * 0.4); // Shops sell 5x faster
       if (ratePerHr <= 0) return 5000 * quantity; 
       
-      const baseTimePerBatch = (3600) / ratePerHr;
-      const totalSeconds = baseTimePerBatch * quantity;
+      const totalBatches = quantity;
+      const totalSeconds = (totalBatches / ratePerHr) * 3600;
       return totalSeconds * 1000; // time in ms
   }
   
@@ -1189,12 +1189,12 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                     </DialogDescription>
                 </DialogHeader>
                  <div className="flex-grow overflow-y-auto -mr-6 pr-6">
-                    <div className="grid grid-cols-3 gap-4 pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
                     {/* Recipe/Item List */}
-                    <div className="col-span-1 flex flex-col gap-2">
+                    <div className="md:col-span-1 flex flex-col gap-2">
                         {isSelectedBuildingShop ? (
                             shopInventory.length > 0 ? (
-                                <ScrollArea className="h-full">
+                                <ScrollArea className="h-full max-h-48 md:max-h-full">
                                     <div className="flex flex-col gap-2 pr-4">
                                         {shopInventory.map((item) => (
                                             <Button
@@ -1216,7 +1216,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             )
                         ) : (
                             buildingRecipes.length > 0 ? (
-                                <ScrollArea className="h-full">
+                                <ScrollArea className="h-full max-h-48 md:max-h-full">
                                     <div className="flex flex-col gap-2 pr-4">
                                         {buildingRecipes.map((recipe) => (
                                             <Button
@@ -1239,7 +1239,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         )}
                     </div>
                     {/* Production/Sale Details */}
-                    <div className="col-span-2">
+                    <div className="md:col-span-2">
                         {selectedRecipe ? ( // PRODUCER VIEW
                             <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
                                 <h3 className='text-xl font-bold'>{selectedRecipe.output.name}</h3>
@@ -1297,7 +1297,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                            <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
                               <h3 className='text-xl font-bold'>{selectedInventoryItem.item}</h3>
                               
-                              <div className='grid grid-cols-2 gap-4'>
+                              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                                 <div className='space-y-2'>
                                     <Label htmlFor='quantity-sell'>Idadi (Una: {selectedInventoryItem.quantity.toLocaleString()})</Label>
                                     <Input 
