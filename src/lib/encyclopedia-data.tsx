@@ -1,10 +1,4 @@
 
-
-
-
-
-
-
 import React from 'react';
 import { recipes, type Recipe } from './recipe-data';
 import { buildingData } from './building-data';
@@ -244,206 +238,83 @@ const getIcon = (name: string): React.ReactElement<LucideIcon> => {
 
 // --- Main Execution ---
 
-// This is the definitive, hardcoded price list for all items.
-const priceList: Record<string, number> = {
-  // Agriculture & Food
-  'Maharage': 1.50,
-  'Mchele': 1.00,
-  'Unga wa ngano': 1.20,
-  'Unga wa sembe': 0.90,
-  'Ndizi': 4.00,
-  'Viazi mbatata': 3.00,
-  'Mboga mboga': 2.00,
-  'Samaki': 10.00,
-  'Embe': 3.00,
-  'Nanasi': 6.00,
-  'Parachichi': 4.00,
-  'Miwa': 3.00,
-  'Chumvi': 3.00,
-  'Sukari': 6.00,
-  'Nyama': 11.00,
-  'Nyasi': 1.00,
-  'Mbolea': 2.00,
-  'Kuku': 9.00,
-  'Yai': 1.50,
-  'Zabibu': 7.00,
-  'Apple': 4.00,
-  'Chungwa': 3.00,
-  'Korosho': 14.00,
-  'Karafuu': 20.00,
-  'Pamba': 6.00,
-  'Katani': 7.00,
+// A map to look up recipes by their output name quickly.
+const recipeMap = new Map<string, Recipe>(recipes.map(r => [r.output.name, r]));
+
+// Get a list of all unique items from recipes.
+const allItems = new Set<string>([
+    ...recipes.flatMap(r => [r.output.name, ...r.inputs.map(i => i.name)])
+]);
+
+// This is the definitive, hardcoded price list for BASE items.
+const basePriceList: Record<string, number> = {
+  // Base resources that don't have recipes
   'Mbegu': 0.70,
-  
-  // New Food Items
-  'Wali wa Samaki': 16.00,
-  'Maharage na Ndizi': 10.50,
-  'Chipsi Nyama': 19.00,
-  'Pilau ya Nyama': 23.00,
-  'Ugali Maharage': 7.40,
-  'Ugali Samaki': 15.90,
-  'Chipsi Mayai': 9.50,
-  'Saladi ya Matunda': 27.00,
-  'Kachumbari': 8.00,
-  'Juisi Mchanganyiko': 23.00,
-  'Githeri': 7.50,
-  'Burger ya Kuku': 16.70,
-  'Sandwich ya Mayai': 7.70,
-
-
-  // Construction
-  'Nondo': 7.00,
-  'Zege': 5.00,
-  'Mbao': 6.00,
-  'Matofali': 1.00,
-  'Chuma': 8.00,
-  'Umeme': 0.20,
-  'Kokoto': 1.60,
-  'Mchanga': 0.80,
-  'Maji': 0.10,
-  'Saruji': 3.00,
-  'Mabati': 9.00,
-
-  // Madini
-  'Almasi': 1000.00,
-  'Dhahabu': 800.00,
-  'Silver': 200.00,
-  'Ruby': 500.00,
-  'Tanzanite': 700.00,
-  'Shaba': 100.00,
-  
-  // Mashine & Leseni
-  'B1 Mashine': 1220.00,
-  'B2 Mashine': 1300.00,
-  'B3 Mashine': 1400.00,
-  'B4 Mashine': 1500.00,
-  'B5 Mashine': 1600.00,
-  'B6 Mashine': 1700.00,
-  'B7 Mashine': 1800.00,
-  'Leseni B1': 5000.00,
-  'Leseni B2': 5100.00,
-  'Leseni B3': 5200.00,
-  'Leseni B4': 5300.00,
-  'Leseni B5': 5400.00,
-  'Leseni B6': 5500.00,
-  'Leseni B7': 5600.00,
-  'A1 Mashine': 2300.00,
-  'A2 Mashine': 2600.00,
-  'A3 Mashine': 3200.00,
-  'A4 Mashine': 3600.00,
-  'A5 Mashine': 4200.00,
-  'C1 Mashine': 3000.00,
-  'C2 Mashine': 5000.00,
-  'Karatasi': 10.00,
-  'Cheti cha Madini': 7000.00,
-
-  // Mavazi & Vito
-  'Kitamba': 10.00,
-  'Ngozi': 50.00,
-  'Viatu': 300.00,
-  'Pochi': 200.00,
-  'T-Shirt': 150.00,
-  'Jeans': 170.00,
-  'Skirt': 220.00,
-  'Kijora': 140.00,
-  'Saa': 100.00,
-  'Soli': 70.00,
-  'Kioo': 20.00,
-  'Chokaa': 3.00,
-  'Gundi': 2.00,
-  'Mkufu wa Dhahabu': 3000.00,
-  'Saa ya Dhahabu': 2500.00,
-  'Pete ya Dhahabu': 1500.00,
-  'Mkufu wa Almasi': 6000.00,
-  'Saa ya Almasi': 4000.00,
-  'Pete ya Almasi': 2500.00,
-  'Mafuta Ghafi': 50.00,
-  'Disel': 100.00,
-  'Petrol': 150.00,
-  
-  // Electronics
-  'TV': 500.00,
-  'Tablet': 300.00,
-  'Smartphone': 800.00,
-  'Laptop': 1400.00,
-  'Processor': 30.00,
-  'Betri': 50.00,
-  'Display': 100.00,
-  'Motherboard': 120.00,
-  'Vifaa vya ndani': 40.00,
-  'Housing': 60.00,
-  'Nyaya': 12.00,
-  'LCD': 30.00,
-  'Cathode': 23.00,
-  'Anode': 98.00,
-  'Ram': 30.00,
-  'Rom': 23.00,
-  'PCB': 80.00,
-  
-  // Vehicles
-  'Bull Dozer': 13000.00,
-  'Lori': 9000.00,
-  'Gari ya kifahari': 40000.00,
-  'Gari': 7000.00,
-  'Pikipiki ya Kifahari': 25000.00,
-  'Pikipiki': 5000.00,
-  'Car Body': 500.00,
-  'Bike Body': 400.00,
-  'Interior': 200.00,
-  'Luxury Interior': 700.00,
-  'Motor': 800.00,
-  'Engine': 1200.00,
-  'Dashboard': 700.00,
-  'Ndege': 100000.00,
-  'Ndege ya kifahari': 300000.00,
-  'Meli': 200000.00,
-  'Meli ya kifahari': 600000.00,
-  'Bodi ya Ndege': 40000.00,
-  'Bodi ya Meli': 60000.00,
-
-  // Space
-  'Roketi': 1500000.00,
-  'Fuselage': 2000.00,
-  'Wings': 14400.00,
-  'Tarakilishi': 4500.00,
-  'Cockpit': 8099.00,
-  'Attitude Control': 1555.00,
-  'Rocket Engine': 20000.00,
-  'Heat Shield': 40000.00,
-  'K1 Mashine': 6000.00,
-  'K2 Mashine': 8000.00,
-  'K3 Mashine': 12000.00,
-  'K4 Mashine': 15000.00,
-  'K5 Mashine': 17000.00,
-  'K6 Mashine': 20000.00,
-  'K7 Mashine': 20000.00, // Assuming K7 has a price as well
-  
-  // Fallbacks
+  'Miti': 0.5,
+  'Madini ya chuma': 0.9,
   'Ngombe': 100,
   'Bwawa': 500,
   'Boat': 1000,
   'Mawe': 0.2,
-  'Miti': 0.5,
-  'Madini ya chuma': 0.9,
-  'Bull dozer body': 15000,
-  'Truck body': 10000,
 };
 
-// A map to look up recipes by their output name quickly.
-const recipeMap = new Map<string, Recipe>(recipes.map(r => [r.output.name, r]));
 
-// Get a list of all unique items from recipes and the hardcoded price list.
-const allItems = new Set<string>([
-    ...recipes.flatMap(r => [r.output.name, ...r.inputs.map(i => i.name)]),
-    ...Object.keys(priceList)
-]);
+// --- Calculate all prices dynamically ---
+const calculatedPrices: Record<string, number> = { ...basePriceList };
+const priceCalculationCompleted = new Set<string>(Object.keys(basePriceList));
+
+let itemsToCalculate = Array.from(allItems).filter(item => !priceCalculationCompleted.has(item));
+
+let iterations = 0;
+const MAX_ITERATIONS = allItems.size; // Prevent infinite loops
+
+while (itemsToCalculate.length > 0 && iterations < MAX_ITERATIONS) {
+    const stillToCalculate: string[] = [];
+    
+    itemsToCalculate.forEach(itemName => {
+        const recipe = recipeMap.get(itemName);
+        if (!recipe) {
+            // Should be a base item, but if not in basePriceList, we can't price it.
+            priceCalculationCompleted.add(itemName); 
+            return;
+        }
+
+        let canCalculate = true;
+        let inputCost = 0;
+
+        for (const input of recipe.inputs) {
+            if (calculatedPrices[input.name] === undefined) {
+                canCalculate = false;
+                break;
+            }
+            inputCost += calculatedPrices[input.name] * input.quantity;
+        }
+
+        if (canCalculate) {
+            const costPerUnit = inputCost / recipe.output.quantity;
+            calculatedPrices[itemName] = costPerUnit * 1.15; // Add a 15% margin for market price
+            priceCalculationCompleted.add(itemName);
+        } else {
+            stillToCalculate.push(itemName);
+        }
+    });
+
+    if (stillToCalculate.length === itemsToCalculate.length) {
+        // No progress made, indicates a circular dependency or missing base price
+        console.error("Could not calculate prices for:", stillToCalculate);
+        break; 
+    }
+    
+    itemsToCalculate = stillToCalculate;
+    iterations++;
+}
 
 
 // --- Generate Encyclopedia Entries using the final calculated prices ---
 const finalEntries: EncyclopediaEntry[] = [];
 allItems.forEach(itemName => {
     const recipe = recipeMap.get(itemName);
-    const marketCost = priceList[itemName] || 0;
+    const marketCost = calculatedPrices[itemName] || 0;
     
     let properties: { label: string; value: string }[] = [
         { label: 'Market Cost', value: `$${marketCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}` }
@@ -453,15 +324,15 @@ allItems.forEach(itemName => {
         // It's a produced good
         let inputCost = 0;
         for (const input of recipe.inputs) {
-            inputCost += (priceList[input.name] || 0) * input.quantity;
+            inputCost += (calculatedPrices[input.name] || 0) * input.quantity;
         }
-        const productionCostPerUnit = inputCost / recipe.output.quantity;
-
-        const buildingInfo = buildingData[recipe.buildingId];
-        const baseTimePerUnit = buildingInfo ? (3600) / (buildingInfo.productionRate) : 0; // Time in seconds for one batch
         
-        properties.unshift({ label: 'Production Cost', value: `$${productionCostPerUnit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}` });
-        properties.push({ label: 'Base Production Time', value: `${(baseTimePerUnit / recipe.output.quantity).toFixed(2)}s per unit` });
+        const buildingInfo = buildingData[recipe.buildingId];
+        // Time in seconds for one BATCH
+        const baseTimeForBatch = buildingInfo ? (3600) / (buildingInfo.productionRate) : 0; 
+        
+        properties.unshift({ label: 'Production Cost', value: `$${(inputCost / recipe.output.quantity).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})} per unit` });
+        properties.push({ label: 'Base Production Time', value: `${(baseTimeForBatch).toFixed(0)}s per batch` });
         properties.push({ label: 'Output per Batch', value: `${recipe.output.quantity.toLocaleString()} unit(s)` });
         properties.push({ label: 'Building', value: recipe.buildingId.charAt(0).toUpperCase() + recipe.buildingId.slice(1).replace(/_/g, ' ') });
 
