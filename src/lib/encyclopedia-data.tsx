@@ -20,7 +20,7 @@ export type EncyclopediaEntry = {
   description: string;
   imageUrl: string;
   imageHint: string;
-  icon: React.ReactElement<LucideIcon>;
+  icon: React.ComponentType<any>;
   properties: {
     label: string;
     value: string;
@@ -37,7 +37,7 @@ export type EncyclopediaEntry = {
 const getImageUrl = (name: string) => `https://picsum.photos/seed/${name.toLowerCase().replace(/\s/g, '-')}/64/64`;
 const getImageHint = (name: string) => name.toLowerCase().split(' ').slice(0, 2).join(' ');
 
-const itemIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
+const itemIcons: Record<string, React.ComponentType<any>> = {
     // Construction
     'Mbao': (props) => <Hammer {...props} className="text-amber-800" />,
     'Matofali': (props) => <ToyBrick {...props} className="text-orange-600" />,
@@ -231,9 +231,8 @@ const itemIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
     'Default': (props) => <Package {...props} className="text-gray-400" />
 };
 
-const getIcon = (name: string): React.ReactElement => {
-    const IconComponent = itemIcons[name] || itemIcons['Default'];
-    return <IconComponent />;
+const getIconComponent = (name: string): React.ComponentType<any> => {
+    return itemIcons[name] || itemIcons['Default'];
 };
 
 
@@ -271,32 +270,32 @@ const priceCalculationCompleted = new Set<string>(Object.keys(basePriceList));
 let itemsToCalculate = Array.from(allItems).filter(item => !priceCalculationCompleted.has(item));
 
 let iterations = 0;
-const MAX_ITERATIONS = allItems.size; // Prevent infinite loops
+const MAX_ITERATIONS = allItems.size * 2; // Prevent infinite loops, give more leeway
 
 while (itemsToCalculate.length > 0 && iterations < MAX_ITERATIONS) {
     const stillToCalculate: string[] = [];
     
-    itemsToCalculate.forEach(itemName => {
+    for (const itemName of itemsToCalculate) {
         const recipe = recipeMap.get(itemName);
         if (!recipe) {
             // Should be a base item, but if not in basePriceList, we can't price it.
-            if (!calculatedPrices[itemName]) {
+            if (calculatedPrices[itemName] === undefined) {
               // console.warn(`Item "${itemName}" has no recipe and no base price. Setting to 0.`);
               calculatedPrices[itemName] = 0;
             }
             priceCalculationCompleted.add(itemName); 
-            return;
+            continue; // Go to next item
         }
 
         let canCalculate = true;
         let inputCost = 0;
 
         for (const input of recipe.inputs) {
-            if (calculatedPrices[input.name] === undefined) {
+            if (!priceCalculationCompleted.has(input.name)) {
                 canCalculate = false;
                 break;
             }
-            inputCost += calculatedPrices[input.name] * input.quantity;
+            inputCost += (calculatedPrices[input.name] || 0) * input.quantity;
         }
 
         if (canCalculate) {
@@ -306,21 +305,21 @@ while (itemsToCalculate.length > 0 && iterations < MAX_ITERATIONS) {
         } else {
             stillToCalculate.push(itemName);
         }
-    });
+    }
 
-    if (stillToCalculate.length > 0 && stillToCalculate.length === itemsToCalculate.length) {
+    if (stillToCalculate.length === itemsToCalculate.length) {
         // No progress made, indicates a circular dependency or missing base price
         console.error("Could not calculate prices for:", stillToCalculate);
-        // For items that couldn't be calculated, set their price to 0 to avoid breaking the loop
+        // Break the loop to prevent infinite execution.
+        // The un-calculated items will have a price of 0.
         stillToCalculate.forEach(item => {
             calculatedPrices[item] = 0;
             priceCalculationCompleted.add(item);
         });
-        itemsToCalculate = []; // exit loop
-    } else {
-        itemsToCalculate = stillToCalculate;
+        break; 
     }
     
+    itemsToCalculate = stillToCalculate;
     iterations++;
 }
 
@@ -363,7 +362,7 @@ allItems.forEach(itemName => {
         description: `Description for ${itemName}.`,
         imageUrl: getImageUrl(itemName),
         imageHint: getImageHint(itemName),
-        icon: getIcon(itemName),
+        icon: getIconComponent(itemName),
         properties: properties,
         recipe: recipe ? {
             inputs: recipe.inputs.map(input => ({
@@ -512,5 +511,3 @@ export const encyclopediaData: EncyclopediaEntry[] = finalEntries.sort((a, b) =>
     }
     return a.name.localeCompare(b.name);
 });
-
-    
