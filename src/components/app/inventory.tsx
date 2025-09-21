@@ -154,8 +154,8 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
           </DialogHeader>
           {selectedItem && (
              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="quantity" className="text-right">Quantity</Label>
+                <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+                    <Label htmlFor="quantity" className="sm:text-right">Quantity</Label>
                     <Input 
                         id="quantity" 
                         type="number"
@@ -163,11 +163,11 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
                         onChange={(e) => setQuantity(Math.max(1, Math.min(Number(e.target.value), selectedItem.quantity)))}
                         min="1"
                         max={selectedItem.quantity}
-                        className="col-span-3 bg-gray-800 border-gray-600"
+                        className="sm:col-span-3 bg-gray-800 border-gray-600"
                     />
                 </div>
-                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="price" className="text-right">Price/Unit</Label>
+                 <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+                    <Label htmlFor="price" className="sm:text-right">Price/Unit</Label>
                     <Input 
                         id="price" 
                         type="number"
@@ -176,7 +176,7 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
                         min={priceFloor}
                         max={priceCeiling}
                         step="0.01"
-                        className="col-span-3 bg-gray-800 border-gray-600"
+                        className="sm:col-span-3 bg-gray-800 border-gray-600"
                     />
                 </div>
                 <div className='col-span-4 text-xs text-center text-gray-400'>
