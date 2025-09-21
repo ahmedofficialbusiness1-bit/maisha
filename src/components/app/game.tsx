@@ -76,7 +76,21 @@ const getInitialUserData = (): UserData => ({
     privateNotes: 'Karibu kwenye wasifu wangu! Mimi ni mtaalamu wa kuzalisha bidhaa bora.',
     money: 10000,
     stars: 5,
-    inventory: [],
+    inventory: [
+      { item: 'Maji', quantity: 10000, marketPrice: 0.05 },
+      { item: 'Umeme', quantity: 10000, marketPrice: 0.15 },
+      { item: 'Mbegu', quantity: 10000, marketPrice: 0.70 },
+      { item: 'Mbao', quantity: 2000, marketPrice: 1.15 },
+      { item: 'Matofali', quantity: 2000, marketPrice: 2.16 },
+      { item: 'Nondo', quantity: 2000, marketPrice: 2.46 },
+      { item: 'Zege', quantity: 2000, marketPrice: 1.44 },
+      { item: 'Mabati', quantity: 2000, marketPrice: 2.07 },
+      { item: 'Saruji', quantity: 2000, marketPrice: 0.75 },
+      { item: 'Chuma', quantity: 2000, marketPrice: 2.07 },
+      { item: 'Mchanga', quantity: 2000, marketPrice: 0.12 },
+      { item: 'Mawe', quantity: 2000, marketPrice: 0.20 },
+      { item: 'Kokoto', quantity: 2000, marketPrice: 0.23 },
+    ],
     marketListings: initialPlayerListings, // These could be global or also user-specific
     companyData: initialCompanyData,
     bondListings: initialBondListings,
@@ -107,16 +121,31 @@ export const productCategoryToShopMap: Record<string, string> = {
 
 export function Game() {
   const [view, setView] = React.useState<View>('dashboard');
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [gameState, setGameState] = React.useState<UserData>(getInitialUserData());
 
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
+  
+  // Load game state from localStorage
+  React.useEffect(() => {
+    const savedState = localStorage.getItem('maisha-game-state');
+    if (savedState) {
+      setGameState(JSON.parse(savedState));
+    }
+    setIsLoading(false);
+  }, []);
 
-  // Update state using a single function to ensure consistency
+  // Save game state to localStorage with debounce
+  const debouncedSave = useDebouncedCallback((newState: UserData) => {
+    localStorage.setItem('maisha-game-state', JSON.stringify(newState));
+  }, 1000);
+
+  // Update state using a single function to ensure consistency and trigger save
   const updateState = (updater: (prevState: UserData) => UserData) => {
     setGameState(prevState => {
-        if (!prevState) return getInitialUserData();
-        return updater(prevState);
+        const newState = updater(prevState);
+        debouncedSave(newState);
+        return newState;
     });
   };
 
@@ -557,6 +586,8 @@ export function Game() {
             ...aiListings,
         ]
     }));
+  // This effect should run only once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
    React.useEffect(() => {
@@ -758,3 +789,5 @@ export function Game() {
     </div>
   );
 }
+
+    
