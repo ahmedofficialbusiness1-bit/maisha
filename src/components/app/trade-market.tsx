@@ -374,52 +374,95 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                     <CardTitle>Soko la Hisa</CardTitle>
                     <CardDescription>Nunua na uza hisa za makampuni mbalimbali yaliyosajiliwa.</CardDescription>
                 </CardHeader>
-                <CardContent className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="border-gray-700 hover:bg-gray-700/50">
-                                <TableHead className="text-white">Kampuni</TableHead>
-                                <TableHead className="text-right text-white">Bei</TableHead>
-                                <TableHead className="text-right text-white">Hisa Zipo</TableHead>
-                                <TableHead className="text-right text-white">Thamani ya Kampuni</TableHead>
-                                <TableHead className="text-right text-white">Rating</TableHead>
-                                <TableHead className="text-right text-white">Vitendo</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {stockListings.map((stock) => (
-                                <TableRow key={stock.id} className="border-gray-700">
-                                    <TableCell className="p-2 sm:p-4">
-                                        <div className="flex items-center gap-2 sm:gap-3">
-                                            <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                                                <AvatarImage src={stock.logo} alt={stock.companyName} data-ai-hint={stock.imageHint} />
-                                                <AvatarFallback>{stock.ticker.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="font-bold text-sm sm:text-base">{stock.companyName}</p>
-                                                <p className="text-xs text-gray-400">{stock.ticker}</p>
-                                            </div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right font-mono p-2 sm:p-4">${stock.stockPrice.toFixed(2)}</TableCell>
-                                    <TableCell className="text-right font-mono p-2 sm:p-4">{stock.sharesAvailable?.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right font-mono p-2 sm:p-4">${stock.marketCap.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right p-2 sm:p-4">
-                                        <div className={cn("flex items-center justify-end font-bold text-sm", 
-                                            stock.creditRating.startsWith('A') ? 'text-green-400' : 
-                                            stock.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
-                                        )}>
-                                            {stock.creditRating}
-                                            <ShieldCheck className="ml-1 h-4 w-4" />
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right p-2 sm:p-4">
-                                        <Button size="sm" variant="secondary" className="bg-green-600 hover:bg-green-700 text-xs h-8" onClick={() => handleOpenBuyStockDialog(stock)}>Nunua</Button>
-                                    </TableCell>
+                <CardContent>
+                    {/* Mobile View */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
+                        {stockListings.map((stock) => (
+                             <Card key={stock.id} className="bg-gray-900/50">
+                                 <CardHeader>
+                                     <div className="flex items-center gap-3">
+                                         <Avatar className="h-10 w-10">
+                                             <AvatarImage src={stock.logo} alt={stock.companyName} data-ai-hint={stock.imageHint} />
+                                             <AvatarFallback>{stock.ticker.charAt(0)}</AvatarFallback>
+                                         </Avatar>
+                                         <div>
+                                             <CardTitle className="text-base">{stock.companyName}</CardTitle>
+                                             <CardDescription>{stock.ticker}</CardDescription>
+                                         </div>
+                                     </div>
+                                 </CardHeader>
+                                 <CardContent className="space-y-4">
+                                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                         <div className="text-gray-400">Bei</div>
+                                         <div className="font-mono text-right">${stock.stockPrice.toFixed(2)}</div>
+                                         <div className="text-gray-400">Hisa Zipo</div>
+                                         <div className="font-mono text-right">{stock.sharesAvailable?.toLocaleString()}</div>
+                                         <div className="text-gray-400">Thamani</div>
+                                         <div className="font-mono text-right">${(stock.marketCap / 1e6).toFixed(2)}M</div>
+                                         <div className="text-gray-400">Rating</div>
+                                         <div className={cn("flex items-center justify-end font-bold", 
+                                             stock.creditRating.startsWith('A') ? 'text-green-400' : 
+                                             stock.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
+                                         )}>
+                                             {stock.creditRating}
+                                             <ShieldCheck className="ml-1 h-4 w-4" />
+                                         </div>
+                                     </div>
+                                      <Button size="sm" className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleOpenBuyStockDialog(stock)}>
+                                         Nunua
+                                     </Button>
+                                 </CardContent>
+                             </Card>
+                        ))}
+                    </div>
+                    {/* Desktop View */}
+                    <div className="hidden md:block overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="border-gray-700 hover:bg-gray-700/50">
+                                    <TableHead className="text-white">Kampuni</TableHead>
+                                    <TableHead className="text-right text-white">Bei</TableHead>
+                                    <TableHead className="text-right text-white">Hisa Zipo</TableHead>
+                                    <TableHead className="text-right text-white">Thamani ya Kampuni</TableHead>
+                                    <TableHead className="text-right text-white">Rating</TableHead>
+                                    <TableHead className="text-right text-white">Vitendo</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {stockListings.map((stock) => (
+                                    <TableRow key={stock.id} className="border-gray-700">
+                                        <TableCell className="p-2 sm:p-4">
+                                            <div className="flex items-center gap-2 sm:gap-3">
+                                                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                                                    <AvatarImage src={stock.logo} alt={stock.companyName} data-ai-hint={stock.imageHint} />
+                                                    <AvatarFallback>{stock.ticker.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <p className="font-bold text-sm sm:text-base">{stock.companyName}</p>
+                                                    <p className="text-xs text-gray-400">{stock.ticker}</p>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right font-mono p-2 sm:p-4">${stock.stockPrice.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right font-mono p-2 sm:p-4">{stock.sharesAvailable?.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-mono p-2 sm:p-4">${stock.marketCap.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right p-2 sm:p-4">
+                                            <div className={cn("flex items-center justify-end font-bold text-sm", 
+                                                stock.creditRating.startsWith('A') ? 'text-green-400' : 
+                                                stock.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
+                                            )}>
+                                                {stock.creditRating}
+                                                <ShieldCheck className="ml-1 h-4 w-4" />
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right p-2 sm:p-4">
+                                            <Button size="sm" variant="secondary" className="bg-green-600 hover:bg-green-700 text-xs h-8" onClick={() => handleOpenBuyStockDialog(stock)}>Nunua</Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>
@@ -432,51 +475,93 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                     <CardTitle>Soko la Hatifungani</CardTitle>
                     <CardDescription>Wekeza kwenye hatifungani za serikali na makampuni kwa mapato ya kudumu.</CardDescription>
                 </CardHeader>
-                <CardContent className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="border-gray-700 hover:bg-gray-700/50">
-                                <TableHead className="text-white">Mtoaji</TableHead>
-                                <TableHead className="text-right text-white">Rating</TableHead>
-                                <TableHead className="text-right text-white">Kuponi</TableHead>
-                                <TableHead className="text-right text-white">Ukomavu</TableHead>
-                                <TableHead className="text-right text-white">Bei</TableHead>
-                                <TableHead className="text-right text-white">Vitendo</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {bondListings.map((bond) => (
-                                <TableRow key={bond.id} className="border-gray-700">
-                                    <TableCell className="p-2 sm:p-4">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                                                <AvatarImage src={bond.issuerLogo} alt={bond.issuer} data-ai-hint={bond.imageHint} />
-                                                <AvatarFallback>{bond.issuer.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                             <div>
-                                                <p className="font-bold text-sm sm:text-base">{bond.issuer}</p>
-                                            </div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right p-2 sm:p-4">
-                                        <div className={cn("flex items-center justify-end font-bold text-sm", 
-                                            bond.creditRating.startsWith('A') ? 'text-green-400' : 
-                                            bond.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
-                                        )}>
-                                            {bond.creditRating}
-                                            <ShieldCheck className="ml-1 h-4 w-4" />
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right font-mono text-green-400 p-2 sm:p-4">{bond.couponRate.toFixed(2)}%</TableCell>
-                                    <TableCell className="text-right font-mono p-2 sm:p-4">{new Date(bond.maturityDate).toLocaleDateString()}</TableCell>
-                                    <TableCell className="text-right font-mono p-2 sm:p-4">${bond.price.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right p-2 sm:p-4">
-                                        <Button size="sm" variant="secondary" className="bg-blue-600 hover:bg-blue-700 text-xs h-8">Nunua</Button>
-                                    </TableCell>
+                <CardContent>
+                    {/* Mobile View */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
+                        {bondListings.map((bond) => (
+                             <Card key={bond.id} className="bg-gray-900/50">
+                                 <CardHeader>
+                                     <div className="flex items-center gap-3">
+                                         <Avatar className="h-10 w-10">
+                                             <AvatarImage src={bond.issuerLogo} alt={bond.issuer} data-ai-hint={bond.imageHint} />
+                                             <AvatarFallback>{bond.issuer.charAt(0)}</AvatarFallback>
+                                         </Avatar>
+                                         <div>
+                                             <CardTitle className="text-base">{bond.issuer}</CardTitle>
+                                         </div>
+                                     </div>
+                                 </CardHeader>
+                                 <CardContent className="space-y-4">
+                                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                         <div className="text-gray-400">Bei</div>
+                                         <div className="font-mono text-right">${bond.price.toLocaleString()}</div>
+                                         <div className="text-gray-400">Kuponi</div>
+                                         <div className="font-mono text-right text-green-400">{bond.couponRate.toFixed(2)}%</div>
+                                         <div className="text-gray-400">Ukomavu</div>
+                                         <div className="font-mono text-right">{new Date(bond.maturityDate).toLocaleDateString()}</div>
+                                         <div className="text-gray-400">Rating</div>
+                                         <div className={cn("flex items-center justify-end font-bold", 
+                                             bond.creditRating.startsWith('A') ? 'text-green-400' : 
+                                             bond.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
+                                         )}>
+                                             {bond.creditRating}
+                                             <ShieldCheck className="ml-1 h-4 w-4" />
+                                         </div>
+                                     </div>
+                                      <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
+                                         Nunua
+                                     </Button>
+                                 </CardContent>
+                             </Card>
+                        ))}
+                    </div>
+                    {/* Desktop View */}
+                    <div className="hidden md:block overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="border-gray-700 hover:bg-gray-700/50">
+                                    <TableHead className="text-white">Mtoaji</TableHead>
+                                    <TableHead className="text-right text-white">Rating</TableHead>
+                                    <TableHead className="text-right text-white">Kuponi</TableHead>
+                                    <TableHead className="text-right text-white">Ukomavu</TableHead>
+                                    <TableHead className="text-right text-white">Bei</TableHead>
+                                    <TableHead className="text-right text-white">Vitendo</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {bondListings.map((bond) => (
+                                    <TableRow key={bond.id} className="border-gray-700">
+                                        <TableCell className="p-2 sm:p-4">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                                                    <AvatarImage src={bond.issuerLogo} alt={bond.issuer} data-ai-hint={bond.imageHint} />
+                                                    <AvatarFallback>{bond.issuer.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                 <div>
+                                                    <p className="font-bold text-sm sm:text-base">{bond.issuer}</p>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right p-2 sm:p-4">
+                                            <div className={cn("flex items-center justify-end font-bold text-sm", 
+                                                bond.creditRating.startsWith('A') ? 'text-green-400' : 
+                                                bond.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
+                                            )}>
+                                                {bond.creditRating}
+                                                <ShieldCheck className="ml-1 h-4 w-4" />
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right font-mono text-green-400 p-2 sm:p-4">{bond.couponRate.toFixed(2)}%</TableCell>
+                                        <TableCell className="text-right font-mono p-2 sm:p-4">{new Date(bond.maturityDate).toLocaleDateString()}</TableCell>
+                                        <TableCell className="text-right font-mono p-2 sm:p-4">${bond.price.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right p-2 sm:p-4">
+                                            <Button size="sm" variant="secondary" className="bg-blue-600 hover:bg-blue-700 text-xs h-8">Nunua</Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>
