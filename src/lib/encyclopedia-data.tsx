@@ -244,7 +244,8 @@ const recipeMap = new Map<string, Recipe>(recipes.map(r => [r.output.name, r]));
 
 // Get a list of all unique items from recipes and other base items
 const allItems = new Set<string>([
-    ...recipes.flatMap(r => [r.output.name, ...r.inputs.map(i => i.name)])
+    ...recipes.flatMap(r => [r.output.name, ...r.inputs.map(i => i.name)]),
+    'Maji', 'Umeme'
 ]);
 
 
@@ -279,9 +280,9 @@ while (itemsToCalculate.length > 0 && iterations < MAX_ITERATIONS) {
         const recipe = recipeMap.get(itemName);
         if (!recipe) {
             if (calculatedPrices[itemName] === undefined) {
-              // This case should not be hit if allItems are from recipes or basePriceList
-              // but as a safeguard:
-              calculatedPrices[itemName] = 0;
+              // This can happen for items in `allItems` that are not in basePriceList and have no recipe
+              // e.g., 'Maji', 'Umeme' before they were added to basePriceList
+              calculatedPrices[itemName] = 0; // Default to 0 if no other info
             }
             priceCalculationCompleted.add(itemName); 
             continue;
