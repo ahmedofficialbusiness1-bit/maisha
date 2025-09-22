@@ -87,14 +87,9 @@ export function Encyclopedia() {
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <div className="flex items-center gap-4">
-                    <Image
-                        src={selectedEntry.imageUrl}
-                        alt={selectedEntry.name}
-                        width={80}
-                        height={80}
-                        className="rounded-lg border-2 border-gray-600 object-cover"
-                        data-ai-hint={selectedEntry.imageHint}
-                    />
+                    {React.createElement(selectedEntry.icon, {
+                        className: "h-20 w-20 rounded-lg border-2 border-gray-600 object-cover p-2"
+                    })}
                     <div>
                         <CardTitle className="text-3xl">{selectedEntry.name}</CardTitle>
                         <CardDescription className="text-gray-400">{selectedEntry.category}</CardDescription>
@@ -118,19 +113,21 @@ export function Encyclopedia() {
                             <h3 className="text-lg font-semibold mt-4 mb-2">Recipe</h3>
                             <div className="bg-gray-900/50 p-4 rounded-lg flex items-center justify-center gap-4 flex-wrap">
                                 <div className="flex items-center justify-center gap-2 flex-wrap">
-                                    {selectedEntry.recipe.inputs.map((input, index) => (
+                                    {selectedEntry.recipe.inputs.map((input, index) => {
+                                        const inputEntry = encyclopediaData.find(e => e.name === input.name);
+                                        return (
                                         <React.Fragment key={input.name}>
                                             <div className="text-center">
-                                                <Image src={input.imageUrl} alt={input.name} width={40} height={40} className="mx-auto rounded-md" />
+                                                {inputEntry && React.createElement(inputEntry.icon, { className: "mx-auto rounded-md h-10 w-10" })}
                                                 <p className="text-xs mt-1">{input.quantity}x {input.name}</p>
                                             </div>
                                             {index < selectedEntry.recipe!.inputs.length - 1 && <p className="text-xl font-bold">+</p>}
                                         </React.Fragment>
-                                    ))}
+                                    )})}
                                 </div>
                                 <p className="text-2xl font-bold mx-2">→</p>
                                 <div className="text-center">
-                                    <Image src={selectedEntry.imageUrl} alt={selectedEntry.name} width={48} height={48} className="mx-auto rounded-md" />
+                                    {React.createElement(selectedEntry.icon, { className: "mx-auto rounded-md h-12 w-12" })}
                                     <p className="text-xs mt-1">{selectedEntry.properties.find(p => p.label === "Output per Batch")?.value.split(' ')[0] || 1}x {selectedEntry.name}</p>
                                 </div>
                             </div>
@@ -168,3 +165,5 @@ export function Encyclopedia() {
     </div>
   );
 }
+
+    

@@ -345,8 +345,6 @@ allItems.forEach(itemName => {
         properties.push({ label: 'Base Production Time', value: `${(baseTimeForBatch).toFixed(0)}s per batch` });
         properties.push({ label: 'Output per Batch', value: `${recipe.output.quantity.toLocaleString()} unit(s)` });
         properties.push({ label: 'Building', value: recipe.buildingId.charAt(0).toUpperCase() + recipe.buildingId.slice(1).replace(/_/g, ' ') });
-        properties.push({ label: 'XP Gained', value: `${Math.ceil(inputCost / 10).toLocaleString()}` });
-
     } else {
         // It's a base material
         properties.unshift({ label: 'Type', value: 'Base Resource' });
@@ -508,3 +506,5 @@ export const encyclopediaData: EncyclopediaEntry[] = finalEntries.sort((a, b) =>
     }
     return a.name.localeCompare(b.name);
 });
+
+    
