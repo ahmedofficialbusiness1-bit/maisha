@@ -23,8 +23,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={cn('font-body antialiased bg-background text-foreground')}>
-        {children}
+      <body className={cn('font-body antialiased bg-background text-foreground bg-cover bg-center bg-fixed')} style={{backgroundImage: "url('https://picsum.photos/seed/african-savanna/1920/1080')"}}>
+        <div className="absolute inset-0 bg-black/60 z-0"></div>
+        <div className="relative z-10">
+          {children}
+        </div>
         <Toaster />
       </body>
     </html>
