@@ -3,7 +3,6 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import {
   Card,
   CardContent,
@@ -87,9 +86,6 @@ export function Encyclopedia() {
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <div className="flex items-center gap-4">
-                    <div className="h-20 w-20 rounded-lg border-2 border-gray-600 object-cover p-2 flex items-center justify-center">
-                        {React.createElement(selectedEntry.icon, {className: "h-full w-full"})}
-                    </div>
                     <div>
                         <CardTitle className="text-3xl">{selectedEntry.name}</CardTitle>
                         <CardDescription className="text-gray-400">{selectedEntry.category}</CardDescription>
