@@ -244,9 +244,6 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                             className="p-3 rounded-lg border-2 text-center flex flex-col items-center justify-center bg-gray-700/50 border-gray-600 hover:bg-blue-600/30 hover:border-blue-500 transition-colors"
                             title={product.name}
                             >
-                            <div className="h-5 w-5 flex items-center justify-center mb-2">
-                                {React.createElement(product.icon, {className: 'w-full h-full'})}
-                            </div>
                             <span className="text-xs font-semibold block truncate w-full">{product.name}</span>
                             </button>
                         )
@@ -269,7 +266,6 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         Rudi kwenye Bidhaa Zote
                     </Button>
                     <div className="text-center">
-                        <div className='h-12 w-12 mx-auto mb-2'>{React.createElement(selectedProduct.icon, {className: 'w-full h-full'})}</div>
                         <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
                         <p className="text-sm text-gray-400">{selectedProduct.category}</p>
                     </div>

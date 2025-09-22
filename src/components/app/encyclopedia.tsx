@@ -110,11 +110,9 @@ export function Encyclopedia() {
                             <div className="bg-gray-900/50 p-4 rounded-lg flex items-center justify-center gap-4 flex-wrap">
                                 <div className="flex items-center justify-center gap-2 flex-wrap">
                                     {selectedEntry.recipe.inputs.map((input, index) => {
-                                        const inputEntry = encyclopediaData.find(e => e.name === input.name);
                                         return (
                                         <React.Fragment key={input.name}>
                                             <div className="text-center">
-                                                {inputEntry && React.createElement(inputEntry.icon, { className: "mx-auto rounded-md h-10 w-10" })}
                                                 <p className="text-xs mt-1">{input.quantity}x {input.name}</p>
                                             </div>
                                             {index < selectedEntry.recipe!.inputs.length - 1 && <p className="text-xl font-bold">+</p>}
@@ -123,7 +121,6 @@ export function Encyclopedia() {
                                 </div>
                                 <p className="text-2xl font-bold mx-2">→</p>
                                 <div className="text-center">
-                                    {React.createElement(selectedEntry.icon, { className: "mx-auto rounded-md h-12 w-12" })}
                                     <p className="text-xs mt-1">{selectedEntry.recipe.output?.quantity || 1}x {selectedEntry.name}</p>
                                 </div>
                             </div>
@@ -141,7 +138,7 @@ export function Encyclopedia() {
                 </CardHeader>
                 <CardContent>
                     <div className='flex items-center gap-4 p-4 rounded-lg bg-gray-900/50'>
-                         {React.createElement(relevantShop.icon, {className: "h-16 w-16 text-white"})}
+                         <p className="text-4xl">🏢</p>
                          <div>
                             <h3 className='text-xl font-bold text-white'>{relevantShop.name}</h3>
                             <p className='text-sm text-gray-400'>{relevantShop.description}</p>
