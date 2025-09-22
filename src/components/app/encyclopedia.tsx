@@ -87,7 +87,7 @@ export function Encyclopedia() {
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <div className="flex items-center gap-4">
-                    {React.createElement(selectedEntry.icon, {
+                    {React.cloneElement(selectedEntry.icon, {
                         className: "h-20 w-20 rounded-lg border-2 border-gray-600 object-cover p-2"
                     })}
                     <div>
@@ -118,7 +118,7 @@ export function Encyclopedia() {
                                         return (
                                         <React.Fragment key={input.name}>
                                             <div className="text-center">
-                                                {inputEntry && React.createElement(inputEntry.icon, { className: "mx-auto rounded-md h-10 w-10" })}
+                                                {inputEntry && React.cloneElement(inputEntry.icon, { className: "mx-auto rounded-md h-10 w-10" })}
                                                 <p className="text-xs mt-1">{input.quantity}x {input.name}</p>
                                             </div>
                                             {index < selectedEntry.recipe!.inputs.length - 1 && <p className="text-xl font-bold">+</p>}
@@ -127,7 +127,7 @@ export function Encyclopedia() {
                                 </div>
                                 <p className="text-2xl font-bold mx-2">→</p>
                                 <div className="text-center">
-                                    {React.createElement(selectedEntry.icon, { className: "mx-auto rounded-md h-12 w-12" })}
+                                    {React.cloneElement(selectedEntry.icon, { className: "mx-auto rounded-md h-12 w-12" })}
                                     <p className="text-xs mt-1">{selectedEntry.properties.find(p => p.label === "Output per Batch")?.value.split(' ')[0] || 1}x {selectedEntry.name}</p>
                                 </div>
                             </div>
