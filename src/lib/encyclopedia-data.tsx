@@ -306,7 +306,6 @@ while (itemsToCalculate.length > 0 && iterations < MAX_ITERATIONS) {
 
     if (stillToCalculate.length > 0 && stillToCalculate.length === itemsToCalculate.length) {
         // No progress made, indicates a circular dependency or missing base price
-        console.error("Could not calculate prices for:", stillToCalculate);
         stillToCalculate.forEach(item => {
             calculatedPrices[item] = 0; // Price as 0 if un-calculatable
             priceCalculationCompleted.add(item);
