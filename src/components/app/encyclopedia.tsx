@@ -88,7 +88,7 @@ export function Encyclopedia() {
                 <CardHeader>
                     <div className="flex items-center gap-4">
                     <div className="h-20 w-20 rounded-lg border-2 border-gray-600 object-cover p-2 flex items-center justify-center">
-                        {React.cloneElement(selectedEntry.icon, {className: "h-full w-full"})}
+                        {React.createElement(selectedEntry.icon, {className: "h-full w-full"})}
                     </div>
                     <div>
                         <CardTitle className="text-3xl">{selectedEntry.name}</CardTitle>
@@ -118,7 +118,7 @@ export function Encyclopedia() {
                                         return (
                                         <React.Fragment key={input.name}>
                                             <div className="text-center">
-                                                {inputEntry && React.cloneElement(inputEntry.icon, { className: "mx-auto rounded-md h-10 w-10" })}
+                                                {inputEntry && React.createElement(inputEntry.icon, { className: "mx-auto rounded-md h-10 w-10" })}
                                                 <p className="text-xs mt-1">{input.quantity}x {input.name}</p>
                                             </div>
                                             {index < selectedEntry.recipe!.inputs.length - 1 && <p className="text-xl font-bold">+</p>}
@@ -127,7 +127,7 @@ export function Encyclopedia() {
                                 </div>
                                 <p className="text-2xl font-bold mx-2">→</p>
                                 <div className="text-center">
-                                    {React.cloneElement(selectedEntry.icon, { className: "mx-auto rounded-md h-12 w-12" })}
+                                    {React.createElement(selectedEntry.icon, { className: "mx-auto rounded-md h-12 w-12" })}
                                     <p className="text-xs mt-1">{selectedEntry.recipe.output?.quantity || 1}x {selectedEntry.name}</p>
                                 </div>
                             </div>

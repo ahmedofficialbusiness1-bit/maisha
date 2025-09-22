@@ -48,7 +48,7 @@ import type { LucideIcon } from 'lucide-react';
 export type BuildingType = {
   id: string;
   name: string;
-  icon: React.ComponentType<any>;
+  icon: LucideIcon;
   description: string;
   image: string;
   imageHint: string;
