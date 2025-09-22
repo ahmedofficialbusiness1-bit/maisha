@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
-import { login } from '@/app/actions';
+import { signup } from '@/app/actions';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,28 +13,27 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 
-
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button className="w-full bg-blue-600 hover:bg-blue-700" disabled={pending}>
-      {pending ? 'Inaingia...' : 'Ingia'}
+      {pending ? 'Inatengeneza Akaunti...' : 'Jisajili'}
     </Button>
   );
 }
 
-export default function LoginPage() {
-  const [state, formAction] = useFormState(login, { success: false, message: '' });
+export default function SignupPage() {
+  const [state, formAction] = useFormState(signup, { success: false, message: ''});
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
     if (state?.success) {
       toast({
-        title: "Umefanikiwa Kuingia!",
-        description: "Karibu tena kwenye himaya yako.",
+        title: "Umefanikiwa Kujisajili!",
+        description: "Sasa unaweza kuingia kwenye akaunti yako mpya.",
       });
-      router.push('/dashboard');
+      router.push('/login');
     }
   }, [state, router, toast]);
 
@@ -43,9 +41,9 @@ export default function LoginPage() {
     <main className="flex items-center justify-center min-h-screen">
       <Card className="w-full max-w-sm bg-gray-900/80 border-gray-700/60 text-white backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Karibu Tena</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Tengeneza Akaunti</CardTitle>
           <CardDescription className="text-center text-gray-400">
-            Ingia kwenye akaunti yako ili kuendeleza himaya yako.
+            Anza safari yako ya kujenga himaya ya kiuchumi.
           </CardDescription>
         </CardHeader>
         <form action={formAction}>
@@ -67,15 +65,19 @@ export default function LoginPage() {
                 <Label htmlFor="password">Nenosiri</Label>
                 <Input id="password" name="password" type="password" required className="bg-gray-800 border-gray-600" />
             </div>
+            <div className="grid gap-2">
+                <Label htmlFor="confirmPassword">Thibitisha Nenosiri</Label>
+                <Input id="confirmPassword" name="confirmPassword" type="password" required className="bg-gray-800 border-ray-600" />
+            </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
                 <SubmitButton />
-            <div className="text-center text-sm text-gray-400">
-                Huna akaunti?{' '}
-                <Link href="/signup" className="underline text-blue-400 hover:text-blue-300">
-                Jisajili
-                </Link>
-            </div>
+                <div className="text-center text-sm text-gray-400">
+                    Una akaunti tayari?{' '}
+                    <Link href="/login" className="underline text-blue-400 hover:text-blue-300">
+                    Ingia
+                    </Link>
+                </div>
             </CardFooter>
         </form>
       </Card>
