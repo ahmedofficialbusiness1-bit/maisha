@@ -87,9 +87,9 @@ export function Encyclopedia() {
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <div className="flex items-center gap-4">
-                    {React.cloneElement(selectedEntry.icon, {
-                        className: "h-20 w-20 rounded-lg border-2 border-gray-600 object-cover p-2"
-                    })}
+                    <div className="h-20 w-20 rounded-lg border-2 border-gray-600 object-cover p-2 flex items-center justify-center">
+                        {React.cloneElement(selectedEntry.icon, {className: "h-full w-full"})}
+                    </div>
                     <div>
                         <CardTitle className="text-3xl">{selectedEntry.name}</CardTitle>
                         <CardDescription className="text-gray-400">{selectedEntry.category}</CardDescription>
@@ -128,7 +128,7 @@ export function Encyclopedia() {
                                 <p className="text-2xl font-bold mx-2">→</p>
                                 <div className="text-center">
                                     {React.cloneElement(selectedEntry.icon, { className: "mx-auto rounded-md h-12 w-12" })}
-                                    <p className="text-xs mt-1">{selectedEntry.properties.find(p => p.label === "Output per Batch")?.value.split(' ')[0] || 1}x {selectedEntry.name}</p>
+                                    <p className="text-xs mt-1">{selectedEntry.recipe.output?.quantity || 1}x {selectedEntry.name}</p>
                                 </div>
                             </div>
                         </div>
@@ -165,7 +165,5 @@ export function Encyclopedia() {
     </div>
   );
 }
-
-    
 
     

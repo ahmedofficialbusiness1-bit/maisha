@@ -11,7 +11,7 @@ import { TradeMarket, type PlayerListing, type StockListing, type BondListing } 
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { recipes } from '@/lib/recipe-data';
-import { encyclopediaData } from '@/lib/encyclopedia-data.tsx';
+import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
@@ -649,7 +649,7 @@ export function Game() {
                         }
                         const productInfo = encyclopediaData.find(e => e.name === itemName);
                         const xpGain = parseFloat(productInfo?.properties.find(p => p.label === "XP Gained")?.value || '0');
-                        addXP(xpGain * (totalQuantity / (productInfo?.recipe?.inputs[0]?.quantity || 1)));
+                        addXP(xpGain * (totalQuantity / (productInfo?.recipe?.output.quantity || 1)));
 
                         addNotification(`Uzalishaji wa ${totalQuantity.toLocaleString()}x ${itemName} umekamilika.`, 'production');
                     }

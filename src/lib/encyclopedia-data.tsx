@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import type { LucideIcon } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
 import { 
     Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component,
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf,
@@ -22,24 +22,18 @@ export type EncyclopediaEntry = {
   description: string;
   imageUrl: string;
   imageHint: string;
-  icon: React.ReactElement;
+  icon: React.ReactElement<LucideProps>;
   properties: {
     label: string;
     value: string;
   }[];
-  recipe?: {
-    inputs: {
-        name: string;
-        quantity: number;
-        imageUrl: string;
-    }[];
-  };
+  recipe?: Recipe;
 };
 
 const getImageUrl = (name: string) => `https://picsum.photos/seed/${name.toLowerCase().replace(/\s/g, '-')}/64/64`;
 const getImageHint = (name: string) => name.toLowerCase().split(' ').slice(0, 2).join(' ');
 
-const itemIcons: Record<string, React.ReactElement> = {
+const itemIcons: Record<string, React.ReactElement<LucideProps>> = {
     // Construction
     'Mbao': <Hammer />,
     'Matofali': <ToyBrick />,
@@ -231,7 +225,7 @@ const itemIcons: Record<string, React.ReactElement> = {
     'Award': <Award /> // Added for notifications
 };
 
-const getIcon = (name: string): React.ReactElement => {
+const getIcon = (name: string): React.ReactElement<LucideProps> => {
     return itemIcons[name] || <Package />;
 };
 
@@ -364,13 +358,7 @@ allItems.forEach(itemName => {
         imageHint: getImageHint(itemName),
         icon: getIcon(itemName),
         properties: properties,
-        recipe: recipe ? {
-            inputs: recipe.inputs.map(input => ({
-                name: input.name,
-                quantity: input.quantity,
-                imageUrl: getImageUrl(input.name)
-            }))
-        } : undefined,
+        recipe: recipe ? recipe : undefined,
     });
 });
 
@@ -511,7 +499,5 @@ export const encyclopediaData: EncyclopediaEntry[] = finalEntries.sort((a, b) =>
     }
     return a.name.localeCompare(b.name);
 });
-
-    
 
     
