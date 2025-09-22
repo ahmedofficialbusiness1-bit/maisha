@@ -1,4 +1,5 @@
 
+
 import type { LucideIcon } from 'lucide-react';
 import { 
     Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component,
@@ -329,6 +330,7 @@ allItems.forEach(itemName => {
         { label: 'Market Cost', value: `$${marketCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}` }
     ];
 
+    let xpGain = 0;
     if (recipe) {
         // It's a produced good
         let inputCost = 0;
@@ -340,7 +342,7 @@ allItems.forEach(itemName => {
         // Time in seconds for one BATCH
         const baseTimeForBatch = buildingInfo ? (3600) / (buildingInfo.productionRate) : 0; 
         
-        const xpGain = (inputCost / recipe.output.quantity) * 5; // XP is 5x the cost of a single unit
+        xpGain = (inputCost / recipe.output.quantity) * 5; // XP is 5x the cost of a single unit
 
         properties.unshift({ label: 'Production Cost', value: `$${(inputCost / recipe.output.quantity).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})} per unit` });
         properties.push({ label: 'Base Production Time', value: `${(baseTimeForBatch).toFixed(0)}s per batch` });
