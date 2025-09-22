@@ -43,11 +43,12 @@ import {
 } from "@/components/ui/alert-dialog"
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { productCategoryToShopMap } from './game';
+import type { LucideIcon } from 'lucide-react';
 
 export type BuildingType = {
   id: string;
   name: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
   description: string;
   image: string;
   imageHint: string;
@@ -79,7 +80,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'duka_kuu',
         name: 'Duka Kuu',
-        icon: <Store className="text-green-400" />,
+        icon: Store,
         description: 'Huzaa bidhaa za chakula, kilimo na za msingi.',
         image: 'https://picsum.photos/seed/supermarket/200/200',
         imageHint: 'supermarket aisle'
@@ -87,7 +88,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'duka_la_ujenzi',
         name: 'Duka la Vifaa vya Ujenzi',
-        icon: <ShoppingCart className="text-orange-400" />,
+        icon: ShoppingCart,
         description: 'Huzaa vifaa vya ujenzi na malighafi.',
         image: 'https://picsum.photos/seed/hardware-store/200/200',
         imageHint: 'hardware store'
@@ -95,7 +96,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'duka_la_nguo_na_vito',
         name: 'Duka la Nguo na Vito',
-        icon: <ShoppingCart className="text-pink-400" />,
+        icon: ShoppingCart,
         description: 'Huzaa mavazi, vito na bidhaa za kifahari.',
         image: 'https://picsum.photos/seed/fashion-boutique/200/200',
         imageHint: 'fashion boutique'
@@ -103,7 +104,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'duka_la_electroniki',
         name: 'Duka la Electroniki',
-        icon: <ShoppingCart className="text-blue-400" />,
+        icon: ShoppingCart,
         description: 'Huzaa vifaa vya kielektroniki.',
         image: 'https://picsum.photos/seed/electronics-store/200/200',
         imageHint: 'electronics store'
@@ -111,7 +112,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'duka_la_magari',
         name: 'Duka la Magari',
-        icon: <ShoppingCart className="text-red-400" />,
+        icon: ShoppingCart,
         description: 'Huzaa magari, pikipiki na vyombo vya usafiri.',
         image: 'https://picsum.photos/seed/car-dealership/200/200',
         imageHint: 'car dealership'
@@ -119,7 +120,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'duka_la_anga',
         name: 'Duka la Anga',
-        icon: <ShoppingCart className="text-purple-400" />,
+        icon: ShoppingCart,
         description: 'Huzaa bidhaa za teknolojia ya anga.',
         image: 'https://picsum.photos/seed/space-store/200/200',
         imageHint: 'space showroom'
@@ -127,7 +128,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'shamba',
         name: 'Shamba',
-        icon: <Leaf className="text-green-500" />,
+        icon: Leaf,
         description: 'Huzalisha mazao ya kilimo na mifugo.',
         image: 'https://picsum.photos/seed/farm-land/200/200',
         imageHint: 'fertile farm'
@@ -135,7 +136,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'zizi',
         name: 'Zizi',
-        icon: <Drumstick className="text-orange-400" />,
+        icon: Drumstick,
         description: 'Hufuga wanyama na kuzalisha bidhaa za mifugo.',
         image: 'https://picsum.photos/seed/animal-pen/200/200',
         imageHint: 'animal pen'
@@ -143,7 +144,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_samaki',
         name: 'Kiwanda cha Samaki',
-        icon: <GlassWater className="text-blue-400" />,
+        icon: GlassWater,
         description: 'Husindika samaki na bidhaa za baharini.',
         image: 'https://picsum.photos/seed/fish-factory/200/200',
         imageHint: 'fish factory'
@@ -151,7 +152,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_mawe',
         name: 'Uchimbaji Mawe (Quarry)',
-        icon: <Mountain className="text-gray-500" />,
+        icon: Mountain,
         description: 'Huchimba mawe na kokoto.',
         image: 'https://picsum.photos/seed/quarry/200/200',
         imageHint: 'stone quarry'
@@ -159,7 +160,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_mchanga',
         name: 'Uchimbaji Mchanga',
-        icon: <Mountain className="text-yellow-600" />,
+        icon: Mountain,
         description: 'Huchimba mchanga.',
         image: 'https://picsum.photos/seed/sand-pit/200/200',
         imageHint: 'sand pit'
@@ -167,7 +168,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_chuma',
         name: 'Uchimbaji Chuma',
-        icon: <Gem className="text-slate-500" />,
+        icon: Gem,
         description: 'Huchimba madini ya chuma.',
         image: 'https://picsum.photos/seed/iron-mine/200/200',
         imageHint: 'iron mine'
@@ -175,7 +176,7 @@ export const availableBuildings: BuildingType[] = [
      {
         id: 'uchimbaji_almasi',
         name: 'Uchimbaji Almasi',
-        icon: <Gem className="text-cyan-400" />,
+        icon: Gem,
         description: 'Huchimba Almasi.',
         image: 'https://picsum.photos/seed/diamond-mine/200/200',
         imageHint: 'diamond mine'
@@ -183,7 +184,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_dhahabu',
         name: 'Uchimbaji Dhahabu',
-        icon: <Gem className="text-yellow-400" />,
+        icon: Gem,
         description: 'Huchimba Dhahabu.',
         image: 'https://picsum.photos/seed/gold-mine/200/200',
         imageHint: 'gold mine'
@@ -191,7 +192,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_silver',
         name: 'Uchimbaji Silver',
-        icon: <Gem className="text-slate-400" />,
+        icon: Gem,
         description: 'Huchimba Silver.',
         image: 'https://picsum.photos/seed/silver-mine/200/200',
         imageHint: 'silver mine'
@@ -199,7 +200,7 @@ export const availableBuildings: BuildingType[] = [
      {
         id: 'uchimbaji_ruby',
         name: 'Uchimbaji Ruby',
-        icon: <Gem className="text-red-500" />,
+        icon: Gem,
         description: 'Huchimba Ruby.',
         image: 'https://picsum.photos/seed/ruby-mine/200/200',
         imageHint: 'ruby mine'
@@ -207,7 +208,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_tanzanite',
         name: 'Uchimbaji Tanzanite',
-        icon: <Gem className="text-purple-400" />,
+        icon: Gem,
         description: 'Huchimba Tanzanite.',
         image: 'https://picsum.photos/seed/tanzanite-mine/200/200',
         imageHint: 'tanzanite mine'
@@ -215,7 +216,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_shaba',
         name: 'Uchimbaji Shaba',
-        icon: <Gem className="text-orange-400" />,
+        icon: Gem,
         description: 'Huchimba Shaba.',
         image: 'https://picsum.photos/seed/copper-mine/200/200',
         imageHint: 'copper mine'
@@ -223,7 +224,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_umeme',
         name: 'Kiwanda cha Umeme',
-        icon: <Zap className="text-yellow-300" />,
+        icon: Zap,
         description: 'Huzalisha umeme.',
         image: 'https://picsum.photos/seed/power-plant/200/200',
         imageHint: 'power plant'
@@ -231,7 +232,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_maji',
         name: 'Kiwanda cha Maji',
-        icon: <Droplets className="text-blue-500" />,
+        icon: Droplets,
         description: 'Huzalisha maji safi.',
         image: 'https://picsum.photos/seed/water-plant/200/200',
         imageHint: 'water plant'
@@ -239,7 +240,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_mbao',
         name: 'Kiwanda cha Mbao',
-        icon: <Hammer className="text-amber-800" />,
+        icon: Hammer,
         description: 'Husindika miti kuwa mbao.',
         image: 'https://picsum.photos/seed/lumber-mill/200/200',
         imageHint: 'lumber mill'
@@ -247,7 +248,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_saruji',
         name: 'Kiwanda cha Saruji',
-        icon: <Factory className="text-gray-400" />,
+        icon: Factory,
         description: 'Huzalisha saruji.',
         image: 'https://picsum.photos/seed/cement-factory/200/200',
         imageHint: 'cement factory'
@@ -255,7 +256,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_matofali',
         name: 'Kiwanda cha Matofali',
-        icon: <ToyBrick className="text-orange-600" />,
+        icon: ToyBrick,
         description: 'Huzalisha matofali na zege.',
         image: 'https://picsum.photos/seed/brick-factory/200/200',
         imageHint: 'brick factory'
@@ -263,7 +264,7 @@ export const availableBuildings: BuildingType[] = [
      {
         id: 'kiwanda_cha_chuma',
         name: 'Kiwanda cha Chuma',
-        icon: <Factory className="text-slate-500" />,
+        icon: Factory,
         description: 'Huyeyusha madini ya chuma na kuzalisha nondo.',
         image: 'https://picsum.photos/seed/steel-mill/200/200',
         imageHint: 'steel mill'
@@ -271,7 +272,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_sukari',
         name: 'Kiwanda cha Sukari',
-        icon: <Wheat className="text-amber-200" />,
+        icon: Wheat,
         description: 'Husindika miwa kuwa sukari.',
         image: 'https://picsum.photos/seed/sugar-factory/200/200',
         imageHint: 'sugar factory'
@@ -279,7 +280,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'mgahawa',
         name: 'Mgahawa',
-        icon: <Utensils className="text-white" />,
+        icon: Utensils,
         description: 'Huandaa vinywaji na vyakula.',
         image: 'https://picsum.photos/seed/restaurant/200/200',
         imageHint: 'restaurant interior'
@@ -287,7 +288,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_mashine',
         name: 'Kiwanda cha Mashine',
-        icon: <Wrench className="text-gray-400" />,
+        icon: Wrench,
         description: 'Huzalisha mashine mbalimbali za uzalishaji.',
         image: 'https://picsum.photos/seed/machine-factory/200/200',
         imageHint: 'machine factory'
@@ -295,7 +296,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'ofisi_ya_leseni',
         name: 'Ofisi ya Leseni',
-        icon: <FileText className="text-blue-300" />,
+        icon: FileText,
         description: 'Hutoa leseni mbalimbali za uendeshaji.',
         image: 'https://picsum.photos/seed/license-office/200/200',
         imageHint: 'government office'
@@ -303,7 +304,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_karatasi',
         name: 'Kiwanda cha Karatasi',
-        icon: <ScrollText className="text-white" />,
+        icon: ScrollText,
         description: 'Huzalisha karatasi kutoka kwenye mbao.',
         image: 'https://picsum.photos/seed/paper-mill/200/200',
         imageHint: 'paper mill'
@@ -311,7 +312,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'wizara_ya_madini',
         name: 'Wizara ya Madini',
-        icon: <FileText className="text-yellow-500" />,
+        icon: FileText,
         description: 'Inatoa vyeti vya uhalali wa uchimbaji madini.',
         image: 'https://picsum.photos/seed/ministry-minerals/200/200',
         imageHint: 'government building'
@@ -319,7 +320,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_vitambaa',
         name: 'Kiwanda cha Vitambaa',
-        icon: <Factory className="text-pink-400" />,
+        icon: Factory,
         description: 'Huzalisha vitambaa kutoka pamba na katani.',
         image: 'https://picsum.photos/seed/fabric-factory/200/200',
         imageHint: 'fabric factory'
@@ -327,7 +328,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_ngozi',
         name: 'Kiwanda cha Ngozi',
-        icon: <Factory className="text-amber-800" />,
+        icon: Factory,
         description: 'Husindika ngozi kutoka kwa wanyama.',
         image: 'https://picsum.photos/seed/leather-factory/200/200',
         imageHint: 'leather factory'
@@ -335,7 +336,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_nguo',
         name: 'Kiwanda cha Nguo',
-        icon: <Shirt className="text-blue-500" />,
+        icon: Shirt,
         description: 'Hushona mavazi mbalimbali.',
         image: 'https://picsum.photos/seed/garment-factory/200/200',
         imageHint: 'garment factory'
@@ -343,7 +344,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_saa',
         name: 'Kiwanda cha Saa',
-        icon: <Watch className="text-slate-300" />,
+        icon: Watch,
         description: 'Huzalisha saa na soli za viatu.',
         image: 'https://picsum.photos/seed/watch-factory/200/200',
         imageHint: 'watch factory'
@@ -351,7 +352,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_vioo',
         name: 'Kiwanda cha Vioo',
-        icon: <Glasses className="text-cyan-300" />,
+        icon: Glasses,
         description: 'Huzalisha vioo kwa ajili ya saa na matumizi mengine.',
         image: 'https://picsum.photos/seed/glass-factory/200/200',
         imageHint: 'glass factory'
@@ -359,7 +360,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_chokaa',
         name: 'Kiwanda cha Chokaa',
-        icon: <Building2 className="text-stone-400" />,
+        icon: Building2,
         description: 'Huzalisha chokaa.',
         image: 'https://picsum.photos/seed/lime-factory/200/200',
         imageHint: 'lime factory'
@@ -367,7 +368,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_gundi',
         name: 'Kiwanda cha Gundi',
-        icon: <FlaskConical className="text-yellow-200" />,
+        icon: FlaskConical,
         description: 'Huzalisha gundi.',
         image: 'https://picsum.photos/seed/glue-factory/200/200',
         imageHint: 'glue factory'
@@ -375,7 +376,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'sonara',
         name: 'Sonara',
-        icon: <CircleDollarSign className="text-yellow-400" />,
+        icon: CircleDollarSign,
         description: 'Hutengeneza vito na mapambo ya thamani.',
         image: 'https://picsum.photos/seed/goldsmith/200/200',
         imageHint: 'goldsmith workshop'
@@ -383,7 +384,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'uchimbaji_mafuta',
         name: 'Uchimbaji Mafuta',
-        icon: <Droplets className="text-black" />,
+        icon: Droplets,
         description: 'Huchimba mafuta ghafi kutoka ardhini.',
         image: 'https://picsum.photos/seed/oil-rig/200/200',
         imageHint: 'oil rig'
@@ -391,7 +392,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_disel',
         name: 'Kiwanda cha Disel',
-        icon: <Factory className="text-gray-700" />,
+        icon: Factory,
         description: 'Husindika mafuta ghafi kuwa disel.',
         image: 'https://picsum.photos/seed/diesel-factory/200/200',
         imageHint: 'oil refinery'
@@ -399,7 +400,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_petrol',
         name: 'Kiwanda cha Petrol',
-        icon: <Factory className="text-orange-700" />,
+        icon: Factory,
         description: 'Husindika mafuta ghafi kuwa petroli.',
         image: 'https://picsum.photos/seed/petrol-factory/200/200',
         imageHint: 'oil refinery night'
@@ -408,7 +409,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_tv',
         name: 'Kiwanda cha TV',
-        icon: <Tv className="text-blue-400" />,
+        icon: Tv,
         description: 'Huunganisha na kuzalisha televisheni.',
         image: 'https://picsum.photos/seed/tv-factory/200/200',
         imageHint: 'electronics factory'
@@ -416,7 +417,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_tablet',
         name: 'Kiwanda cha Tablet',
-        icon: <Tablet className="text-blue-400" />,
+        icon: Tablet,
         description: 'Huunganisha na kuzalisha tablets.',
         image: 'https://picsum.photos/seed/tablet-factory/200/200',
         imageHint: 'electronics factory'
@@ -424,7 +425,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_smartphone',
         name: 'Kiwanda cha Smartphone',
-        icon: <Smartphone className="text-blue-400" />,
+        icon: Smartphone,
         description: 'Huunganisha na kuzalisha simu janja.',
         image: 'https://picsum.photos/seed/smartphone-factory/200/200',
         imageHint: 'electronics factory'
@@ -432,7 +433,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_laptop',
         name: 'Kiwanda cha Laptop',
-        icon: <Laptop className="text-blue-400" />,
+        icon: Laptop,
         description: 'Huunganisha na kuzalisha laptop.',
         image: 'https://picsum.photos/seed/laptop-factory/200/200',
         imageHint: 'electronics factory'
@@ -440,7 +441,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_processor',
         name: 'Kiwanda cha Processor',
-        icon: <Cpu className="text-purple-400" />,
+        icon: Cpu,
         description: 'Huzalisha processor kwa ajili ya vifaa vya kielektroniki.',
         image: 'https://picsum.photos/seed/cpu-factory/200/200',
         imageHint: 'clean room'
@@ -448,7 +449,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_betri',
         name: 'Kiwanda cha Betri',
-        icon: <Battery className="text-green-400" />,
+        icon: Battery,
         description: 'Huzalisha betri kwa ajili ya vifaa vya kielektroniki.',
         image: 'https://picsum.photos/seed/battery-factory/200/200',
         imageHint: 'battery production'
@@ -456,7 +457,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_display',
         name: 'Kiwanda cha Display',
-        icon: <Monitor className="text-cyan-400" />,
+        icon: Monitor,
         description: 'Huzalisha display (screen) kwa ajili ya vifaa vya kielektroniki.',
         image: 'https://picsum.photos/seed/display-factory/200/200',
         imageHint: 'screen manufacturing'
@@ -464,7 +465,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_motherboard',
         name: 'Kiwanda cha Motherboard',
-        icon: <MemoryStick className="text-green-600" />,
+        icon: MemoryStick,
         description: 'Huzalisha motherboard kwa ajili ya vifaa vya kielektroniki.',
         image: 'https://picsum.photos/seed/motherboard-factory/200/200',
         imageHint: 'circuit board'
@@ -472,7 +473,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_vifaa_vya_ndani',
         name: 'Kiwanda cha Vifaa vya Ndani',
-        icon: <Wrench className="text-slate-400" />,
+        icon: Wrench,
         description: 'Huzalisha komponenti ndogo ndogo za ndani.',
         image: 'https://picsum.photos/seed/components-factory/200/200',
         imageHint: 'small components'
@@ -480,7 +481,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_usanidi',
         name: 'Kiwanda cha Usanidi',
-        icon: <Factory className="text-gray-500" />,
+        icon: Factory,
         description: 'Huzalisha sehemu maalum za kielektroniki.',
         image: 'https://picsum.photos/seed/config-factory/200/200',
         imageHint: 'electronics assembly'
@@ -489,7 +490,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_spare',
         name: 'Kiwanda cha Spare',
-        icon: <Wrench className="text-yellow-500" />,
+        icon: Wrench,
         description: 'Huzalisha vipuri mbalimbali vya magari na vyombo vingine.',
         image: 'https://picsum.photos/seed/spare-parts-factory/200/200',
         imageHint: 'spare parts'
@@ -497,7 +498,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_gari',
         name: 'Kiwanda cha Gari',
-        icon: <Car className="text-red-500" />,
+        icon: Car,
         description: 'Huunganisha magari na malori.',
         image: 'https://picsum.photos/seed/car-factory/200/200',
         imageHint: 'car factory'
@@ -505,7 +506,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_pikipiki',
         name: 'Kiwanda cha Pikipiki',
-        icon: <Bike className="text-blue-500" />,
+        icon: Bike,
         description: 'Huunganisha pikipiki.',
         image: 'https://picsum.photos/seed/motorcycle-factory/200/200',
         imageHint: 'motorcycle factory'
@@ -513,7 +514,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_ndege',
         name: 'Kiwanda cha Ndege',
-        icon: <Plane className="text-cyan-400" />,
+        icon: Plane,
         description: 'Huunganisha ndege.',
         image: 'https://picsum.photos/seed/airplane-factory/200/200',
         imageHint: 'airplane factory'
@@ -521,7 +522,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_meli',
         name: 'Kiwanda cha Meli',
-        icon: <Ship className="text-indigo-500" />,
+        icon: Ship,
         description: 'Huunganisha meli.',
         image: 'https://picsum.photos/seed/shipyard/200/200',
         imageHint: 'shipyard'
@@ -530,7 +531,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_k_mashine',
         name: 'Kiwanda cha K Mashine',
-        icon: <Wrench className="text-purple-400" />,
+        icon: Wrench,
         description: 'Huzalisha mashine maalum za "K-Series" kwa ajili ya teknolojia ya anga.',
         image: 'https://picsum.photos/seed/k-machine-factory/200/200',
         imageHint: 'advanced factory'
@@ -538,7 +539,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_anga',
         name: 'Kiwanda cha Anga',
-        icon: <Factory className="text-blue-300" />,
+        icon: Factory,
         description: 'Huunganisha sehemu muhimu za roketi na vyombo vya anga.',
         image: 'https://picsum.photos/seed/space-factory/200/200',
         imageHint: 'space assembly'
@@ -546,7 +547,7 @@ export const availableBuildings: BuildingType[] = [
     {
         id: 'kiwanda_cha_roketi',
         name: 'Kiwanda cha Roketi',
-        icon: <Rocket className="text-red-500" />,
+        icon: Rocket,
         description: 'Huunganisha roketi kamili tayari kwa safari ya anga.',
         image: 'https://picsum.photos/seed/rocket-factory/200/200',
         imageHint: 'rocket launch'
@@ -947,7 +948,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                 <div className="w-full h-4/6 relative flex items-center justify-center">
                     {/* Building Body */}
                     <div className={cn("w-4/5 h-full rounded-t-md flex items-center justify-center", style.body)}>
-                        {React.cloneElement(slot.building.icon, {
+                        {React.createElement(slot.building.icon, {
                             className: 'w-10 h-10 text-white/90',
                         })}
                     </div>
@@ -1051,7 +1052,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                 className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-2 text-center"
                                 onClick={() => handleSelectBuildingToShowDetails(b)}
                             >
-                            {React.cloneElement(b.icon, { className: 'h-5 w-5' })}
+                            {React.createElement(b.icon, { className: 'h-5 w-5' })}
                             <p className="font-semibold mt-1 text-sm">{b.name}</p>
                             </Card>
                         ))}
@@ -1406,3 +1407,5 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     </div>
   );
 }
+
+    

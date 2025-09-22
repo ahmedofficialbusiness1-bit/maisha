@@ -1,8 +1,5 @@
 
-import React from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { recipes, type Recipe } from './recipe-data';
-import { buildingData } from './building-data';
 import { 
     Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component,
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf,
@@ -12,6 +9,8 @@ import {
     Tv, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, HardDrive, Speaker, CircuitBoard,
     Monitor, Car, Bike, Plane, Tractor, Rocket, ShieldCheck, Award
 } from 'lucide-react';
+import { recipes, type Recipe } from './recipe-data';
+import { buildingData } from './building-data';
 
 
 export type EncyclopediaEntry = {
@@ -509,3 +508,5 @@ export const encyclopediaData: EncyclopediaEntry[] = finalEntries.sort((a, b) =>
     }
     return a.name.localeCompare(b.name);
 });
+
+    
