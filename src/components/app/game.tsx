@@ -239,7 +239,7 @@ export function Game() {
     const constructionTimeMs = 15 * 60 * 1000;
 
     updateState(prev => {
-        const newInventory = [...prev.inventory];
+        let newInventory = [...prev.inventory];
         for (const cost of costs) {
             const itemIndex = newInventory.findIndex(i => i.item === cost.name);
             if (itemIndex > -1) {
@@ -285,7 +285,7 @@ export function Game() {
     const constructionTimeMs = (15 * 60 * 1000) * Math.pow(2, slot.level);
 
     updateState(prev => {
-        const newInventory = [...prev.inventory];
+        let newInventory = [...prev.inventory];
         for (const cost of costs) {
             const itemIndex = newInventory.findIndex(i => i.item === cost.name);
             if (itemIndex > -1) {
@@ -338,7 +338,7 @@ export function Game() {
      const now = Date.now();
  
      updateState(prev => {
-        const newInventory = [...prev.inventory];
+        let newInventory = [...prev.inventory];
         for (const input of inputs) {
             const itemIndex = newInventory.findIndex(i => i.item === input.name);
             const requiredQuantity = input.quantity * quantity;
