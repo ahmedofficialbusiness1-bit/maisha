@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import type { LucideProps, LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { 
     Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component,
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf,
