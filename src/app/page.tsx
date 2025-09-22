@@ -3,38 +3,32 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function LandingPage() {
   return (
-    <main className="flex items-center justify-center min-h-screen">
-      <Card className="w-full max-w-sm bg-gray-900/80 border-gray-700/60 text-white backdrop-blur-sm">
+    <main className="flex items-center justify-center min-h-screen p-4">
+      <Card className="w-full max-w-2xl bg-gray-900/80 border-gray-700/60 text-white backdrop-blur-sm text-center">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Karibu Tena</CardTitle>
-          <CardDescription className="text-center text-gray-400">
-            Ingia kwenye akaunti yako ili kuendeleza himaya yako.
+          <CardTitle className="text-4xl font-bold">Uchumi wa Afrika</CardTitle>
+          <CardDescription className="text-lg text-gray-300 pt-2">
+            Jenga Himaya Yako ya Kiuchumi
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Barua Pepe</Label>
-            <Input id="email" type="email" placeholder="mchezaji@mfano.com" required className="bg-gray-800 border-gray-600"/>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Nenosiri</Label>
-            <Input id="password" type="password" required className="bg-gray-800 border-gray-600" />
-          </div>
+        <CardContent className="text-base text-gray-400 space-y-4">
+            <p>
+                Anza kama mjasiriamali mdogo na ukuze biashara yako kuwa kongwe la kimataifa. Lima, chakata, zalisha bidhaa, na uuze katika soko la ushindani. 
+            </p>
+            <p>
+                Wekeza kwenye soko la hisa, dhibiti fedha zako, na shindana na wachezaji wengine kuwa tajiri namba moja barani Afrika.
+            </p>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full bg-blue-600 hover:bg-blue-700">Ingia</Button>
-           <div className="text-center text-sm text-gray-400">
-            Huna akaunti?{' '}
-            <Link href="#" className="underline text-blue-400 hover:text-blue-300">
-              Jisajili
+        <CardFooter className="flex justify-center">
+            <Link href="/login">
+                <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6">
+                    Anza Mchezo
+                </Button>
             </Link>
-          </div>
         </CardFooter>
       </Card>
     </main>
