@@ -1,5 +1,6 @@
 
 
+
 import * as React from 'react';
 import Image from 'next/image';
 import {
@@ -17,7 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, ChevronsLeft, ChevronsRight, HelpCircle, Search, FileText, Building, LandPlot, ShieldCheck, Landmark } from 'lucide-react';
 import type { InventoryItem } from './inventory';
-import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data.tsx';
+import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"

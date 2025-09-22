@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import * as React from 'react';
@@ -13,7 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data.tsx';
+import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
 import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
