@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut } from 'lucide-react';
+import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award } from 'lucide-react';
 import { useMemo } from 'react';
 import type { View } from './game';
 import {
@@ -18,6 +18,7 @@ import {
 import type { Notification } from './game';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 interface AppHeaderProps {
     money: number;
@@ -27,6 +28,9 @@ interface AppHeaderProps {
     setView: (view: View) => void;
     notifications: Notification[];
     onNotificationsRead: () => void;
+    playerLevel: number;
+    playerXP: number;
+    xpForNextLevel: number;
 }
 
 function formatCurrency(value: number): string {
@@ -39,7 +43,7 @@ function formatCurrency(value: number): string {
     return `$${value}`;
 }
 
-export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead }: AppHeaderProps) {
+export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead, playerLevel, playerXP, xpForNextLevel }: AppHeaderProps) {
     const formattedMoney = useMemo(() => formatCurrency(money), [money]);
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -48,6 +52,8 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
             onNotificationsRead();
         }
     }
+    
+    const xpPercentage = (playerXP / xpForNextLevel) * 100;
   
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-2 border-b border-gray-700/50 bg-gray-900/95 px-2 text-white backdrop-blur-sm sm:h-20 sm:px-4">
@@ -81,10 +87,19 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
           </Avatar>
           <div className="hidden sm:flex flex-col">
             <span className="font-semibold text-sm">{playerName}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">Level 1</span>
-              <Progress value={0} className="h-1.5 w-16 bg-gray-700" />
-            </div>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2 cursor-pointer">
+                            <span className="text-xs text-gray-400">Level {playerLevel}</span>
+                            <Progress value={xpPercentage} className="h-1.5 w-16 bg-gray-700" />
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-gray-800 border-gray-700 text-white">
+                        <p>XP: {Math.floor(playerXP).toLocaleString()} / {xpForNextLevel.toLocaleString()}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
         
@@ -127,6 +142,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                                     {n.icon === 'production' && <Tractor className="h-4 w-4 text-blue-400" />}
                                     {n.icon === 'purchase' && <CircleDollarSign className="h-4 w-4 text-red-400" />}
                                     {n.icon === 'dividend' && <Coins className="h-4 w-4 text-yellow-400" />}
+                                    {n.icon === 'level-up' && <Award className="h-4 w-4 text-yellow-300" />}
                                 </div>
                                 <div className="flex-grow">
                                     <p className="text-sm leading-tight">{n.message}</p>

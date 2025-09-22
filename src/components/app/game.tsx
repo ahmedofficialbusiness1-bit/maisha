@@ -33,7 +33,7 @@ export type Notification = {
     message: string;
     timestamp: number;
     read: boolean;
-    icon: 'construction' | 'sale' | 'purchase' | 'dividend' | 'production';
+    icon: 'construction' | 'sale' | 'purchase' | 'dividend' | 'production' | 'level-up';
 };
 
 
@@ -43,6 +43,8 @@ export type UserData = {
   privateNotes: string;
   money: number;
   stars: number;
+  playerLevel: number;
+  playerXP: number;
   inventory: InventoryItem[];
   marketListings: PlayerListing[];
   companyData: StockListing[];
@@ -76,6 +78,8 @@ const getInitialUserData = (): UserData => ({
     privateNotes: 'Karibu kwenye wasifu wangu! Mimi ni mtaalamu wa kuzalisha bidhaa bora.',
     money: 10000,
     stars: 5,
+    playerLevel: 1,
+    playerXP: 0,
     inventory: [
       { item: 'Maji', quantity: 10000, marketPrice: 0.05 },
       { item: 'Umeme', quantity: 10000, marketPrice: 0.15 },
@@ -149,6 +153,27 @@ export function Game() {
     });
   };
 
+  const getXpForNextLevel = (level: number) => {
+    return level * 1000;
+  };
+
+  const addXP = (amount: number) => {
+    updateState(prev => {
+        let newXP = prev.playerXP + amount;
+        let newLevel = prev.playerLevel;
+        let xpForNextLevel = getXpForNextLevel(newLevel);
+        
+        while (newXP >= xpForNextLevel) {
+            newXP -= xpForNextLevel;
+            newLevel++;
+            addNotification(`Hongera! Umefikia Level ${newLevel}!`, 'level-up');
+            xpForNextLevel = getXpForNextLevel(newLevel);
+        }
+
+        return { ...prev, playerXP: newXP, playerLevel: newLevel };
+    });
+  };
+
   const addNotification = (message: string, icon: Notification['icon']) => {
     const newNotification: Notification = {
         id: `${Date.now()}-${Math.random()}`,
@@ -192,6 +217,11 @@ export function Game() {
         ...prev,
         transactions: [newTransaction, ...prev.transactions]
     }));
+
+    // Grant XP for income
+    if (type === 'income') {
+        addXP(Math.floor(amount * 0.01)); // 1 XP for every $100 earned
+    }
   };
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
@@ -617,6 +647,10 @@ export function Game() {
                             const price = productInfo ? parseFloat(productInfo.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : 0;
                             newState.inventory.push({ item: itemName, quantity: totalQuantity, marketPrice: price });
                         }
+                        const productInfo = encyclopediaData.find(e => e.name === itemName);
+                        const xpGain = parseFloat(productInfo?.properties.find(p => p.label === "XP Gained")?.value || '0');
+                        addXP(xpGain * (totalQuantity / (productInfo?.recipe?.inputs[0]?.quantity || 1)));
+
                         addNotification(`Uzalishaji wa ${totalQuantity.toLocaleString()}x ${itemName} umekamilika.`, 'production');
                     }
                     return { ...slot, activity: undefined };
@@ -624,6 +658,7 @@ export function Game() {
             }
             if (slot && slot.construction && now >= slot.construction.endTime) {
                 changed = true;
+                addXP(100 * slot.construction.targetLevel); // XP for construction/upgrade
                 addNotification(`Ujenzi wa ${slot.building?.name} Lvl ${slot.construction.targetLevel} umekamilika!`, 'construction');
                 return { ...slot, level: slot.construction.targetLevel, construction: undefined };
             }
@@ -748,6 +783,9 @@ export function Game() {
         playerAvatar={gameState.playerAvatar} 
         notifications={gameState.notifications}
         onNotificationsRead={handleMarkNotificationsRead}
+        playerLevel={gameState.playerLevel}
+        playerXP={gameState.playerXP}
+        xpForNextLevel={getXpForNextLevel(gameState.playerLevel)}
       />
       <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-gray-800/50">
         {view === 'dashboard' && (
