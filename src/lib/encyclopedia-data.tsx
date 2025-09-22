@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { recipes, type Recipe } from './recipe-data';
 import { buildingData } from './building-data';
