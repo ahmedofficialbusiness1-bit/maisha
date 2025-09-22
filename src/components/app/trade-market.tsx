@@ -140,6 +140,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
   const [selectedStock, setSelectedStock] = React.useState<(StockListing & { sharesAvailable: number }) | null>(null);
   const [buyStockQuantity, setBuyStockQuantity] = React.useState(1);
   
+  const [isBuyDialogOpen, setIsBuyDialogOpen] = React.useState(false);
   const [buyQuantity, setBuyQuantity] = React.useState(0);
   const [selectedListing, setSelectedListing] = React.useState<PlayerListing | null>(null);
 
@@ -175,14 +176,13 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
     if (listing.seller === playerName) return;
     setSelectedListing(listing);
     setBuyQuantity(listing.quantity);
+    setIsBuyDialogOpen(true);
   }
 
   const handleConfirmBuy = () => {
     if (selectedListing && buyQuantity > 0) {
         onBuyFromMarket(selectedListing, buyQuantity);
-        // Reset after buying
-        setSelectedListing(null);
-        setBuyQuantity(0);
+        setIsBuyDialogOpen(false);
     }
   }
 
@@ -237,7 +237,6 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                     <h3 className="font-bold text-sm text-gray-400 px-2 mb-2">{category}</h3>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                     {products.map(product => {
-                        const Icon = product.icon;
                         return (
                             <button
                             key={product.id}
@@ -246,7 +245,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                             title={product.name}
                             >
                             <div className="h-5 w-5 flex items-center justify-center mb-2">
-                                <Icon className="h-full w-full" />
+                                {React.createElement(product.icon, { className: "h-full w-full" })}
                             </div>
                             <span className="text-xs font-semibold block truncate w-full">{product.name}</span>
                             </button>
@@ -261,152 +260,176 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
       )}
 
     {viewMode === 'exchange' && selectedProduct && (
-        <div className="flex flex-col gap-4 px-4 sm:px-6">
-            {/* Header */}
-            <div className="flex flex-col gap-4">
-                <Button variant="outline" onClick={handleBackToList} className="mr-auto">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Rudi kwenye Bidhaa Zote
-                </Button>
-                <div className="text-center">
-                    {React.createElement(selectedProduct.icon, { className: "h-12 w-12 mx-auto mb-2" })}
-                    <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
-                    <p className="text-sm text-gray-400">{selectedProduct.category}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 sm:px-6">
+            <div className='md:col-span-2 flex flex-col gap-4'>
+                {/* Header */}
+                <div className="flex flex-col gap-4">
+                    <Button variant="outline" onClick={handleBackToList} className="mr-auto">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Rudi kwenye Bidhaa Zote
+                    </Button>
+                    <div className="text-center">
+                        {React.createElement(selectedProduct.icon, { className: "h-12 w-12 mx-auto mb-2" })}
+                        <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
+                        <p className="text-sm text-gray-400">{selectedProduct.category}</p>
+                    </div>
                 </div>
+
+                {/* Listings */}
+                <Card className="bg-gray-800/60 border-gray-700 flex-grow">
+                    <CardHeader>
+                        <CardTitle>Soko la {selectedProduct.name}</CardTitle>
+                        <CardDescription>Inaonyesha orodha zote za wachezaji.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <ScrollArea className="h-[45vh] lg:h-[65vh]">
+                            <div className="hidden md:block">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="border-gray-700 sticky top-0 bg-gray-800/95 backdrop-blur-sm">
+                                            <TableHead className="text-white w-2/5">Muuzaji</TableHead>
+                                            <TableHead className="text-right text-white">Ubora</TableHead>
+                                            <TableHead className="text-right text-white">Kiasi</TableHead>
+                                            <TableHead className="text-right text-white">Bei (kwa uniti)</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredListings.map((listing) => (
+                                            <TableRow
+                                                key={listing.id}
+                                                onClick={() => handleSelectListing(listing)}
+                                                className={cn(
+                                                    "border-gray-700 hover:bg-gray-700/50",
+                                                    listing.seller === playerName ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                                                )}
+                                            >
+                                                <TableCell className="font-medium p-2 sm:p-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <Avatar className="h-8 w-8">
+                                                            <AvatarImage src={listing.avatar} alt={listing.seller} data-ai-hint={listing.imageHint} />
+                                                            <AvatarFallback>{listing.seller.charAt(0)}</AvatarFallback>
+                                                        </Avatar>
+                                                        <span>{listing.seller}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right p-2 sm:p-4">
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <span>{listing.quality}</span>
+                                                        <Star className="h-4 w-4 text-yellow-400" />
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono p-2 sm:p-4">{listing.quantity.toLocaleString()}</TableCell>
+                                                <TableCell className="text-right font-mono p-2 sm:p-4">${listing.price.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                            <div className="grid grid-cols-1 gap-2 p-2 md:hidden">
+                                {filteredListings.map((listing) => (
+                                    <div
+                                        key={listing.id}
+                                        onClick={() => handleSelectListing(listing)}
+                                        className={cn(
+                                            "p-3 rounded-lg border-2 bg-gray-700/40 border-gray-600",
+                                            listing.seller === playerName ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-blue-500",
+                                        )}
+                                    >
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <Avatar className="h-8 w-8">
+                                                    <AvatarImage src={listing.avatar} alt={listing.seller} data-ai-hint={listing.imageHint} />
+                                                    <AvatarFallback>{listing.seller.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <span className="font-semibold text-sm">{listing.seller}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1 text-sm">
+                                                <span>{listing.quality}</span>
+                                                <Star className="h-4 w-4 text-yellow-400" />
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                                            <div>
+                                                <div className="text-xs text-gray-400">Bei</div>
+                                                <div className="font-mono">${listing.price.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-xs text-gray-400">Kiasi</div>
+                                                <div className="font-mono">{listing.quantity.toLocaleString()}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {filteredListings.length === 0 && (
+                                <div className="flex items-center justify-center h-48 text-gray-400">
+                                    <p>Hakuna wachezaji wanaouza {selectedProduct?.name || 'bidhaa hii'} kwa sasa.</p>
+                                </div>
+                            )}
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
             </div>
 
-            {/* Listings */}
-            <Card className="bg-gray-800/60 border-gray-700 flex-grow">
-                <CardHeader>
-                    <CardTitle>Soko la {selectedProduct.name}</CardTitle>
-                    <CardDescription>Inaonyesha orodha zote za wachezaji.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <ScrollArea className="h-[45vh] lg:h-[65vh]">
-                        {/* Mobile View */}
-                        <div className="grid grid-cols-1 gap-2 p-2 md:hidden">
-                            {filteredListings.map((listing) => (
-                                <div
-                                    key={listing.id}
-                                    onClick={() => handleSelectListing(listing)}
-                                    className={cn(
-                                        "p-3 rounded-lg border-2 bg-gray-700/40",
-                                        listing.seller === playerName ? "opacity-50 cursor-not-allowed border-gray-700" : "cursor-pointer border-gray-600 hover:border-blue-500",
-                                        selectedListing?.id === listing.id && "border-blue-500 bg-blue-900/50"
-                                    )}
-                                >
-                                    <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2">
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage src={listing.avatar} alt={listing.seller} data-ai-hint={listing.imageHint} />
-                                                <AvatarFallback>{listing.seller.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <span className="font-semibold text-sm">{listing.seller}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1 text-sm">
-                                            <span>{listing.quality}</span>
-                                            <Star className="h-4 w-4 text-yellow-400" />
-                                        </div>
-                                    </div>
-                                    <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                                        <div>
-                                            <div className="text-xs text-gray-400">Bei</div>
-                                            <div className="font-mono">${listing.price.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-xs text-gray-400">Kiasi</div>
-                                            <div className="font-mono">{listing.quantity.toLocaleString()}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        {/* Desktop View */}
-                        <div className="hidden md:block">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="border-gray-700 sticky top-0 bg-gray-800/95 backdrop-blur-sm">
-                                        <TableHead className="text-white w-2/5">Muuzaji</TableHead>
-                                        <TableHead className="text-right text-white">Ubora</TableHead>
-                                        <TableHead className="text-right text-white">Kiasi</TableHead>
-                                        <TableHead className="text-right text-white">Bei (kwa uniti)</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredListings.map((listing) => (
-                                        <TableRow
-                                            key={listing.id}
-                                            onClick={() => handleSelectListing(listing)}
-                                            className={cn(
-                                                "border-gray-700 hover:bg-gray-700/50",
-                                                listing.seller === playerName ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
-                                                selectedListing?.id === listing.id && "bg-blue-600/30"
-                                            )}
-                                        >
-                                            <TableCell className="font-medium p-2 sm:p-4">
-                                                <div className="flex items-center gap-2">
-                                                    <Avatar className="h-8 w-8">
-                                                        <AvatarImage src={listing.avatar} alt={listing.seller} data-ai-hint={listing.imageHint} />
-                                                        <AvatarFallback>{listing.seller.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <span>{listing.seller}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-right p-2 sm:p-4">
-                                                <div className="flex items-center justify-end gap-1">
-                                                    <span>{listing.quality}</span>
-                                                    <Star className="h-4 w-4 text-yellow-400" />
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-right font-mono p-2 sm:p-4">{listing.quantity.toLocaleString()}</TableCell>
-                                            <TableCell className="text-right font-mono p-2 sm:p-4">${listing.price.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                        {filteredListings.length === 0 && (
-                            <div className="flex items-center justify-center h-48 text-gray-400">
-                                <p>Hakuna wachezaji wanaouza {selectedProduct?.name || 'bidhaa hii'} kwa sasa.</p>
-                            </div>
-                        )}
-                    </ScrollArea>
-                </CardContent>
-            </Card>
-
             {/* Purchase Controls */}
-            <Card className="bg-gray-800/60 border-gray-700">
-                <CardContent className="p-4">
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor='buy-amount'>Kiasi cha Kununua</Label>
-                            <Input
-                                id="buy-amount"
-                                type="number"
-                                placeholder="0"
-                                className="w-full bg-gray-700 border-gray-600 mt-1"
-                                value={buyQuantity}
-                                onChange={(e) => setBuyQuantity(Math.max(0, Math.min(Number(e.target.value), selectedListing?.quantity || 0)))}
-                                disabled={!selectedListing}
-                            />
-                        </div>
-                        <div className='text-center text-sm'>
-                            {selectedListing ? (
-                                <p>Jumla: <span className='font-bold'>${(buyQuantity * selectedListing.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></p>
-                            ) : (
-                                <p className='text-gray-400'>Chagua muuzaji ili kununua.</p>
-                            )}
-                        </div>
+            <div className='md:col-span-1'>
+                 <Card className="bg-gray-800/60 border-gray-700 md:hidden mt-4">
+                    <CardContent className="p-4">
                         <Button
                             className="w-full bg-green-600 hover:bg-green-700"
-                            onClick={handleConfirmBuy}
-                            disabled={!selectedListing || buyQuantity <= 0}
+                            onClick={() => selectedListing && handleSelectListing(selectedListing)}
+                            disabled={!selectedListing}
                         >
                             NUNUA
                         </Button>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+                <div className="hidden md:block">
+                     <Card className="bg-gray-800/60 border-gray-700 sticky top-24">
+                        <CardHeader>
+                            <CardTitle>Nunua Bidhaa</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4">
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor='buy-amount'>Muuzaji</Label>
+                                    <Input
+                                        readOnly
+                                        value={selectedListing?.seller || 'Chagua muuzaji...'}
+                                        className="w-full bg-gray-700 border-gray-600 mt-1"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor='buy-amount'>Kiasi cha Kununua</Label>
+                                    <Input
+                                        id="buy-amount"
+                                        type="number"
+                                        placeholder="0"
+                                        className="w-full bg-gray-700 border-gray-600 mt-1"
+                                        value={buyQuantity}
+                                        onChange={(e) => setBuyQuantity(Math.max(0, Math.min(Number(e.target.value), selectedListing?.quantity || 0)))}
+                                        disabled={!selectedListing}
+                                    />
+                                </div>
+                                <div className='text-center text-sm'>
+                                    {selectedListing ? (
+                                        <p>Jumla: <span className='font-bold'>${(buyQuantity * selectedListing.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></p>
+                                    ) : (
+                                        <p className='text-gray-400'>Chagua muuzaji ili kununua.</p>
+                                    )}
+                                </div>
+                                <Button
+                                    className="w-full bg-green-600 hover:bg-green-700"
+                                    onClick={handleConfirmBuy}
+                                    disabled={!selectedListing || buyQuantity <= 0}
+                                >
+                                    NUNUA
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
         </div>
     )}
     </>
@@ -674,6 +697,52 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
               className="bg-green-600 hover:bg-green-700 text-white"
               disabled={!selectedStock || buyStockQuantity <= 0 || buyStockQuantity > (selectedStock.sharesAvailable || 0)}
               onClick={handleConfirmBuyStock}
+            >
+              Thibitisha Ununuzi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isBuyDialogOpen} onOpenChange={setIsBuyDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Nunua {selectedProduct?.name}</DialogTitle>
+             {selectedListing && (
+                <DialogDescription>
+                    Unanunua kutoka kwa {selectedListing.seller}.
+                </DialogDescription>
+             )}
+          </DialogHeader>
+          {selectedListing && (
+             <div className="grid gap-4 py-4">
+                <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+                    <Label htmlFor="buy-quantity" className="sm:text-right">Kiasi</Label>
+                    <Input 
+                        id="buy-quantity" 
+                        type="number"
+                        value={buyQuantity}
+                        onChange={(e) => setBuyQuantity(Math.max(1, Math.min(Number(e.target.value), selectedListing.quantity)))}
+                        min="1"
+                        max={selectedListing.quantity}
+                        className="sm:col-span-3 bg-gray-800 border-gray-600"
+                    />
+                </div>
+                 <div className='col-span-4 text-xs text-center text-gray-400'>
+                     <p>Bei kwa Kipande: ${selectedListing.price.toFixed(3)}</p>
+                </div>
+                <Separator className="my-2 bg-gray-700"/>
+                <div className='text-center'>
+                    <p className="text-lg font-bold">Jumla ya Gharama</p>
+                    <p className='text-2xl font-mono text-green-400'>${(buyQuantity * selectedListing.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+             </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBuyDialogOpen(false)}>Ghairi</Button>
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={!selectedListing || buyQuantity <= 0 || buyQuantity > selectedListing.quantity}
+              onClick={handleConfirmBuy}
             >
               Thibitisha Ununuzi
             </Button>
