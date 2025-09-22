@@ -67,7 +67,7 @@ export default function SignupPage() {
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="confirmPassword">Thibitisha Nenosiri</Label>
-                <Input id="confirmPassword" name="confirmPassword" type="password" required className="bg-gray-800 border-ray-600" />
+                <Input id="confirmPassword" name="confirmPassword" type="password" required className="bg-gray-800 border-gray-600" />
             </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
