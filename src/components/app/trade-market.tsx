@@ -245,7 +245,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                             title={product.name}
                             >
                             <div className="h-5 w-5 flex items-center justify-center mb-2">
-                                {React.cloneElement(product.icon, { className: "h-full w-full" })}
+                                {product.icon}
                             </div>
                             <span className="text-xs font-semibold block truncate w-full">{product.name}</span>
                             </button>
@@ -269,7 +269,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         Rudi kwenye Bidhaa Zote
                     </Button>
                     <div className="text-center">
-                        {React.cloneElement(selectedProduct.icon, { className: "h-12 w-12 mx-auto mb-2" })}
+                        <div className='h-12 w-12 mx-auto mb-2'>{selectedProduct.icon}</div>
                         <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
                         <p className="text-sm text-gray-400">{selectedProduct.category}</p>
                     </div>
@@ -752,5 +752,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
     </>
   );
 }
+
+    
 
     

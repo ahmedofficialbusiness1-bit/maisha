@@ -228,6 +228,7 @@ const itemIcons: Record<string, React.ReactElement> = {
     'Leseni B7': <FileText />,
     'Karatasi': <ScrollText />,
     'Cheti cha Madini': <FileText />,
+    'Award': <Award /> // Added for notifications
 };
 
 const getIcon = (name: string): React.ReactElement => {
@@ -331,7 +332,6 @@ allItems.forEach(itemName => {
         { label: 'Market Cost', value: `$${marketCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}` }
     ];
 
-    let xpGain = 0;
     if (recipe) {
         // It's a produced good
         let inputCost = 0;
@@ -343,7 +343,7 @@ allItems.forEach(itemName => {
         // Time in seconds for one BATCH
         const baseTimeForBatch = buildingInfo ? (3600) / (buildingInfo.productionRate) : 0; 
         
-        xpGain = (inputCost / recipe.output.quantity) * 5; // XP is 5x the cost of a single unit
+        const xpGain = (inputCost / recipe.output.quantity) * 5; // XP is 5x the cost of a single unit
 
         properties.unshift({ label: 'Production Cost', value: `$${(inputCost / recipe.output.quantity).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})} per unit` });
         properties.push({ label: 'Base Production Time', value: `${(baseTimeForBatch).toFixed(0)}s per batch` });
@@ -511,5 +511,7 @@ export const encyclopediaData: EncyclopediaEntry[] = finalEntries.sort((a, b) =>
     }
     return a.name.localeCompare(b.name);
 });
+
+    
 
     
