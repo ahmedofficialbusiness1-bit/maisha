@@ -145,14 +145,7 @@ export function Encyclopedia() {
                 </CardHeader>
                 <CardContent>
                     <div className='flex items-center gap-4 p-4 rounded-lg bg-gray-900/50'>
-                         <Image
-                            src={relevantShop.image}
-                            alt={relevantShop.name}
-                            width={80}
-                            height={80}
-                            className="rounded-lg border-2 border-gray-600 object-cover"
-                            data-ai-hint={relevantShop.imageHint}
-                         />
+                         {React.createElement(relevantShop.icon, {className: "h-16 w-16 text-white"})}
                          <div>
                             <h3 className='text-xl font-bold text-white'>{relevantShop.name}</h3>
                             <p className='text-sm text-gray-400'>{relevantShop.description}</p>
@@ -165,5 +158,3 @@ export function Encyclopedia() {
     </div>
   );
 }
-
-    

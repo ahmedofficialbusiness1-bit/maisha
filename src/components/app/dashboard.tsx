@@ -948,7 +948,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                 <div className="w-full h-4/6 relative flex items-center justify-center">
                     {/* Building Body */}
                     <div className={cn("w-4/5 h-full rounded-t-md flex items-center justify-center", style.body)}>
-                        {React.cloneElement(React.createElement(slot.building.icon), {
+                        {React.createElement(slot.building.icon, {
                             className: 'w-10 h-10 text-white/90',
                         })}
                     </div>

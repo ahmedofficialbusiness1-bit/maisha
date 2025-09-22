@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import type { LucideProps } from 'lucide-react';
+import type { LucideProps, LucideIcon } from 'lucide-react';
 import { 
     Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component,
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf,
@@ -499,5 +499,3 @@ export const encyclopediaData: EncyclopediaEntry[] = finalEntries.sort((a, b) =>
     }
     return a.name.localeCompare(b.name);
 });
-
-    
