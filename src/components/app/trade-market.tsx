@@ -235,15 +235,16 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                 {Object.entries(filteredCategories).map(([category, products]) => (
                 <div key={category} className="mb-4">
                     <h3 className="font-bold text-sm text-gray-400 px-2 mb-2">{category}</h3>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                     {products.map(product => {
                         return (
                             <button
                             key={product.id}
                             onClick={() => handleProductSelect(product)}
-                            className="p-3 rounded-lg border-2 text-center flex flex-col items-center justify-center bg-gray-700/50 border-gray-600 hover:bg-blue-600/30 hover:border-blue-500 transition-colors"
+                            className="p-3 rounded-lg border-2 text-center flex flex-col items-center justify-center gap-2 bg-gray-700/50 border-gray-600 hover:bg-blue-600/30 hover:border-blue-500 transition-colors"
                             title={product.name}
                             >
+                            <Image src={product.imageUrl} alt={product.name} data-ai-hint={product.imageHint} width={40} height={40} className="rounded-md" />
                             <span className="text-xs font-semibold block truncate w-full">{product.name}</span>
                             </button>
                         )
@@ -265,9 +266,12 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Rudi kwenye Bidhaa Zote
                     </Button>
-                    <div className="text-center">
-                        <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
-                        <p className="text-sm text-gray-400">{selectedProduct.category}</p>
+                    <div className="text-center flex items-center justify-center gap-4">
+                        <Image src={selectedProduct.imageUrl} alt={selectedProduct.name} data-ai-hint={selectedProduct.imageHint} width={48} height={48} className="rounded-lg" />
+                        <div>
+                            <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
+                            <p className="text-sm text-gray-400">{selectedProduct.category}</p>
+                        </div>
                     </div>
                 </div>
 
@@ -748,3 +752,5 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
     </>
   );
 }
+
+    

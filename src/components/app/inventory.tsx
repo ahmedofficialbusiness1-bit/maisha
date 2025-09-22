@@ -1,6 +1,8 @@
+
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import {
   Table,
   TableBody,
@@ -109,35 +111,52 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {inventoryItems.map(item => (
-                  <TableRow
-                    key={item.item}
-                    className="border-gray-700 hover:bg-gray-700/50"
-                  >
-                    <TableCell className="font-medium">{item.item}</TableCell>
-                    <TableCell className="text-right font-mono">
-                      {item.quantity.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0" disabled={item.quantity <= 0}>
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white">
-                          <DropdownMenuItem onClick={() => handleOpenSellDialog(item)}>
-                            Sell on Market
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            Create Contract
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {inventoryItems.map(item => {
+                   const productInfo = encyclopediaData.find(e => e.name === item.item);
+                   return (
+                    <TableRow
+                        key={item.item}
+                        className="border-gray-700 hover:bg-gray-700/50"
+                    >
+                        <TableCell className="font-medium">
+                            <div className="flex items-center gap-3">
+                                {productInfo && (
+                                    <Image 
+                                        src={productInfo.imageUrl}
+                                        alt={productInfo.name}
+                                        data-ai-hint={productInfo.imageHint}
+                                        width={40}
+                                        height={40}
+                                        className="rounded-md"
+                                    />
+                                )}
+                                <span>{item.item}</span>
+                            </div>
+                        </TableCell>
+                        <TableCell className="text-right font-mono">
+                        {item.quantity.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0" disabled={item.quantity <= 0}>
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white">
+                            <DropdownMenuItem onClick={() => handleOpenSellDialog(item)}>
+                                Sell on Market
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                                Create Contract
+                            </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        </TableCell>
+                    </TableRow>
+                   )
+                })}
               </TableBody>
             </Table>
           </CardContent>
@@ -206,3 +225,5 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
     </>
   );
 }
+
+    

@@ -3,6 +3,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import {
   Card,
   CardContent,
@@ -86,6 +87,14 @@ export function Encyclopedia() {
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <div className="flex items-center gap-4">
+                    <Image
+                        src={selectedEntry.imageUrl}
+                        alt={selectedEntry.name}
+                        data-ai-hint={selectedEntry.imageHint}
+                        width={64}
+                        height={64}
+                        className="rounded-lg"
+                    />
                     <div>
                         <CardTitle className="text-3xl">{selectedEntry.name}</CardTitle>
                         <CardDescription className="text-gray-400">{selectedEntry.category}</CardDescription>
@@ -110,9 +119,13 @@ export function Encyclopedia() {
                             <div className="bg-gray-900/50 p-4 rounded-lg flex items-center justify-center gap-4 flex-wrap">
                                 <div className="flex items-center justify-center gap-2 flex-wrap">
                                     {selectedEntry.recipe.inputs.map((input, index) => {
+                                        const inputProductInfo = encyclopediaData.find(e => e.name === input.name);
                                         return (
                                         <React.Fragment key={input.name}>
                                             <div className="text-center">
+                                                {inputProductInfo && (
+                                                    <Image src={inputProductInfo.imageUrl} alt={inputProductInfo.name} data-ai-hint={inputProductInfo.imageHint} width={32} height={32} className="rounded-md mx-auto" />
+                                                )}
                                                 <p className="text-xs mt-1">{input.quantity}x {input.name}</p>
                                             </div>
                                             {index < selectedEntry.recipe!.inputs.length - 1 && <p className="text-xl font-bold">+</p>}
@@ -121,6 +134,7 @@ export function Encyclopedia() {
                                 </div>
                                 <p className="text-2xl font-bold mx-2">→</p>
                                 <div className="text-center">
+                                    <Image src={selectedEntry.imageUrl} alt={selectedEntry.name} data-ai-hint={selectedEntry.imageHint} width={40} height={40} className="rounded-md mx-auto" />
                                     <p className="text-xs mt-1">{selectedEntry.recipe.output?.quantity || 1}x {selectedEntry.name}</p>
                                 </div>
                             </div>
@@ -151,3 +165,5 @@ export function Encyclopedia() {
     </div>
   );
 }
+
+    
