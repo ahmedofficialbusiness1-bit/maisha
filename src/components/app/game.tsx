@@ -72,29 +72,23 @@ const initialBondListings: BondListing[] = [
 
 const AI_PLAYER_NAME = 'Serekali';
 
-const getInitialUserData = (): UserData => ({
+const getInitialUserData = (): UserData => {
+  const largeNumber = 999_999_999;
+  const allItemsInventory: InventoryItem[] = encyclopediaData.map(entry => ({
+      item: entry.name,
+      quantity: largeNumber,
+      marketPrice: parseFloat(entry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0')
+  }));
+    
+  return {
     playerName: 'Mchezaji Mpya',
     playerAvatar: `https://picsum.photos/seed/player/100/100`,
     privateNotes: 'Karibu kwenye wasifu wangu! Mimi ni mtaalamu wa kuzalisha bidhaa bora.',
-    money: 10000,
-    stars: 5,
+    money: largeNumber,
+    stars: largeNumber,
     playerLevel: 1,
     playerXP: 0,
-    inventory: [
-      { item: 'Maji', quantity: 10000, marketPrice: 0.05 },
-      { item: 'Umeme', quantity: 10000, marketPrice: 0.15 },
-      { item: 'Mbegu', quantity: 10000, marketPrice: 0.70 },
-      { item: 'Mbao', quantity: 2000, marketPrice: 1.15 },
-      { item: 'Matofali', quantity: 2000, marketPrice: 2.16 },
-      { item: 'Nondo', quantity: 2000, marketPrice: 2.46 },
-      { item: 'Zege', quantity: 2000, marketPrice: 1.44 },
-      { item: 'Mabati', quantity: 2000, marketPrice: 2.07 },
-      { item: 'Saruji', quantity: 2000, marketPrice: 0.75 },
-      { item: 'Chuma', quantity: 2000, marketPrice: 2.07 },
-      { item: 'Mchanga', quantity: 2000, marketPrice: 0.12 },
-      { item: 'Mawe', quantity: 2000, marketPrice: 0.20 },
-      { item: 'Kokoto', quantity: 2000, marketPrice: 0.23 },
-    ],
+    inventory: allItemsInventory,
     marketListings: initialPlayerListings, // These could be global or also user-specific
     companyData: initialCompanyData,
     bondListings: initialBondListings,
@@ -102,7 +96,8 @@ const getInitialUserData = (): UserData => ({
     playerStocks: [],
     transactions: [],
     notifications: [],
-});
+  }
+};
 
 
 export const productCategoryToShopMap: Record<string, string> = {
