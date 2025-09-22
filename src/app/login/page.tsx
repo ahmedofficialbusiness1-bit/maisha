@@ -1,7 +1,7 @@
-
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { login } from '@/app/actions';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +25,7 @@ function SubmitButton() {
 }
 
 export default function LoginPage() {
-  const [state, formAction] = useFormState(login, { success: false, message: '' });
+  const [state, formAction] = useActionState(login, { success: false, message: '' });
   const router = useRouter();
   const { toast } = useToast();
 
@@ -35,7 +35,8 @@ export default function LoginPage() {
         title: "Umefanikiwa Kuingia!",
         description: "Karibu tena kwenye himaya yako.",
       });
-      router.push('/dashboard');
+      // The redirect in the action will handle navigation
+      // router.push('/dashboard'); 
     }
   }, [state, router, toast]);
 
