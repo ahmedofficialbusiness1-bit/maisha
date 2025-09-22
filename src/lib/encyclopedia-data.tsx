@@ -341,13 +341,13 @@ allItems.forEach(itemName => {
         // Time in seconds for one BATCH
         const baseTimeForBatch = buildingInfo ? (3600) / (buildingInfo.productionRate) : 0; 
         
-        const xpGained = (inputCost / recipe.output.quantity) * 5; // XP is 5x the cost of a single unit
+        const xpGain = (inputCost / recipe.output.quantity) * 5; // XP is 5x the cost of a single unit
 
         properties.unshift({ label: 'Production Cost', value: `$${(inputCost / recipe.output.quantity).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})} per unit` });
         properties.push({ label: 'Base Production Time', value: `${(baseTimeForBatch).toFixed(0)}s per batch` });
         properties.push({ label: 'Output per Batch', value: `${recipe.output.quantity.toLocaleString()} unit(s)` });
         properties.push({ label: 'Building', value: recipe.buildingId.charAt(0).toUpperCase() + recipe.buildingId.slice(1).replace(/_/g, ' ') });
-        properties.push({ label: 'XP Gained', value: `${xpGained.toFixed(2)}` });
+        properties.push({ label: 'XP Gained', value: `${xpGain.toFixed(2)}` });
     } else {
         // It's a base material
         properties.unshift({ label: 'Type', value: 'Base Resource' });
@@ -451,7 +451,7 @@ const itemCategorization: Record<string, string> = {
     'Bike Body': 'Spares',
     'Interior': 'Spares',
     'Luxury Interior': 'Spares',
-    'Motor': 'Spares',
+    'Motor': 'Wrench',
     'Engine': 'Spares',
     'Dashboard': 'Spares',
     'Bull dozer body': 'Spares',
@@ -509,5 +509,3 @@ export const encyclopediaData: EncyclopediaEntry[] = finalEntries.sort((a, b) =>
     }
     return a.name.localeCompare(b.name);
 });
-
-    
