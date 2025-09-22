@@ -549,7 +549,7 @@ export const availableBuildings: BuildingType[] = [
         name: 'Kiwanda cha Roketi',
         icon: Rocket,
         description: 'Huunganisha roketi kamili tayari kwa safari ya anga.',
-        image: 'https://picsum.photos/seed/rocket-factory/200/200',
+        image: 'https://picsum.photos/seed/rocket-launch/200/200',
         imageHint: 'rocket launch'
     },
 ];
@@ -1407,7 +1407,3 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     </div>
   );
 }
-
-    
-
-    
