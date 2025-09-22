@@ -622,6 +622,21 @@ export const SHOP_BUILDING_IDS = [
     'duka_la_anga',
 ];
 
+const buildingCategories: Record<string, BuildingType[]> = {
+    'Maduka': availableBuildings.filter(b => b.id.startsWith('duka_')),
+    'Uzalishaji wa Msingi': availableBuildings.filter(b => ['shamba', 'zizi', 'kiwanda_cha_samaki', 'kiwanda_cha_umeme', 'kiwanda_cha_maji'].includes(b.id)),
+    'Madini na Malighafi': availableBuildings.filter(b => b.id.startsWith('uchimbaji_')),
+    'Viwanda vya Usindikaji': availableBuildings.filter(b => 
+        (b.id.startsWith('kiwanda_cha_') || b.id === 'mgahawa' || b.id === 'sonara') && 
+        !['kiwanda_cha_samaki', 'kiwanda_cha_umeme', 'kiwanda_cha_maji'].includes(b.id) &&
+        !b.id.includes('_k_') && !b.id.includes('_anga') && !b.id.includes('_roketi')
+    ),
+    'Teknolojia ya Anga': availableBuildings.filter(b => b.id.startsWith('kiwanda_cha_k_') || b.id.startsWith('kiwanda_cha_anga') || b.id.startsWith('kiwanda_cha_roketi')),
+    'Utafiti': availableBuildings.filter(b => b.id.startsWith('utafiti_')),
+    'Utawala': availableBuildings.filter(b => ['ofisi_ya_leseni', 'wizara_ya_madini'].includes(b.id))
+};
+
+
 interface DashboardProps {
     buildingSlots: BuildingSlot[];
     inventory: InventoryItem[];
@@ -911,9 +926,23 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   const buildCosts = selectedBuildingForBuild ? buildingData[selectedBuildingForBuild.id]?.buildCost : [];
   const canAffordBuild = hasEnoughMaterials(buildCosts);
   
-  const filteredBuildings = availableBuildings.filter(b =>
-      b.name.toLowerCase().includes(buildingSearch.toLowerCase())
-  );
+    const filteredBuildingCategories = React.useMemo(() => {
+        if (!buildingSearch) return buildingCategories;
+
+        const lowercasedFilter = buildingSearch.toLowerCase();
+        const filtered: Record<string, BuildingType[]> = {};
+
+        for (const category in buildingCategories) {
+            const matchingBuildings = buildingCategories[category].filter(building =>
+                building.name.toLowerCase().includes(lowercasedFilter)
+            );
+
+            if (matchingBuildings.length > 0) {
+                filtered[category] = matchingBuildings;
+            }
+        }
+        return filtered;
+    }, [buildingSearch]);
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -1033,16 +1062,23 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                             className='pl-10 bg-gray-800 border-gray-600 h-9'
                         />
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {filteredBuildings.map((b) => (
-                            <Card 
-                                key={b.id} 
-                                className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-2 text-center"
-                                onClick={() => handleSelectBuildingToShowDetails(b)}
-                            >
-                            <p className="text-2xl">🏢</p>
-                            <p className="font-semibold mt-1 text-sm">{b.name}</p>
-                            </Card>
+                    <div className='space-y-4'>
+                        {Object.entries(filteredBuildingCategories).map(([category, buildings]) => (
+                            <div key={category}>
+                                <h3 className="font-bold text-sm text-gray-400 px-2 mb-2">{category}</h3>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    {buildings.map((b) => (
+                                        <Card 
+                                            key={b.id} 
+                                            className="bg-gray-800 hover:bg-gray-700/80 border-gray-700 cursor-pointer flex flex-col items-center justify-center p-2 text-center h-24"
+                                            onClick={() => handleSelectBuildingToShowDetails(b)}
+                                        >
+                                        <p className="text-2xl">🏢</p>
+                                        <p className="font-semibold mt-1 text-xs">{b.name}</p>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </div>
                         ))}
                     </div>
                 </div>
