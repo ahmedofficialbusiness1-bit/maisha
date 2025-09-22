@@ -96,6 +96,18 @@ while (itemsToCalculate.length > 0 && iterations < MAX_ITERATIONS) {
         }
 
         if (canCalculate) {
+            if (recipe.buildingId.startsWith('utafiti_')) {
+                // Special case for research "products". Their cost is arbitrary.
+                // The cost is handled in the recipe definition inputs (or lack thereof)
+                // For encyclopedia purposes, we can assign a representative value.
+                if(itemName.includes("Kilimo")) inputCost = 10000;
+                else if(itemName.includes("Ujenzi")) inputCost = 15000;
+                else if(itemName.includes("Nguo")) inputCost = 20000;
+                else if(itemName.includes("Electroniki")) inputCost = 50000;
+                else if(itemName.includes("Usafiri")) inputCost = 100000;
+                else if(itemName.includes("Anga")) inputCost = 500000;
+            }
+            
             const costPerUnit = inputCost / recipe.output.quantity;
             calculatedPrices[itemName] = costPerUnit * 1.15; // Add a 15% margin for market price
             priceCalculationCompleted.add(itemName);
@@ -135,6 +147,16 @@ allItems.forEach(itemName => {
         for (const input of recipe.inputs) {
             inputCost += (calculatedPrices[input.name] || 0) * input.quantity;
         }
+
+        if (recipe.buildingId.startsWith('utafiti_')) {
+            // Special case for research "products". Their cost is arbitrary.
+            if(itemName.includes("Kilimo")) inputCost = 10000;
+            else if(itemName.includes("Ujenzi")) inputCost = 15000;
+            else if(itemName.includes("Nguo")) inputCost = 20000;
+            else if(itemName.includes("Electroniki")) inputCost = 50000;
+            else if(itemName.includes("Usafiri")) inputCost = 100000;
+            else if(itemName.includes("Anga")) inputCost = 500000;
+        }
         
         const buildingInfo = buildingData[recipe.buildingId];
         // Time in seconds for one BATCH
@@ -166,7 +188,7 @@ allItems.forEach(itemName => {
 
 
 // Final Categorization and Sorting
-const categoryOrder = ['Space', 'Vehicles', 'Spares', 'Electronics', 'Construction', 'Vifaa', 'Documents', 'Madini', 'Mafuta', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
+const categoryOrder = ['Utafiti', 'Space', 'Vehicles', 'Spares', 'Electronics', 'Construction', 'Vifaa', 'Documents', 'Madini', 'Mafuta', 'Raw Material', 'Agriculture', 'Food', 'Mavazi', 'Product'];
 const itemCategorization: Record<string, string> = {
     'Mbao': 'Construction', 'Matofali': 'Construction', 'Nondo': 'Construction', 'Zege': 'Construction', 'Mabati': 'Construction',
     'Saruji': 'Construction', 'Mchanga': 'Construction', 'Mawe': 'Construction', 'Kokoto': 'Construction',
@@ -270,6 +292,14 @@ const itemCategorization: Record<string, string> = {
     'Attitude Control': 'Space',
     'Rocket Engine': 'Space',
     'Heat Shield': 'Space',
+
+    // Research
+    'Utafiti wa Kilimo': 'Utafiti',
+    'Utafiti wa Ujenzi': 'Utafiti',
+    'Utafiti wa Nguo': 'Utafiti',
+    'Utafiti wa Electroniki': 'Utafiti',
+    'Utafiti wa Usafiri': 'Utafiti',
+    'Utafiti wa Anga': 'Utafiti',
 };
 
 // Auto-categorize Machines and Licenses

@@ -492,6 +492,49 @@ export const availableBuildings: BuildingType[] = [
         image: 'https://picsum.photos/seed/rocket-launch/200/200',
         imageHint: 'rocket launch'
     },
+    // Research Buildings
+    {
+        id: 'utafiti_kilimo',
+        name: 'Jengo la Utafiti wa Kilimo',
+        description: 'Hufanya utafiti wa kuboresha ubora wa bidhaa za kilimo na chakula.',
+        image: 'https://picsum.photos/seed/agri-research/200/200',
+        imageHint: 'science laboratory'
+    },
+    {
+        id: 'utafiti_ujenzi',
+        name: 'Jengo la Utafiti wa Ujenzi',
+        description: 'Hufanya utafiti wa kuboresha ubora wa vifaa vya ujenzi na madini.',
+        image: 'https://picsum.photos/seed/build-research/200/200',
+        imageHint: 'materials science'
+    },
+    {
+        id: 'utafiti_nguo',
+        name: 'Jengo la Utafiti wa Nguo',
+        description: 'Hufanya utafiti wa kuboresha ubora wa nguo, vito, na bidhaa za mavazi.',
+        image: 'https://picsum.photos/seed/fashion-research/200/200',
+        imageHint: 'fashion design'
+    },
+    {
+        id: 'utafiti_electroniki',
+        name: 'Jengo la Utafiti wa Electroniki',
+        description: 'Hufanya utafiti wa kuboresha ubora wa vifaa vya kielektroniki.',
+        image: 'https://picsum.photos/seed/elec-research/200/200',
+        imageHint: 'electronics lab'
+    },
+    {
+        id: 'utafiti_usafiri',
+        name: 'Jengo la Utafiti wa Usafiri',
+        description: 'Hufanya utafiti wa kuboresha ubora wa magari na vyombo vya usafiri.',
+        image: 'https://picsum.photos/seed/vehicle-research/200/200',
+        imageHint: 'automotive design'
+    },
+    {
+        id: 'utafiti_anga',
+        name: 'Jengo la Utafiti wa Anga',
+        description: 'Hufanya utafiti wa kuboresha teknolojia za anga.',
+        image: 'https://picsum.photos/seed/space-research/200/200',
+        imageHint: 'aerospace engineering'
+    },
 ];
 
 const buildingStyles: Record<string, { body: string; roof: string }> = {
@@ -560,6 +603,13 @@ const buildingStyles: Record<string, { body: string; roof: string }> = {
     kiwanda_cha_k_mashine: { body: 'bg-purple-800/80', roof: 'border-b-purple-950/90' },
     kiwanda_cha_anga: { body: 'bg-blue-900/80', roof: 'border-b-blue-950/90' },
     kiwanda_cha_roketi: { body: 'bg-red-900/80', roof: 'border-b-red-950/90' },
+    // Research Buildings
+    utafiti_kilimo: { body: 'bg-lime-800/80', roof: 'border-b-lime-950/90' },
+    utafiti_ujenzi: { body: 'bg-stone-800/80', roof: 'border-b-stone-950/90' },
+    utafiti_nguo: { body: 'bg-fuchsia-800/80', roof: 'border-b-fuchsia-950/90' },
+    utafiti_electroniki: { body: 'bg-sky-800/80', roof: 'border-b-sky-950/90' },
+    utafiti_usafiri: { body: 'bg-rose-800/80', roof: 'border-b-rose-950/90' },
+    utafiti_anga: { body: 'bg-violet-800/80', roof: 'border-b-violet-950/90' },
     default: { body: 'bg-gray-700/80', roof: 'border-b-gray-600/90' }
 };
 

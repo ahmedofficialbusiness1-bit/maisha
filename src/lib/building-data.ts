@@ -710,6 +710,37 @@ export const buildingData: Record<string, BuildingConfig> = {
         ],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
+    // Research Buildings
+    utafiti_kilimo: {
+        productionRate: 1, // 1 research point per hour
+        buildCost: [{ name: 'Mbao', quantity: 1000 }, { name: 'Kioo', quantity: 500 }, { name: 'Zege', quantity: 500 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    utafiti_ujenzi: {
+        productionRate: 1,
+        buildCost: [{ name: 'Nondo', quantity: 1000 }, { name: 'Zege', quantity: 1000 }, { name: 'Chuma', quantity: 500 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    utafiti_nguo: {
+        productionRate: 1,
+        buildCost: [{ name: 'Kitamba', quantity: 500 }, { name: 'Kioo', quantity: 500 }, { name: 'Mbao', quantity: 500 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    utafiti_electroniki: {
+        productionRate: 1,
+        buildCost: [{ name: 'Nyaya', quantity: 1000 }, { name: 'PCB', quantity: 200 }, { name: 'Kioo', quantity: 300 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    utafiti_usafiri: {
+        productionRate: 1,
+        buildCost: [{ name: 'Engine', quantity: 5 }, { name: 'Car Body', quantity: 5 }, { name: 'Nondo', quantity: 1000 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
+    utafiti_anga: {
+        productionRate: 1,
+        buildCost: [{ name: 'Tarakilishi', quantity: 2 }, { name: 'Fuselage', quantity: 1 }, { name: 'Nondo', quantity: 5000 }],
+        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+    },
 };
 
     

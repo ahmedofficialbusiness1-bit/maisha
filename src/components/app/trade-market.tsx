@@ -313,9 +313,8 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-right p-2 sm:p-4">
-                                                    <div className="flex items-center justify-end gap-1">
-                                                        <span>{listing.quality}</span>
-                                                        <Star className="h-4 w-4 text-yellow-400" />
+                                                    <div className="flex items-center justify-end gap-1 font-bold">
+                                                        <span>Q{listing.quality}</span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-right font-mono p-2 sm:p-4">{listing.quantity.toLocaleString()}</TableCell>
@@ -343,9 +342,8 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                                 </Avatar>
                                                 <span className="font-semibold text-sm">{listing.seller}</span>
                                             </div>
-                                            <div className="flex items-center gap-1 text-sm">
-                                                <span>{listing.quality}</span>
-                                                <Star className="h-4 w-4 text-yellow-400" />
+                                            <div className="flex items-center gap-1 text-sm font-bold">
+                                                <span>Q{listing.quality}</span>
                                             </div>
                                         </div>
                                         <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
@@ -644,7 +642,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             <div className="px-4 sm:px-6">
                 <TabsList className="grid w-full grid-cols-3 bg-gray-800/80">
                     <TabsTrigger value="commodities"><LandPlot className='mr-2 h-4 w-4'/>Bidhaa</TabsTrigger>
-                    <TabsTrigger value="stocks"><Landmark className='mr-2 h-4 w-4'/>Hisa</TabsTrigger>
+                    <TabsTrigger value="stocks"><Landmark className='mr-2 h-4 w'/>Hisa</TabsTrigger>
                     <TabsTrigger value="bonds"><FileText className='mr-2 h-4 w-4'/>Hatifungani</TabsTrigger>
                 </TabsList>
             </div>
@@ -752,5 +750,3 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
     </>
   );
 }
-
-    

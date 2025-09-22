@@ -31,6 +31,11 @@ const licenseRecipeInputs = [
     { name: 'Karatasi', quantity: 600 },
 ];
 
+const researchRecipeInputs = (cost: number) => [
+    // Research requires money, not items. We handle this as a special case.
+    // For now, inputs are empty. The cost is handled in the game logic.
+];
+
 export const recipes: Recipe[] = [
   // Shamba Recipes
   { id: 'mbegu', buildingId: 'shamba', output: { name: 'Mbegu', quantity: 2 }, inputs: [{ name: 'Maji', quantity: 5 }] },
@@ -237,4 +242,12 @@ export const recipes: Recipe[] = [
   { id: 'rocket_engine', buildingId: 'kiwanda_cha_anga', output: { name: 'Rocket Engine', quantity: 1 }, inputs: [{ name: 'K6 Mashine', quantity: 2 }, { name: 'Engine', quantity: 40 }] },
   { id: 'heat_shield', buildingId: 'kiwanda_cha_anga', output: { name: 'Heat Shield', quantity: 1 }, inputs: [{ name: 'K7 Mashine', quantity: 2 }, { name: 'Nondo', quantity: 2000 }] },
   { id: 'roketi', buildingId: 'kiwanda_cha_roketi', output: { name: 'Roketi', quantity: 1 }, inputs: [{ name: 'Fuselage', quantity: 2 }, { name: 'Wings', quantity: 8 }, { name: 'Tarakilishi', quantity: 2 }, { name: 'Cockpit', quantity: 2 }, { name: 'Attitude Control', quantity: 8 }, { name: 'Rocket Engine', quantity: 8 }, { name: 'Heat Shield', quantity: 2 }] },
+
+  // Research Recipes
+  { id: 'utafiti_kilimo', buildingId: 'utafiti_kilimo', output: { name: 'Utafiti wa Kilimo', quantity: 10 }, inputs: researchRecipeInputs(10000) },
+  { id: 'utafiti_ujenzi', buildingId: 'utafiti_ujenzi', output: { name: 'Utafiti wa Ujenzi', quantity: 10 }, inputs: researchRecipeInputs(15000) },
+  { id: 'utafiti_nguo', buildingId: 'utafiti_nguo', output: { name: 'Utafiti wa Nguo', quantity: 10 }, inputs: researchRecipeInputs(20000) },
+  { id: 'utafiti_electroniki', buildingId: 'utafiti_electroniki', output: { name: 'Utafiti wa Electroniki', quantity: 10 }, inputs: researchRecipeInputs(50000) },
+  { id: 'utafiti_usafiri', buildingId: 'utafiti_usafiri', output: { name: 'Utafiti wa Usafiri', quantity: 10 }, inputs: researchRecipeInputs(100000) },
+  { id: 'utafiti_anga', buildingId: 'utafiti_anga', output: { name: 'Utafiti wa Anga', quantity: 10 }, inputs: researchRecipeInputs(500000) },
 ];
