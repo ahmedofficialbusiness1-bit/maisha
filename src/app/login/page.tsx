@@ -33,7 +33,7 @@ export default function LoginPage() {
             </Link>
            <div className="text-center text-sm text-gray-400">
             Huna akaunti?{' '}
-            <Link href="#" className="underline text-blue-400 hover:text-blue-300">
+            <Link href="/signup" className="underline text-blue-400 hover:text-blue-300">
               Jisajili
             </Link>
           </div>

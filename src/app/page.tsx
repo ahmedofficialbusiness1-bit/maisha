@@ -24,7 +24,7 @@ export default function LandingPage() {
             </p>
         </CardContent>
         <CardFooter className="flex justify-center">
-            <Link href="/login">
+            <Link href="/signup">
                 <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6">
                     Anza Mchezo
                 </Button>
