@@ -77,6 +77,7 @@ export default function SignupPage() {
                 displayName: values.username
             });
 
+            // Redirect to dashboard after successful signup and profile update
             router.push('/dashboard');
 
         } catch (e: any) {
@@ -147,7 +148,7 @@ export default function SignupPage() {
               <FormField
                 control={form.control}
                 name="password"
-                render={({ field })_=> (
+                render={({ field }) => (
                   <FormItem className="grid gap-2">
                     <FormLabel htmlFor="password">Nenosiri</FormLabel>
                     <FormControl>
