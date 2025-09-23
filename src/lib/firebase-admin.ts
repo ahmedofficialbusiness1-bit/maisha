@@ -12,8 +12,8 @@ function getAdminApp(): App {
     const serviceAccount: ServiceAccount = {
         projectId: process.env.FIREBASE_PROJECT_ID || "studio-3569606942-35878",
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-g2nmy@studio-3569606942-35878.iam.gserviceaccount.com",
-        // The private key must be a single-line string. Replace newlines with \\n.
-        privateKey: (process.env.FIREBASE_PRIVATE_KEY || "").replace(/\\n/g, '\n'),
+        // The private key is injected from environment variables.
+        privateKey: process.env.FIREBASE_PRIVATE_KEY || "",
     };
 
     return initializeApp({
