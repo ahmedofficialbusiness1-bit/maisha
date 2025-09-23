@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -20,7 +21,6 @@ import { z } from 'zod';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -137,7 +137,6 @@ export default function SignupPage() {
                         className="bg-gray-700 border-gray-600"
                       />
                     </FormControl>
-                     <FormDescription className="text-xs text-gray-400">Hili ndilo jina litakaloonekana kwenye mchezo.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -157,7 +156,6 @@ export default function SignupPage() {
                         className="bg-gray-700 border-gray-600"
                       />
                     </FormControl>
-                     <FormDescription className="text-xs text-gray-400">Hii itatumika kwa kuingia kwenye akaunti yako.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -221,3 +219,5 @@ export default function SignupPage() {
     </main>
   );
 }
+
+    
