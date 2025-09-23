@@ -3,32 +3,30 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function LandingPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/dashboard');
+  }, [router]);
+
   return (
     <main className="flex-1 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl bg-gray-900/80 border-gray-700/60 text-white backdrop-blur-sm text-center">
         <CardHeader>
           <CardTitle className="text-4xl font-bold">Uchumi wa Afrika</CardTitle>
           <CardDescription className="text-lg text-gray-300 pt-2">
-            Jenga Himaya Yako ya Kiuchumi
+            Inapakia Mchezo...
           </CardDescription>
         </CardHeader>
         <CardContent className="text-base text-gray-400 space-y-4">
             <p>
-                Anza kama mjasiriamali mdogo na ukuze biashara yako kuwa kongwe la kimataifa. Lima, chakata, zalisha bidhaa, na uuze katika soko la ushindani. 
-            </p>
-            <p>
-                Wekeza kwenye soko la hisa, dhibiti fedha zako, na shindana na wachezaji wengine kuwa tajiri namba moja barani Afrika.
+                Tafadhali subiri, tunakupeleka kwenye dashibodi yako.
             </p>
         </CardContent>
-        <CardFooter className="flex justify-center">
-            <Link href="/dashboard">
-                <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6">
-                    Anza Mchezo
-                </Button>
-            </Link>
-        </CardFooter>
       </Card>
     </main>
   );

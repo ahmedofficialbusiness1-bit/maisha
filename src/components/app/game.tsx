@@ -17,10 +17,8 @@ import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
 import { Skeleton } from '../ui/skeleton';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 
 const BUILDING_SLOTS = 20;
@@ -88,8 +86,8 @@ export const getInitialUserData = (uid: string, email: string | null): UserData 
     
   return {
     uid,
-    email: email || 'unknown',
-    playerName: email?.split('@')[0] || 'Mchezaji Mpya',
+    email: email || 'local_user@app.com',
+    playerName: 'Mchezaji',
     playerAvatar: `https://picsum.photos/seed/${uid}/100/100`,
     privateNotes: 'Karibu kwenye wasifu wangu! Mimi ni mtaalamu wa kuzalisha bidhaa bora.',
     money: largeNumber,
@@ -130,50 +128,23 @@ export function Game() {
   const [view, setView] = React.useState<View>('dashboard');
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-  const router = useRouter();
 
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
   
-  // Auth state listener & data fetcher
+  // Set initial game state for a single player
   React.useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-        if (user) {
-            const docRef = doc(db, 'users', user.uid);
-            const unsubscribeFirestore = onSnapshot(docRef, (doc) => {
-                if (doc.exists()) {
-                    setGameState(doc.data() as UserData);
-                } else {
-                    const initialData = getInitialUserData(user.uid, user.email);
-                    setDoc(docRef, initialData); // Create the document
-                    setGameState(initialData); // Set state immediately
-                }
-                setIsLoading(false);
-            }, (error) => {
-                console.error("Error fetching user data:", error);
-                setGameState(null);
-                setIsLoading(false);
-            });
-             return () => unsubscribeFirestore();
-        } else {
-            // User is not logged in, stop loading and clear state
-            setGameState(null);
-            setIsLoading(false);
-        }
-    });
-    return () => unsubscribeAuth();
+    const localUserId = 'local_user';
+    const initialData = getInitialUserData(localUserId, 'local_user@app.com');
+    setGameState(initialData);
+    setIsLoading(false);
   }, []);
 
-  // Redirect if not logged in after loading
-  React.useEffect(() => {
-    if (!isLoading && !gameState) {
-      router.push('/login');
-    }
-  }, [isLoading, gameState, router]);
 
-
-  // Debounced save to Firestore
+  // Debounced save to Firestore (or could be local storage)
   const debouncedSave = useDebouncedCallback((newState: UserData) => {
     if(newState.uid) { 
+      // This will save to Firestore, but for a single-player offline mode,
+      // you might want to save to localStorage instead.
       const docRef = doc(db, "users", newState.uid);
       setDoc(docRef, newState, { merge: true });
     }
@@ -698,11 +669,9 @@ export function Game() {
   }
 
   if (!gameState) {
-     // This case is handled by the redirect effect.
-     // We return null to prevent rendering the game with no data, which causes errors.
      return null;
   }
-
+  
   const stockValue = gameState.playerStocks.reduce((total, stock) => {
     const stockInfo = gameState.companyData.find(s => s.ticker === stock.ticker);
     return total + (stockInfo ? stockInfo.stockPrice * stock.shares : 0);
