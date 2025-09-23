@@ -819,11 +819,6 @@ export function Game() {
     );
   }
 
-  if (!gameState) {
-    // This view is temporary while the redirect in useEffect happens
-    return null;
-  }
-
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
