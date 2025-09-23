@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { cookies } from 'next/headers';
-import { getAuth } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
