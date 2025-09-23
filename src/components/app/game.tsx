@@ -20,7 +20,6 @@ import { Skeleton } from '../ui/skeleton';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
 
 
 const BUILDING_SLOTS = 20;
@@ -131,7 +130,6 @@ export function Game() {
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [currentUser, setCurrentUser] = React.useState<User | null>(null);
-  const router = useRouter();
 
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
   
@@ -142,12 +140,14 @@ export function Game() {
             setCurrentUser(user);
         } else {
             setCurrentUser(null);
-            setIsLoading(false);
-            router.push('/login');
+            // If there's no user, we might not want to immediately stop loading,
+            // but rather wait for a redirect from a higher-level component or middleware.
+            // For now, we'll just stop loading, but this prevents access to the game.
+             setIsLoading(false);
         }
     });
     return () => unsubscribe();
-  }, [router]);
+  }, []);
 
   // Firestore state listener
   React.useEffect(() => {
@@ -166,11 +166,10 @@ export function Game() {
           }, (error) => {
               console.error("Error fetching user data:", error);
               setIsLoading(false);
-              router.push('/login');
           });
           return () => unsubscribe();
       }
-  }, [currentUser, router]);
+  }, [currentUser]);
 
 
   // Debounced save to Firestore

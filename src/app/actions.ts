@@ -11,7 +11,6 @@ import { auth, db } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { getInitialUserData } from '@/components/app/game';
-import { redirect } from 'next/navigation';
 
 
 const SimulateCommodityPriceSchema = z.object({
