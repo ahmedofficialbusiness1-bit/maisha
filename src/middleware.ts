@@ -2,10 +2,17 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+// This function can be marked `async` if using `await` inside
+export function middleware(request: NextRequest) {
+    const { pathname } = request.nextUrl;
+    
+    // The authentication logic will be handled on the client-side
+    // in the dashboard page. This middleware is simplified to just allow navigation.
+    
     return NextResponse.next();
 }
  
+// See "Matching Paths" below to learn more
 export const config = {
   matcher: [
     /*

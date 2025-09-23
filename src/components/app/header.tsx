@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award } from 'lucide-react';
 import { useMemo } from 'react';
-import type { View } from '../app/game';
+import type { View } from '@/app/game';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,13 +15,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import type { Notification } from '../app/game';
+import type { Notification } from '@/app/game';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { useRouter } from 'next/navigation';
-import { getAuth } from 'firebase/auth';
+import { getAuth, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
+
 
 interface AppHeaderProps {
     money: number;
@@ -59,10 +60,8 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
 
     const handleLogout = async () => {
         const auth = getAuth(app);
-        await auth.signOut();
-        // Since we removed login, we just refresh the page.
-        // The middleware will handle redirection if needed.
-        router.push('/');
+        await signOut(auth);
+        router.push('/login');
     }
     
     const xpPercentage = (playerXP / xpForNextLevel) * 100;

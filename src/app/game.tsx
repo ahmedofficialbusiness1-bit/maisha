@@ -16,8 +16,9 @@ import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
-import { Skeleton } from '../ui/skeleton';
-
+import { Skeleton } from '@/components/ui/skeleton';
+import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 type AuthenticatedUser = {
     uid: string;
@@ -78,22 +79,25 @@ const initialBondListings: BondListing[] = [
 const AI_PLAYER_NAME = 'Serekali';
 
 export const getInitialUserData = (user: AuthenticatedUser): UserData => {
-  const largeNumber = 999_999_999_999;
-  const allItemsInventory: InventoryItem[] = encyclopediaData.map(entry => ({
-      item: entry.name,
-      quantity: largeNumber,
-      marketPrice: parseFloat(entry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0')
-  }));
+  const largeNumber = 100_000;
+  const initialItems: InventoryItem[] = [
+    { item: 'Mbao', quantity: 5000, marketPrice: 1.20 },
+    { item: 'Matofali', quantity: 10000, marketPrice: 0.50 },
+    { item: 'Nondo', quantity: 1000, marketPrice: 2.50 },
+    { item: 'Saruji', quantity: 2000, marketPrice: 8.00 },
+    { item: 'Maji', quantity: 50000, marketPrice: 0.10 },
+    { item: 'Umeme', quantity: 25000, marketPrice: 0.15 },
+  ];
     
   return {
     uid: user.uid,
     username: user.username,
     privateNotes: `Karibu kwenye wasifu wangu! Mimi ni ${user.username}, mtaalamu wa kuzalisha bidhaa bora.`,
     money: largeNumber,
-    stars: largeNumber,
+    stars: 100,
     playerLevel: 1,
     playerXP: 0,
-    inventory: allItemsInventory,
+    inventory: initialItems,
     marketListings: initialPlayerListings,
     companyData: initialCompanyData,
     bondListings: initialBondListings,
@@ -136,16 +140,32 @@ export function Game({ user }: { user: AuthenticatedUser }) {
         return;
     };
 
-    const initialData = getInitialUserData(user);
-    setGameState(initialData);
-    setIsLoading(false);
-    
+    const docRef = doc(db, 'users', user.uid);
+
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setGameState(docSnap.data() as UserData);
+      } else {
+        // First-time user, create their data
+        const initialData = getInitialUserData(user);
+        setDoc(docRef, initialData).then(() => {
+          setGameState(initialData);
+        });
+      }
+      setIsLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, [user]);
 
 
   // Debounced save to Firestore
   const debouncedSave = useDebouncedCallback((newState: UserData) => {
-    // Saving is disabled as we are not using Firestore
+    if(newState.uid) { 
+      const docRef = doc(db, "users", newState.uid);
+      setDoc(docRef, newState, { merge: true });
+    }
   }, 1000);
 
   // Update state using a single function to ensure consistency and trigger save
