@@ -144,8 +144,8 @@ export function Game() {
                     setGameState(doc.data() as UserData);
                 } else {
                     const initialData = getInitialUserData(user.uid, user.email);
-                    setDoc(docRef, initialData);
-                    setGameState(initialData);
+                    setDoc(docRef, initialData); // Create the document
+                    setGameState(initialData); // Set state immediately
                 }
                 setIsLoading(false);
             }, (error) => {
@@ -606,68 +606,74 @@ export function Game() {
   React.useEffect(() => {
     if (!gameState) return;
 
-    const now = Date.now();
-    let stateChanged = false;
-
-    const newSlots = [...gameState.buildingSlots];
-    
-    newSlots.forEach((slot, index) => {
-        const activityId = slot.activity ? `${index}-${slot.activity.startTime}` : null;
+    const interval = setInterval(() => {
+        const now = Date.now();
+        let stateChanged = false;
         
-        // Process construction
-        if (slot.construction && now >= slot.construction.endTime) {
-            const buildingName = slot.building?.name || 'Jengo';
-            addNotification(`Ujenzi wa ${buildingName} Lvl ${slot.construction.targetLevel} umekamilika!`, 'construction');
-            addXP(100 * slot.construction.targetLevel); // Grant XP for construction
-            newSlots[index] = { ...slot, level: slot.construction.targetLevel, construction: undefined };
-            stateChanged = true;
-        }
+        const newState: UserData = JSON.parse(JSON.stringify(gameState)); // Deep copy
 
-        // Process activities (production/sales)
-        if (slot.activity && now >= slot.activity.endTime && !processedActivitiesRef.current.has(activityId!)) {
-            if (slot.activity.type === 'produce') {
-                const { recipeId: itemName, quantity } = slot.activity;
-                
-                updateState(prev => {
-                    const newInventory = [...prev.inventory];
-                    const itemIndex = newInventory.findIndex(i => i.item === itemName);
+        newState.buildingSlots.forEach((slot, index) => {
+            const activityId = slot.activity ? `${index}-${slot.activity.startTime}` : null;
+            const constructionId = slot.construction ? `${index}-${slot.construction.startTime}` : null;
+            
+            // Process construction
+            if (slot.construction && now >= slot.construction.endTime && !processedActivitiesRef.current.has(constructionId!)) {
+                addNotification(`Ujenzi wa ${slot.building?.name} Lvl ${slot.construction.targetLevel} umekamilika!`, 'construction');
+                addXP(100 * slot.construction.targetLevel); // Grant XP for construction
+                newState.buildingSlots[index] = { ...slot, level: slot.construction.targetLevel, construction: undefined };
+                processedActivitiesRef.current.add(constructionId!);
+                stateChanged = true;
+            }
+
+            // Process activities (production/sales)
+            if (slot.activity && now >= slot.activity.endTime && !processedActivitiesRef.current.has(activityId!)) {
+                if (slot.activity.type === 'produce') {
+                    const { recipeId: itemName, quantity } = slot.activity;
+                    
+                    const itemIndex = newState.inventory.findIndex(i => i.item === itemName);
                     const marketPrice = encyclopediaData.find(e => e.name === itemName)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0';
                     
                     if (itemIndex !== -1) {
-                        newInventory[itemIndex].quantity += quantity;
+                        newState.inventory[itemIndex].quantity += quantity;
                     } else {
-                        newInventory.push({ item: itemName, quantity, marketPrice: parseFloat(marketPrice) });
+                        newState.inventory.push({ item: itemName, quantity, marketPrice: parseFloat(marketPrice) });
                     }
                     
                     addNotification(`Uzalishaji wa ${quantity}x ${itemName} umekamilika.`, 'production');
                     addXP(quantity * 2); // 2 XP per item produced
 
-                    return { ...prev, inventory: newInventory };
-                });
-            } else if (slot.activity.type === 'sell') {
-                const { saleValue, quantity, recipeId: itemName } = slot.activity;
-                const marketTax = 0.05;
-                const profit = saleValue * (1 - marketTax);
+                } else if (slot.activity.type === 'sell') {
+                    const { saleValue, quantity, recipeId: itemName } = slot.activity;
+                    const marketTax = 0.05;
+                    const profit = saleValue * (1 - marketTax);
+                    
+                    const newTransaction: Transaction = {
+                      id: `${Date.now()}-${Math.random()}`, type: 'income',
+                      amount: profit, description: `Mauzo ya ${quantity}x ${itemName}`, timestamp: Date.now(),
+                    };
+                    newState.transactions.unshift(newTransaction);
+                    newState.money += profit;
+                    
+                    addNotification(`Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, 'sale');
+                    addXP(Math.floor(profit * 0.01));
+                }
                 
-                updateState(prev => {
-                    addTransaction('income', profit, `Mauzo ya ${quantity}x ${itemName}`);
-                    return { ...prev, money: prev.money + profit };
-                });
-                
-                addNotification(`Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, 'sale');
+                newState.buildingSlots[index] = { ...slot, activity: undefined };
+                processedActivitiesRef.current.add(activityId!); // Mark as processed
+                stateChanged = true;
             }
-            
-            newSlots[index] = { ...slot, activity: undefined };
-            processedActivitiesRef.current.add(activityId!); // Mark as processed
-            stateChanged = true;
+        });
+
+        if (stateChanged) {
+           setGameState(newState);
+           debouncedSave(newState);
         }
-    });
 
-    if (stateChanged) {
-        updateState(prev => ({ ...prev, buildingSlots: newSlots }));
-    }
+    }, 1000); // Run every second
 
-  }, [gameState, 1000]); // Run every second
+    return () => clearInterval(interval);
+
+  }, [gameState, debouncedSave]); 
 
   if (isLoading) {
     return (
@@ -692,7 +698,8 @@ export function Game() {
   }
 
   if (!gameState) {
-     // This case is handled by the redirect effect, but as a fallback, show nothing to prevent errors.
+     // This case is handled by the redirect effect.
+     // We return null to prevent rendering the game with no data, which causes errors.
      return null;
   }
 

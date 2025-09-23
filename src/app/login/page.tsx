@@ -35,7 +35,7 @@ export default function LoginPage() {
     }, [state, toast, router]);
 
     return (
-        <main className="flex items-center justify-center min-h-screen p-4">
+        <main className="flex-1 flex items-center justify-center p-4">
             <Card className="w-full max-w-md bg-gray-900/80 border-gray-700/60 text-white backdrop-blur-sm">
                 <form action={formAction}>
                     <CardHeader className="text-center">
