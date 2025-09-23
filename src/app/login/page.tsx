@@ -8,9 +8,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 
@@ -26,19 +23,6 @@ function SubmitButton() {
 
 export default function LoginPage() {
   const [state, formAction] = useActionState(login, { success: false, message: '' });
-  const router = useRouter();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (state?.success) {
-      toast({
-        title: "Umefanikiwa Kuingia!",
-        description: "Karibu tena kwenye himaya yako.",
-      });
-      // The redirect in the action will handle navigation
-      // router.push('/dashboard'); 
-    }
-  }, [state, router, toast]);
 
   return (
     <main className="flex items-center justify-center min-h-screen">
