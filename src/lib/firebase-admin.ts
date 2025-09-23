@@ -6,13 +6,14 @@ function getAdminApp(): App {
         return getApp();
     }
     
-    // In a production environment, you would use environment variables
-    // For this context, the build environment injects these values.
+    if (!process.env.FIREBASE_PRIVATE_KEY) {
+        throw new Error('FIREBASE_PRIVATE_KEY is not set');
+    }
+
     const serviceAccount: ServiceAccount = {
         projectId: process.env.FIREBASE_PROJECT_ID || "studio-3569606942-35878",
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-g2nmy@studio-3569606942-35878.iam.gserviceaccount.com",
-        // The private key is injected from environment variables.
-        privateKey: process.env.FIREBASE_PRIVATE_KEY || "",
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     };
 
     return initializeApp({

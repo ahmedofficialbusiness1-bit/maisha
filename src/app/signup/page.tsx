@@ -77,8 +77,20 @@ export default function SignupPage() {
                 displayName: values.username
             });
 
-            // Redirect to dashboard after successful signup and profile update
-            router.push('/dashboard');
+            const idToken = await userCredential.user.getIdToken();
+
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${idToken}`,
+                },
+            });
+
+            if (response.ok) {
+                 router.push('/dashboard');
+            } else {
+                 throw new Error('Failed to create session');
+            }
 
         } catch (e: any) {
             if (e.code === 'auth/email-already-in-use') {
@@ -90,7 +102,7 @@ export default function SignupPage() {
         } finally {
             setIsPending(false);
         }
-    }
+    };
 
 
   return (

@@ -2,15 +2,13 @@
 
 import { z } from 'zod';
 import { cookies } from 'next/headers';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { app } from '@/lib/firebase';
-import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import { adminApp } from '@/lib/firebase-admin';
+import { cache } from 'react';
 
 
-export async function logout(): Promise<{ error: string } | { error?: undefined }> {
+export async function logout() {
 	cookies().delete('session');
     redirect('/signup');
 }

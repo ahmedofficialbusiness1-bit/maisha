@@ -6,17 +6,13 @@ export async function middleware(request: NextRequest) {
     const sessionCookie = request.cookies.get('session')?.value;
     const { pathname } = request.nextUrl;
 
-    const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
+    const isAuthPage = pathname.startsWith('/signup');
 
-    // If there's no session cookie and the user is not on an auth page, redirect to signup.
     if (!sessionCookie && !isAuthPage) {
         return NextResponse.redirect(new URL('/signup', request.url));
     }
 
-    // If there is a session cookie and the user is on an auth page, redirect to the dashboard.
     if (sessionCookie && isAuthPage) {
-        // The actual validation of the cookie will happen on the dashboard page.
-        // This is just a UX improvement.
         return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
