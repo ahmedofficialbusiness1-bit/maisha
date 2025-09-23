@@ -8,6 +8,8 @@ import { db } from '@/lib/db';
 import { userTable } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateId } from 'lucia';
+import { cache } from 'react';
+import type { Session, User } from 'lucia';
 
 const signupSchema = z.object({
   username: z
@@ -110,9 +112,6 @@ export async function logout(): Promise<{ error: string } | { error?: undefined 
     return {};
 }
 
-
-import { cache } from 'react';
-import type { Session, User } from 'lucia';
 
 export const validateRequest = cache(
 	async (): Promise<{ user: User; session: Session } | { user: null; session: null }> => {
