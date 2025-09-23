@@ -4,11 +4,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-// This page is no longer in use. Redirect to the signup page.
+// This page is no longer in use. Redirect to the dashboard.
 export default function LoginPage() {
     const router = useRouter();
     useEffect(() => {
-        router.replace('/signup');
+        router.replace('/dashboard');
     }, [router]);
 
     return (

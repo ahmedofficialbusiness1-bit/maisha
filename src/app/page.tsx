@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,7 @@ export default function LandingPage() {
             </p>
         </CardContent>
         <CardFooter className="flex justify-center">
-            <Link href="/signup">
+            <Link href="/dashboard">
                 <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6">
                     Anza Mchezo
                 </Button>
