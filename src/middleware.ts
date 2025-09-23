@@ -8,9 +8,9 @@ export async function middleware(request: NextRequest) {
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
 
-    // If there's no session cookie and the user is not on an auth page, redirect to login.
+    // If there's no session cookie and the user is not on an auth page, redirect to signup.
     if (!sessionCookie && !isAuthPage) {
-        return NextResponse.redirect(new URL('/login', request.url));
+        return NextResponse.redirect(new URL('/signup', request.url));
     }
 
     // If there is a session cookie and the user is on an auth page, redirect to the dashboard.

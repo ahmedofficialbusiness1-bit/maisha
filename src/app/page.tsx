@@ -6,6 +6,6 @@ export default async function LandingPage() {
   if (user) {
     redirect('/dashboard');
   } else {
-    redirect('/login');
+    redirect('/signup');
   }
 }

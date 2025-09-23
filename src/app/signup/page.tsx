@@ -214,12 +214,6 @@ export default function SignupPage() {
              </Button>
             </form>
           </Form>
-          <div className="mt-4 text-center text-sm text-gray-400">
-            Tayari una akaunti?{' '}
-            <Link href="/login" className="underline text-blue-400">
-              Ingia
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </main>
