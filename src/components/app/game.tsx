@@ -17,8 +17,9 @@ import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
 import { Skeleton } from '../ui/skeleton';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import type { User } from 'lucia';
 
 
 const BUILDING_SLOTS = 20;
@@ -41,9 +42,7 @@ export type Notification = {
 
 export type UserData = {
   uid: string;
-  email: string;
-  playerName: string;
-  playerAvatar: string;
+  username: string;
   privateNotes: string;
   money: number;
   stars: number;
@@ -76,7 +75,7 @@ const initialBondListings: BondListing[] = [
 
 const AI_PLAYER_NAME = 'Serekali';
 
-export const getInitialUserData = (uid: string, email: string | null): UserData => {
+export const getInitialUserData = (user: User): UserData => {
   const largeNumber = 999_999_999_999;
   const allItemsInventory: InventoryItem[] = encyclopediaData.map(entry => ({
       item: entry.name,
@@ -85,11 +84,9 @@ export const getInitialUserData = (uid: string, email: string | null): UserData 
   }));
     
   return {
-    uid,
-    email: email || 'local_user@app.com',
-    playerName: 'Mchezaji',
-    playerAvatar: `https://picsum.photos/seed/${uid}/100/100`,
-    privateNotes: 'Karibu kwenye wasifu wangu! Mimi ni mtaalamu wa kuzalisha bidhaa bora.',
+    uid: user.id,
+    username: user.username,
+    privateNotes: `Karibu kwenye wasifu wangu! Mimi ni ${user.username}, mtaalamu wa kuzalisha bidhaa bora.`,
     money: largeNumber,
     stars: largeNumber,
     playerLevel: 1,
@@ -124,27 +121,42 @@ export const productCategoryToShopMap: Record<string, string> = {
 };
 
 
-export function Game() {
+export function Game({ user }: { user: User }) {
   const [view, setView] = React.useState<View>('dashboard');
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
   
-  // Set initial game state for a single player
   React.useEffect(() => {
-    const localUserId = 'local_user';
-    const initialData = getInitialUserData(localUserId, 'local_user@app.com');
-    setGameState(initialData);
-    setIsLoading(false);
-  }, []);
+    if (!user?.id) {
+        setIsLoading(false);
+        return;
+    };
+
+    const docRef = doc(db, 'users', user.id);
+
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setGameState(docSnap.data() as UserData);
+      } else {
+        // First-time user, create their data
+        const initialData = getInitialUserData(user);
+        setDoc(docRef, initialData).then(() => {
+          setGameState(initialData);
+        });
+      }
+      setIsLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [user]);
 
 
-  // Debounced save to Firestore (or could be local storage)
+  // Debounced save to Firestore
   const debouncedSave = useDebouncedCallback((newState: UserData) => {
     if(newState.uid) { 
-      // This will save to Firestore, but for a single-player offline mode,
-      // you might want to save to localStorage instead.
       const docRef = doc(db, "users", newState.uid);
       setDoc(docRef, newState, { merge: true });
     }
@@ -155,7 +167,8 @@ export function Game() {
     setGameState(prevState => {
         if (!prevState) return null;
         const newState = updater(prevState);
-        debouncedSave(newState);
+        // We don't call debouncedSave here because onSnapshot will update the state
+        // This prevents re-renders. The game loop will now handle saving.
         return newState;
     });
   };
@@ -205,8 +218,7 @@ export function Game() {
   const handleUpdateProfile = (data: ProfileData) => {
     updateState(prev => ({
         ...prev,
-        playerName: data.playerName,
-        playerAvatar: data.avatarUrl || prev.playerAvatar,
+        username: data.playerName,
         privateNotes: data.privateNotes || ''
     }));
     setView('dashboard'); // Go back to dashboard after saving
@@ -553,10 +565,10 @@ export function Game() {
          const newListing: PlayerListing = {
              id: Date.now(),
              commodity: item.item,
-             seller: prev.playerName,
+             seller: prev.username,
              quantity,
              price,
-             avatar: prev.playerAvatar,
+             avatar: `https://picsum.photos/seed/${prev.uid}/40/40`,
              quality: 0, // Placeholder
              imageHint: 'player avatar'
          };
@@ -573,7 +585,7 @@ export function Game() {
   };
 
 
-  // Game loop for processing finished activities
+  // Game loop for processing finished activities and saving data
   React.useEffect(() => {
     if (!gameState) return;
 
@@ -636,7 +648,8 @@ export function Game() {
         });
 
         if (stateChanged) {
-           setGameState(newState);
+           // Instead of just setGameState, we now call debouncedSave
+           // onSnapshot will handle the local state update from Firestore
            debouncedSave(newState);
         }
 
@@ -669,7 +682,7 @@ export function Game() {
   }
 
   if (!gameState) {
-     return null;
+     return null; // Should be redirected by middleware, but as a fallback.
   }
   
   const stockValue = gameState.playerStocks.reduce((total, stock) => {
@@ -706,8 +719,8 @@ export function Game() {
   };
   
   const currentProfile: ProfileData = {
-      playerName: gameState.playerName,
-      avatarUrl: gameState.playerAvatar,
+      playerName: gameState.username,
+      avatarUrl: `https://picsum.photos/seed/${gameState.uid}/100/100`,
       privateNotes: gameState.privateNotes,
   };
   
@@ -746,7 +759,7 @@ export function Game() {
                     inventory={gameState.inventory} 
                     onBuyStock={handleBuyStock}
                     onBuyFromMarket={handleBuyFromMarket}
-                    playerName={gameState.playerName}
+                    playerName={gameState.username}
                 />;
       case 'encyclopedia':
         return <Encyclopedia />;
@@ -767,8 +780,8 @@ export function Game() {
         money={gameState.money} 
         stars={gameState.stars} 
         setView={setView} 
-        playerName={gameState.playerName}
-        playerAvatar={gameState.playerAvatar}
+        playerName={gameState.username}
+        playerAvatar={`https://picsum.photos/seed/${gameState.uid}/40/40`}
         notifications={gameState.notifications}
         onNotificationsRead={handleMarkNotificationsRead}
         playerLevel={gameState.playerLevel}

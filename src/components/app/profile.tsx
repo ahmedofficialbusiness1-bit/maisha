@@ -100,7 +100,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
   
    React.useEffect(() => {
     form.reset(currentProfile);
-  }, [currentProfile, form]);
+  }, [currentProfile, form, isEditing]);
 
   function onSubmit(data: ProfileData) {
     onSave(data);
@@ -112,9 +112,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
   }
 
   const handleEditToggle = () => {
-    if (isEditing) {
-        form.reset(currentProfile); // Reset changes if canceling
-    }
     setIsEditing(!isEditing);
   }
   
@@ -168,42 +165,14 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                             <FormItem>
                                 <FormLabel>Jina la Kampuni</FormLabel>
                                 <FormControl>
-                                <Input placeholder="Jina la kampuni yako..." {...field} className='bg-gray-700 border-gray-600'/>
+                                <Input placeholder="Jina la kampuni yako..." {...field} className='bg-gray-700 border-gray-600' disabled/>
                                 </FormControl>
+                                <FormDescription>Huwezi kubadilisha jina la mtumiaji kwa sasa.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                             )}
                         />
-                        <FormField
-                          control={form.control}
-                          name="avatarUrl"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Picha ya Wasifu (Nembo)</FormLabel>
-                               <FormControl>
-                                <div id={field.name}>
-                                  <Input
-                                    type="file"
-                                    className="hidden"
-                                    ref={fileInputRef}
-                                    onChange={handleImageUpload}
-                                    accept="image/*"
-                                  />
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full justify-center bg-gray-700 border-gray-600 hover:bg-gray-600"
-                                    onClick={() => fileInputRef.current?.click()}
-                                  >
-                                    <Upload className="mr-2 h-4 w-4" />
-                                    Pakia Picha
-                                  </Button>
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        {/* Avatar upload is disabled for now as we use picsum */}
                         </>
                     ) : null}
 

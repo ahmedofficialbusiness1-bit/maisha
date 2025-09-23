@@ -19,6 +19,8 @@ import type { Notification } from './game';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { logout } from '@/app/actions';
+import { useRouter } from 'next/navigation';
 
 interface AppHeaderProps {
     money: number;
@@ -40,10 +42,11 @@ function formatCurrency(value: number): string {
     if (value >= 1_000) {
         return `$${(value / 1_000).toFixed(1)}K`;
     }
-    return `$${value}`;
+    return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 }
 
 export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead, playerLevel, playerXP, xpForNextLevel }: AppHeaderProps) {
+    const router = useRouter();
     const formattedMoney = useMemo(() => formatCurrency(money), [money]);
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -51,6 +54,11 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
         if (unreadCount > 0) {
             onNotificationsRead();
         }
+    }
+
+    const handleLogout = async () => {
+        await logout();
+        router.push('/login');
     }
     
     const xpPercentage = (playerXP / xpForNextLevel) * 100;
@@ -184,6 +192,11 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                     <User className="mr-2 h-4 w-4" />
                     <span>Wasifu</span>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator className='bg-gray-600'/>
+                 <DropdownMenuItem onSelect={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Toka</span>
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
 
@@ -191,5 +204,3 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
     </header>
   );
 }
-
-    
