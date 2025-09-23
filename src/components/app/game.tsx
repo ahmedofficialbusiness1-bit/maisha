@@ -134,7 +134,7 @@ export function Game() {
 
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
   
-  // Auth state listener
+  // Auth state listener & data fetcher
   React.useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
         if (user) {
@@ -155,12 +155,20 @@ export function Game() {
             });
              return () => unsubscribeFirestore();
         } else {
+            // User is not logged in
             setGameState(null);
             setIsLoading(false);
         }
     });
     return () => unsubscribeAuth();
   }, []);
+
+  // Redirect if not logged in after loading
+  React.useEffect(() => {
+    if (!isLoading && !gameState) {
+      router.push('/login');
+    }
+  }, [isLoading, gameState, router]);
 
 
   // Debounced save to Firestore
@@ -812,11 +820,11 @@ export function Game() {
   }
 
   if (!gameState) {
-    router.push('/login');
+    // The redirect effect will handle navigation.
+    // Return the loading skeleton to prevent rendering the game with null state.
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900/90 z-50 text-white">
-            {/* This view is temporary while the redirect happens */}
-            <p>Inakuelekeza kwenye ukurasa wa kuingia...</p>
+        <div className="fixed inset-0 flex flex-col items-center justify-center bg-gray-900/90 z-50 text-white p-4">
+            <h1 className="text-3xl font-bold mb-4 animate-pulse">Inapakia Data...</h1>
         </div>
     );
   }
