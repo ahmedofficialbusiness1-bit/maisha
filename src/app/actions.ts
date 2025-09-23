@@ -11,6 +11,7 @@ import { auth, db } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { getInitialUserData } from '@/components/app/game';
+import { redirect } from 'next/navigation';
 
 
 const SimulateCommodityPriceSchema = z.object({
@@ -106,10 +107,7 @@ export async function login(prevState: AuthFormState, formData: FormData) {
     };
   }
   
-  return {
-    success: true,
-    message: "Umeingia kikamilifu"
-  }
+  redirect('/dashboard');
 }
 
 
@@ -146,8 +144,5 @@ export async function signup(prevState: AuthFormState, formData: FormData) {
     };
   }
 
-  return {
-    success: true,
-    message: "Umejisajili kikamilifu"
-  }
+  redirect('/dashboard');
 }
