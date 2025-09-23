@@ -20,6 +20,7 @@ import { Skeleton } from '../ui/skeleton';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 
 const BUILDING_SLOTS = 20;
@@ -129,49 +130,43 @@ export function Game() {
   const [view, setView] = React.useState<View>('dashboard');
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [currentUser, setCurrentUser] = React.useState<User | null>(null);
+  const router = useRouter();
 
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
   
   // Auth state listener
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
         if (user) {
-            setCurrentUser(user);
+            const docRef = doc(db, 'users', user.uid);
+            const unsubscribeFirestore = onSnapshot(docRef, (doc) => {
+                if (doc.exists()) {
+                    setGameState(doc.data() as UserData);
+                } else {
+                    const initialData = getInitialUserData(user.uid, user.email);
+                    setDoc(docRef, initialData);
+                    setGameState(initialData);
+                }
+                setIsLoading(false);
+            }, (error) => {
+                console.error("Error fetching user data:", error);
+                setIsLoading(false);
+            });
+             return () => unsubscribeFirestore();
         } else {
-            setCurrentUser(null);
+            setGameState(null);
+            setIsLoading(false);
+            router.push('/login');
         }
     });
-    return () => unsubscribe();
-  }, []);
-
-  // Firestore state listener
-  React.useEffect(() => {
-      if (currentUser) {
-          setIsLoading(true);
-          const docRef = doc(db, 'users', currentUser.uid);
-          const unsubscribe = onSnapshot(docRef, (doc) => {
-              if (doc.exists()) {
-                  setGameState(doc.data() as UserData);
-              } else {
-                  const initialData = getInitialUserData(currentUser.uid, currentUser.email);
-                  setDoc(docRef, initialData);
-                  setGameState(initialData);
-              }
-              setIsLoading(false);
-          }, (error) => {
-              console.error("Error fetching user data:", error);
-              setIsLoading(false);
-          });
-          return () => unsubscribe();
-      }
-  }, [currentUser]);
+    return () => unsubscribeAuth();
+  }, [router]);
 
 
   // Debounced save to Firestore
   const debouncedSave = useDebouncedCallback((newState: UserData) => {
-    if(currentUser) { 
-      const docRef = doc(db, "users", currentUser.uid);
+    if(newState.uid) { 
+      const docRef = doc(db, "users", newState.uid);
       setDoc(docRef, newState, { merge: true });
     }
   }, 1000);
@@ -800,7 +795,7 @@ export function Game() {
   
   const playerMetrics = calculatePlayerMetrics();
 
-  if (isLoading || !gameState) {
+  if (isLoading) {
     return (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-gray-900/90 z-50 text-white p-4">
             <h1 className="text-3xl font-bold mb-4 animate-pulse">Inapakia Data...</h1>
@@ -814,6 +809,15 @@ export function Game() {
             </div>
         </div>
     );
+  }
+
+  if (!gameState) {
+    // This case should ideally not be hit if the redirect works, but it's a good fallback.
+    return (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900/90 z-50 text-white">
+            <p>Inakuelekeza kwenye ukurasa wa kuingia...</p>
+        </div>
+    )
   }
 
 
@@ -871,3 +875,5 @@ export function Game() {
     </div>
   );
 }
+
+    
