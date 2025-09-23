@@ -62,17 +62,6 @@ export default function LoginPage() {
     }
   }, [state, router]);
   
-  const onSubmit = async () => {
-    const isValid = await form.trigger();
-    if (isValid) {
-      const values = form.getValues();
-      const formData = new FormData();
-      formData.append('username', values.username);
-      formData.append('password', values.password);
-      formAction(formData);
-    }
-  };
-
   return (
     <main className="flex-1 flex items-center justify-center p-4">
       <Card className="w-full max-w-sm bg-gray-800/60 border-gray-700 text-white">
@@ -85,7 +74,7 @@ export default function LoginPage() {
         <CardContent>
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(onSubmit)}
+              action={formAction}
               className="grid gap-4"
             >
               <FormField
