@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useActionState, useEffect } from "react";
 import { login, type AuthFormState } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 const initialState: AuthFormState = {
     success: false,
@@ -18,8 +19,12 @@ const initialState: AuthFormState = {
 export default function LoginPage() {
     const [state, formAction] = useActionState(login, initialState);
     const { toast } = useToast();
+    const router = useRouter();
 
     useEffect(() => {
+        if (state.success) {
+            router.push('/dashboard');
+        }
         if (!state.success && state.message) {
             toast({
                 variant: "destructive",
@@ -27,7 +32,7 @@ export default function LoginPage() {
                 description: state.message,
             });
         }
-    }, [state, toast]);
+    }, [state, toast, router]);
 
     return (
         <main className="flex items-center justify-center min-h-screen p-4">

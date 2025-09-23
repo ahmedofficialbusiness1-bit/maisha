@@ -86,7 +86,7 @@ export type AuthFormState = {
   message: string;
 }
 
-export async function login(prevState: AuthFormState, formData: FormData) {
+export async function login(prevState: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const validatedFields = LoginSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
@@ -107,11 +107,14 @@ export async function login(prevState: AuthFormState, formData: FormData) {
     };
   }
   
-  redirect('/dashboard');
+  return {
+    success: true,
+    message: "Umefanikiwa kuingia."
+  }
 }
 
 
-export async function signup(prevState: AuthFormState, formData: FormData) {
+export async function signup(prevState: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const validatedFields = SignupSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
@@ -144,5 +147,8 @@ export async function signup(prevState: AuthFormState, formData: FormData) {
     };
   }
 
-  redirect('/dashboard');
+  return {
+    success: true,
+    message: "Umefanikiwa kujisajili."
+  }
 }
