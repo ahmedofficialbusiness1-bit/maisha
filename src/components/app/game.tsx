@@ -819,6 +819,10 @@ export function Game() {
     );
   }
 
+  if (!gameState) {
+    return null; // Render nothing while the redirect is happening in useEffect
+  }
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
@@ -878,3 +882,4 @@ export function Game() {
     
 
     
+
