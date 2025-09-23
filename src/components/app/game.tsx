@@ -150,17 +150,17 @@ export function Game() {
                 setIsLoading(false);
             }, (error) => {
                 console.error("Error fetching user data:", error);
+                setGameState(null);
                 setIsLoading(false);
             });
              return () => unsubscribeFirestore();
         } else {
             setGameState(null);
             setIsLoading(false);
-            router.push('/login');
         }
     });
     return () => unsubscribeAuth();
-  }, [router]);
+  }, []);
 
 
   // Debounced save to Firestore
@@ -812,12 +812,13 @@ export function Game() {
   }
 
   if (!gameState) {
-    // This case should ideally not be hit if the redirect works, but it's a good fallback.
+    router.push('/login');
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900/90 z-50 text-white">
+            {/* This view is temporary while the redirect happens */}
             <p>Inakuelekeza kwenye ukurasa wa kuingia...</p>
         </div>
-    )
+    );
   }
 
 
