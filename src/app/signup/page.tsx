@@ -32,9 +32,9 @@ export default function SignupPage() {
     if (state?.success) {
       toast({
         title: "Umefanikiwa Kujisajili!",
-        description: "Sasa unaweza kuingia kwenye akaunti yako mpya.",
+        description: "Karibu kwenye mchezo. Data zako zinapakiwa.",
       });
-      router.push('/login');
+      router.push('/dashboard');
     }
   }, [state, router, toast]);
 
@@ -73,12 +73,6 @@ export default function SignupPage() {
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
                 <SubmitButton />
-                <div className="text-center text-sm text-gray-400">
-                    Una akaunti tayari?{' '}
-                    <Link href="/login" className="underline text-blue-400 hover:text-blue-300">
-                    Ingia
-                    </Link>
-                </div>
             </CardFooter>
         </form>
       </Card>

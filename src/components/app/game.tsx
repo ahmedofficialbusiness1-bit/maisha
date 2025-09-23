@@ -144,7 +144,7 @@ export function Game() {
             setCurrentUser(null);
             setGameState(null);
             setIsLoading(false);
-            router.push('/login');
+            router.push('/signup');
         }
     });
     return () => unsubscribe();
