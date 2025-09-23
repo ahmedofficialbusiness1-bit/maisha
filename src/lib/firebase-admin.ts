@@ -1,11 +1,24 @@
 
-import { initializeApp, getApps, getApp, type App } from 'firebase-admin/app';
+import { initializeApp, getApps, getApp, type App, type ServiceAccount, cert } from 'firebase-admin/app';
 
 function getAdminApp(): App {
     if (getApps().length) {
         return getApp();
     }
-    return initializeApp();
+    
+    // In a production environment, you would use environment variables
+    // For this context, we will check if they exist, otherwise use placeholders.
+    // The build environment will replace these placeholders.
+    const serviceAccount: ServiceAccount = {
+        projectId: process.env.FIREBASE_PROJECT_ID || "studio-3569606942-35878",
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-g2nmy@studio-3569606942-35878.iam.gserviceaccount.com",
+        // The private key must be a single-line string. Replace newlines with \\n.
+        privateKey: (process.env.FIREBASE_PRIVATE_KEY || "").replace(/\\n/g, '\n'),
+    };
+
+    return initializeApp({
+        credential: cert(serviceAccount)
+    });
 }
 
 export const adminApp = getAdminApp();
