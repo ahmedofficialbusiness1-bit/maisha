@@ -145,7 +145,6 @@ export function Game() {
             setCurrentUser(null);
             setGameState(null);
             setIsLoading(false);
-            // Only redirect if the user is on a protected route (e.g., dashboard)
             if (pathname === '/dashboard') {
                 router.push('/login');
             }
@@ -162,8 +161,6 @@ export function Game() {
               if (doc.exists()) {
                   setGameState(doc.data() as UserData);
               } else {
-                  // This case might happen if the doc creation failed on signup.
-                  // We can try to create it again.
                   const initialData = getInitialUserData(currentUser.uid, currentUser.email);
                   setDoc(docRef, initialData);
                   setGameState(initialData);
@@ -809,15 +806,15 @@ export function Game() {
 
   if (isLoading || !gameState) {
     return (
-        <div className="flex flex-col min-h-screen bg-gray-900 items-center justify-center text-white">
-            <h1 className="text-2xl font-bold mb-4">Inapakia Data...</h1>
-            <Skeleton className="h-16 w-full max-w-4xl mb-4" />
-            <div className="flex-grow w-full max-w-4xl grid grid-cols-5 gap-4">
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-32 w-full" />
+        <div className="fixed inset-0 flex flex-col items-center justify-center bg-gray-900/90 z-50 text-white p-4">
+            <h1 className="text-3xl font-bold mb-4 animate-pulse">Inapakia Data...</h1>
+            <div className="w-full max-w-4xl space-y-4">
+                <Skeleton className="h-20 w-full" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                        <Skeleton key={i} className="h-32 w-full" />
+                    ))}
+                </div>
             </div>
         </div>
     );
@@ -880,6 +877,3 @@ export function Game() {
 }
 
     
-
-    
-
