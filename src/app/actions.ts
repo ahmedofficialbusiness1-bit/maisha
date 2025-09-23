@@ -1,15 +1,12 @@
 'use server';
 
 import { z } from 'zod';
-import { lucia } from '@/lib/auth';
 import { cookies } from 'next/headers';
-import { Argon2id } from 'oslo/password';
-import { db } from '@/lib/db';
-import { userTable } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
-import { generateId } from 'lucia';
+import { getAuth } from 'firebase-admin/auth';
+import { adminApp } from '@/lib/firebase-admin';
 import { cache } from 'react';
-import type { Session, User } from 'lucia';
+import { redirect } from 'next/navigation';
+
 
 const signupSchema = z.object({
   username: z
@@ -23,9 +20,9 @@ const signupSchema = z.object({
 });
 
 export async function signup(
-  prevState: { error: string } | undefined,
-  formData: FormData
-): Promise<{ error: string } | { error?: undefined }> {
+    prevState: { error: string } | undefined,
+    formData: FormData
+) {
   const parsed = signupSchema.safeParse(Object.fromEntries(formData));
 
   if (!parsed.success) {
@@ -36,122 +33,64 @@ export async function signup(
 
   const { username, password } = parsed.data;
 
-  const hashedPassword = await new Argon2id().hash(password);
-  const userId = generateId(15);
-
   try {
-    await db.insert(userTable).values({
-      id: userId,
-      username: username,
-      hashedPassword,
+    const auth = getAuth(adminApp);
+    const userRecord = await auth.createUser({
+        displayName: username,
+        password: password,
+    });
+    
+    const token = await auth.createCustomToken(userRecord.uid);
+    cookies().set('session', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: 60 * 60 * 24, // 1 day
     });
 
-    const session = await lucia.createSession(userId, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes
-    );
-    return {};
   } catch (e: any) {
-    if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      return {
-        error: 'Username already taken',
-      };
+    if (e.code === 'auth/email-already-exists') {
+        return { error: 'Username already taken.' };
     }
     return {
-      error: 'An unknown error occurred',
+      error: 'An unknown error occurred: ' + e.message,
     };
   }
 }
-
-const loginSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(1, 'Password is required'),
-});
 
 export async function login(
     prevState: { error: string } | undefined,
     formData: FormData
 ): Promise<{ error: string } | { error?: undefined }> {
-    const parsed = loginSchema.safeParse(Object.fromEntries(formData));
-
-    if (!parsed.success) {
-        return {
-            error: parsed.error.errors.map(e => e.message).join(', ')
-        };
-    }
-    const { username, password } = parsed.data;
-
-    const existingUser = (
-        await db.select().from(userTable).where(eq(userTable.username, username))
-    )[0];
-
-    if (!existingUser) {
-        return {
-        error: 'Incorrect username or password',
-        };
-    }
-
-    const validPassword = await new Argon2id().verify(
-        existingUser.hashedPassword,
-        password
-    );
-    if (!validPassword) {
-        return {
-        error: 'Incorrect username or password',
-        };
-    }
-
-    const session = await lucia.createSession(existingUser.id, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes
-    );
-    return {};
+    // This action is now handled client-side with Firebase SDK to get ID token
+    // And then server-side in the middleware to create a session cookie
+    // This server action is kept for compatibility with the form structure but redirects
+    return redirect('/login');
 }
 
 export async function logout(): Promise<{ error: string } | { error?: undefined }> {
-	const { session } = await validateRequest();
-	if (!session) {
-		return {
-			error: "Unauthorized"
-		};
-	}
-
-	await lucia.invalidateSession(session.id);
-
-	const sessionCookie = lucia.createBlankSessionCookie();
-	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+	cookies().delete('session');
     return {};
 }
 
 
 export const validateRequest = cache(
-	async (): Promise<{ user: User; session: Session } | { user: null; session: null }> => {
-		const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
-		if (!sessionId) {
-			return {
-				user: null,
-				session: null
-			};
+	async (): Promise<{ user: { uid: string; username: string; } } | { user: null }> => {
+		const sessionCookie = cookies().get('session')?.value;
+		if (!sessionCookie) {
+			return { user: null };
 		}
 
-		const result = await lucia.validateSession(sessionId);
-		// next.js throws when you attempt to set cookie when rendering page
 		try {
-			if (result.session && result.session.fresh) {
-				const sessionCookie = lucia.createSessionCookie(result.session.id);
-				cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
-			}
-			if (!result.session) {
-				const sessionCookie = lucia.createBlankSessionCookie();
-				cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
-			}
-		} catch {}
-		return result;
+			const decodedIdToken = await getAuth(adminApp).verifySessionCookie(sessionCookie, true);
+			return {
+				user: {
+                    uid: decodedIdToken.uid,
+                    username: decodedIdToken.name || '',
+                }
+			};
+		} catch (error) {
+			return { user: null };
+		}
 	}
 );

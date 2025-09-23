@@ -1,8 +1,7 @@
 'use client';
 
 import { useActionState, useEffect } from 'react';
-import { useFormStatus } from 'react-dom';
-import { signup } from '@/app/actions';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Card,
@@ -26,7 +25,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useRouter } from 'next/navigation';
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { app } from '@/lib/firebase';
+
 
 const signupSchema = z
   .object({
@@ -47,18 +48,10 @@ const signupSchema = z
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? 'Inasajili...' : 'Jisajili'}
-    </Button>
-  );
-}
-
 export default function SignupPage() {
     const router = useRouter();
-    const [state, formAction] = useActionState(signup, undefined);
+    const [error, setError] = React.useState<string | null>(null);
+    const [isPending, setIsPending] = React.useState(false);
 
     const form = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
@@ -69,11 +62,41 @@ export default function SignupPage() {
         },
     });
 
-    useEffect(() => {
-        if (state && !state.error) {
-            router.push('/dashboard');
+    const onSubmit = async (values: SignupFormValues) => {
+        setIsPending(true);
+        setError(null);
+        try {
+            const auth = getAuth(app);
+            const email = `${values.username}@uchumi.app`; // Simulate email
+            const userCredential = await createUserWithEmailAndPassword(auth, email, values.password);
+            
+            const idToken = await userCredential.user.getIdToken();
+
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${idToken}`,
+                },
+            });
+
+            if (response.ok) {
+                router.push('/dashboard');
+            } else {
+                 const data = await response.json();
+                 setError(data.error || 'Failed to create session.');
+            }
+
+        } catch (e: any) {
+            if (e.code === 'auth/email-already-in-use') {
+                setError('Username already taken. Please choose another one.');
+            } else {
+                setError('An unknown error occurred. Please try again.');
+            }
+        } finally {
+            setIsPending(false);
         }
-    }, [state, router]);
+    }
+
 
   return (
     <main className="flex-1 flex items-center justify-center p-4">
@@ -87,7 +110,7 @@ export default function SignupPage() {
         <CardContent>
           <Form {...form}>
             <form
-              action={formAction}
+              onSubmit={form.handleSubmit(onSubmit)}
               className="grid gap-4"
             >
               <FormField
@@ -149,15 +172,17 @@ export default function SignupPage() {
                 )}
               />
               
-               {state?.error && (
+               {error && (
                 <Alert variant="destructive" className="bg-red-500/10 border-red-500/30 text-red-300">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Kosa la Usajili</AlertTitle>
-                  <AlertDescription>{state.error}</AlertDescription>
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
-              <SubmitButton />
+             <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? 'Inasajili...' : 'Jisajili'}
+             </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm text-gray-400">

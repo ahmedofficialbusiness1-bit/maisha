@@ -1,8 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
-import { useFormStatus } from 'react-dom';
-import { login } from '@/app/actions';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Card,
@@ -27,6 +25,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useRouter } from 'next/navigation';
+import { getAuth, signInWithEmailAndPassword, signInWithCustomToken } from "firebase/auth";
+import { app } from '@/lib/firebase';
+
 
 const loginSchema = z.object({
   username: z.string().min(1, { message: 'Jina la mtumiaji linahitajika' }),
@@ -35,18 +36,10 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? 'Inaingia...' : 'Ingia'}
-    </Button>
-  );
-}
-
 export default function LoginPage() {
   const router = useRouter();
-  const [state, formAction] = useActionState(login, undefined);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -56,11 +49,48 @@ export default function LoginPage() {
     },
   });
 
-  useEffect(() => {
-    if (state && !state.error) {
-       router.push('/dashboard');
+  const onSubmit = async (values: LoginFormValues) => {
+    setIsPending(true);
+    setError(null);
+    try {
+        const auth = getAuth(app);
+        // Firebase Auth doesn't support direct username/password sign-in.
+        // We simulate it by creating an "email" from the username.
+        // In a real app, you would typically use email as the identifier.
+        const email = `${values.username}@uchumi.app`;
+        const userCredential = await signInWithEmailAndPassword(auth, email, values.password);
+
+        const idToken = await userCredential.user.getIdToken();
+
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${idToken}`,
+            },
+        });
+
+        if (response.ok) {
+            router.push('/dashboard');
+        } else {
+            const data = await response.json();
+            setError(data.error || 'Failed to create session.');
+        }
+
+    } catch (e: any) {
+        switch (e.code) {
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':
+                setError('Incorrect username or password.');
+                break;
+            default:
+                setError('An unknown error occurred. Please try again.');
+                break;
+        }
+    } finally {
+        setIsPending(false);
     }
-  }, [state, router]);
+  };
   
   return (
     <main className="flex-1 flex items-center justify-center p-4">
@@ -74,7 +104,7 @@ export default function LoginPage() {
         <CardContent>
           <Form {...form}>
             <form
-              action={formAction}
+              onSubmit={form.handleSubmit(onSubmit)}
               className="grid gap-4"
             >
               <FormField
@@ -115,15 +145,17 @@ export default function LoginPage() {
                 )}
               />
 
-              {state?.error && (
+              {error && (
                 <Alert variant="destructive" className="bg-red-500/10 border-red-500/30 text-red-300">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Kosa la Kuingia</AlertTitle>
-                  <AlertDescription>{state.error}</AlertDescription>
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
-              <SubmitButton />
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? 'Inaingia...' : 'Ingia'}
+              </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm text-gray-400">
