@@ -20,7 +20,7 @@ import { Skeleton } from '../ui/skeleton';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 
 const BUILDING_SLOTS = 20;
@@ -132,7 +132,6 @@ export function Game() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [currentUser, setCurrentUser] = React.useState<User | null>(null);
   const router = useRouter();
-  const pathname = usePathname();
 
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
   
@@ -145,17 +144,16 @@ export function Game() {
             setCurrentUser(null);
             setGameState(null);
             setIsLoading(false);
-            if (pathname === '/dashboard') {
-                router.push('/login');
-            }
+            router.push('/login');
         }
     });
     return () => unsubscribe();
-  }, [router, pathname]);
+  }, [router]);
 
   // Firestore state listener
   React.useEffect(() => {
       if (currentUser) {
+          setIsLoading(true);
           const docRef = doc(db, 'users', currentUser.uid);
           const unsubscribe = onSnapshot(docRef, (doc) => {
               if (doc.exists()) {
@@ -875,5 +873,3 @@ export function Game() {
     </div>
   );
 }
-
-    
