@@ -1,11 +1,13 @@
-import { validateRequest } from '@/app/actions';
 import { Game } from '@/components/app/game';
-import { redirect } from 'next/navigation';
+
+// Mock user for direct access
+const mockUser = {
+  uid: 'mock-user-01',
+  username: 'Mchezaji',
+};
 
 export default async function DashboardPage() {
-  const { user } = await validateRequest();
-  if (!user) {
-    return redirect('/login');
-  }
-  return <Game user={user} />;
+  // Directly render the game with a mock user
+  // No validation needed as we removed the authentication flow
+  return <Game user={mockUser} />;
 }

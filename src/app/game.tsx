@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -16,8 +17,7 @@ import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
 import { Skeleton } from '../ui/skeleton';
-import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+
 
 type AuthenticatedUser = {
     uid: string;
@@ -136,32 +136,16 @@ export function Game({ user }: { user: AuthenticatedUser }) {
         return;
     };
 
-    const docRef = doc(db, 'users', user.uid);
-
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setGameState(docSnap.data() as UserData);
-      } else {
-        // First-time user, create their data
-        const initialData = getInitialUserData(user);
-        setDoc(docRef, initialData).then(() => {
-          setGameState(initialData);
-        });
-      }
-      setIsLoading(false);
-    });
-
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
+    const initialData = getInitialUserData(user);
+    setGameState(initialData);
+    setIsLoading(false);
+    
   }, [user]);
 
 
   // Debounced save to Firestore
   const debouncedSave = useDebouncedCallback((newState: UserData) => {
-    if(newState.uid) { 
-      const docRef = doc(db, "users", newState.uid);
-      setDoc(docRef, newState, { merge: true });
-    }
+    // Saving is disabled as we are not using Firestore
   }, 1000);
 
   // Update state using a single function to ensure consistency and trigger save
