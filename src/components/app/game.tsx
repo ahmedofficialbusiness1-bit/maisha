@@ -820,13 +820,8 @@ export function Game() {
   }
 
   if (!gameState) {
-    // The redirect effect will handle navigation.
-    // Return the loading skeleton to prevent rendering the game with null state.
-    return (
-        <div className="fixed inset-0 flex flex-col items-center justify-center bg-gray-900/90 z-50 text-white p-4">
-            <h1 className="text-3xl font-bold mb-4 animate-pulse">Inapakia Data...</h1>
-        </div>
-    );
+    // This view is temporary while the redirect in useEffect happens
+    return null;
   }
 
 
@@ -884,5 +879,7 @@ export function Game() {
     </div>
   );
 }
+
+    
 
     
