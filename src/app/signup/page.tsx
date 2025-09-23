@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useEffect } from 'react';
+import { useFormStatus } from 'react-dom';
 import { signup } from '@/app/actions';
 import Link from 'next/link';
 import {
@@ -26,7 +27,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 const signupSchema = z
   .object({
@@ -56,7 +56,7 @@ function SubmitButton() {
 
 export default function SignupPage() {
     const router = useRouter();
-    const [state, formAction] = useFormState(signup, undefined);
+    const [state, formAction] = useActionState(signup, undefined);
 
     const form = useForm<z.infer<typeof signupSchema>>({
         resolver: zodResolver(signupSchema),
@@ -85,7 +85,11 @@ export default function SignupPage() {
         <CardContent>
           <Form {...form}>
             <form
-              action={formAction}
+              onSubmit={form.handleSubmit(() => form.trigger().then(isValid => {
+                if (isValid) {
+                  formAction(new FormData(form.control.fields._f.ref.closest('form')));
+                }
+              }))}
               className="grid gap-4"
             >
               <FormField

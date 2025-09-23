@@ -1,7 +1,8 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
-import { login, validateRequest } from '@/app/actions';
+import { useActionState, useEffect } from 'react';
+import { useFormStatus } from 'react-dom';
+import { login } from '@/app/actions';
 import Link from 'next/link';
 import {
   Card,
@@ -26,7 +27,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 const loginSchema = z.object({
   username: z.string().min(1, { message: 'Jina la mtumiaji linahitajika' }),
@@ -44,7 +44,7 @@ function SubmitButton() {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [state, formAction] = useFormState(login, undefined);
+  const [state, formAction] = useActionState(login, undefined);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -72,7 +72,11 @@ export default function LoginPage() {
         <CardContent>
           <Form {...form}>
             <form
-              action={formAction}
+              onSubmit={form.handleSubmit(() => form.trigger().then(isValid => {
+                if (isValid) {
+                  formAction(new FormData(form.control.fields._f.ref.closest('form')));
+                }
+              }))}
               className="grid gap-4"
             >
               <FormField
