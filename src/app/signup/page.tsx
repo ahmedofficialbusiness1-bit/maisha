@@ -77,6 +77,7 @@ export default function SignupPage() {
                 displayName: values.username
             });
             
+            // The logic to create a session cookie is now moved to an API route.
             const idToken = await userCredential.user.getIdToken();
 
             const response = await fetch('/api/login', {
@@ -88,6 +89,7 @@ export default function SignupPage() {
 
             if (response.ok) {
                 router.push('/dashboard');
+                router.refresh(); // Refresh the page to ensure server components re-render with new session
             } else {
                  const data = await response.json();
                  setError(data.error || 'Failed to create session.');

@@ -12,7 +12,7 @@ import { adminApp } from '@/lib/firebase-admin';
 
 export async function logout(): Promise<{ error: string } | { error?: undefined }> {
 	cookies().delete('session');
-    redirect('/login');
+    redirect('/signup');
 }
 
 
@@ -33,6 +33,7 @@ export const validateRequest = cache(
                 }
 			};
 		} catch (error) {
+			// Session cookie is invalid, delete it.
 			cookies().delete('session');
 			return { user: null };
 		}
