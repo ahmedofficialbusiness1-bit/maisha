@@ -45,6 +45,8 @@ const signupSchema = z
     path: ['confirmPassword'],
   });
 
+type SignupFormValues = z.infer<typeof signupSchema>;
+
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
@@ -58,7 +60,7 @@ export default function SignupPage() {
     const router = useRouter();
     const [state, formAction] = useActionState(signup, undefined);
 
-    const form = useForm<z.infer<typeof signupSchema>>({
+    const form = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
         defaultValues: {
             username: '',
@@ -73,6 +75,17 @@ export default function SignupPage() {
         }
     }, [state, router]);
 
+    const onSubmit = async () => {
+        const isValid = await form.trigger();
+        if (isValid) {
+            const values = form.getValues();
+            const formData = new FormData();
+            formData.append('username', values.username);
+            formData.append('password', values.password);
+            formAction(formData);
+        }
+    };
+
   return (
     <main className="flex-1 flex items-center justify-center p-4">
       <Card className="w-full max-w-sm bg-gray-800/60 border-gray-700 text-white">
@@ -85,11 +98,7 @@ export default function SignupPage() {
         <CardContent>
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(() => form.trigger().then(isValid => {
-                if (isValid) {
-                  formAction(new FormData(form.control.fields._f.ref.closest('form')));
-                }
-              }))}
+              onSubmit={form.handleSubmit(onSubmit)}
               className="grid gap-4"
             >
               <FormField

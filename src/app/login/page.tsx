@@ -33,6 +33,8 @@ const loginSchema = z.object({
   password: z.string().min(1, { message: 'Nenosiri linahitajika' }),
 });
 
+type LoginFormValues = z.infer<typeof loginSchema>;
+
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
@@ -46,7 +48,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [state, formAction] = useActionState(login, undefined);
 
-  const form = useForm<z.infer<typeof loginSchema>>({
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: '',
@@ -59,6 +61,17 @@ export default function LoginPage() {
        router.push('/dashboard');
     }
   }, [state, router]);
+  
+  const onSubmit = async () => {
+    const isValid = await form.trigger();
+    if (isValid) {
+      const values = form.getValues();
+      const formData = new FormData();
+      formData.append('username', values.username);
+      formData.append('password', values.password);
+      formAction(formData);
+    }
+  };
 
   return (
     <main className="flex-1 flex items-center justify-center p-4">
@@ -72,11 +85,7 @@ export default function LoginPage() {
         <CardContent>
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(() => form.trigger().then(isValid => {
-                if (isValid) {
-                  formAction(new FormData(form.control.fields._f.ref.closest('form')));
-                }
-              }))}
+              onSubmit={form.handleSubmit(onSubmit)}
               className="grid gap-4"
             >
               <FormField
