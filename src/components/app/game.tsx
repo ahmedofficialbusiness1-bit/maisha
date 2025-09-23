@@ -140,10 +140,6 @@ export function Game() {
             setCurrentUser(user);
         } else {
             setCurrentUser(null);
-            // If there's no user, we might not want to immediately stop loading,
-            // but rather wait for a redirect from a higher-level component or middleware.
-            // For now, we'll just stop loading, but this prevents access to the game.
-             setIsLoading(false);
         }
     });
     return () => unsubscribe();
