@@ -6,9 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useFormState } from "react-dom";
+import { useActionState, useEffect } from "react";
 import { signup, type AuthFormState } from "@/app/actions";
-import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const initialState: AuthFormState = {
@@ -17,7 +16,7 @@ const initialState: AuthFormState = {
 };
 
 export default function SignupPage() {
-    const [state, formAction] = useFormState(signup, initialState);
+    const [state, formAction] = useActionState(signup, initialState);
     const { toast } = useToast();
 
     useEffect(() => {
