@@ -1,5 +1,5 @@
 
-import { initializeApp, getApps } from 'firebase/app';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
@@ -11,9 +11,14 @@ const firebaseConfig = {
   messagingSenderId: "646151071371",
 };
 
-// Initialize Firebase
-const apps = getApps();
-const firebaseApp = apps.length ? apps[0] : initializeApp(firebaseConfig);
+// Helper function to safely initialize and get the Firebase app
+function getFirebaseApp(): FirebaseApp {
+    if (!getApps().length) {
+        return initializeApp(firebaseConfig);
+    }
+    return getApp();
+}
 
-export const auth = getAuth(firebaseApp);
-export const db = getFirestore(firebaseApp);
+export const app = getFirebaseApp();
+export const auth = getAuth(app);
+export const db = getFirestore(app);
