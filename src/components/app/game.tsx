@@ -19,8 +19,11 @@ import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/component
 import { Skeleton } from '../ui/skeleton';
 import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { User } from 'lucia';
 
+type AuthenticatedUser = {
+    uid: string;
+    username: string;
+}
 
 const BUILDING_SLOTS = 20;
 
@@ -75,7 +78,7 @@ const initialBondListings: BondListing[] = [
 
 const AI_PLAYER_NAME = 'Serekali';
 
-export const getInitialUserData = (user: User): UserData => {
+export const getInitialUserData = (user: AuthenticatedUser): UserData => {
   const largeNumber = 999_999_999_999;
   const allItemsInventory: InventoryItem[] = encyclopediaData.map(entry => ({
       item: entry.name,
@@ -84,7 +87,7 @@ export const getInitialUserData = (user: User): UserData => {
   }));
     
   return {
-    uid: user.id,
+    uid: user.uid,
     username: user.username,
     privateNotes: `Karibu kwenye wasifu wangu! Mimi ni ${user.username}, mtaalamu wa kuzalisha bidhaa bora.`,
     money: largeNumber,
@@ -121,7 +124,7 @@ export const productCategoryToShopMap: Record<string, string> = {
 };
 
 
-export function Game({ user }: { user: User }) {
+export function Game({ user }: { user: AuthenticatedUser }) {
   const [view, setView] = React.useState<View>('dashboard');
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -129,12 +132,12 @@ export function Game({ user }: { user: User }) {
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
   
   React.useEffect(() => {
-    if (!user?.id) {
+    if (!user?.uid) {
         setIsLoading(false);
         return;
     };
 
-    const docRef = doc(db, 'users', user.id);
+    const docRef = doc(db, 'users', user.uid);
 
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
