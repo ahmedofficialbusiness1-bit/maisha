@@ -17,6 +17,10 @@ import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
 import { Skeleton } from '../ui/skeleton';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 
 const BUILDING_SLOTS = 20;
@@ -38,6 +42,8 @@ export type Notification = {
 
 
 export type UserData = {
+  uid: string;
+  email: string;
   playerName: string;
   playerAvatar: string;
   privateNotes: string;
@@ -72,8 +78,8 @@ const initialBondListings: BondListing[] = [
 
 const AI_PLAYER_NAME = 'Serekali';
 
-const getInitialUserData = (): UserData => {
-  const largeNumber = 999_999_999;
+export const getInitialUserData = (uid: string, email: string | null): UserData => {
+  const largeNumber = 999_999_999_999;
   const allItemsInventory: InventoryItem[] = encyclopediaData.map(entry => ({
       item: entry.name,
       quantity: largeNumber,
@@ -81,15 +87,17 @@ const getInitialUserData = (): UserData => {
   }));
     
   return {
-    playerName: 'Mchezaji Mpya',
-    playerAvatar: `https://picsum.photos/seed/player/100/100`,
+    uid,
+    email: email || 'unknown',
+    playerName: email?.split('@')[0] || 'Mchezaji Mpya',
+    playerAvatar: `https://picsum.photos/seed/${uid}/100/100`,
     privateNotes: 'Karibu kwenye wasifu wangu! Mimi ni mtaalamu wa kuzalisha bidhaa bora.',
     money: largeNumber,
     stars: largeNumber,
     playerLevel: 1,
     playerXP: 0,
     inventory: allItemsInventory,
-    marketListings: initialPlayerListings, // These could be global or also user-specific
+    marketListings: initialPlayerListings,
     companyData: initialCompanyData,
     bondListings: initialBondListings,
     buildingSlots: Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })),
@@ -120,28 +128,61 @@ export const productCategoryToShopMap: Record<string, string> = {
 
 export function Game() {
   const [view, setView] = React.useState<View>('dashboard');
+  const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [gameState, setGameState] = React.useState<UserData>(getInitialUserData());
+  const [currentUser, setCurrentUser] = React.useState<User | null>(null);
+  const router = useRouter();
 
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
   
-  // Load game state from localStorage
+  // Auth state listener
   React.useEffect(() => {
-    const savedState = localStorage.getItem('maisha-game-state');
-    if (savedState) {
-      setGameState(JSON.parse(savedState));
-    }
-    setIsLoading(false);
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+            setCurrentUser(user);
+        } else {
+            setCurrentUser(null);
+            setGameState(null);
+            setIsLoading(false);
+            router.push('/login');
+        }
+    });
+    return () => unsubscribe();
+  }, [router]);
 
-  // Save game state to localStorage with debounce
+  // Firestore state listener
+  React.useEffect(() => {
+      if (currentUser) {
+          const docRef = doc(db, 'users', currentUser.uid);
+          const unsubscribe = onSnapshot(docRef, (doc) => {
+              if (doc.exists()) {
+                  setGameState(doc.data() as UserData);
+              } else {
+                  // This case might happen if the doc creation failed on signup.
+                  // We can try to create it again.
+                  const initialData = getInitialUserData(currentUser.uid, currentUser.email);
+                  setDoc(docRef, initialData);
+                  setGameState(initialData);
+              }
+              setIsLoading(false);
+          });
+          return () => unsubscribe();
+      }
+  }, [currentUser]);
+
+
+  // Debounced save to Firestore
   const debouncedSave = useDebouncedCallback((newState: UserData) => {
-    localStorage.setItem('maisha-game-state', JSON.stringify(newState));
+    if(currentUser) {
+      const docRef = doc(db, "users", currentUser.uid);
+      setDoc(docRef, newState, { merge: true });
+    }
   }, 1000);
 
   // Update state using a single function to ensure consistency and trigger save
   const updateState = (updater: (prevState: UserData) => UserData) => {
     setGameState(prevState => {
+        if (!prevState) return null;
         const newState = updater(prevState);
         debouncedSave(newState);
         return newState;
@@ -220,6 +261,7 @@ export function Game() {
   };
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
+    if (!gameState) return;
     const costs = buildingData[building.id]?.buildCost;
     if (!costs) return;
     
@@ -264,6 +306,7 @@ export function Game() {
   };
   
     const handleUpgradeBuilding = (slotIndex: number) => {
+    if (!gameState) return;
     const slot = gameState.buildingSlots[slotIndex];
     if (!slot || !slot.building) return;
 
@@ -309,6 +352,7 @@ export function Game() {
   };
 
   const handleDemolishBuilding = (slotIndex: number) => {
+    if (!gameState) return;
     const buildingName = gameState?.buildingSlots[slotIndex]?.building?.name || 'Jengo';
     updateState(prev => {
         const newSlots = [...prev.buildingSlots];
@@ -319,6 +363,7 @@ export function Game() {
 
 
   const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
+    if (!gameState) return;
     const inputs = recipe.inputs || [];
     
     for (const input of inputs) {
@@ -369,6 +414,7 @@ export function Game() {
   };
 
   const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => {
+     if (!gameState) return;
      const inventoryItem = gameState.inventory.find(i => i.item === item.item);
      if (!inventoryItem || inventoryItem.quantity < quantity) {
        return;
@@ -441,7 +487,7 @@ export function Game() {
   };
   
   const handleBoostConstruction = (slotIndex: number, starsToUse: number) => {
-      if (gameState.stars < starsToUse) return;
+      if (!gameState || gameState.stars < starsToUse) return;
       
       const timeReductionPerStar = 3 * 60 * 1000;
       const timeReduction = starsToUse * timeReductionPerStar;
@@ -457,6 +503,7 @@ export function Game() {
   };
 
  const handleBuyMaterial = (materialName: string, quantityToBuy: number): boolean => {
+    if (!gameState) return false;
     const listingsForMaterial = gameState.marketListings
       .filter(l => l.commodity === materialName)
       .sort((a, b) => a.price - b.price);
@@ -512,6 +559,7 @@ export function Game() {
 };
 
     const calculateAvailableShares = (stock: StockListing) => {
+        if (!gameState) return 0;
         const ownedByPlayers = gameState.playerStocks
             .filter(ps => ps.ticker === stock.ticker)
             .reduce((sum, ps) => sum + ps.shares, 0);
@@ -520,14 +568,13 @@ export function Game() {
     }
 
   const handleBuyStock = (stock: StockListing, quantity: number) => {
-      const totalCost = stock.stockPrice * quantity;
-      if (gameState.money < totalCost) return;
+      if (!gameState || gameState.money < (stock.stockPrice * quantity)) return;
 
       const availableShares = calculateAvailableShares(stock);
       if (quantity > availableShares) return;
 
       updateState(prev => {
-        addTransaction('expense', totalCost, `Bought ${quantity.toLocaleString()} shares of ${stock.ticker}`);
+        addTransaction('expense', stock.stockPrice * quantity, `Bought ${quantity.toLocaleString()} shares of ${stock.ticker}`);
         
         const existingStock = prev.playerStocks.find(s => s.ticker === stock.ticker);
         let newPlayerStocks: PlayerStock[];
@@ -537,14 +584,14 @@ export function Game() {
             newPlayerStocks = [...prev.playerStocks, { ticker: stock.ticker, shares: quantity }];
         }
 
-        return { ...prev, money: prev.money - totalCost, playerStocks: newPlayerStocks };
+        return { ...prev, money: prev.money - (stock.stockPrice * quantity), playerStocks: newPlayerStocks };
       });
 
       addNotification(`Umenunua hisa ${quantity.toLocaleString()} za ${stock.companyName}.`, 'purchase');
   }
 
   const handleBuyFromMarket = (listing: PlayerListing, quantity: number) => {
-    if (listing.seller === gameState.playerName) return;
+    if (!gameState || listing.seller === gameState.playerName) return;
 
     const totalCost = listing.price * quantity;
     if (gameState.money < totalCost) return;
@@ -585,6 +632,7 @@ export function Game() {
   
    // AI Player (Serekali) automatic market seeding
    React.useEffect(() => {
+    if (!gameState) return;
     const aiListings: PlayerListing[] = encyclopediaData
       .filter(entry => entry.properties.some(p => p.label === 'Market Cost'))
       .map((entry, index) => {
@@ -613,9 +661,11 @@ export function Game() {
     }));
   // This effect should run only once on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [gameState === null]); // Run only when gameState is first initialized
 
    React.useEffect(() => {
+    if (!gameState) return;
+
     const interval = setInterval(() => {
         const now = Date.now();
         let changed = false;
@@ -716,6 +766,7 @@ export function Game() {
 
 
   const calculatePlayerMetrics = React.useCallback((): PlayerMetrics => {
+    if (!gameState) return { netWorth: 0, ranking: 'N/A', rating: 'N/A', buildingValue: 0, stockValue: 0 };
     const inventoryValue = gameState.inventory.reduce((acc, item) => acc + (item.quantity * item.marketPrice), 0);
     const buildingValue = gameState.buildingSlots.reduce((acc, slot) => {
         if (slot.building) {
@@ -752,11 +803,12 @@ export function Game() {
   
   const playerMetrics = calculatePlayerMetrics();
 
-  if (isLoading) {
+  if (isLoading || !gameState) {
     return (
-        <div className="flex flex-col min-h-screen bg-gray-900 p-8 items-center justify-center">
-            <Skeleton className="h-16 w-full mb-4" />
-            <div className="flex-grow w-full grid grid-cols-5 gap-4">
+        <div className="flex flex-col min-h-screen bg-gray-900 items-center justify-center text-white">
+            <h1 className="text-2xl font-bold mb-4">Inapakia Data...</h1>
+            <Skeleton className="h-16 w-full max-w-4xl mb-4" />
+            <div className="flex-grow w-full max-w-4xl grid grid-cols-5 gap-4">
                 <Skeleton className="h-32 w-full" />
                 <Skeleton className="h-32 w-full" />
                 <Skeleton className="h-32 w-full" />

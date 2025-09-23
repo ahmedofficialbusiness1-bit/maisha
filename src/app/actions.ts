@@ -7,9 +7,11 @@ import {
   type SimulateCommodityPriceOutput,
 } from '@/ai/flows/commodity-price-simulation';
 import { z } from 'zod';
-import {auth} from '@/lib/firebase';
+import {auth, db} from '@/lib/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { redirect } from 'next/navigation';
+import { doc, setDoc } from 'firebase/firestore';
+import { getInitialUserData } from '@/components/app/game';
 
 const SimulateCommodityPriceSchema = z.object({
   commodity: z.string().min(1, 'Commodity is required.'),
@@ -48,7 +50,13 @@ export async function signup(prevState: FormState, formData: FormData): Promise<
     const { email, password } = validatedFields.data;
 
     try {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        // Create user document in Firestore
+        const initialData = getInitialUserData(user.uid, email);
+        await setDoc(doc(db, "users", user.uid), initialData);
+
         return { success: true, message: 'Umefanikiwa kujisajili!' };
     } catch (error: any) {
         let message = 'Hitilafu imetokea wakati wa kujisajili.';
@@ -83,7 +91,6 @@ export async function login(prevState: FormState, formData: FormData): Promise<F
         return { success: false, message: 'Barua pepe au nenosiri si sahihi.' };
     }
     
-    // Redirect to dashboard upon successful login
     redirect('/dashboard');
 }
 
