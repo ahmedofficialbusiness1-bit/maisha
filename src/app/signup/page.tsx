@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useActionState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -26,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { app } from '@/lib/firebase';
 
 
@@ -68,8 +67,15 @@ export default function SignupPage() {
         setError(null);
         try {
             const auth = getAuth(app);
-            const email = `${values.username}@uchumi.app`; // Simulate email
+            // We create a fake email for Firebase Auth, as it requires it.
+            // The user will only use their username to log in.
+            const email = `${values.username.toLowerCase()}@uchumi.app`; 
             const userCredential = await createUserWithEmailAndPassword(auth, email, values.password);
+            
+            // Set the user's display name
+            await updateProfile(userCredential.user, {
+                displayName: values.username
+            });
             
             const idToken = await userCredential.user.getIdToken();
 
@@ -91,6 +97,7 @@ export default function SignupPage() {
             if (e.code === 'auth/email-already-in-use') {
                 setError('Username already taken. Please choose another one.');
             } else {
+                console.error(e);
                 setError('An unknown error occurred. Please try again.');
             }
         } finally {
