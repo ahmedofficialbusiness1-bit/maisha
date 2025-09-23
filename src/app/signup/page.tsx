@@ -34,7 +34,9 @@ const signupSchema = z
     username: z
       .string()
       .min(3, { message: 'Jina la mtumiaji lazima liwe na angalau herufi 3' })
-      .max(31, { message: 'Jina la mtumiaji lisizidi herufi 31' }),
+      .max(31, { message: 'Jina la mtumiaji lisizidi herufi 31' })
+      .regex(/^[a-zA-Z0-9_]+$/, { message: 'Jina la mtumiaji linaweza kuwa na herufi, nambari na alama ya chini tu' }),
+    email: z.string().email({ message: 'Barua pepe si sahihi' }),
     password: z
       .string()
       .min(6, { message: 'Nenosiri lazima liwe na angalau herufi 6' })
@@ -57,6 +59,7 @@ export default function SignupPage() {
         resolver: zodResolver(signupSchema),
         defaultValues: {
             username: '',
+            email: '',
             password: '',
             confirmPassword: ''
         },
@@ -67,12 +70,8 @@ export default function SignupPage() {
         setError(null);
         try {
             const auth = getAuth(app);
-            // We create a fake email for Firebase Auth, as it requires it.
-            // The user will only use their username to log in.
-            const email = `${values.username.toLowerCase()}@uchumi.app`; 
-            const userCredential = await createUserWithEmailAndPassword(auth, email, values.password);
+            const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
             
-            // Set the user's display name
             await updateProfile(userCredential.user, {
                 displayName: values.username
             });
@@ -95,7 +94,7 @@ export default function SignupPage() {
 
         } catch (e: any) {
             if (e.code === 'auth/email-already-in-use') {
-                setError('Username already taken. Please choose another one.');
+                setError('Barua pepe hii ishatumika. Tafadhali chagua nyingine.');
             } else {
                 console.error(e);
                 setError('An unknown error occurred. Please try again.');
@@ -126,7 +125,7 @@ export default function SignupPage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem className="grid gap-2">
-                    <FormLabel htmlFor="username">Jina la Mtumiaji</FormLabel>
+                    <FormLabel htmlFor="username">Jina la Mtumiaji (Username)</FormLabel>
                     <FormControl>
                       <Input
                         id="username"
@@ -135,6 +134,27 @@ export default function SignupPage() {
                         className="bg-gray-700 border-gray-600"
                       />
                     </FormControl>
+                     <FormDescription className="text-xs text-gray-400">Hili ndilo jina litakaloonekana kwenye mchezo.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem className="grid gap-2">
+                    <FormLabel htmlFor="email">Barua Pepe (Email)</FormLabel>
+                    <FormControl>
+                      <Input
+                        id="email"
+                        type="email"
+                        required
+                        {...field}
+                        className="bg-gray-700 border-gray-600"
+                      />
+                    </FormControl>
+                     <FormDescription className="text-xs text-gray-400">Hii itatumika kwa kuingia kwenye akaunti yako.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

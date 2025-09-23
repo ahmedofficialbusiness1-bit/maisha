@@ -30,7 +30,7 @@ import { app } from '@/lib/firebase';
 
 
 const loginSchema = z.object({
-  username: z.string().min(1, { message: 'Jina la mtumiaji linahitajika' }),
+  email: z.string().email({ message: 'Barua pepe si sahihi' }),
   password: z.string().min(1, { message: 'Nenosiri linahitajika' }),
 });
 
@@ -44,7 +44,7 @@ export default function LoginPage() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
     },
   });
@@ -54,11 +54,7 @@ export default function LoginPage() {
     setError(null);
     try {
         const auth = getAuth(app);
-        // Firebase Auth doesn't support direct username/password sign-in.
-        // We simulate it by creating an "email" from the username.
-        // In a real app, you would typically use email as the identifier.
-        const email = `${values.username}@uchumi.app`;
-        const userCredential = await signInWithEmailAndPassword(auth, email, values.password);
+        const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
 
         const idToken = await userCredential.user.getIdToken();
 
@@ -81,7 +77,7 @@ export default function LoginPage() {
             case 'auth/user-not-found':
             case 'auth/wrong-password':
             case 'auth/invalid-credential':
-                setError('Incorrect username or password.');
+                setError('Incorrect email or password.');
                 break;
             default:
                 setError('An unknown error occurred. Please try again.');
@@ -98,7 +94,7 @@ export default function LoginPage() {
         <CardHeader>
           <CardTitle className="text-2xl">Ingia</CardTitle>
           <CardDescription className="text-gray-400">
-            Weka jina lako la mtumiaji na nenosiri ili kuendelea.
+            Weka barua pepe na nenosiri lako ili kuendelea.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,13 +105,14 @@ export default function LoginPage() {
             >
               <FormField
                 control={form.control}
-                name="username"
+                name="email"
                 render={({ field }) => (
                   <FormItem className="grid gap-2">
-                    <FormLabel htmlFor="username">Jina la Mtumiaji</FormLabel>
+                    <FormLabel htmlFor="email">Barua Pepe (Email)</FormLabel>
                     <FormControl>
                       <Input
-                        id="username"
+                        id="email"
+                        type="email"
                         required
                         {...field}
                         className="bg-gray-700 border-gray-600"
