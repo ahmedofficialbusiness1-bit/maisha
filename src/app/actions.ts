@@ -10,7 +10,6 @@ import { z } from 'zod';
 import { auth, db } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { redirect } from 'next/navigation';
 import { getInitialUserData } from '@/components/app/game';
 
 
@@ -107,7 +106,10 @@ export async function login(prevState: AuthFormState, formData: FormData) {
     };
   }
   
-  redirect('/dashboard');
+  return {
+    success: true,
+    message: "Umeingia kikamilifu"
+  }
 }
 
 
@@ -144,5 +146,8 @@ export async function signup(prevState: AuthFormState, formData: FormData) {
     };
   }
 
-  redirect('/dashboard');
+  return {
+    success: true,
+    message: "Umejisajili kikamilifu"
+  }
 }
