@@ -23,9 +23,18 @@ const signupSchema = z.object({
 });
 
 export async function signup(
-  values: z.infer<typeof signupSchema>
+  prevState: { error: string } | undefined,
+  formData: FormData
 ): Promise<{ error: string } | { error?: undefined }> {
-  const { username, password } = signupSchema.parse(values);
+  const parsed = signupSchema.safeParse(Object.fromEntries(formData));
+
+  if (!parsed.success) {
+    return {
+        error: parsed.error.errors.map(e => e.message).join(', ')
+    };
+  }
+
+  const { username, password } = parsed.data;
 
   const hashedPassword = await new Argon2id().hash(password);
   const userId = generateId(15);
@@ -58,43 +67,51 @@ export async function signup(
 }
 
 const loginSchema = z.object({
-  username: z.string(),
-  password: z.string(),
+  username: z.string().min(1, 'Username is required'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 export async function login(
-  values: z.infer<typeof loginSchema>
+    prevState: { error: string } | undefined,
+    formData: FormData
 ): Promise<{ error: string } | { error?: undefined }> {
-  const { username, password } = loginSchema.parse(values);
+    const parsed = loginSchema.safeParse(Object.fromEntries(formData));
 
-  const existingUser = (
-    await db.select().from(userTable).where(eq(userTable.username, username))
-  )[0];
+    if (!parsed.success) {
+        return {
+            error: parsed.error.errors.map(e => e.message).join(', ')
+        };
+    }
+    const { username, password } = parsed.data;
 
-  if (!existingUser) {
-    return {
-      error: 'Incorrect username or password',
-    };
-  }
+    const existingUser = (
+        await db.select().from(userTable).where(eq(userTable.username, username))
+    )[0];
 
-  const validPassword = await new Argon2id().verify(
-    existingUser.hashedPassword,
-    password
-  );
-  if (!validPassword) {
-    return {
-      error: 'Incorrect username or password',
-    };
-  }
+    if (!existingUser) {
+        return {
+        error: 'Incorrect username or password',
+        };
+    }
 
-  const session = await lucia.createSession(existingUser.id, {});
-  const sessionCookie = lucia.createSessionCookie(session.id);
-  cookies().set(
-    sessionCookie.name,
-    sessionCookie.value,
-    sessionCookie.attributes
-  );
-  return {};
+    const validPassword = await new Argon2id().verify(
+        existingUser.hashedPassword,
+        password
+    );
+    if (!validPassword) {
+        return {
+        error: 'Incorrect username or password',
+        };
+    }
+
+    const session = await lucia.createSession(existingUser.id, {});
+    const sessionCookie = lucia.createSessionCookie(session.id);
+    cookies().set(
+        sessionCookie.name,
+        sessionCookie.value,
+        sessionCookie.attributes
+    );
+    return {};
 }
 
 export async function logout(): Promise<{ error: string } | { error?: undefined }> {
