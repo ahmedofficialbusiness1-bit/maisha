@@ -5,41 +5,39 @@ import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const originHeader = request.headers.get('Origin');
-  const hostHeader = request.headers.get('Host');
-  if (
-    !originHeader ||
-    !hostHeader ||
-    !verifyRequestOrigin(originHeader, [hostHeader])
-  ) {
-    return new NextResponse(null, {
-      status: 403,
-    });
+  // In production, the host header is available. In development, it might be undefined.
+  const host = request.headers.get('host') || new URL(request.url).host;
+
+  // CSRF protection
+  if (request.method !== 'GET') {
+      if (!originHeader || !verifyRequestOrigin(originHeader, [host])) {
+        return new NextResponse(null, {
+          status: 403,
+        });
+      }
   }
 
   const sessionId = request.cookies.get(lucia.sessionCookieName)?.value ?? null;
-
   const { pathname } = request.nextUrl;
 
-  // Public routes that don't require authentication
+  // Redirect authenticated users from login/signup to dashboard
   if (pathname === '/login' || pathname === '/signup') {
     if (sessionId) {
       const { session } = await lucia.validateSession(sessionId);
       if (session) {
-        // Redirect authenticated users away from login/signup
         return NextResponse.redirect(new URL('/dashboard', request.url));
       }
     }
     return NextResponse.next();
   }
 
-  // Protected routes
+  // Protect dashboard route
   if (pathname.startsWith('/dashboard')) {
     if (!sessionId) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
     const { session } = await lucia.validateSession(sessionId);
     if (!session) {
-      // Invalid session, redirect to login
       const sessionCookie = lucia.createBlankSessionCookie();
       const response = NextResponse.redirect(new URL('/login', request.url));
       response.cookies.set(
