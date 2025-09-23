@@ -76,24 +76,8 @@ export default function SignupPage() {
             await updateProfile(userCredential.user, {
                 displayName: values.username
             });
-            
-            // The logic to create a session cookie is now moved to an API route.
-            const idToken = await userCredential.user.getIdToken();
 
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${idToken}`,
-                },
-            });
-
-            if (response.ok) {
-                router.push('/dashboard');
-                router.refresh(); // Refresh the page to ensure server components re-render with new session
-            } else {
-                 const data = await response.json();
-                 setError(data.error || 'Failed to create session.');
-            }
+            router.push('/dashboard');
 
         } catch (e: any) {
             if (e.code === 'auth/email-already-in-use') {
@@ -163,7 +147,7 @@ export default function SignupPage() {
               <FormField
                 control={form.control}
                 name="password"
-                render={({ field }) => (
+                render={({ field })_=> (
                   <FormItem className="grid gap-2">
                     <FormLabel htmlFor="password">Nenosiri</FormLabel>
                     <FormControl>
@@ -219,5 +203,3 @@ export default function SignupPage() {
     </main>
   );
 }
-
-    
