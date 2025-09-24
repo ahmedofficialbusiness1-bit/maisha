@@ -83,10 +83,6 @@ export const getInitialUserData = (user: AuthenticatedUser): UserData => {
   const initialItems: InventoryItem[] = [
     { item: 'Mbao', quantity: 5000, marketPrice: 1.20 },
     { item: 'Matofali', quantity: 10000, marketPrice: 0.50 },
-    { item: 'Nondo', quantity: 1000, marketPrice: 2.50 },
-    { item: 'Saruji', quantity: 2000, marketPrice: 8.00 },
-    { item: 'Maji', quantity: 50000, marketPrice: 0.10 },
-    { item: 'Umeme', quantity: 25000, marketPrice: 0.15 },
   ];
     
   return {
