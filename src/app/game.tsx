@@ -570,10 +570,11 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     return true;
   };
 
-  const handleBuyFromMarket = async (listing: PlayerListing, quantity: number) => {
-    if (!gameState || !listing.sellerUid || quantity <= 0) return;
+  const handleBuyFromMarket = async (listing: PlayerListing, quantityToBuy: number) => {
+    if (!gameState || !listing.sellerUid || quantityToBuy <= 0) return;
+    if (listing.sellerUid === gameState.uid) return; // Cannot buy from yourself
 
-    const totalCost = listing.price * quantity;
+    const totalCost = listing.price * quantityToBuy;
     if (gameState.money < totalCost) {
         addNotification('Huna pesa za kutosha kununua bidhaa hii.', 'purchase');
         return;
@@ -593,6 +594,16 @@ export function Game({ user }: { user: AuthenticatedUser }) {
 
             const buyerData = buyerDoc.data() as UserData;
             const sellerData = sellerDoc.data() as UserData;
+            
+            // --- VALIDATE SELLER LISTING ---
+            const sellerListingIndex = sellerData.marketListings.findIndex(l => l.id === listing.id);
+            if (sellerListingIndex === -1) {
+                throw new Error("Bidhaa hii haipo tena sokoni.");
+            }
+            const actualListing = sellerData.marketListings[sellerListingIndex];
+            if (actualListing.quantity < quantityToBuy) {
+                throw new Error(`Kuna ${actualListing.quantity} pekee zinazopatikana.`);
+            }
 
             // ---- BUYER UPDATES ----
             if (buyerData.money < totalCost) {
@@ -602,13 +613,14 @@ export function Game({ user }: { user: AuthenticatedUser }) {
             const newBuyerInventory = [...buyerData.inventory];
             const itemIndex = newBuyerInventory.findIndex(i => i.item === listing.commodity);
             if (itemIndex > -1) {
-                newBuyerInventory[itemIndex].quantity += quantity;
+                newBuyerInventory[itemIndex].quantity += quantityToBuy;
             } else {
-                 const marketPrice = encyclopediaData.find(e => e.name === listing.commodity)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0';
-                 newBuyerInventory.push({ item: listing.commodity, quantity, marketPrice: parseFloat(marketPrice) });
+                 const marketPriceEntry = encyclopediaData.find(e => e.name === listing.commodity);
+                 const marketPrice = marketPriceEntry ? parseFloat(marketPriceEntry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : 0;
+                 newBuyerInventory.push({ item: listing.commodity, quantity: quantityToBuy, marketPrice });
             }
 
-            const newBuyerTransaction: Transaction = { id: `${Date.now()}-buy`, type: 'expense', amount: totalCost, description: `Nunua ${quantity}x ${listing.commodity} kutoka kwa ${listing.seller}`, timestamp: Date.now() };
+            const newBuyerTransaction: Transaction = { id: `${Date.now()}-buy`, type: 'expense', amount: totalCost, description: `Nunua ${quantityToBuy}x ${listing.commodity} kutoka kwa ${listing.seller}`, timestamp: Date.now() };
 
             transaction.update(buyerDocRef, {
                 money: buyerData.money - totalCost,
@@ -617,12 +629,20 @@ export function Game({ user }: { user: AuthenticatedUser }) {
             });
             
             // ---- SELLER UPDATES ----
-            const newSellerMarketListings = sellerData.marketListings.filter(l => l.id !== listing.id);
             const marketTax = 0.05;
             const profit = totalCost * (1 - marketTax);
             
-            const newSellerTransaction: Transaction = { id: `${Date.now()}-sell`, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${listing.commodity} kwa ${buyerData.username}`, timestamp: Date.now() };
-            const sellerNotification: Notification = { id: `${Date.now()}-sell-notify`, message: `Umefanikiwa kuuza ${quantity}x ${listing.commodity} kwa $${profit.toFixed(2)} kwa ${buyerData.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
+            let newSellerMarketListings = [...sellerData.marketListings];
+            if (actualListing.quantity === quantityToBuy) {
+                // Remove the listing if all items are bought
+                newSellerMarketListings.splice(sellerListingIndex, 1);
+            } else {
+                // Update the quantity if only a part is bought
+                newSellerMarketListings[sellerListingIndex].quantity -= quantityToBuy;
+            }
+            
+            const newSellerTransaction: Transaction = { id: `${Date.now()}-sell`, type: 'income', amount: profit, description: `Mauzo ya ${quantityToBuy}x ${listing.commodity} kwa ${buyerData.username}`, timestamp: Date.now() };
+            const sellerNotification: Notification = { id: `${Date.now()}-sell-notify`, message: `Umefanikiwa kuuza ${quantityToBuy}x ${listing.commodity} kwa $${profit.toFixed(2)} kwa ${buyerData.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
 
             transaction.update(sellerDocRef, {
                 money: sellerData.money + profit,
@@ -632,7 +652,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
             });
         });
 
-        addNotification(`Umenunua ${quantity}x ${listing.commodity} kutoka kwa ${listing.seller}.`, 'purchase');
+        addNotification(`Umenunua ${quantityToBuy}x ${listing.commodity} kutoka kwa ${listing.seller}.`, 'purchase');
 
     } catch (e: any) {
         console.error("Transaction failed: ", e);
