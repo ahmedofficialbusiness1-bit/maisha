@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -175,46 +176,28 @@ export function Game({ user }: { user: AuthenticatedUser }) {
 
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
-        const data = docSnap.data() as UserData;
+        const data = docSnap.data();
+        const mergedData = { ...getInitialUserData(user), ...data };
         
-        setGameState(prevGameState => {
-            // If the new data is older than the current state, ignore it.
-            // This can happen due to latency. Compare server timestamps.
-            const newTimestamp = (data.lastSeen as any)?.seconds || 0;
-            const oldTimestamp = (prevGameState?.lastSeen as any)?.seconds || 0;
+        setGameState(prevState => {
+            if (!prevState) return mergedData;
+
+            const newTimestamp = (mergedData.lastSeen as any)?.seconds || 0;
+            const oldTimestamp = (prevState?.lastSeen as any)?.seconds || 0;
             if(newTimestamp > 0 && newTimestamp < oldTimestamp) {
-                return prevGameState;
+                return prevState;
             }
-
-            // Backwards compatibility checks
-            const updates: Partial<UserData> = {};
-            let needsUpdate = false;
-            if (data.netWorth === undefined) {
-                updates.netWorth = data.money || 0;
-                needsUpdate = true;
-            }
-            if (data.email === undefined) {
-                updates.email = user.email;
-                needsUpdate = true;
-            }
-            if (data.marketListings === undefined) {
-                updates.marketListings = [];
-                needsUpdate = true;
-            }
-            if (data.role === undefined) {
-                updates.role = user.email === ADMIN_EMAIL ? 'admin' : 'player';
-                needsUpdate = true;
-            }
-
-            if (needsUpdate) {
-                updateDoc(docRef, updates);
-            }
-
-            return { ...data, ...updates };
+            return mergedData;
         });
 
-        // Always mark presence as online
-        updateDoc(docRef, { status: 'online', lastSeen: serverTimestamp() });
+        // Always mark presence as online and ensure data is complete
+        updateDoc(docRef, { 
+            status: 'online', 
+            lastSeen: serverTimestamp(),
+            email: mergedData.email,
+            netWorth: mergedData.netWorth,
+            role: mergedData.role
+        });
 
       } else {
         // First-time user, create their data
@@ -729,8 +712,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
             if (!prevState) return null;
             
             const now = Date.now();
-            let stateChanged = false;
-            
             const newState: UserData = JSON.parse(JSON.stringify(prevState));
 
             newState.buildingSlots.forEach((slot, index) => {
@@ -756,7 +737,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
                 newState.playerLevel = newLevel;
 
                 processedActivitiesRef.current.add(constructionId!);
-                stateChanged = true;
             }
 
             if (slot.activity && now >= slot.activity.endTime && !processedActivitiesRef.current.has(activityId!)) {
@@ -787,11 +767,12 @@ export function Game({ user }: { user: AuthenticatedUser }) {
 
                 newState.buildingSlots[index] = { ...slot, activity: undefined };
                 processedActivitiesRef.current.add(activityId!);
-                stateChanged = true;
             }
             });
 
-            if (stateChanged) {
+            // If there were any changes from the loop, save them.
+            // We compare stringified versions to detect deep changes.
+            if (JSON.stringify(newState) !== JSON.stringify(prevState)) {
               debouncedSave(newState);
               return newState;
             }
@@ -958,5 +939,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     </div>
   );
 }
+
+    
 
     
