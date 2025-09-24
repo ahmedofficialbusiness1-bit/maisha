@@ -249,17 +249,10 @@ export function Game({ user }: { user: AuthenticatedUser }) {
   const updateState = (updater: (prevState: UserData) => Partial<UserData>) => {
     setGameState(prevState => {
         if (!prevState) return null;
-        // The updater function now returns a partial update
         const updates = updater(prevState);
         const newState = { ...prevState, ...updates };
-
-        // Save the new state to firestore. onSnapshot will update the local state.
-        if (newState.uid) {
-            const docRef = doc(db, "users", newState.uid);
-            updateDoc(docRef, updates);
-        }
-        
-        return newState;
+        debouncedSave(newState); // This will save the full state after a delay
+        return newState; // Return the new state for instant UI update
     });
   };
 
@@ -948,5 +941,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     </div>
   );
 }
+
+    
 
     
