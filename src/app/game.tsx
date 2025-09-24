@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -17,7 +18,7 @@ import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
 import { Leaderboard } from '@/components/app/leaderboard';
-import { AdminPanel } from '@/components/app/admin-panel';
+import { AdminPanel } from '@/componentsapp/admin-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, collection, query, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -85,10 +86,10 @@ const initialBondListings: BondListing[] = [
 const AI_PLAYER_NAME = 'Serekali';
 
 export const getInitialUserData = (user: AuthenticatedUser): UserData => {
-  const startingMoney = 100000;
+  const startingMoney = 10000;
   const initialItems: InventoryItem[] = [
-    { item: 'Mbao', quantity: 5000, marketPrice: 1.20 },
-    { item: 'Matofali', quantity: 10000, marketPrice: 0.50 },
+    { item: 'Mbao', quantity: 500 },
+    { item: 'Matofali', quantity: 1000 },
   ];
     
   return {
@@ -177,39 +178,46 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data() as UserData;
-        let needsUpdate = false;
-        const updates: Partial<UserData> = {};
         
-        // Update presence to online
-        if (data.status !== 'online') {
-            updates.status = 'online';
-            updates.lastSeen = serverTimestamp();
-            needsUpdate = true;
-        }
+        setGameState(prevGameState => {
+            // If the new data is older than the current state, ignore it.
+            // This can happen due to latency. Compare server timestamps.
+            const newTimestamp = (data.lastSeen as any)?.seconds || 0;
+            const oldTimestamp = (prevGameState?.lastSeen as any)?.seconds || 0;
+            if(newTimestamp > 0 && newTimestamp < oldTimestamp) {
+                return prevGameState;
+            }
 
-        // Backwards compatibility: ensure netWorth exists
-        if (data.netWorth === undefined) {
-            updates.netWorth = data.money || 0; // Set a default value
-            needsUpdate = true;
-        }
-        
-        // Backwards compatibility: ensure email exists
-        if (data.email === undefined) {
-            updates.email = user.email;
-            needsUpdate = true;
-        }
-         // Backwards compatibility: ensure marketListings exists
-        if (data.marketListings === undefined) {
-            updates.marketListings = [];
-            needsUpdate = true;
-        }
+            // Backwards compatibility checks
+            const updates: Partial<UserData> = {};
+            let needsUpdate = false;
+            if (data.netWorth === undefined) {
+                updates.netWorth = data.money || 0;
+                needsUpdate = true;
+            }
+            if (data.email === undefined) {
+                updates.email = user.email;
+                needsUpdate = true;
+            }
+            if (data.marketListings === undefined) {
+                updates.marketListings = [];
+                needsUpdate = true;
+            }
+            if (data.role === undefined) {
+                updates.role = user.email === ADMIN_EMAIL ? 'admin' : 'player';
+                needsUpdate = true;
+            }
 
+            if (needsUpdate) {
+                updateDoc(docRef, updates);
+            }
 
-        if (needsUpdate) {
-            updateDoc(docRef, updates);
-        }
-        
-        setGameState({...data, ...updates});
+            return { ...data, ...updates };
+        });
+
+        // Always mark presence as online
+        updateDoc(docRef, { status: 'online', lastSeen: serverTimestamp() });
+
       } else {
         // First-time user, create their data
         const initialData = getInitialUserData(user);
@@ -241,6 +249,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
   const debouncedSave = useDebouncedCallback((newState: UserData) => {
     if(newState.uid) { 
       const docRef = doc(db, "users", newState.uid);
+      // Use setDoc with merge to avoid overwriting simultaneous server-side changes
       setDoc(docRef, newState, { merge: true });
     }
   }, 1000);
@@ -713,7 +722,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
   };
 
 
-  // Game loop for processing finished activities and saving data
+  // Game loop for processing finished activities
   React.useEffect(() => {
     if (!user?.uid) return;
 
@@ -723,8 +732,8 @@ export function Game({ user }: { user: AuthenticatedUser }) {
         setGameState(prevState => {
             if (!prevState) return null;
 
-            const newState: UserData = JSON.parse(JSON.stringify(prevState)); // Deep copy
             let stateChangedInLoop = false;
+            const newState: UserData = JSON.parse(JSON.stringify(prevState)); // Deep copy
 
             newState.buildingSlots.forEach((slot, index) => {
                 const activityId = slot.activity ? `${index}-${slot.activity.startTime}` : null;
@@ -770,7 +779,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
                         
                         const newNotification: Notification = { id: `${Date.now()}-production-${index}`, message: `Uzalishaji wa ${quantity}x ${itemName} umekamilika.`, timestamp: now, read: false, icon: 'production' };
                         newState.notifications.unshift(newNotification);
-                        // Add XP
                         newState.playerXP += (quantity * 2);
 
                     } else if (slot.activity.type === 'sell') {
@@ -784,7 +792,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
                         
                         const newNotification: Notification = { id: `${Date.now()}-sale-notify-${index}`, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, timestamp: now, read: false, icon: 'sale' };
                         newState.notifications.unshift(newNotification);
-                        // Add XP
                         newState.playerXP += (Math.floor(profit * 0.01));
                     }
                     
@@ -840,6 +847,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     if (netWorth !== gameState.netWorth) {
         updateState(prev => ({ netWorth }));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState?.money, gameState?.playerStocks, gameState?.buildingSlots, gameState?.companyData]);
 
 
@@ -882,7 +890,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
       avatarUrl: `https://picsum.photos/seed/${gameState.uid}/100/100`,
       privateNotes: gameState.privateNotes,
       status: gameState.status,
-      lastSeen: gameState.lastSeen?.toDate(), // Convert Firestore Timestamp to JS Date
+      lastSeen: gameState.lastSeen && gameState.lastSeen.toDate ? gameState.lastSeen.toDate() : gameState.lastSeen, // Convert Firestore Timestamp to JS Date
       role: gameState.role,
   };
   
