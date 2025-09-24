@@ -18,7 +18,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import { Search } from 'lucide-react';
-import { productCategoryToShopMap } from './game';
+import { productCategoryToShopMap } from '@/app/game';
 import { availableBuildings } from './dashboard';
 
 export function Encyclopedia() {
