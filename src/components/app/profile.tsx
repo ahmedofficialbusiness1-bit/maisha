@@ -30,6 +30,7 @@ import { Textarea } from '../ui/textarea';
 import { Clipboard, Pencil, Upload } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 const profileFormSchema = z.object({
   playerName: z
@@ -42,6 +43,8 @@ const profileFormSchema = z.object({
     }),
   avatarUrl: z.string().optional().or(z.literal('')),
   privateNotes: z.string().max(500, { message: 'Maelezo yasizidi herufi 500.'}).optional(),
+  status: z.enum(['online', 'offline']).optional(),
+  lastSeen: z.date().optional(),
 });
 
 export type ProfileData = z.infer<typeof profileFormSchema>;
@@ -55,7 +58,7 @@ export type PlayerMetrics = {
 };
 
 interface PlayerProfileProps {
-  onSave: (data: ProfileData) => void;
+  onSave: (data: Omit<ProfileData, 'status' | 'lastSeen'>) => void;
   currentProfile: ProfileData;
   metrics: PlayerMetrics;
 }
@@ -81,28 +84,28 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 
 export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
-  const [localTime, setLocalTime] = React.useState('');
 
-  const form = useForm<ProfileData>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: currentProfile,
+  const form = useForm<Omit<ProfileData, 'status' | 'lastSeen'>>({
+    resolver: zodResolver(profileFormSchema.omit({ status: true, lastSeen: true })),
+    defaultValues: {
+        playerName: currentProfile.playerName,
+        avatarUrl: currentProfile.avatarUrl,
+        privateNotes: currentProfile.privateNotes,
+    },
   });
   
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const avatarUrl = form.watch('avatarUrl');
 
-  React.useEffect(() => {
-    const timer = setInterval(() => {
-      setLocalTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-  
    React.useEffect(() => {
-    form.reset(currentProfile);
+    form.reset({
+        playerName: currentProfile.playerName,
+        avatarUrl: currentProfile.avatarUrl,
+        privateNotes: currentProfile.privateNotes,
+    });
   }, [currentProfile, form, isEditing]);
 
-  function onSubmit(data: ProfileData) {
+  function onSubmit(data: Omit<ProfileData, 'status' | 'lastSeen'>) {
     onSave(data);
     setIsEditing(false);
   }
@@ -126,6 +129,10 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
     }
   };
 
+  const lastSeenText = currentProfile.lastSeen 
+    ? `was ${formatDistanceToNow(currentProfile.lastSeen, { addSuffix: true })}`
+    : 'recently';
+
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -134,14 +141,25 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
           <div className="lg:col-span-2 flex flex-col gap-4">
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader className="flex-row gap-4 items-center">
-                    <Avatar className="h-20 w-20 border-2 border-yellow-400 rounded-md">
-                        <AvatarImage src={avatarUrl} alt={currentProfile.playerName} data-ai-hint="player logo" className="rounded-none" />
-                        <AvatarFallback className="rounded-md">{currentProfile.playerName.charAt(0)}</AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                        <Avatar className="h-20 w-20 border-2 border-yellow-400 rounded-md">
+                            <AvatarImage src={avatarUrl} alt={currentProfile.playerName} data-ai-hint="player logo" className="rounded-none" />
+                            <AvatarFallback className="rounded-md">{currentProfile.playerName.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className={cn(
+                            "absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-gray-800",
+                            currentProfile.status === 'online' ? 'bg-green-500' : 'bg-gray-500'
+                        )} />
+                    </div>
+
                     <div className='flex-grow space-y-1'>
                         <div className='flex items-center gap-2'>
-                            <div className='h-3 w-3 rounded-full bg-green-500'></div>
-                            <span className='text-sm font-semibold text-green-400'>Online</span>
+                             <span className={cn(
+                                'text-sm font-semibold',
+                                currentProfile.status === 'online' ? 'text-green-400' : 'text-gray-400'
+                            )}>
+                                {currentProfile.status === 'online' ? 'Online' : `Offline (${lastSeenText})`}
+                            </span>
                         </div>
                         <h1 className="text-2xl font-bold tracking-tight">{currentProfile.playerName}</h1>
                         <p className="text-muted-foreground">Sole trader</p>
@@ -221,10 +239,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                         <InfoItem label="Credit Rating" value={metrics.rating} />
                         <InfoItem label="Government orders Tier" value="T1" />
                         <InfoItem label="Established" value={new Date().toLocaleDateString()} />
-                        <InfoItem label="Last seen" value="Today" />
-                        <InfoItem label="Local time" value={localTime} />
-                        <InfoItem label="Previous name(s)" value="-" />
-                        <InfoItem label="Search tags" value={<Button variant="secondary" size="sm" className='h-auto px-2 py-1 text-xs'>EDIT</Button>} />
                     </div>
                 </CardContent>
             </Card>
@@ -250,7 +264,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                         <Separator className="bg-gray-600" />
                     </div>
                     <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 pl-4">
-                        <ValuationItem label={<span className='text-xs'>(at {localTime})</span>} value="" />
                         <ValuationItem label="Company value" value={`$${metrics.netWorth.toLocaleString()}`} />
                         <ValuationItem label="Buildings value" value={`$${metrics.buildingValue.toLocaleString()}`} />
                         <ValuationItem label="Patents value" value="$0" />
@@ -264,7 +277,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                         <Separator className="bg-gray-600" />
                     </div>
                     <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 pl-4">
-                        <ValuationItem label={<span className='text-xs'>(at {localTime})</span>} value="" />
                         <ValuationItem label="No liabilities" value="" />
                     </div>
 

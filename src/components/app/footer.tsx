@@ -1,7 +1,8 @@
+
 'use client';
 
 import * as React from 'react';
-import type { View } from '@/components/app/game';
+import type { View } from '@/app/game';
 import { Button } from '@/components/ui/button';
 import {
   Archive,
@@ -9,7 +10,7 @@ import {
   CandlestickChart,
   MessageSquare,
   LayoutDashboard,
-  User,
+  Trophy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -36,10 +37,10 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
       label: 'Market',
       icon: <CandlestickChart className="h-5 w-5" />,
     },
-     {
-      view: 'encyclopedia' as View,
-      label: 'Encyclopedia',
-      icon: <BookOpen className="h-5 w-5" />,
+    {
+      view: 'leaderboard' as View,
+      label: 'Wanaoongoza',
+      icon: <Trophy className="h-5 w-5" />,
     },
     {
       view: 'chats' as View,

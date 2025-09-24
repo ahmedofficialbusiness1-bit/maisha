@@ -16,8 +16,9 @@ import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
+import { Leaderboard } from '@/components/app/leaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 type AuthenticatedUser = {
@@ -32,7 +33,7 @@ export type PlayerStock = {
     shares: number;
 }
 
-export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting' | 'profile';
+export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting' | 'profile' | 'leaderboard';
 
 export type Notification = {
     id: string;
@@ -59,6 +60,9 @@ export type UserData = {
   playerStocks: PlayerStock[];
   transactions: Transaction[];
   notifications: Notification[];
+  status: 'online' | 'offline';
+  lastSeen: any; // Firestore ServerTimestamp
+  netWorth: number;
 };
 
 const initialPlayerListings: PlayerListing[] = [
@@ -101,6 +105,9 @@ export const getInitialUserData = (user: AuthenticatedUser): UserData => {
     playerStocks: [],
     transactions: [],
     notifications: [],
+    status: 'online',
+    lastSeen: serverTimestamp(),
+    netWorth: startingMoney,
   }
 };
 
@@ -140,7 +147,14 @@ export function Game({ user }: { user: AuthenticatedUser }) {
 
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
-        setGameState(docSnap.data() as UserData);
+        const data = docSnap.data() as UserData;
+        
+        // Update presence to online
+        if (data.status !== 'online') {
+            updateDoc(docRef, { status: 'online', lastSeen: serverTimestamp() });
+        }
+        
+        setGameState(data);
       } else {
         // First-time user, create their data
         const initialData = getInitialUserData(user);
@@ -150,9 +164,21 @@ export function Game({ user }: { user: AuthenticatedUser }) {
       }
       setIsLoading(false);
     });
+    
+     // Handle user leaving the page
+    const handleBeforeUnload = () => {
+        updateDoc(docRef, { status: 'offline', lastSeen: serverTimestamp() });
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     // Cleanup subscription on unmount
-    return () => unsubscribe();
+    return () => {
+        unsubscribe();
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        // Set offline on component unmount (e.g., logout)
+        handleBeforeUnload();
+    };
   }, [user]);
 
 
@@ -661,6 +687,41 @@ export function Game({ user }: { user: AuthenticatedUser }) {
 
   }, [gameState, debouncedSave]); 
 
+  // Recalculate net worth when money, stocks, or buildings change
+  React.useEffect(() => {
+    if (!gameState) return;
+
+    const stockValue = gameState.playerStocks.reduce((total, stock) => {
+        const stockInfo = gameState.companyData.find(s => s.ticker === stock.ticker);
+        return total + (stockInfo ? stockInfo.stockPrice * stock.shares : 0);
+    }, 0);
+
+    const buildingValue = gameState.buildingSlots.reduce((total, slot) => {
+        if (!slot.building) return total;
+        const buildCost = buildingData[slot.building.id].buildCost;
+        let cost = buildCost.reduce((sum, material) => {
+            const price = encyclopediaData.find(e => e.name === material.name)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0';
+            return sum + (parseFloat(price) * material.quantity);
+        }, 0);
+        // Add upgrade costs
+        for (let i = 2; i <= slot.level; i++) {
+            const upgradeCosts = buildingData[slot.building.id].upgradeCost(i);
+            cost += upgradeCosts.reduce((sum, material) => {
+                 const price = encyclopediaData.find(e => e.name === material.name)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0';
+                 return sum + (parseFloat(price) * material.quantity);
+            }, 0);
+        }
+        return total + cost;
+    }, 0);
+
+    const netWorth = gameState.money + stockValue + buildingValue;
+
+    if (netWorth !== gameState.netWorth) {
+        updateState(prev => ({ ...prev, netWorth }));
+    }
+  }, [gameState?.money, gameState?.playerStocks, gameState?.buildingSlots, gameState?.companyData]);
+
+
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-900 text-white">
@@ -687,43 +748,20 @@ export function Game({ user }: { user: AuthenticatedUser }) {
      return null; // Should be redirected by middleware, but as a fallback.
   }
   
-  const stockValue = gameState.playerStocks.reduce((total, stock) => {
-    const stockInfo = gameState.companyData.find(s => s.ticker === stock.ticker);
-    return total + (stockInfo ? stockInfo.stockPrice * stock.shares : 0);
-  }, 0);
-
-  const buildingValue = gameState.buildingSlots.reduce((total, slot) => {
-      if (!slot.building) return total;
-      const buildCost = buildingData[slot.building.id].buildCost;
-      let cost = buildCost.reduce((sum, material) => {
-          const price = encyclopediaData.find(e => e.name === material.name)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0';
-          return sum + (parseFloat(price) * material.quantity);
-      }, 0);
-      // Add upgrade costs
-      for (let i = 2; i <= slot.level; i++) {
-        const upgradeCosts = buildingData[slot.building.id].upgradeCost(i);
-        cost += upgradeCosts.reduce((sum, material) => {
-             const price = encyclopediaData.find(e => e.name === material.name)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0';
-             return sum + (parseFloat(price) * material.quantity);
-        }, 0);
-      }
-      return total + cost;
-  }, 0);
-  
-  const netWorth = gameState.money + stockValue + buildingValue;
-
   const profileMetrics: PlayerMetrics = {
-    netWorth,
-    buildingValue,
-    stockValue,
-    ranking: '1',
-    rating: 'A+',
+    netWorth: gameState.netWorth,
+    buildingValue: 0, // Recalculated locally in component
+    stockValue: 0, // Recalculated locally in component
+    ranking: '1', // Placeholder
+    rating: 'A+', // Placeholder
   };
   
   const currentProfile: ProfileData = {
       playerName: gameState.username,
       avatarUrl: `https://picsum.photos/seed/${gameState.uid}/100/100`,
       privateNotes: gameState.privateNotes,
+      status: gameState.status,
+      lastSeen: gameState.lastSeen?.toDate(), // Convert Firestore Timestamp to JS Date
   };
   
   const availableShares = (stock: StockListing): number => {
@@ -766,9 +804,11 @@ export function Game({ user }: { user: AuthenticatedUser }) {
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats />;
+          return <Chats user={user} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions} />;
+      case 'leaderboard':
+          return <Leaderboard />;
       case 'profile':
           return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={profileMetrics} />;
       default:
