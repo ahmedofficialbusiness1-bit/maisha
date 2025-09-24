@@ -59,6 +59,7 @@ export default function DashboardPage() {
   const appUser = {
       uid: user.uid,
       username: user.displayName || user.email?.split('@')[0] || 'Mchezaji',
+      email: user.email,
   }
 
   return <Game user={appUser} />;

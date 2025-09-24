@@ -45,6 +45,7 @@ const profileFormSchema = z.object({
   privateNotes: z.string().max(500, { message: 'Maelezo yasizidi herufi 500.'}).optional(),
   status: z.enum(['online', 'offline']).optional(),
   lastSeen: z.date().optional(),
+  role: z.enum(['player', 'admin']).optional(),
 });
 
 export type ProfileData = z.infer<typeof profileFormSchema>;
@@ -58,7 +59,7 @@ export type PlayerMetrics = {
 };
 
 interface PlayerProfileProps {
-  onSave: (data: Omit<ProfileData, 'status' | 'lastSeen'>) => void;
+  onSave: (data: Omit<ProfileData, 'status' | 'lastSeen' | 'role'>) => void;
   currentProfile: ProfileData;
   metrics: PlayerMetrics;
 }
@@ -85,8 +86,8 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
 
-  const form = useForm<Omit<ProfileData, 'status' | 'lastSeen'>>({
-    resolver: zodResolver(profileFormSchema.omit({ status: true, lastSeen: true })),
+  const form = useForm<Omit<ProfileData, 'status' | 'lastSeen' | 'role'>>({
+    resolver: zodResolver(profileFormSchema.omit({ status: true, lastSeen: true, role: true })),
     defaultValues: {
         playerName: currentProfile.playerName,
         avatarUrl: currentProfile.avatarUrl,
@@ -105,7 +106,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
     });
   }, [currentProfile, form, isEditing]);
 
-  function onSubmit(data: Omit<ProfileData, 'status' | 'lastSeen'>) {
+  function onSubmit(data: Omit<ProfileData, 'status' | 'lastSeen' | 'role'>) {
     onSave(data);
     setIsEditing(false);
   }
@@ -162,7 +163,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                             </span>
                         </div>
                         <h1 className="text-2xl font-bold tracking-tight">{currentProfile.playerName}</h1>
-                        <p className="text-muted-foreground">Sole trader</p>
+                        <p className="text-muted-foreground">{currentProfile.role === 'admin' ? 'Administrator' : 'Sole trader'}</p>
                         <div className='flex items-center gap-4 pt-2'>
                             <Button type="button" variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleCopy}>
                                 <Clipboard className='h-4 w-4 mr-1' /> Copy to Clipboard

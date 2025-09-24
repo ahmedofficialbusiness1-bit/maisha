@@ -17,6 +17,7 @@ import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
 import { Leaderboard } from '@/components/app/leaderboard';
+import { AdminPanel } from '@/components/app/admin-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -24,16 +25,18 @@ import { db } from '@/lib/firebase';
 type AuthenticatedUser = {
     uid: string;
     username: string;
+    email: string | null;
 }
 
 const BUILDING_SLOTS = 20;
+const ADMIN_EMAIL = 'ahmedofficialbusiness1@gmail.com';
 
 export type PlayerStock = {
     ticker: string;
     shares: number;
 }
 
-export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting' | 'profile' | 'leaderboard';
+export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting' | 'profile' | 'leaderboard' | 'admin';
 
 export type Notification = {
     id: string;
@@ -63,6 +66,7 @@ export type UserData = {
   status: 'online' | 'offline';
   lastSeen: any; // Firestore ServerTimestamp
   netWorth: number;
+  role: 'player' | 'admin';
 };
 
 const initialPlayerListings: PlayerListing[] = [
@@ -108,6 +112,7 @@ export const getInitialUserData = (user: AuthenticatedUser): UserData => {
     status: 'online',
     lastSeen: serverTimestamp(),
     netWorth: startingMoney,
+    role: user.email === ADMIN_EMAIL ? 'admin' : 'player',
   }
 };
 
@@ -779,6 +784,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
       privateNotes: gameState.privateNotes,
       status: gameState.status,
       lastSeen: gameState.lastSeen?.toDate(), // Convert Firestore Timestamp to JS Date
+      role: gameState.role,
   };
   
   const availableShares = (stock: StockListing): number => {
@@ -821,13 +827,15 @@ export function Game({ user }: { user: AuthenticatedUser }) {
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={user} />;
+          return <Chats user={{ uid: user.uid, username: user.username}} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions} />;
       case 'leaderboard':
           return <Leaderboard />;
       case 'profile':
           return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={profileMetrics} />;
+      case 'admin':
+          return <AdminPanel />;
       default:
         return null;
     }
@@ -846,6 +854,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
         playerLevel={gameState.playerLevel}
         playerXP={gameState.playerXP}
         xpForNextLevel={getXpForNextLevel(gameState.playerLevel)}
+        isAdmin={gameState.role === 'admin'}
       />
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
