@@ -79,7 +79,7 @@ const initialBondListings: BondListing[] = [
 const AI_PLAYER_NAME = 'Serekali';
 
 export const getInitialUserData = (user: AuthenticatedUser): UserData => {
-  const largeNumber = 100_000;
+  const startingMoney = 100000;
   const initialItems: InventoryItem[] = [
     { item: 'Mbao', quantity: 5000, marketPrice: 1.20 },
     { item: 'Matofali', quantity: 10000, marketPrice: 0.50 },
@@ -93,7 +93,7 @@ export const getInitialUserData = (user: AuthenticatedUser): UserData => {
     uid: user.uid,
     username: user.username,
     privateNotes: `Karibu kwenye wasifu wangu! Mimi ni ${user.username}, mtaalamu wa kuzalisha bidhaa bora.`,
-    money: largeNumber,
+    money: startingMoney,
     stars: 100,
     playerLevel: 1,
     playerXP: 0,
@@ -801,3 +801,5 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     </div>
   );
 }
+
+    

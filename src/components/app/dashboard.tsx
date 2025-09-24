@@ -42,7 +42,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { encyclopediaData } from '@/lib/encyclopedia-data';
-import { productCategoryToShopMap } from './game';
+import { productCategoryToShopMap } from '@/app/game';
 import type { LucideIcon } from 'lucide-react';
 
 export type BuildingType = {
@@ -482,7 +482,7 @@ export const availableBuildings: BuildingType[] = [
         id: 'kiwanda_cha_anga',
         name: 'Kiwanda cha Anga',
         description: 'Huunganisha sehemu muhimu za roketi na vyombo vya anga.',
-        image: 'https://picsum.photos/seed/space-factory/200/200',
+        image: 'https://picsum.photos/seed/space-assembly/200/200',
         imageHint: 'space assembly'
     },
     {
