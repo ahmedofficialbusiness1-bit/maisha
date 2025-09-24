@@ -9,10 +9,9 @@ import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot, type BuildingType, type ActivityInfo } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
 import { TradeMarket, type PlayerListing, type StockListing, type BondListing } from '@/components/app/trade-market';
-import { Encyclopedia } from '@/components/app/encyclopedia';
+import { Encyclopedia, encyclopediaData } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { recipes } from '@/lib/recipe-data';
-import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
@@ -86,10 +85,10 @@ const initialBondListings: BondListing[] = [
 const AI_PLAYER_NAME = 'Serekali';
 
 export const getInitialUserData = (user: AuthenticatedUser): UserData => {
-  const startingMoney = 10000;
+  const startingMoney = 100000;
   const initialItems: InventoryItem[] = [
-    { item: 'Mbao', quantity: 500 },
-    { item: 'Matofali', quantity: 1000 },
+    { item: 'Mbao', quantity: 5000, marketPrice: 1.15 },
+    { item: 'Matofali', quantity: 10000, marketPrice: 2.13 },
   ];
     
   return {
@@ -727,79 +726,79 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     if (!user?.uid) return;
 
     const interval = setInterval(() => {
-      setGameState(prevState => {
-        if (!prevState) return null;
-        
-        const now = Date.now();
-        let stateChanged = false;
-        
-        const newState: UserData = JSON.parse(JSON.stringify(prevState));
-
-        newState.buildingSlots.forEach((slot, index) => {
-          const activityId = slot.activity ? `${index}-${slot.activity.startTime}` : null;
-          const constructionId = slot.construction ? `${index}-${slot.construction.startTime}` : null;
-
-          if (slot.construction && now >= slot.construction.endTime && !processedActivitiesRef.current.has(constructionId!)) {
-            newState.buildingSlots[index] = { ...slot, level: slot.construction.targetLevel, construction: undefined };
-            const newNotification: Notification = { id: `${Date.now()}-construction-${index}`, message: `Ujenzi wa ${slot.building?.name} Lvl ${slot.construction.targetLevel} umekamilika!`, timestamp: now, read: false, icon: 'construction' };
-            newState.notifications.unshift(newNotification);
+        setGameState(prevState => {
+            if (!prevState) return null;
             
-            let newXP = newState.playerXP + (100 * slot.construction.targetLevel);
-            let newLevel = newState.playerLevel;
-            let xpForNextLevel = getXpForNextLevel(newLevel);
-            while (newXP >= xpForNextLevel) {
-                newXP -= xpForNextLevel;
-                newLevel++;
-                const levelUpNotification: Notification = { id: `${Date.now()}-levelup-${newLevel}`, message: `Hongera! Umefikia Level ${newLevel}!`, timestamp: now, read: false, icon: 'level-up' };
-                newState.notifications.unshift(levelUpNotification);
-                xpForNextLevel = getXpForNextLevel(newLevel);
-            }
-            newState.playerXP = newXP;
-            newState.playerLevel = newLevel;
+            const now = Date.now();
+            let stateChanged = false;
+            
+            const newState: UserData = JSON.parse(JSON.stringify(prevState));
 
-            processedActivitiesRef.current.add(constructionId!);
-            stateChanged = true;
-          }
+            newState.buildingSlots.forEach((slot, index) => {
+            const activityId = slot.activity ? `${index}-${slot.activity.startTime}` : null;
+            const constructionId = slot.construction ? `${index}-${slot.construction.startTime}` : null;
 
-          if (slot.activity && now >= slot.activity.endTime && !processedActivitiesRef.current.has(activityId!)) {
-            if (slot.activity.type === 'produce') {
-              const { recipeId: itemName, quantity } = slot.activity;
-              const itemIndex = newState.inventory.findIndex(i => i.item === itemName);
-              const marketPrice = encyclopediaData.find(e => e.name === itemName)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0';
-              if (itemIndex !== -1) {
-                newState.inventory[itemIndex].quantity += quantity;
-              } else {
-                newState.inventory.push({ item: itemName, quantity, marketPrice: parseFloat(marketPrice) });
-              }
-              const newNotification: Notification = { id: `${Date.now()}-production-${index}`, message: `Uzalishaji wa ${quantity}x ${itemName} umekamilika.`, timestamp: now, read: false, icon: 'production' };
-              newState.notifications.unshift(newNotification);
-              newState.playerXP += (quantity * 2);
+            if (slot.construction && now >= slot.construction.endTime && !processedActivitiesRef.current.has(constructionId!)) {
+                newState.buildingSlots[index] = { ...slot, level: slot.construction.targetLevel, construction: undefined };
+                const newNotification: Notification = { id: `${Date.now()}-construction-${index}`, message: `Ujenzi wa ${slot.building?.name} Lvl ${slot.construction.targetLevel} umekamilika!`, timestamp: now, read: false, icon: 'construction' };
+                newState.notifications.unshift(newNotification);
+                
+                let newXP = newState.playerXP + (100 * slot.construction.targetLevel);
+                let newLevel = newState.playerLevel;
+                let xpForNextLevel = getXpForNextLevel(newLevel);
+                while (newXP >= xpForNextLevel) {
+                    newXP -= xpForNextLevel;
+                    newLevel++;
+                    const levelUpNotification: Notification = { id: `${Date.now()}-levelup-${newLevel}`, message: `Hongera! Umefikia Level ${newLevel}!`, timestamp: now, read: false, icon: 'level-up' };
+                    newState.notifications.unshift(levelUpNotification);
+                    xpForNextLevel = getXpForNextLevel(newLevel);
+                }
+                newState.playerXP = newXP;
+                newState.playerLevel = newLevel;
 
-            } else if (slot.activity.type === 'sell') {
-              const { saleValue, quantity, recipeId: itemName } = slot.activity;
-              const marketTax = 0.05;
-              const profit = saleValue * (1 - marketTax);
-              const newTransaction: Transaction = { id: `${Date.now()}-sale-${index}`, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${itemName}`, timestamp: now };
-              newState.transactions.unshift(newTransaction);
-              newState.money += profit;
-              const newNotification: Notification = { id: `${Date.now()}-sale-notify-${index}`, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, timestamp: now, read: false, icon: 'sale' };
-              newState.notifications.unshift(newNotification);
-              newState.playerXP += (Math.floor(profit * 0.01));
+                processedActivitiesRef.current.add(constructionId!);
+                stateChanged = true;
             }
 
-            newState.buildingSlots[index] = { ...slot, activity: undefined };
-            processedActivitiesRef.current.add(activityId!);
-            stateChanged = true;
-          }
+            if (slot.activity && now >= slot.activity.endTime && !processedActivitiesRef.current.has(activityId!)) {
+                if (slot.activity.type === 'produce') {
+                const { recipeId: itemName, quantity } = slot.activity;
+                const itemIndex = newState.inventory.findIndex(i => i.item === itemName);
+                const marketPrice = encyclopediaData.find(e => e.name === itemName)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0';
+                if (itemIndex !== -1) {
+                    newState.inventory[itemIndex].quantity += quantity;
+                } else {
+                    newState.inventory.push({ item: itemName, quantity, marketPrice: parseFloat(marketPrice) });
+                }
+                const newNotification: Notification = { id: `${Date.now()}-production-${index}`, message: `Uzalishaji wa ${quantity}x ${itemName} umekamilika.`, timestamp: now, read: false, icon: 'production' };
+                newState.notifications.unshift(newNotification);
+                newState.playerXP += (quantity * 2);
+
+                } else if (slot.activity.type === 'sell') {
+                const { saleValue, quantity, recipeId: itemName } = slot.activity;
+                const marketTax = 0.05;
+                const profit = saleValue * (1 - marketTax);
+                const newTransaction: Transaction = { id: `${Date.now()}-sale-${index}`, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${itemName}`, timestamp: now };
+                newState.transactions.unshift(newTransaction);
+                newState.money += profit;
+                const newNotification: Notification = { id: `${Date.now()}-sale-notify-${index}`, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, timestamp: now, read: false, icon: 'sale' };
+                newState.notifications.unshift(newNotification);
+                newState.playerXP += (Math.floor(profit * 0.01));
+                }
+
+                newState.buildingSlots[index] = { ...slot, activity: undefined };
+                processedActivitiesRef.current.add(activityId!);
+                stateChanged = true;
+            }
+            });
+
+            if (stateChanged) {
+              debouncedSave(newState);
+              return newState;
+            }
+
+            return prevState;
         });
-
-        if (stateChanged) {
-          debouncedSave(newState);
-          return newState;
-        }
-
-        return prevState;
-      });
     }, 1000);
 
     return () => clearInterval(interval);
@@ -960,10 +959,3 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     </div>
   );
 }
-
-    
-
-    
-
-    
-

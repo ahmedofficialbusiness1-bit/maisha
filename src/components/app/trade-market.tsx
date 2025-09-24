@@ -92,7 +92,7 @@ function PriceTicker({ inventory }: { inventory: InventoryItem[] }) {
         {tickerItems.map((item, index) => (
           <div key={index} className="flex items-center mx-4">
             <span className="font-semibold text-white">{item.commodity}:</span>
-            <span className="ml-2 font-mono text-white">${item.price.toFixed(2)}</span>
+            <span className="ml-2 font-mono text-white">${(item.price || 0).toFixed(2)}</span>
             <div
               className={`flex items-center ml-1 ${
                 item.change >= 0 ? 'text-green-400' : 'text-red-400'
