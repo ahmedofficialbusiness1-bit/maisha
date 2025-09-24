@@ -61,7 +61,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
     const handleLogout = async () => {
         const auth = getAuth(app);
         await signOut(auth);
-        router.push('/login');
+        router.push('/');
     }
     
     const xpPercentage = (playerXP / xpForNextLevel) * 100;
