@@ -13,25 +13,29 @@ const calculateUpgradeCost = (baseCost: { name: string; quantity: number }[], le
     }));
 };
 
+// Define build costs separately to avoid `this` context issues.
+const DUKA_KUU_BUILD_COST = [
+    { name: 'Mbao', quantity: 500 },
+    { name: 'Matofali', quantity: 1000 },
+    { name: 'Zege', quantity: 200 },
+];
+const DUKA_LA_UJENZI_BUILD_COST = [
+    { name: 'Nondo', quantity: 300 },
+    { name: 'Saruji', quantity: 500 },
+    { name: 'Zege', quantity: 400 },
+];
+// ... Add other build cost constants here if needed, following the pattern.
 
 export const buildingData: Record<string, BuildingConfig> = {
     duka_kuu: {
         productionRate: 0, // Shops don't produce
-        buildCost: [
-            { name: 'Mbao', quantity: 500 },
-            { name: 'Matofali', quantity: 1000 },
-            { name: 'Zege', quantity: 200 },
-        ],
-        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+        buildCost: DUKA_KUU_BUILD_COST,
+        upgradeCost: (level) => calculateUpgradeCost(DUKA_KUU_BUILD_COST, level)
     },
     duka_la_ujenzi: {
         productionRate: 0,
-        buildCost: [
-            { name: 'Nondo', quantity: 300 },
-            { name: 'Saruji', quantity: 500 },
-            { name: 'Zege', quantity: 400 },
-        ],
-        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+        buildCost: DUKA_LA_UJENZI_BUILD_COST,
+        upgradeCost: (level) => calculateUpgradeCost(DUKA_LA_UJENZI_BUILD_COST, level)
     },
     duka_la_nguo_na_vito: {
         productionRate: 0,
