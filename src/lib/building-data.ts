@@ -13,7 +13,7 @@ const calculateUpgradeCost = (baseCost: { name: string; quantity: number }[], le
     }));
 };
 
-// Define build costs separately to avoid `this` context issues.
+// Define build costs separately for reusability.
 const DUKA_KUU_BUILD_COST = [
     { name: 'Mbao', quantity: 500 },
     { name: 'Matofali', quantity: 1000 },
@@ -24,7 +24,35 @@ const DUKA_LA_UJENZI_BUILD_COST = [
     { name: 'Saruji', quantity: 500 },
     { name: 'Zege', quantity: 400 },
 ];
-// ... Add other build cost constants here if needed, following the pattern.
+const DUKA_LA_NGUO_BUILD_COST = [
+    { name: 'Mbao', quantity: 400 },
+    { name: 'Kioo', quantity: 200 },
+    { name: 'Zege', quantity: 150 },
+];
+const DUKA_LA_ELECTRONIKI_BUILD_COST = [
+    { name: 'Chuma', quantity: 300 },
+    { name: 'Kioo', quantity: 300 },
+    { name: 'Nondo', quantity: 150 },
+];
+const DUKA_LA_MAGARI_BUILD_COST = [
+    { name: 'Nondo', quantity: 800 },
+    { name: 'Chuma', quantity: 500 },
+    { name: 'Zege', quantity: 600 },
+];
+const DUKA_LA_ANGA_BUILD_COST = [
+    { name: 'Nondo', quantity: 2000 },
+    { name: 'Chuma', quantity: 1500 },
+    { name: 'Zege', quantity: 1000 },
+];
+const SHAMBA_BUILD_COST = [
+    { name: 'Mabati', quantity: 150 },
+    { name: 'Mbao', quantity: 450 },
+    { name: 'Zege', quantity: 75 },
+    { name: 'Nondo', quantity: 60 },
+    { name: 'Matofali', quantity: 750 },
+    { name: 'Chuma', quantity: 30 },
+];
+// ... Add other build cost constants here following the pattern.
 
 export const buildingData: Record<string, BuildingConfig> = {
     duka_kuu: {
@@ -39,51 +67,28 @@ export const buildingData: Record<string, BuildingConfig> = {
     },
     duka_la_nguo_na_vito: {
         productionRate: 0,
-        buildCost: [
-            { name: 'Mbao', quantity: 400 },
-            { name: 'Kioo', quantity: 200 },
-            { name: 'Zege', quantity: 150 },
-        ],
-        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+        buildCost: DUKA_LA_NGUO_BUILD_COST,
+        upgradeCost: (level) => calculateUpgradeCost(DUKA_LA_NGUO_BUILD_COST, level)
     },
     duka_la_electroniki: {
         productionRate: 0,
-        buildCost: [
-            { name: 'Chuma', quantity: 300 },
-            { name: 'Kioo', quantity: 300 },
-            { name: 'Nondo', quantity: 150 },
-        ],
-        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+        buildCost: DUKA_LA_ELECTRONIKI_BUILD_COST,
+        upgradeCost: (level) => calculateUpgradeCost(DUKA_LA_ELECTRONIKI_BUILD_COST, level)
     },
     duka_la_magari: {
         productionRate: 0,
-        buildCost: [
-            { name: 'Nondo', quantity: 800 },
-            { name: 'Chuma', quantity: 500 },
-            { name: 'Zege', quantity: 600 },
-        ],
-        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+        buildCost: DUKA_LA_MAGARI_BUILD_COST,
+        upgradeCost: (level) => calculateUpgradeCost(DUKA_LA_MAGARI_BUILD_COST, level)
     },
     duka_la_anga: {
         productionRate: 0,
-        buildCost: [
-            { name: 'Nondo', quantity: 2000 },
-            { name: 'Chuma', quantity: 1500 },
-            { name: 'Zege', quantity: 1000 },
-        ],
-        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+        buildCost: DUKA_LA_ANGA_BUILD_COST,
+        upgradeCost: (level) => calculateUpgradeCost(DUKA_LA_ANGA_BUILD_COST, level)
     },
     shamba: {
         productionRate: 100,
-        buildCost: [
-            { name: 'Mabati', quantity: 150 },
-            { name: 'Mbao', quantity: 450 },
-            { name: 'Zege', quantity: 75 },
-            { name: 'Nondo', quantity: 60 },
-            { name: 'Matofali', quantity: 750 },
-            { name: 'Chuma', quantity: 30 },
-        ],
-        upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
+        buildCost: SHAMBA_BUILD_COST,
+        upgradeCost: (level) => calculateUpgradeCost(SHAMBA_BUILD_COST, level)
     },
     zizi: {
         productionRate: 30,
@@ -754,3 +759,4 @@ export const buildingData: Record<string, BuildingConfig> = {
     
 
     
+

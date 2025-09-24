@@ -308,44 +308,45 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     if (!gameState) return;
     const costs = buildingData[building.id]?.buildCost;
     if (!costs) return;
-    
-    // Correctly check for materials
+
     for (const cost of costs) {
-        const inventoryItem = gameState.inventory.find(i => i.item === cost.name);
-        if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
-            addNotification(`Huna vifaa vya kutosha kujenga ${building.name}.`, 'construction');
-            return;
-        }
+      const inventoryItem = gameState.inventory.find(i => i.item === cost.name);
+      if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
+        addNotification(`Huna vifaa vya kutosha kujenga ${building.name}.`, 'construction');
+        return;
+      }
     }
 
     const now = Date.now();
     const constructionTimeMs = 15 * 60 * 1000;
 
     updateState(prev => {
-        let newInventory = [...prev.inventory];
-        // Deduct materials
-        for (const cost of costs) {
-            const itemIndex = newInventory.findIndex(i => i.item === cost.name);
-            if (itemIndex > -1) {
-              newInventory[itemIndex].quantity -= cost.quantity;
-            }
+      let newInventory = [...prev.inventory];
+      for (const cost of costs) {
+        const itemIndex = newInventory.findIndex(i => i.item === cost.name);
+        if (itemIndex !== -1) {
+          newInventory[itemIndex] = {
+            ...newInventory[itemIndex],
+            quantity: newInventory[itemIndex].quantity - cost.quantity,
+          };
         }
-        
-        const newSlots = [...prev.buildingSlots];
-        newSlots[slotIndex] = { 
-            building, 
-            level: 0,
-            construction: {
-                startTime: now,
-                endTime: now + constructionTimeMs,
-                targetLevel: 1
-            }
-        };
+      }
 
-        return { 
-            inventory: newInventory.filter(item => item.quantity > 0),
-            buildingSlots: newSlots 
-        };
+      const newSlots = [...prev.buildingSlots];
+      newSlots[slotIndex] = {
+        building,
+        level: 0,
+        construction: {
+          startTime: now,
+          endTime: now + constructionTimeMs,
+          targetLevel: 1,
+        },
+      };
+
+      return {
+        inventory: newInventory.filter(item => item.quantity > 0),
+        buildingSlots: newSlots,
+      };
     });
 
     addNotification(`Ujenzi wa ${building.name} umeanza.`, 'construction');
@@ -370,28 +371,31 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     const constructionTimeMs = (15 * 60 * 1000) * Math.pow(2, slot.level);
 
     updateState(prev => {
-        let newInventory = [...prev.inventory];
-        for (const cost of costs) {
-            const itemIndex = newInventory.findIndex(i => i.item === cost.name);
-            if (itemIndex > -1) {
-            newInventory[itemIndex].quantity -= cost.quantity;
-            }
+      let newInventory = [...prev.inventory];
+      for (const cost of costs) {
+        const itemIndex = newInventory.findIndex(i => i.item === cost.name);
+        if (itemIndex !== -1) {
+          newInventory[itemIndex] = {
+            ...newInventory[itemIndex],
+            quantity: newInventory[itemIndex].quantity - cost.quantity,
+          };
         }
-        
-        const newSlots = [...prev.buildingSlots];
-        newSlots[slotIndex] = {
-            ...slot,
-            construction: {
-            startTime: now,
-            endTime: now + constructionTimeMs,
-            targetLevel: slot.level + 1
-            }
-        };
+      }
 
-        return { 
-            inventory: newInventory.filter(item => item.quantity > 0),
-            buildingSlots: newSlots
-        };
+      const newSlots = [...prev.buildingSlots];
+      newSlots[slotIndex] = {
+        ...slot,
+        construction: {
+          startTime: now,
+          endTime: now + constructionTimeMs,
+          targetLevel: slot.level + 1,
+        },
+      };
+
+      return {
+        inventory: newInventory.filter(item => item.quantity > 0),
+        buildingSlots: newSlots,
+      };
     });
 
     addNotification(`Uboreshaji wa ${slot.building.name} hadi Lvl ${slot.level + 1} umeanza.`, 'construction');
@@ -943,3 +947,4 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     
 
     
+
