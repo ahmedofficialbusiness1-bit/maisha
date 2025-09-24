@@ -41,6 +41,7 @@ export type PlayerListing = {
   avatar: string;
   quality: number;
   imageHint: string;
+  sellerUid?: string; // Added to identify the seller for transactions
 };
 
 export type StockListing = {

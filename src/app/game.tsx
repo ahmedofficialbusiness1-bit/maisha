@@ -19,7 +19,7 @@ import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/component
 import { Leaderboard } from '@/components/app/leaderboard';
 import { AdminPanel } from '@/components/app/admin-panel';
 import { Skeleton } from '@/components/ui/skeleton';
-import { doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, collection, query, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 type AuthenticatedUser = {
@@ -70,10 +70,7 @@ export type UserData = {
   role: 'player' | 'admin';
 };
 
-const initialPlayerListings: PlayerListing[] = [
-    { id: 1, commodity: 'Maji', seller: 'Flexy suyo', quantity: 450, price: 0.10, avatar: 'https://picsum.photos/seed/flexy/40/40', quality: 1, imageHint: 'player avatar' },
-    { id: 2, commodity: 'Yai', seller: 'MKG CIE', quantity: 100, price: 1.50, avatar: 'https://picsum.photos/seed/mkg/40/40', quality: 0, imageHint: 'company logo' },
-];
+const initialPlayerListings: PlayerListing[] = [];
 
 const initialCompanyData: StockListing[] = [
     { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, totalShares: 250000, marketCap: 450.75 * 250000, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 100000, dividendYield: 0.015 },
@@ -141,9 +138,34 @@ export function Game({ user }: { user: AuthenticatedUser }) {
   const [view, setView] = React.useState<View>('dashboard');
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [allMarketListings, setAllMarketListings] = React.useState<PlayerListing[]>([]);
 
   const processedActivitiesRef = React.useRef<Set<string>>(new Set());
   
+  // Effect for fetching ALL market listings for a true multiplayer market
+  React.useEffect(() => {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef);
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const listings: PlayerListing[] = [];
+        querySnapshot.forEach((doc) => {
+            const userData = doc.data() as UserData;
+            if (userData.marketListings && userData.marketListings.length > 0) {
+                // Add the seller's UID to each listing for transaction purposes
+                const userListings = userData.marketListings.map(listing => ({
+                    ...listing,
+                    sellerUid: userData.uid 
+                }));
+                listings.push(...userListings);
+            }
+        });
+        setAllMarketListings(listings);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   React.useEffect(() => {
     if (!user?.uid) {
         setIsLoading(false);
@@ -176,6 +198,12 @@ export function Game({ user }: { user: AuthenticatedUser }) {
             updates.email = user.email;
             needsUpdate = true;
         }
+         // Backwards compatibility: ensure marketListings exists
+        if (data.marketListings === undefined) {
+            updates.marketListings = [];
+            needsUpdate = true;
+        }
+
 
         if (needsUpdate) {
             updateDoc(docRef, updates);
@@ -218,12 +246,19 @@ export function Game({ user }: { user: AuthenticatedUser }) {
   }, 1000);
 
   // Update state using a single function to ensure consistency and trigger save
-  const updateState = (updater: (prevState: UserData) => UserData) => {
+  const updateState = (updater: (prevState: UserData) => Partial<UserData>) => {
     setGameState(prevState => {
         if (!prevState) return null;
-        const newState = updater(prevState);
-        // We don't call debouncedSave here because onSnapshot will update the state
-        // This prevents re-renders. The game loop will now handle saving.
+        // The updater function now returns a partial update
+        const updates = updater(prevState);
+        const newState = { ...prevState, ...updates };
+
+        // Save the new state to firestore. onSnapshot will update the local state.
+        if (newState.uid) {
+            const docRef = doc(db, "users", newState.uid);
+            updateDoc(docRef, updates);
+        }
+        
         return newState;
     });
   };
@@ -245,7 +280,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
             xpForNextLevel = getXpForNextLevel(newLevel);
         }
 
-        return { ...prev, playerXP: newXP, playerLevel: newLevel };
+        return { playerXP: newXP, playerLevel: newLevel };
     });
   };
 
@@ -258,21 +293,18 @@ export function Game({ user }: { user: AuthenticatedUser }) {
         icon,
     };
     updateState(prev => ({
-        ...prev,
         notifications: [newNotification, ...prev.notifications].slice(0, 50)
     }));
   };
 
   const handleMarkNotificationsRead = () => {
     updateState(prev => ({
-        ...prev,
         notifications: prev.notifications.map(n => ({ ...n, read: true }))
     }));
   }
 
   const handleUpdateProfile = (data: ProfileData) => {
     updateState(prev => ({
-        ...prev,
         username: data.playerName,
         privateNotes: data.privateNotes || ''
     }));
@@ -288,7 +320,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
       timestamp: Date.now(),
     };
     updateState(prev => ({
-        ...prev,
         transactions: [newTransaction, ...prev.transactions]
     }));
 
@@ -334,7 +365,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
         };
 
         return { 
-            ...prev, 
             inventory: newInventory.filter(item => item.quantity > 0),
             buildingSlots: newSlots 
         };
@@ -380,7 +410,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
         };
 
         return { 
-            ...prev,
             inventory: newInventory.filter(item => item.quantity > 0),
             buildingSlots: newSlots
         };
@@ -395,7 +424,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     updateState(prev => {
         const newSlots = [...prev.buildingSlots];
         newSlots[slotIndex] = { building: null, level: 0 };
-        return { ...prev, buildingSlots: newSlots };
+        return { buildingSlots: newSlots };
     });
   };
 
@@ -442,7 +471,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
         }
         
         return {
-            ...prev,
             inventory: newInventory.filter(item => item.quantity > 0),
             buildingSlots: newSlots,
         }
@@ -485,7 +513,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
         }
         
         return {
-            ...prev,
             inventory: newInventory.filter(i => i.quantity > 0),
             buildingSlots: newSlots,
         }
@@ -506,7 +533,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
             slot.construction.endTime -= timeReduction;
         }
         return {
-            ...prev,
             stars: prev.stars - starsToUse,
             buildingSlots: newSlots,
         };
@@ -535,7 +561,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
         addTransaction('expense', totalCost, `Nunua ${quantity}x ${materialName}`);
 
         return {
-            ...prev,
             money: prev.money - totalCost,
             inventory: newInventory,
         }
@@ -545,37 +570,74 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     return true;
   };
 
-  const handleBuyFromMarket = (listing: PlayerListing, quantity: number) => {
-    if (!gameState || quantity <= 0) return;
+  const handleBuyFromMarket = async (listing: PlayerListing, quantity: number) => {
+    if (!gameState || !listing.sellerUid || quantity <= 0) return;
 
     const totalCost = listing.price * quantity;
-    if (gameState.money < totalCost) return;
+    if (gameState.money < totalCost) {
+        addNotification('Huna pesa za kutosha kununua bidhaa hii.', 'purchase');
+        return;
+    }
 
-    updateState(prev => {
-        // Remove listing from market (or reduce quantity if partial buy was allowed)
-        const newMarketListings = prev.marketListings.filter(l => l.id !== listing.id);
+    try {
+        await runTransaction(db, async (transaction) => {
+            const buyerDocRef = doc(db, 'users', gameState.uid);
+            const sellerDocRef = doc(db, 'users', listing.sellerUid!);
 
-        // Add item to player inventory
-        const newInventory = [...prev.inventory];
-        const itemIndex = newInventory.findIndex(i => i.item === listing.commodity);
-        if (itemIndex !== -1) {
-            newInventory[itemIndex].quantity += quantity;
-        } else {
-            const marketPrice = encyclopediaData.find(e => e.name === listing.commodity)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0';
-            newInventory.push({ item: listing.commodity, quantity, marketPrice: parseFloat(marketPrice) });
-        }
-        
-        addTransaction('expense', totalCost, `Nunua ${quantity}x ${listing.commodity} kutoka kwa ${listing.seller}`);
+            const buyerDoc = await transaction.get(buyerDocRef);
+            const sellerDoc = await transaction.get(sellerDocRef);
 
-        return {
-            ...prev,
-            money: prev.money - totalCost,
-            inventory: newInventory,
-            marketListings: newMarketListings,
-        };
-    });
-    
-     addNotification(`Umenunua ${quantity}x ${listing.commodity} kutoka kwa ${listing.seller}.`, 'purchase');
+            if (!buyerDoc.exists() || !sellerDoc.exists()) {
+                throw new Error("Mchezaji hayupo!");
+            }
+
+            const buyerData = buyerDoc.data() as UserData;
+            const sellerData = sellerDoc.data() as UserData;
+
+            // ---- BUYER UPDATES ----
+            if (buyerData.money < totalCost) {
+                throw new Error("Huna pesa za kutosha.");
+            }
+
+            const newBuyerInventory = [...buyerData.inventory];
+            const itemIndex = newBuyerInventory.findIndex(i => i.item === listing.commodity);
+            if (itemIndex > -1) {
+                newBuyerInventory[itemIndex].quantity += quantity;
+            } else {
+                 const marketPrice = encyclopediaData.find(e => e.name === listing.commodity)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0';
+                 newBuyerInventory.push({ item: listing.commodity, quantity, marketPrice: parseFloat(marketPrice) });
+            }
+
+            const newBuyerTransaction: Transaction = { id: `${Date.now()}-buy`, type: 'expense', amount: totalCost, description: `Nunua ${quantity}x ${listing.commodity} kutoka kwa ${listing.seller}`, timestamp: Date.now() };
+
+            transaction.update(buyerDocRef, {
+                money: buyerData.money - totalCost,
+                inventory: newBuyerInventory,
+                transactions: [newBuyerTransaction, ...buyerData.transactions]
+            });
+            
+            // ---- SELLER UPDATES ----
+            const newSellerMarketListings = sellerData.marketListings.filter(l => l.id !== listing.id);
+            const marketTax = 0.05;
+            const profit = totalCost * (1 - marketTax);
+            
+            const newSellerTransaction: Transaction = { id: `${Date.now()}-sell`, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${listing.commodity} kwa ${buyerData.username}`, timestamp: Date.now() };
+            const sellerNotification: Notification = { id: `${Date.now()}-sell-notify`, message: `Umefanikiwa kuuza ${quantity}x ${listing.commodity} kwa $${profit.toFixed(2)} kwa ${buyerData.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
+
+            transaction.update(sellerDocRef, {
+                money: sellerData.money + profit,
+                marketListings: newSellerMarketListings,
+                transactions: [newSellerTransaction, ...sellerData.transactions],
+                notifications: [sellerNotification, ...sellerData.notifications]
+            });
+        });
+
+        addNotification(`Umenunua ${quantity}x ${listing.commodity} kutoka kwa ${listing.seller}.`, 'purchase');
+
+    } catch (e: any) {
+        console.error("Transaction failed: ", e);
+        addNotification(`Ununuzi haujafanikiwa: ${e.message}`, 'purchase');
+    }
   };
   
     const handleBuyStock = (stock: StockListing, quantity: number) => {
@@ -598,7 +660,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
 
         // This is a simplified model. In a real game, you'd update the available shares on the market.
         return {
-            ...prev,
             money: prev.money - totalCost,
             playerStocks: newPlayerStocks,
         };
@@ -630,7 +691,6 @@ export function Game({ user }: { user: AuthenticatedUser }) {
          const newMarketListings = [newListing, ...prev.marketListings];
          
          return {
-             ...prev,
              inventory: newInventory.filter(i => i.quantity > 0),
              marketListings: newMarketListings,
          }
@@ -744,7 +804,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     const netWorth = gameState.money + stockValue + buildingValue;
 
     if (netWorth !== gameState.netWorth) {
-        updateState(prev => ({ ...prev, netWorth }));
+        updateState(prev => ({ netWorth }));
     }
   }, [gameState?.money, gameState?.playerStocks, gameState?.buildingSlots, gameState?.companyData]);
 
@@ -821,7 +881,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
         return <Inventory inventoryItems={gameState.inventory} onPostToMarket={handlePostToMarket} />;
       case 'market':
         return <TradeMarket 
-                    playerListings={gameState.marketListings} 
+                    playerListings={allMarketListings} 
                     stockListings={stockListingsWithShares} 
                     bondListings={gameState.bondListings}
                     inventory={gameState.inventory} 
@@ -868,7 +928,3 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     </div>
   );
 }
-
-    
-
-    
