@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -9,7 +7,8 @@ import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot, type BuildingType, type ActivityInfo } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
 import { TradeMarket, type PlayerListing, type StockListing, type BondListing } from '@/components/app/trade-market';
-import { Encyclopedia, encyclopediaData } from '@/components/app/encyclopedia';
+import { Encyclopedia } from '@/components/app/encyclopedia';
+import { encyclopediaData } from '@/lib/encyclopedia-data';
 import type { Recipe } from '@/lib/recipe-data';
 import { recipes } from '@/lib/recipe-data';
 import { buildingData } from '@/lib/building-data';
@@ -959,3 +958,5 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     </div>
   );
 }
+
+    
