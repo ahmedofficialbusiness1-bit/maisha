@@ -50,6 +50,7 @@ export type Notification = {
 export type UserData = {
   uid: string;
   username: string;
+  email: string | null;
   privateNotes: string;
   money: number;
   stars: number;
@@ -96,6 +97,7 @@ export const getInitialUserData = (user: AuthenticatedUser): UserData => {
   return {
     uid: user.uid,
     username: user.username,
+    email: user.email,
     privateNotes: `Karibu kwenye wasifu wangu! Mimi ni ${user.username}, mtaalamu wa kuzalisha bidhaa bora.`,
     money: startingMoney,
     stars: 100,
@@ -154,29 +156,32 @@ export function Game({ user }: { user: AuthenticatedUser }) {
       if (docSnap.exists()) {
         const data = docSnap.data() as UserData;
         let needsUpdate = false;
+        const updates: Partial<UserData> = {};
         
         // Update presence to online
         if (data.status !== 'online') {
-            data.status = 'online';
-            data.lastSeen = serverTimestamp();
+            updates.status = 'online';
+            updates.lastSeen = serverTimestamp();
             needsUpdate = true;
         }
 
         // Backwards compatibility: ensure netWorth exists
         if (data.netWorth === undefined) {
-            data.netWorth = data.money || 0; // Set a default value
+            updates.netWorth = data.money || 0; // Set a default value
+            needsUpdate = true;
+        }
+        
+        // Backwards compatibility: ensure email exists
+        if (data.email === undefined) {
+            updates.email = user.email;
             needsUpdate = true;
         }
 
         if (needsUpdate) {
-            updateDoc(docRef, { 
-                status: 'online', 
-                lastSeen: serverTimestamp(),
-                netWorth: data.netWorth
-            });
+            updateDoc(docRef, updates);
         }
         
-        setGameState(data);
+        setGameState({...data, ...updates});
       } else {
         // First-time user, create their data
         const initialData = getInitialUserData(user);
@@ -863,5 +868,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     </div>
   );
 }
+
+    
 
     
