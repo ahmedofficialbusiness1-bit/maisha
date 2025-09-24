@@ -98,7 +98,7 @@ export const getInitialUserData = (user: AuthenticatedUser): UserData => {
     playerLevel: 1,
     playerXP: 0,
     inventory: initialItems,
-    marketListings: initialPlayerListings,
+    marketListings: [],
     companyData: initialCompanyData,
     bondListings: initialBondListings,
     buildingSlots: Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })),
@@ -148,10 +148,27 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data() as UserData;
+        let needsUpdate = false;
         
         // Update presence to online
         if (data.status !== 'online') {
-            updateDoc(docRef, { status: 'online', lastSeen: serverTimestamp() });
+            data.status = 'online';
+            data.lastSeen = serverTimestamp();
+            needsUpdate = true;
+        }
+
+        // Backwards compatibility: ensure netWorth exists
+        if (data.netWorth === undefined) {
+            data.netWorth = data.money || 0; // Set a default value
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            updateDoc(docRef, { 
+                status: 'online', 
+                lastSeen: serverTimestamp(),
+                netWorth: data.netWorth
+            });
         }
         
         setGameState(data);
