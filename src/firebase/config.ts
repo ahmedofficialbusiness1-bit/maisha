@@ -1,3 +1,4 @@
+
 'use client';
 
 import { getApp, getApps, initializeApp, type FirebaseOptions } from 'firebase/app';
@@ -9,6 +10,12 @@ const firebaseConfig: FirebaseOptions = JSON.parse(
 );
 
 export function initializeFirebase() {
+  // Prevent initialization if config is not set.
+  if (!firebaseConfig.apiKey) {
+    console.error("Firebase config is not set. Please check your environment variables.");
+    return { app: null, auth: null, firestore: null };
+  }
+
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const firestore = getFirestore(app);

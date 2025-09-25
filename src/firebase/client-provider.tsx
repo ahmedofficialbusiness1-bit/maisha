@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -10,9 +11,9 @@ import type { Firestore } from 'firebase/firestore';
 // that can be shared between component instances.
 type FirebaseInstances = [
   {
-    app: FirebaseApp;
-    auth: Auth;
-    firestore: Firestore;
+    app: FirebaseApp | null;
+    auth: Auth | null;
+    firestore: Firestore | null;
   }
 ];
 
@@ -32,11 +33,16 @@ export function FirebaseClientProvider({
     instances.current = [initializeFirebase()];
   }
 
-  if (!instances.current) {
+  if (!instances.current || !instances.current[0].app) {
     return null;
   }
 
   const [{ app, auth, firestore }] = instances.current;
+
+  // This check is redundant due to the one above, but it's good for type safety.
+  if (!app || !auth || !firestore) {
+    return null;
+  }
 
   return (
     <FirebaseProvider app={app} auth={auth} firestore={firestore}>
