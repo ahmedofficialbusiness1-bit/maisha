@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award, Shield } from 'lucide-react';
 import { useMemo } from 'react';
-import type { View } from './game';
+import type { View } from '@/app/game';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,12 +14,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import type { Notification } from './game';
+import type { Notification } from '@/app/game';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { getAuth } from 'firebase/auth';
-import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
 interface AppHeaderProps {
@@ -58,7 +57,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
     }
 
     const handleLogout = async () => {
-        const auth = getAuth(app);
+        const auth = getAuth();
         await auth.signOut();
         router.push('/');
     }

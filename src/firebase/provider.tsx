@@ -36,13 +36,25 @@ export function FirebaseProvider({
 }
 
 export function useFirebaseApp() {
-  return React.useContext(FirebaseAppContext);
+  const app = React.useContext(FirebaseAppContext);
+  if (!app) {
+    throw new Error('useFirebaseApp must be used within a FirebaseProvider');
+  }
+  return app;
 }
 
 export function useAuth() {
-  return React.useContext(AuthContext);
+  const auth = React.useContext(AuthContext);
+  if (!auth) {
+    throw new Error('useAuth must be used within a FirebaseProvider');
+  }
+  return auth;
 }
 
 export function useFirestore() {
-  return React.useContext(FirestoreContext);
+  const firestore = React.useContext(FirestoreContext);
+  if (!firestore) {
+    throw new Error('useFirestore must be used within a FirebaseProvider');
+  }
+  return firestore;
 }

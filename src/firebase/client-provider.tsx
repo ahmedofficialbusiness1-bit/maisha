@@ -34,14 +34,18 @@ export function FirebaseClientProvider({
   }
 
   if (!instances.current || !instances.current[0].app) {
-    return null;
+    // This can happen if the Firebase config is not set.
+    // We render the children without the provider, and any component
+    // that tries to use Firebase will throw an error. This is better
+    // than crashing the whole app.
+    return <>{children}</>;
   }
 
   const [{ app, auth, firestore }] = instances.current;
 
   // This check is redundant due to the one above, but it's good for type safety.
   if (!app || !auth || !firestore) {
-    return null;
+    return <>{children}</>;
   }
 
   return (
