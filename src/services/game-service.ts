@@ -64,7 +64,12 @@ export function getInitialUserData(): UserData {
 
 export function saveGameState(state: UserData) {
   if (typeof window !== 'undefined') {
-    window.localStorage.setItem(GAME_STATE_KEY, JSON.stringify(state));
+    try {
+      const stateToSave = JSON.stringify(state);
+      window.localStorage.setItem(GAME_STATE_KEY, stateToSave);
+    } catch (error) {
+      console.error("Error saving game state to localStorage:", error);
+    }
   }
 }
 
@@ -76,9 +81,11 @@ export function loadGameState(): UserData | null {
   const savedState = window.localStorage.getItem(GAME_STATE_KEY);
   if (savedState) {
     try {
+      // TODO: Add state validation and migration logic here
       return JSON.parse(savedState);
     } catch (e) {
       console.error("Failed to parse saved game state:", e);
+      window.localStorage.removeItem(GAME_STATE_KEY); // Clear corrupted state
       return null;
     }
   }
