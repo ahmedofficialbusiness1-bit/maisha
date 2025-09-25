@@ -12,7 +12,6 @@ const firebaseConfig: FirebaseOptions = JSON.parse(
 export function initializeFirebase() {
   // Prevent initialization if config is not set.
   if (!firebaseConfig.apiKey) {
-    console.error("Firebase config is not set. Please check your environment variables.");
     return { app: null, auth: null, firestore: null };
   }
 
