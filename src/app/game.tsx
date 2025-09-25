@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -414,8 +413,42 @@ export function Game({ user }: { user: AuthenticatedUser }) {
 
   // Simplified for localStorage - no multiplayer
   const handleBuyFromMarket = (listing: PlayerListing, quantityToBuy: number) => {
-    addNotification('Soko la wachezaji wengi halipatikani katika hali ya nje ya mtandao.', 'purchase');
-  };
+    if (!gameState || quantityToBuy <= 0 || quantityToBuy > listing.quantity) return;
+    
+    const totalCost = listing.price * quantityToBuy;
+    if (gameState.money < totalCost) {
+        addNotification(`Huna pesa za kutosha kununua ${quantityToBuy}x ${listing.commodity}.`, 'purchase');
+        return;
+    }
+
+    updateState(prev => {
+        let newInventory = [...prev.inventory];
+        const itemIndex = newInventory.findIndex(i => i.item === listing.commodity);
+        
+        // Use official market price for newly bought items
+        const entry = encyclopediaData.find(e => e.name === listing.commodity);
+        const officialMarketPrice = entry ? parseFloat(entry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : listing.price;
+
+        if (itemIndex > -1) {
+            newInventory[itemIndex].quantity += quantityToBuy;
+        } else {
+            newInventory.push({ item: listing.commodity, quantity: quantityToBuy, marketPrice: officialMarketPrice });
+        }
+
+        addTransaction('expense', totalCost, `Nunua ${quantityToBuy}x ${listing.commodity}`);
+
+        // Since it's an offline game, we just remove the listing from our own view
+        const newMarketListings = prev.marketListings.filter(l => l.id !== listing.id);
+        
+        return {
+            money: prev.money - totalCost,
+            inventory: newInventory,
+            marketListings: newMarketListings
+        };
+    });
+
+    addNotification(`Umenunua ${quantityToBuy}x ${listing.commodity} kwa $${totalCost.toFixed(2)}.`, 'purchase');
+};
   
   const handleBuyStock = (stock: StockListing, quantity: number) => {
     if (!gameState || quantity <= 0) return;
