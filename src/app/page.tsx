@@ -1,10 +1,10 @@
 'use client';
 
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Factory, CandlestickChart, Wheat, Briefcase, Award } from 'lucide-react';
-
 
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => (
     <div className="flex flex-col items-center text-center p-4">
@@ -18,7 +18,7 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; titl
 
 export default function LandingPage() {
     const router = useRouter();
-
+    
     return (
         <main className="flex-1 flex flex-col items-center justify-center p-4 text-white">
             <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-cover bg-center bg-fixed" style={{backgroundImage: "url('https://picsum.photos/seed/african-savanna/1920/1080')"}} />

@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award, Shield } from 'lucide-react';
+import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award, Shield, BookOpen } from 'lucide-react';
 import { useMemo } from 'react';
 import type { View } from '@/app/game';
 import {
@@ -54,10 +54,6 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
             onNotificationsRead();
         }
     }
-
-    const handleLogout = () => {
-        router.push('/');
-    }
     
     const xpPercentage = (playerXP / xpForNextLevel) * 100;
   
@@ -70,6 +66,8 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
         </div>
         <h1 className="text-lg font-bold">Uchumi wa Afrika</h1>
       </div>
+      
+      <Button variant="ghost" className="md:hidden" onClick={() => setView('encyclopedia')}><BookOpen /></Button>
 
       {/* Spacer */}
       <div className="flex-1"></div>
@@ -195,11 +193,6 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                  <DropdownMenuItem onSelect={() => setView('profile')}>
                     <User className="mr-2 h-4 w-4" />
                     <span>Wasifu</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className='bg-gray-600'/>
-                 <DropdownMenuItem onSelect={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Rudi Mwanzo</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

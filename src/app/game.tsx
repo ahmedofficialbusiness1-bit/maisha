@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useDebouncedCallback } from 'use-debounce';
 import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
@@ -13,13 +12,12 @@ import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
-import { Leaderboard, type LeaderboardEntry } from '@/components/app/leaderboard';
+import { Leaderboard } from '@/components/app/leaderboard';
 import { AdminPanel } from '@/components/app/admin-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
-
-const BUILDING_SLOTS = 20;
+import { getInitialUserData, saveGameState, loadGameState, type UserData } from '@/services/game-service';
 
 export type PlayerStock = {
     ticker: string;
@@ -36,25 +34,7 @@ export type Notification = {
     icon: 'construction' | 'sale' | 'purchase' | 'dividend' | 'production' | 'level-up';
 };
 
-export type UserData = {
-  uid: string;
-  username: string;
-  email: string | null;
-  privateNotes: string;
-  money: number;
-  stars: number;
-  playerLevel: number;
-  playerXP: number;
-  inventory: InventoryItem[];
-  buildingSlots: BuildingSlot[];
-  playerStocks: PlayerStock[];
-  transactions: Transaction[];
-  notifications: Notification[];
-  status: 'online' | 'offline';
-  lastSeen: number; 
-  netWorth: number;
-  role: 'player' | 'admin';
-};
+const BUILDING_SLOTS = 20;
 
 const initialCompanyData: StockListing[] = [
     { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, totalShares: 250000, marketCap: 450.75 * 250000, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 100000, dividendYield: 0.015 },
@@ -74,34 +54,6 @@ const calculatedPrices = encyclopediaData.reduce((acc, item) => {
     return acc;
 }, {} as Record<string, number>);
 
-const getInitialUserData = (): UserData => {
-  const startingMoney = 100000;
-  const initialItems: InventoryItem[] = [
-    { item: 'Mbao', quantity: 5000, marketPrice: calculatedPrices['Mbao'] || 1.15 },
-    { item: 'Matofali', quantity: 10000, marketPrice: calculatedPrices['Matofali'] || 2.13 },
-  ];
-    
-  return {
-    uid: 'local-player',
-    username: 'Mchezaji',
-    email: null,
-    privateNotes: `Karibu kwenye wasifu wangu! Mimi ni Mchezaji, mtaalamu wa kuzalisha bidhaa bora.`,
-    money: startingMoney,
-    stars: 100,
-    playerLevel: 1,
-    playerXP: 0,
-    inventory: initialItems,
-    buildingSlots: Array(BUILDING_SLOTS).fill(null).map(() => ({ building: null, level: 0 })),
-    playerStocks: [],
-    transactions: [],
-    notifications: [],
-    status: 'online',
-    lastSeen: Date.now(),
-    netWorth: startingMoney,
-    role: 'player',
-  }
-};
-
 
 export function Game() {
   const [gameState, setGameState] = React.useState<UserData | null>(null);
@@ -109,44 +61,31 @@ export function Game() {
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
   const { toast } = useToast();
 
-  // Load game state from localStorage on initial render
   React.useEffect(() => {
-    try {
-      const savedState = localStorage.getItem('uchumi-wa-afrika-save');
-      if (savedState) {
-        const parsedState = JSON.parse(savedState);
-        setGameState(parsedState);
-      } else {
-        setGameState(getInitialUserData());
-      }
-    } catch (error) {
-        console.error("Failed to load game state from localStorage:", error);
-        setGameState(getInitialUserData());
+    const savedGame = loadGameState();
+    if (savedGame) {
+      setGameState(savedGame);
+    } else {
+      // Set up a new game if one doesn't exist
+      setGameState(getInitialUserData());
     }
   }, []);
 
-  const debouncedSave = useDebouncedCallback((newState: UserData) => {
-      try {
-        localStorage.setItem('uchumi-wa-afrika-save', JSON.stringify(newState));
-      } catch (error) {
-           console.error("Failed to save game state to localStorage:", error);
-            toast({
-                variant: 'destructive',
-                title: 'Save Error',
-                description: 'Could not save your progress.',
-            });
-      }
-  }, 1000);
+  React.useEffect(() => {
+    if (gameState) {
+      saveGameState(gameState);
+    }
+  }, [gameState]);
+
 
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
-    setGameState(prevState => {
-        if (!prevState) return prevState;
-        const updates = updater(prevState);
-        const newState = { ...prevState, ...updates, lastSeen: Date.now() };
-        debouncedSave(newState);
+    setGameState(prev => {
+        if(!prev) return null;
+        const updates = updater(prev);
+        const newState = { ...prev, ...updates, lastSeen: Date.now() };
         return newState;
     });
-  }, [debouncedSave]);
+  }, []);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -162,7 +101,7 @@ export function Game() {
         icon,
     };
     updateState(prev => ({
-        notifications: [newNotification, ...prev.notifications].slice(0, 50)
+        notifications: [newNotification, ...(prev.notifications || [])].slice(0, 50)
     }));
   }, [updateState]);
 
@@ -191,7 +130,7 @@ export function Game() {
       timestamp: Date.now(),
     };
     updateState(prev => ({
-        transactions: [newTransaction, ...prev.transactions]
+        transactions: [newTransaction, ...(prev.transactions || [])]
     }));
     if (type === 'income') {
         addXP(Math.floor(amount * 0.01));
@@ -395,7 +334,7 @@ export function Game() {
   };
 
   const handleBuyFromMarket = (listing: PlayerListing, quantityToBuy: number) => {
-    addNotification("Soko la wachezaji halipatikani kwenye mchezo wa ndani.", 'purchase');
+    addNotification("Soko la wachezaji halipatikani bado.", 'purchase');
   };
   
   const handleBuyStock = (stock: StockListing, quantity: number) => {
@@ -419,7 +358,7 @@ export function Game() {
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
      if (!gameState || quantity <= 0 || quantity > item.quantity) return;
-     addNotification("Soko la wachezaji halipatikani kwenye mchezo wa ndani.", 'sale');
+     addNotification("Soko la wachezaji halipatikani bado.", 'sale');
   };
 
   // Game loop for processing finished activities
@@ -509,7 +448,7 @@ export function Game() {
                 };
             });
         }
-    });
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [gameState, updateState, addXP, addNotification]);
