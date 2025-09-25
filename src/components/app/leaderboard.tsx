@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -19,6 +18,10 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ allPlayers }: LeaderboardProps) {
+  const sortedPlayers = React.useMemo(() => {
+    return [...allPlayers].sort((a,b) => b.netWorth - a.netWorth)
+  }, [allPlayers]);
+
   return (
     <div className="flex flex-col gap-4 text-white">
       <div>
@@ -32,11 +35,11 @@ export function Leaderboard({ allPlayers }: LeaderboardProps) {
         <CardHeader>
           <CardTitle>Wachezaji Wanaoongoza kwa Utajiri</CardTitle>
           <CardDescription className="text-gray-400">
-            Orodha inasasishwa papo hapo.
+            Ubao wa wanaoongoza haupatikani kwenye mchezo wa ndani.
           </CardDescription>
         </CardHeader>
         <CardContent>
-           {allPlayers.length > 0 ? (
+           {sortedPlayers.length > 0 ? (
              <Table>
                 <TableHeader>
                     <TableRow>
@@ -46,7 +49,7 @@ export function Leaderboard({ allPlayers }: LeaderboardProps) {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {allPlayers.map((player, index) => (
+                    {sortedPlayers.map((player, index) => (
                         <TableRow key={player.uid}>
                             <TableCell className="font-bold text-lg flex items-center gap-2">
                                 {index + 1}

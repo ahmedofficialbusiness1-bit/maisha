@@ -18,8 +18,6 @@ import type { Notification } from '@/app/game';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { getAuth } from 'firebase/auth';
-import { useFirebaseApp } from '@/firebase';
 import { useRouter } from 'next/navigation';
 
 interface AppHeaderProps {
@@ -48,7 +46,6 @@ function formatCurrency(value: number): string {
 
 export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead, playerLevel, playerXP, xpForNextLevel, isAdmin }: AppHeaderProps) {
     const router = useRouter();
-    const app = useFirebaseApp();
     const formattedMoney = useMemo(() => formatCurrency(money), [money]);
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -58,10 +55,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
         }
     }
 
-    const handleLogout = async () => {
-        if (!app) return;
-        const auth = getAuth(app);
-        await auth.signOut();
+    const handleLogout = () => {
         router.push('/');
     }
     
@@ -205,7 +199,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                 <DropdownMenuSeparator className='bg-gray-600'/>
                  <DropdownMenuItem onSelect={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Toka</span>
+                    <span>Rudi Mwanzo</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

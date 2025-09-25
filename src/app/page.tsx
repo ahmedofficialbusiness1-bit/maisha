@@ -4,9 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Factory, CandlestickChart, Wheat, Briefcase, Award } from 'lucide-react';
-import { useUser, FirebaseClientProvider } from '@/firebase';
-import { useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
 
 
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => (
@@ -19,24 +16,8 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; titl
     </div>
 );
 
-function LandingComponent() {
+export default function LandingPage() {
     const router = useRouter();
-    const { user, loading } = useUser();
-
-    useEffect(() => {
-        if (!loading && user) {
-            router.push('/dashboard');
-        }
-    }, [user, loading, router]);
-    
-    if (loading || user) {
-      return (
-          <div className="flex h-screen w-screen items-center justify-center bg-gray-900">
-              <Loader2 className="h-8 w-8 animate-spin text-white" />
-          </div>
-      )
-    }
-
 
     return (
         <main className="flex-1 flex flex-col items-center justify-center p-4 text-white">
@@ -53,7 +34,7 @@ function LandingComponent() {
                     <Button 
                         size="lg" 
                         className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 rounded-full"
-                        onClick={() => router.push('/login')}
+                        onClick={() => router.push('/dashboard')}
                     >
                         Anza Kucheza
                     </Button>
@@ -96,12 +77,4 @@ function LandingComponent() {
             </Card>
         </main>
     );
-}
-
-export default function LandingPage() {
-    return (
-        <FirebaseClientProvider>
-            <LandingComponent />
-        </FirebaseClientProvider>
-    )
 }
