@@ -1,10 +1,9 @@
-
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award } from 'lucide-react';
+import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award, Shield } from 'lucide-react';
 import { useMemo } from 'react';
 import type { View } from './game';
 import {
@@ -19,9 +18,9 @@ import type { Notification } from './game';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { useRouter } from 'next/navigation';
 import { getAuth } from 'firebase/auth';
 import { app } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
 interface AppHeaderProps {
     money: number;
@@ -34,6 +33,7 @@ interface AppHeaderProps {
     playerLevel: number;
     playerXP: number;
     xpForNextLevel: number;
+    isAdmin?: boolean;
 }
 
 function formatCurrency(value: number): string {
@@ -46,7 +46,7 @@ function formatCurrency(value: number): string {
     return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 }
 
-export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead, playerLevel, playerXP, xpForNextLevel }: AppHeaderProps) {
+export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead, playerLevel, playerXP, xpForNextLevel, isAdmin }: AppHeaderProps) {
     const router = useRouter();
     const formattedMoney = useMemo(() => formatCurrency(money), [money]);
     const unreadCount = notifications.filter(n => !n.read).length;
@@ -60,8 +60,6 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
     const handleLogout = async () => {
         const auth = getAuth(app);
         await auth.signOut();
-        // Since we removed login, we just refresh the page.
-        // The middleware will handle redirection if needed.
         router.push('/');
     }
     
@@ -188,6 +186,12 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
             <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white">
                  <DropdownMenuLabel>Management</DropdownMenuLabel>
                 <DropdownMenuSeparator className='bg-gray-600'/>
+                {isAdmin && (
+                    <DropdownMenuItem onSelect={() => setView('admin')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin Panel</span>
+                    </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onSelect={() => setView('accounting')}>
                     <Scale className="mr-2 h-4 w-4" />
                     <span>Uhasibu</span>

@@ -19,7 +19,9 @@ import type { Notification } from '@/app/game';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-
+import { getAuth } from 'firebase/auth';
+import { useFirebaseApp } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 interface AppHeaderProps {
     money: number;
@@ -46,6 +48,8 @@ function formatCurrency(value: number): string {
 }
 
 export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead, playerLevel, playerXP, xpForNextLevel, isAdmin }: AppHeaderProps) {
+    const router = useRouter();
+    const app = useFirebaseApp();
     const formattedMoney = useMemo(() => formatCurrency(money), [money]);
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -55,10 +59,11 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
         }
     }
 
-    const handleLogout = () => {
-        // In local mode, logout can simply reload the page or clear state if we want.
-        // For now, it does nothing as there is no "logged out" state.
-        alert("Logout is not applicable in local mode.");
+    const handleLogout = async () => {
+        if (!app) return;
+        const auth = getAuth(app);
+        await auth.signOut();
+        router.push('/');
     }
     
     const xpPercentage = (playerXP / xpForNextLevel) * 100;
@@ -177,7 +182,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
-                    <Menu className="h-3.5 w-3.5 sm:h-4 smw-4" />
+                    <Menu className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span className="sr-only">Open menu</span>
                 </Button>
             </DropdownMenuTrigger>

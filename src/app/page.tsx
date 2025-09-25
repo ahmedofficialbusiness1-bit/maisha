@@ -1,11 +1,12 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Factory, CandlestickChart, Wheat, Briefcase, Award } from 'lucide-react';
-import Image from 'next/image';
+import { useUser } from '@/firebase';
+import { useEffect } from 'react';
+
 
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => (
     <div className="flex flex-col items-center text-center p-4">
@@ -20,6 +21,14 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; titl
 
 export default function LandingPage() {
     const router = useRouter();
+    const { user, loading } = useUser();
+
+    useEffect(() => {
+        if (user) {
+            router.push('/dashboard');
+        }
+    }, [user, router]);
+
 
     return (
         <main className="flex-1 flex flex-col items-center justify-center p-4 text-white">
@@ -34,7 +43,7 @@ export default function LandingPage() {
                     <Button 
                         size="lg" 
                         className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 rounded-full"
-                        onClick={() => router.push('/dashboard')}
+                        onClick={() => router.push('/login')}
                     >
                         Anza Kucheza
                     </Button>

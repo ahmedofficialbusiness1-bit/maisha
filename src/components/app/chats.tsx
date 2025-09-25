@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -16,6 +15,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, type Timestamp } from 'firebase/firestore';
 
 
 type Message = {
@@ -26,7 +27,7 @@ type Message = {
     avatar: string;
   };
   text: string;
-  timestamp: number | null;
+  timestamp: Timestamp | null;
 };
 
 type AuthenticatedUser = {
@@ -34,63 +35,55 @@ type AuthenticatedUser = {
     username: string;
 };
 
-const LOCAL_STORAGE_CHAT_KEY = 'uchumi-wa-afrika-chat-';
 
 function ChatGroup({ title, user, chatRoomId }: { title: string; user: AuthenticatedUser, chatRoomId: string }) {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [newMessage, setNewMessage] = React.useState('');
   const scrollViewportRef = React.useRef<HTMLDivElement>(null);
-  const storageKey = LOCAL_STORAGE_CHAT_KEY + chatRoomId;
+  const firestore = useFirestore();
+  
+  const messagesRef = React.useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'chat', chatRoomId, 'messages');
+  }, [firestore, chatRoomId]);
+
 
   React.useEffect(() => {
-    try {
-        const savedMessages = localStorage.getItem(storageKey);
-        if (savedMessages) {
-            setMessages(JSON.parse(savedMessages));
-        }
-    } catch (e) {
-        console.error("Failed to load chat messages from local storage", e);
-    }
-  }, [storageKey]);
+    if (!messagesRef) return;
+    const q = query(messagesRef, orderBy('timestamp', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const newMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
+        setMessages(newMessages);
+    });
 
-  const handleSendMessage = (e: React.FormEvent) => {
+    return () => unsubscribe();
+  }, [messagesRef]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-        const message: Message = {
-            id: `${Date.now()}`,
+    if (newMessage.trim() && user && messagesRef) {
+        await addDoc(messagesRef, {
             uid: user.uid,
             sender: {
                 name: user.username,
                 avatar: `https://picsum.photos/seed/${user.uid}/40/40`,
             },
             text: newMessage.trim(),
-            timestamp: Date.now(),
-        };
-
-        setMessages(prevMessages => {
-            const updatedMessages = [...prevMessages, message];
-            try {
-                localStorage.setItem(storageKey, JSON.stringify(updatedMessages));
-            } catch (e) {
-                console.error("Failed to save chat messages to local storage", e);
-            }
-            return updatedMessages;
+            timestamp: serverTimestamp(),
         });
-
       setNewMessage('');
     }
   };
 
   React.useEffect(() => {
-    // Scroll to the bottom whenever a new message is added
     if (scrollViewportRef.current) {
       scrollViewportRef.current.scrollTop = scrollViewportRef.current.scrollHeight;
     }
   }, [messages]);
   
-    const formatTimestamp = (timestamp: number | null) => {
+    const formatTimestamp = (timestamp: Timestamp | null) => {
         if (!timestamp) return '';
-        return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
 
@@ -141,7 +134,7 @@ export function Chats({ user }: { user: AuthenticatedUser }) {
       <CardHeader>
         <CardTitle>Mawasiliano ya Wachezaji</CardTitle>
         <CardDescription className="text-gray-400">
-          Chat imehifadhiwa kwenye kivinjari chako. Wachezaji wengine hawataona jumbe hizi.
+          Ongea na wachezaji wengine kwa muda halisi.
         </CardDescription>
       </CardHeader>
       <CardContent>

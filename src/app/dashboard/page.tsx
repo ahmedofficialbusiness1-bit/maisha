@@ -1,16 +1,13 @@
-
 'use client';
 
 import * as React from 'react';
 import { Game } from '@/app/game';
-
-// Since we are moving to local storage, we can use a mock user.
-const localUser = {
-    uid: 'local-player-01',
-    username: 'Mchezaji',
-    email: 'mchezaji@uchumi.africa',
-}
+import { FirebaseClientProvider } from '@/firebase';
 
 export default function DashboardPage() {
-  return <Game user={localUser} />;
+  return (
+    <FirebaseClientProvider>
+      <Game />
+    </FirebaseClientProvider>
+  );
 }
