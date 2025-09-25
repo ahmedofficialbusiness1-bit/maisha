@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
@@ -19,6 +18,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveGameState, loadGameState, type UserData } from '@/services/game-service';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { getDatabase, ref, onValue } from 'firebase/database';
 
 export type PlayerStock = {
     ticker: string;
@@ -57,26 +59,47 @@ const calculatedPrices = encyclopediaData.reduce((acc, item) => {
 
 
 export function Game() {
+  const { user, loading: userLoading } = useUser();
   const router = useRouter();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
+  const [gameStateLoading, setGameStateLoading] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
   const { toast } = useToast();
 
+  // Load or initialize game state
   React.useEffect(() => {
-    const savedGame = loadGameState();
-    if (savedGame) {
-      setGameState(savedGame);
-    } else {
+    if (userLoading) return;
+    if (!user) {
       router.replace('/login');
+      return;
     }
-  }, [router]);
 
+    const db = getDatabase();
+    const userRef = ref(db, `users/${user.uid}`);
+
+    const unsubscribe = onValue(userRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setGameState(snapshot.val());
+      } else {
+        // User exists but has no data, create initial data
+        const initialData = getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email);
+        saveGameState(user.uid, initialData).then(() => {
+            setGameState(initialData);
+        });
+      }
+      setGameStateLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, userLoading, router]);
+
+  // Save game state whenever it changes
   React.useEffect(() => {
-    if (gameState) {
-      saveGameState(gameState);
+    if (gameState && user) {
+      saveGameState(user.uid, gameState);
     }
-  }, [gameState]);
+  }, [gameState, user]);
 
 
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
@@ -485,7 +508,7 @@ export function Game() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState?.money, gameState?.playerStocks, gameState?.buildingSlots, companyData, gameState?.inventory]);
 
-  if (!gameState) {
+  if (userLoading || gameStateLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-900 text-white">
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-gray-700/50 bg-gray-900/95 px-4 backdrop-blur-sm sm:h-20">
@@ -506,6 +529,8 @@ export function Game() {
       </div>
     );
   }
+
+  if (!gameState || !user) return null; // Should be redirected by useEffect
   
   const myLeaderboardRank = 1;
 

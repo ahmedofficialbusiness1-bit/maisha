@@ -25,7 +25,7 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
   return (
     <div className="flex flex-col h-[70vh]">
       <div className="flex-grow p-4 flex items-center justify-center text-gray-500">
-        <p>Soga za mtandaoni hazipatikani kwenye mchezo wa ndani.</p>
+        <p>Soga za mtandaoni hazipatikani bado.</p>
       </div>
       <form className="flex items-center gap-2 border-t border-gray-700 p-4">
         <Input

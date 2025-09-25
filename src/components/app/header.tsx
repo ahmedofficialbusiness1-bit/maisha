@@ -19,6 +19,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { useRouter } from 'next/navigation';
+import { signOut } from '@/firebase/auth';
 
 interface AppHeaderProps {
     money: number;
@@ -56,9 +57,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
     }
 
     const handleLogout = async () => {
-        if (typeof window !== 'undefined') {
-            window.localStorage.removeItem('uchumi-wa-afrika-game-state');
-        }
+        await signOut();
         router.push('/login');
     }
     

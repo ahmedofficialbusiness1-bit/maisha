@@ -1,0 +1,39 @@
+'use client';
+
+import * as React from 'react';
+import { initializeFirebase, FirebaseProvider } from '.';
+import type { FirebaseApp } from 'firebase/app';
+import type { Auth } from 'firebase/auth';
+import type { Firestore } from 'firebase/firestore';
+import type { Database } from 'firebase/database';
+
+
+export function FirebaseClientProvider({ children }: { children: React.ReactNode }) {
+  const [services, setServices] = React.useState<{
+    app: FirebaseApp | null;
+    auth: Auth | null;
+    firestore: Firestore | null;
+    database: Database | null;
+  } | null>(null);
+
+  React.useEffect(() => {
+    const firebaseServices = initializeFirebase();
+    setServices(firebaseServices);
+  }, []);
+
+  if (!services || !services.app || !services.auth || !services.database) {
+    // You can return a loading spinner here
+    return <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">Inapakia Firebase...</div>;
+  }
+
+  return (
+    <FirebaseProvider
+      app={services.app}
+      auth={services.auth}
+      firestore={services.firestore}
+      database={services.database}
+    >
+      {children}
+    </FirebaseProvider>
+  );
+}
