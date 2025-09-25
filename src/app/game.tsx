@@ -124,6 +124,22 @@ export function Game() {
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
   const { toast } = useToast();
 
+  // Effect to initialize a new user
+  React.useEffect(() => {
+    if (firestore && user && !gameStateLoading && (!gameState || !gameState.uid)) {
+      const newUserData = getInitialUserData(user);
+      const userRef = doc(firestore, 'users', user.uid);
+      
+      setDoc(userRef, newUserData).then(() => {
+          setGameState(newUserData);
+          console.log("New user data initialized in Firestore.");
+      }).catch(error => {
+          console.error("Error initializing user data:", error);
+      });
+    }
+  }, [firestore, user, gameState, gameStateLoading, setGameState]);
+  
+
   const debouncedSave = useDebouncedCallback((newState: Partial<UserData>) => {
       if (userDocRef) {
         setDoc(userDocRef, newState, { merge: true }).catch(error => {
@@ -137,24 +153,16 @@ export function Game() {
       }
   }, 1000);
 
-  // Effect to initialize a new user
-  React.useEffect(() => {
-    if (firestore && user && !gameState && !gameStateLoading) {
-      const newUserData = getInitialUserData(user);
-      setDoc(doc(firestore, 'users', user.uid), newUserData).then(() => {
-          setGameState(newUserData);
-      });
-    }
-  }, [firestore, user, gameState, gameStateLoading, setGameState]);
-
 
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
-    if (!gameState) return;
-    const updates = updater(gameState);
-    const newState = { ...gameState, ...updates };
-    setGameState(newState); // Optimistic update
-    debouncedSave(updates);
-  }, [gameState, setGameState, debouncedSave]);
+    setGameState(prevState => {
+        if (!prevState) return prevState;
+        const updates = updater(prevState);
+        const newState = { ...prevState, ...updates };
+        debouncedSave(updates);
+        return newState;
+    });
+  }, [setGameState, debouncedSave]);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -545,19 +553,15 @@ export function Game() {
         const now = Date.now();
         let changed = false;
         
-        let newMoney = gameState.money;
-        let newXP = gameState.playerXP;
-        const newInventory = [...gameState.inventory.map(i => ({...i}))];
-        let newTransactions = [...gameState.transactions];
-        let newNotifications = [...gameState.notifications];
         const newBuildingSlots = [...gameState.buildingSlots.map(s => ({...s, activity: s.activity ? {...s.activity} : undefined, construction: s.construction ? {...s.construction} : undefined }))];
 
-        newBuildingSlots.forEach((slot) => {
+        const finishedActivities: { type: 'construction' | 'production' | 'sale', slotIndex: number, details: any }[] = [];
+
+        newBuildingSlots.forEach((slot, index) => {
             // Process construction
             if (slot.construction && now >= slot.construction.endTime) {
+                finishedActivities.push({type: 'construction', slotIndex: index, details: { targetLevel: slot.construction.targetLevel, buildingName: slot.building?.name }});
                 slot.level = slot.construction.targetLevel;
-                newNotifications = [{ id: `${now}-construction-${Math.random()}`, message: `Ujenzi wa ${slot.building?.name} Lvl ${slot.construction.targetLevel} umekamilika!`, timestamp: now, read: false, icon: 'construction' }, ...newNotifications];
-                newXP += 100 * slot.construction.targetLevel;
                 slot.construction = undefined;
                 changed = true;
             }
@@ -565,22 +569,9 @@ export function Game() {
             // Process activity
             if (slot.activity && now >= slot.activity.endTime) {
                 if (slot.activity.type === 'produce') {
-                    const { recipeId: itemName, quantity } = slot.activity;
-                    const itemIndex = newInventory.findIndex(i => i.item === itemName);
-                    if (itemIndex !== -1) {
-                        newInventory[itemIndex].quantity += quantity;
-                    } else {
-                        newInventory.push({ item: itemName, quantity, marketPrice: calculatedPrices[itemName] || 0 });
-                    }
-                    newNotifications = [{ id: `${now}-production-${Math.random()}`, message: `Uzalishaji wa ${quantity}x ${itemName} umekamilika.`, timestamp: now, read: false, icon: 'production' }, ...newNotifications];
-                    newXP += quantity * 2;
+                    finishedActivities.push({type: 'production', slotIndex: index, details: { ...slot.activity }});
                 } else if (slot.activity.type === 'sell') {
-                    const { saleValue, quantity, recipeId: itemName } = slot.activity;
-                    const profit = saleValue * 0.95;
-                    newTransactions.unshift({ id: `${now}-sale-${Math.random()}`, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${itemName}`, timestamp: now });
-                    newMoney += profit;
-                    newNotifications = [{ id: `${now}-sale-notify-${Math.random()}`, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, timestamp: now, read: false, icon: 'sale' }, ...newNotifications];
-                    newXP += Math.floor(profit * 0.01);
+                    finishedActivities.push({type: 'sale', slotIndex: index, details: { ...slot.activity }});
                 }
                 slot.activity = undefined;
                 changed = true;
@@ -588,31 +579,63 @@ export function Game() {
         });
         
         if (changed) {
-            // Level up check
-            let currentLevel = gameState.playerLevel;
-            let currentXP = newXP;
-            let xpForNextLevel = getXpForNextLevel(currentLevel);
-            while (currentXP >= xpForNextLevel) {
-                currentXP -= xpForNextLevel;
-                currentLevel++;
-                newNotifications.unshift({ id: `${now}-levelup-${currentLevel}`, message: `Hongera! Umefikia Level ${currentLevel}!`, timestamp: now, read: false, icon: 'level-up' });
-                xpForNextLevel = getXpForNextLevel(currentLevel);
-            }
+            updateState(prev => {
+                let newMoney = prev.money;
+                let newXP = prev.playerXP;
+                const newInventory = [...prev.inventory.map(i => ({...i}))];
+                let newTransactions = [...prev.transactions];
+                let newNotifications = [...prev.notifications];
 
-            updateState(() => ({
-                buildingSlots: newBuildingSlots,
-                inventory: newInventory.filter(i => i.quantity > 0),
-                money: newMoney,
-                transactions: newTransactions,
-                playerXP: currentXP,
-                playerLevel: currentLevel,
-                notifications: newNotifications
-            }));
+                for (const activity of finishedActivities) {
+                    if (activity.type === 'construction') {
+                        newNotifications.unshift({ id: `${now}-construction-${Math.random()}`, message: `Ujenzi wa ${activity.details.buildingName} Lvl ${activity.details.targetLevel} umekamilika!`, timestamp: now, read: false, icon: 'construction' });
+                        newXP += 100 * activity.details.targetLevel;
+                    } else if (activity.type === 'production') {
+                        const { quantity, recipeId: itemName } = activity.details;
+                        const itemIndex = newInventory.findIndex(i => i.item === itemName);
+                        if (itemIndex !== -1) {
+                            newInventory[itemIndex].quantity += quantity;
+                        } else {
+                            newInventory.push({ item: itemName, quantity, marketPrice: calculatedPrices[itemName] || 0 });
+                        }
+                        newNotifications.unshift({ id: `${now}-production-${Math.random()}`, message: `Uzalishaji wa ${quantity}x ${itemName} umekamilika.`, timestamp: now, read: false, icon: 'production' });
+                        newXP += quantity * 2;
+                    } else if (activity.type === 'sale') {
+                        const { saleValue, quantity, recipeId: itemName } = activity.details;
+                        const profit = saleValue * 0.95; // 5% tax
+                        newTransactions.unshift({ id: `${now}-sale-${Math.random()}`, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${itemName}`, timestamp: now });
+                        newMoney += profit;
+                        newNotifications.unshift({ id: `${now}-sale-notify-${Math.random()}`, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, timestamp: now, read: false, icon: 'sale' });
+                        newXP += Math.floor(profit * 0.01);
+                    }
+                }
+
+                // Level up check
+                let currentLevel = prev.playerLevel;
+                let currentXP = newXP;
+                let xpForNextLevel = getXpForNextLevel(currentLevel);
+                while (currentXP >= xpForNextLevel) {
+                    currentXP -= xpForNextLevel;
+                    currentLevel++;
+                    newNotifications.unshift({ id: `${now}-levelup-${currentLevel}`, message: `Hongera! Umefikia Level ${currentLevel}!`, timestamp: now, read: false, icon: 'level-up' });
+                    xpForNextLevel = getXpForNextLevel(currentLevel);
+                }
+
+                return {
+                    buildingSlots: newBuildingSlots,
+                    inventory: newInventory.filter(i => i.quantity > 0),
+                    money: newMoney,
+                    transactions: newTransactions,
+                    playerXP: currentXP,
+                    playerLevel: currentLevel,
+                    notifications: newNotifications
+                };
+            });
         }
     });
 
     return () => clearInterval(interval);
-  }, [gameState, updateState]);
+  }, [gameState, updateState, addXP, addNotification]);
 
 
   // Recalculate net worth and update leaderboard
