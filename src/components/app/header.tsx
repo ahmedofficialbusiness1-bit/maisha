@@ -54,6 +54,13 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
             onNotificationsRead();
         }
     }
+
+    const handleLogout = async () => {
+        if (typeof window !== 'undefined') {
+            window.localStorage.removeItem('uchumi-wa-afrika-game-state');
+        }
+        router.push('/login');
+    }
     
     const xpPercentage = (playerXP / xpForNextLevel) * 100;
   
@@ -193,6 +200,11 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                  <DropdownMenuItem onSelect={() => setView('profile')}>
                     <User className="mr-2 h-4 w-4" />
                     <span>Wasifu</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className='bg-gray-600'/>
+                 <DropdownMenuItem onSelect={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Toka</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

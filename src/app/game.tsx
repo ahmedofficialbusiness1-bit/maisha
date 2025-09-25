@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
@@ -56,6 +57,7 @@ const calculatedPrices = encyclopediaData.reduce((acc, item) => {
 
 
 export function Game() {
+  const router = useRouter();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
@@ -66,10 +68,9 @@ export function Game() {
     if (savedGame) {
       setGameState(savedGame);
     } else {
-      // Set up a new game if one doesn't exist
-      setGameState(getInitialUserData());
+      router.replace('/login');
     }
-  }, []);
+  }, [router]);
 
   React.useEffect(() => {
     if (gameState) {
