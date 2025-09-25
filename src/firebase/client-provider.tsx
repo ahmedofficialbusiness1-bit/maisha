@@ -7,15 +7,11 @@ import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 
-// A single-element tuple is a trick to hold a reference to a value
-// that can be shared between component instances.
-type FirebaseInstances = [
-  {
-    app: FirebaseApp | null;
-    auth: Auth | null;
-    firestore: Firestore | null;
-  }
-];
+interface FirebaseInstances {
+  app: FirebaseApp;
+  auth: Auth;
+  firestore: Firestore;
+}
 
 /**
  * A client-side component that initializes Firebase and provides it to the
@@ -27,29 +23,28 @@ export function FirebaseClientProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const instances = React.useRef<FirebaseInstances>();
+  const [instances, setInstances] = React.useState<FirebaseInstances | null>(null);
 
-  if (typeof window !== 'undefined' && !instances.current) {
-    instances.current = [initializeFirebase()];
-  }
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const firebaseInstances = initializeFirebase();
+      if (firebaseInstances.app && firebaseInstances.auth && firebaseInstances.firestore) {
+         setInstances({
+            app: firebaseInstances.app,
+            auth: firebaseInstances.auth,
+            firestore: firebaseInstances.firestore
+         });
+      }
+    }
+  }, []);
 
-  if (!instances.current || !instances.current[0].app) {
-    // This can happen if the Firebase config is not set.
-    // We render the children without the provider, and any component
-    // that tries to use Firebase will throw an error. This is better
-    // than crashing the whole app.
-    return <>{children}</>;
-  }
-
-  const [{ app, auth, firestore }] = instances.current;
-
-  // This check is redundant due to the one above, but it's good for type safety.
-  if (!app || !auth || !firestore) {
-    return <>{children}</>;
+  if (!instances) {
+    // While initializing, you might want to show a loader or nothing
+    return null;
   }
 
   return (
-    <FirebaseProvider app={app} auth={auth} firestore={firestore}>
+    <FirebaseProvider app={instances.app} auth={instances.auth} firestore={instances.firestore}>
       {children}
     </FirebaseProvider>
   );
