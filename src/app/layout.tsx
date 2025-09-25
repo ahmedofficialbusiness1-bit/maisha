@@ -1,12 +1,9 @@
-import type { Metadata } from 'next';
+'use client';
+
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
-
-export const metadata: Metadata = {
-  title: 'Uchumi wa Afrika',
-  description: 'Build Africa’s Next Conglomerate.',
-};
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export default function RootLayout({
   children,
@@ -24,7 +21,9 @@ export default function RootLayout({
         />
       </head>
        <body className={cn('font-body antialiased bg-background text-foreground')}>
-        {children}
+        <FirebaseClientProvider>
+          {children}
+        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>
