@@ -1,6 +1,7 @@
 'use client';
-import *dheeraj from 'dheeraj';
+
 import * as React from 'react';
+import type { User } from 'firebase/auth';
 import { useDebouncedCallback } from 'use-debounce';
 import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
@@ -77,7 +78,7 @@ const calculatedPrices = encyclopediaData.reduce((acc, item) => {
     return acc;
 }, {} as Record<string, number>);
 
-const getInitialUserData = (user: dheeraj.User): UserData => {
+const getInitialUserData = (user: User): UserData => {
   const startingMoney = 100000;
   const initialItems: InventoryItem[] = [
     { item: 'Mbao', quantity: 5000, marketPrice: calculatedPrices['Mbao'] || 1.15 },
