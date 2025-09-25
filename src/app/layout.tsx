@@ -24,8 +24,6 @@ export default function RootLayout({
         />
       </head>
        <body className={cn('font-body antialiased bg-background text-foreground')}>
-        <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-cover bg-center bg-fixed" style={{backgroundImage: "url('https://picsum.photos/seed/african-savanna/1920/1080')"}} />
-        <div className="absolute inset-0 -z-10 bg-black/60"></div>
         <div className="relative min-h-screen flex flex-col">
           {children}
         </div>

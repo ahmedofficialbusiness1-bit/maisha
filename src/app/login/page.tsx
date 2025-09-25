@@ -10,9 +10,10 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { useFirebaseApp, useUser } from '@/firebase';
+import { useFirebaseApp, useUser, FirebaseClientProvider } from '@/firebase';
 
-export default function LoginPage() {
+
+function LoginComponent() {
   const router = useRouter();
   const { user, loading: userLoading } = useUser();
   const app = useFirebaseApp();
@@ -50,6 +51,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-gray-900 text-white">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-cover bg-center bg-fixed" style={{backgroundImage: "url('https://picsum.photos/seed/african-savanna/1920/1080')"}} />
+      <div className="absolute inset-0 -z-10 bg-black/60"></div>
       <div className="flex flex-col items-center gap-4 rounded-xl bg-gray-800/60 p-8 border border-gray-700 shadow-2xl">
          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-700 mb-4">
             <span className="text-3xl font-bold text-white">UA</span>
@@ -66,4 +69,13 @@ export default function LoginPage() {
       </div>
     </div>
   );
+}
+
+
+export default function LoginPage() {
+    return (
+        <FirebaseClientProvider>
+            <LoginComponent />
+        </FirebaseClientProvider>
+    )
 }

@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Factory, CandlestickChart, Wheat, Briefcase, Award } from 'lucide-react';
-import { useUser } from '@/firebase';
+import { useUser, FirebaseClientProvider } from '@/firebase';
 import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => (
@@ -18,16 +19,23 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; titl
     </div>
 );
 
-
-export default function LandingPage() {
+function LandingComponent() {
     const router = useRouter();
     const { user, loading } = useUser();
 
     useEffect(() => {
-        if (user) {
+        if (!loading && user) {
             router.push('/dashboard');
         }
-    }, [user, router]);
+    }, [user, loading, router]);
+    
+    if (loading || user) {
+      return (
+          <div className="flex h-screen w-screen items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-white" />
+          </div>
+      )
+    }
 
 
     return (
@@ -86,4 +94,14 @@ export default function LandingPage() {
             </Card>
         </main>
     );
+}
+
+export default function LandingPage() {
+    return (
+        <FirebaseClientProvider>
+             <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-cover bg-center bg-fixed" style={{backgroundImage: "url('https://picsum.photos/seed/african-savanna/1920/1080')"}} />
+            <div className="absolute inset-0 -z-10 bg-black/60"></div>
+            <LandingComponent />
+        </FirebaseClientProvider>
+    )
 }
