@@ -19,8 +19,6 @@ import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/component
 import { Leaderboard } from '@/components/app/leaderboard';
 import { AdminPanel } from '@/components/app/admin-panel';
 import { Skeleton } from '@/components/ui/skeleton';
-import { doc, setDoc, onSnapshot, serverTimestamp, updateDoc, collection, query, runTransaction, type Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 type AuthenticatedUser = {
@@ -31,6 +29,7 @@ type AuthenticatedUser = {
 
 const BUILDING_SLOTS = 20;
 const ADMIN_EMAIL = 'ahmedofficialbusiness1@gmail.com';
+const LOCAL_STORAGE_KEY = 'uchumi-wa-afrika-save-game';
 
 export type PlayerStock = {
     ticker: string;
@@ -66,7 +65,7 @@ export type UserData = {
   transactions: Transaction[];
   notifications: Notification[];
   status: 'online' | 'offline';
-  lastSeen: any; // Firestore ServerTimestamp
+  lastSeen: any; // Can be a Date object or number
   netWorth: number;
   role: 'player' | 'admin';
 };
@@ -81,6 +80,14 @@ const initialBondListings: BondListing[] = [
     { id: 1, issuer: 'Serikali ya Tanzania', faceValue: 1000, couponRate: 5.5, maturityDate: '2030-12-31', price: 980, quantityAvailable: 500, creditRating: 'A+', issuerLogo: 'https://picsum.photos/seed/tza-gov/40/40', imageHint: 'government seal' },
     { id: 2, issuer: 'Kilimo Fresh Inc.', faceValue: 1000, couponRate: 7.2, maturityDate: '2028-06-30', price: 1010, quantityAvailable: 2000, creditRating: 'BBB', issuerLogo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo' },
 ];
+
+const calculatedPrices = encyclopediaData.reduce((acc, item) => {
+    const priceString = item.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '');
+    if (priceString) {
+        acc[item.name] = parseFloat(priceString);
+    }
+    return acc;
+}, {} as Record<string, number>);
 
 export const getInitialUserData = (user: AuthenticatedUser): UserData => {
   const startingMoney = 100000;
@@ -107,105 +114,51 @@ export const getInitialUserData = (user: AuthenticatedUser): UserData => {
     transactions: [],
     notifications: [],
     status: 'online',
-    lastSeen: serverTimestamp(),
+    lastSeen: Date.now(),
     netWorth: startingMoney,
     role: user.email === ADMIN_EMAIL ? 'admin' : 'player',
   }
 };
-
-const calculatedPrices = encyclopediaData.reduce((acc, item) => {
-    const priceString = item.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '');
-    if (priceString) {
-        acc[item.name] = parseFloat(priceString);
-    }
-    return acc;
-}, {} as Record<string, number>);
 
 
 export function Game({ user }: { user: AuthenticatedUser }) {
   const [view, setView] = React.useState<View>('dashboard');
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [allMarketListings, setAllMarketListings] = React.useState<PlayerListing[]>([]);
   const { toast } = useToast();
 
-  // Effect for fetching ALL market listings for a true multiplayer market
-  React.useEffect(() => {
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef);
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const listings: PlayerListing[] = [];
-        querySnapshot.forEach((doc) => {
-            const userData = doc.data() as UserData;
-            if (userData.marketListings && userData.marketListings.length > 0) {
-                const userListings = userData.marketListings.map(listing => ({
-                    ...listing,
-                    sellerUid: userData.uid 
-                }));
-                listings.push(...userListings);
-            }
-        });
-        setAllMarketListings(listings);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Main effect to load user data from Firestore
-  React.useEffect(() => {
-    if (!user?.uid) {
-        setIsLoading(false);
-        return;
-    };
-
-    const docRef = doc(db, 'users', user.uid);
-
-    const unsubscribe = onSnapshot(docRef, async (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data() as UserData;
-        const mergedData: UserData = { ...getInitialUserData(user), ...data };
-        
-        // Ensure essential fields are not undefined before setting state
-        if (mergedData.netWorth === undefined || mergedData.role === undefined || mergedData.email === undefined || mergedData.marketListings === undefined) {
-             await updateDoc(docRef, { 
-                netWorth: mergedData.netWorth ?? 0,
-                role: mergedData.role ?? 'player',
-                email: mergedData.email ?? user.email,
-                marketListings: mergedData.marketListings ?? []
-            });
-        }
-        
-        setGameState(mergedData);
-        await updateDoc(docRef, { status: 'online', lastSeen: serverTimestamp() });
-
-      } else {
-        const initialData = getInitialUserData(user);
-        await setDoc(docRef, initialData);
-        setGameState(initialData);
-      }
-      setIsLoading(false);
-    });
-    
-    const handleBeforeUnload = () => {
-        updateDoc(docRef, { status: 'offline', lastSeen: serverTimestamp() });
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-        unsubscribe();
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-        if (user?.uid) handleBeforeUnload();
-    };
-  }, [user]);
-
-  // Debounced save to Firestore
+  // Debounced save to localStorage
   const debouncedSave = useDebouncedCallback((newState: UserData) => {
-    if(newState.uid) { 
-      const docRef = doc(db, "users", newState.uid);
-      setDoc(docRef, newState, { merge: true });
+    try {
+      const stateString = JSON.stringify(newState);
+      localStorage.setItem(LOCAL_STORAGE_KEY, stateString);
+    } catch (error) {
+      console.error("Failed to save game state to localStorage:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Save Error',
+        description: 'Could not save your progress to the browser.',
+      });
     }
   }, 1000);
+
+  // Load game state from localStorage on initial mount
+  React.useEffect(() => {
+    try {
+      const savedStateString = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (savedStateString) {
+        const savedState = JSON.parse(savedStateString);
+        setGameState(savedState);
+      } else {
+        setGameState(getInitialUserData(user));
+      }
+    } catch (error) {
+      console.error("Failed to load game state from localStorage:", error);
+      setGameState(getInitialUserData(user));
+    }
+    setIsLoading(false);
+  }, [user]);
+
   
   // Single update function to manage state and trigger saves
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
@@ -459,65 +412,9 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     return true;
   };
 
-  const handleBuyFromMarket = async (listing: PlayerListing, quantityToBuy: number) => {
-    if (!gameState || !listing.sellerUid || quantityToBuy <= 0) return;
-    if (listing.sellerUid === gameState.uid) return;
-
-    const totalCost = listing.price * quantityToBuy;
-    if (gameState.money < totalCost) {
-        addNotification('Huna pesa za kutosha kununua bidhaa hii.', 'purchase');
-        return;
-    }
-
-    try {
-        await runTransaction(db, async (transaction) => {
-            const buyerDocRef = doc(db, 'users', gameState.uid);
-            const sellerDocRef = doc(db, 'users', listing.sellerUid!);
-
-            const [buyerDoc, sellerDoc] = await Promise.all([transaction.get(buyerDocRef), transaction.get(sellerDocRef)]);
-
-            if (!buyerDoc.exists() || !sellerDoc.exists()) throw new Error("Mchezaji hayupo!");
-
-            const buyerData = buyerDoc.data() as UserData;
-            const sellerData = sellerDoc.data() as UserData;
-            
-            const sellerListingIndex = sellerData.marketListings.findIndex(l => l.id === listing.id);
-            if (sellerListingIndex === -1) throw new Error("Bidhaa hii haipo tena sokoni.");
-            
-            const actualListing = sellerData.marketListings[sellerListingIndex];
-            if (actualListing.quantity < quantityToBuy) throw new Error(`Kuna ${actualListing.quantity} pekee zinazopatikana.`);
-
-            if (buyerData.money < totalCost) throw new Error("Huna pesa za kutosha.");
-
-            // Buyer updates
-            const newBuyerInventory = [...buyerData.inventory];
-            const itemIndex = newBuyerInventory.findIndex(i => i.item === listing.commodity);
-            if (itemIndex > -1) {
-                newBuyerInventory[itemIndex].quantity += quantityToBuy;
-            } else {
-                 newBuyerInventory.push({ item: listing.commodity, quantity: quantityToBuy, marketPrice: calculatedPrices[listing.commodity] || 0 });
-            }
-            const newBuyerTransaction: Transaction = { id: `${Date.now()}-buy`, type: 'expense', amount: totalCost, description: `Nunua ${quantityToBuy}x ${listing.commodity} kutoka kwa ${listing.seller}`, timestamp: Date.now() };
-
-            // Seller updates
-            const profit = totalCost * (1 - 0.05);
-            let newSellerMarketListings = [...sellerData.marketListings];
-            if (actualListing.quantity === quantityToBuy) {
-                newSellerMarketListings.splice(sellerListingIndex, 1);
-            } else {
-                newSellerMarketListings[sellerListingIndex].quantity -= quantityToBuy;
-            }
-            
-            const newSellerTransaction: Transaction = { id: `${Date.now()}-sell`, type: 'income', amount: profit, description: `Mauzo ya ${quantityToBuy}x ${listing.commodity} kwa ${buyerData.username}`, timestamp: Date.now() };
-            const sellerNotification: Notification = { id: `${Date.now()}-sell-notify`, message: `Umefanikiwa kuuza ${quantityToBuy}x ${listing.commodity} kwa $${profit.toFixed(2)} kwa ${buyerData.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
-            
-            transaction.update(buyerDocRef, { money: buyerData.money - totalCost, inventory: newBuyerInventory, transactions: [newBuyerTransaction, ...buyerData.transactions] });
-            transaction.update(sellerDocRef, { money: sellerData.money + profit, marketListings: newSellerMarketListings, transactions: [newSellerTransaction, ...sellerData.transactions], notifications: [sellerNotification, ...sellerData.notifications] });
-        });
-        addNotification(`Umenunua ${quantityToBuy}x ${listing.commodity} kutoka kwa ${listing.seller}.`, 'purchase');
-    } catch (e: any) {
-        toast({ variant: 'destructive', title: 'Ununuzi haujafanikiwa', description: e.message });
-    }
+  // Simplified for localStorage - no multiplayer
+  const handleBuyFromMarket = (listing: PlayerListing, quantityToBuy: number) => {
+    addNotification('Soko la wachezaji wengi halipatikani katika hali ya nje ya mtandao.', 'purchase');
   };
   
   const handleBuyStock = (stock: StockListing, quantity: number) => {
@@ -568,73 +465,84 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     const processedActivities = new Set<string>();
 
     const interval = setInterval(() => {
-        updateState(prevState => {
+        setGameState(prevState => {
+            if (!prevState) return null;
             const now = Date.now();
-            const newState: Partial<UserData> = {};
-            const newNotifications = [...prevState.notifications];
-            let newXP = prevState.playerXP;
+            let stateChanged = false;
+            
+            const newState: UserData = JSON.parse(JSON.stringify(prevState)); // Deep copy to avoid mutation issues
 
-            const updatedSlots = prevState.buildingSlots.map((slot, index) => {
-                const newSlot = { ...slot };
-                const constructionId = newSlot.construction ? `${index}-${newSlot.construction.startTime}` : null;
-                const activityId = newSlot.activity ? `${index}-${newSlot.activity.startTime}` : null;
+            const newNotifications = [...newState.notifications];
+            let newXP = newState.playerXP;
+
+            const updatedSlots = newState.buildingSlots.map((slot, index) => {
+                const constructionId = slot.construction ? `${index}-${slot.construction.startTime}` : null;
+                const activityId = slot.activity ? `${index}-${slot.activity.startTime}` : null;
 
                 // Process construction
-                if (newSlot.construction && now >= newSlot.construction.endTime && !processedActivities.has(constructionId!)) {
-                    newSlot.level = newSlot.construction.targetLevel;
-                    newNotifications.unshift({ id: `${now}-construction-${index}`, message: `Ujenzi wa ${newSlot.building?.name} Lvl ${newSlot.construction.targetLevel} umekamilika!`, timestamp: now, read: false, icon: 'construction' });
-                    newXP += 100 * newSlot.construction.targetLevel;
-                    newSlot.construction = undefined;
+                if (slot.construction && now >= slot.construction.endTime && !processedActivities.has(constructionId!)) {
+                    slot.level = slot.construction.targetLevel;
+                    newNotifications.unshift({ id: `${now}-construction-${index}`, message: `Ujenzi wa ${slot.building?.name} Lvl ${slot.construction.targetLevel} umekamilika!`, timestamp: now, read: false, icon: 'construction' });
+                    newXP += 100 * slot.construction.targetLevel;
+                    slot.construction = undefined;
                     processedActivities.add(constructionId!);
+                    stateChanged = true;
                 }
 
                 // Process activity
-                if (newSlot.activity && now >= newSlot.activity.endTime && !processedActivities.has(activityId!)) {
-                    if (newSlot.activity.type === 'produce') {
-                        const { recipeId: itemName, quantity } = newSlot.activity;
-                        const itemIndex = prevState.inventory.findIndex(i => i.item === itemName);
+                if (slot.activity && now >= slot.activity.endTime && !processedActivities.has(activityId!)) {
+                    if (slot.activity.type === 'produce') {
+                        const { recipeId: itemName, quantity } = slot.activity;
+                        const itemIndex = newState.inventory.findIndex(i => i.item === itemName);
                         if (itemIndex !== -1) {
-                            (newState.inventory = newState.inventory || [...prevState.inventory])[itemIndex].quantity += quantity;
+                            newState.inventory[itemIndex].quantity += quantity;
                         } else {
-                            (newState.inventory = newState.inventory || [...prevState.inventory]).push({ item: itemName, quantity, marketPrice: calculatedPrices[itemName] || 0 });
+                            newState.inventory.push({ item: itemName, quantity, marketPrice: calculatedPrices[itemName] || 0 });
                         }
                         newNotifications.unshift({ id: `${now}-production-${index}`, message: `Uzalishaji wa ${quantity}x ${itemName} umekamilika.`, timestamp: now, read: false, icon: 'production' });
                         newXP += quantity * 2;
-                    } else if (newSlot.activity.type === 'sell') {
-                        const { saleValue, quantity, recipeId: itemName } = newSlot.activity;
+                    } else if (slot.activity.type === 'sell') {
+                        const { saleValue, quantity, recipeId: itemName } = slot.activity;
                         const profit = saleValue * 0.95;
-                        (newState.transactions = newState.transactions || [...prevState.transactions]).unshift({ id: `${now}-sale-${index}`, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${itemName}`, timestamp: now });
-                        newState.money = (newState.money ?? prevState.money) + profit;
+                        newState.transactions.unshift({ id: `${now}-sale-${index}`, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${itemName}`, timestamp: now });
+                        newState.money += profit;
                         newNotifications.unshift({ id: `${now}-sale-notify-${index}`, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, timestamp: now, read: false, icon: 'sale' });
                         newXP += Math.floor(profit * 0.01);
                     }
-                    newSlot.activity = undefined;
+                    slot.activity = undefined;
                     processedActivities.add(activityId!);
+                    stateChanged = true;
                 }
-                return newSlot;
+                return slot;
             });
             
             newState.buildingSlots = updatedSlots;
             newState.notifications = newNotifications;
             
             // Handle level up
-            let newLevel = prevState.playerLevel;
+            let newLevel = newState.playerLevel;
             let xpForNextLevel = getXpForNextLevel(newLevel);
             while (newXP >= xpForNextLevel) {
                 newXP -= xpForNextLevel;
                 newLevel++;
                 newNotifications.unshift({ id: `${now}-levelup-${newLevel}`, message: `Hongera! Umefikia Level ${newLevel}!`, timestamp: now, read: false, icon: 'level-up' });
                 xpForNextLevel = getXpForNextLevel(newLevel);
+                stateChanged = true;
             }
             newState.playerXP = newXP;
             newState.playerLevel = newLevel;
 
-            return newState;
+            if (stateChanged) {
+                debouncedSave(newState);
+                return newState;
+            }
+            return prevState; // No changes, return original state
         });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [updateState, getXpForNextLevel]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Recalculate net worth when dependencies change
   React.useEffect(() => {
@@ -692,7 +600,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     netWorth: gameState.netWorth,
     buildingValue: 0,
     stockValue: 0,
-    ranking: '1',
+    ranking: 'N/A', // No leaderboard in local mode
     rating: 'A+',
   };
   
@@ -701,7 +609,7 @@ export function Game({ user }: { user: AuthenticatedUser }) {
       avatarUrl: `https://picsum.photos/seed/${gameState.uid}/100/100`,
       privateNotes: gameState.privateNotes,
       status: gameState.status,
-      lastSeen: gameState.lastSeen && gameState.lastSeen.toDate ? gameState.lastSeen.toDate() : gameState.lastSeen,
+      lastSeen: new Date(gameState.lastSeen),
       role: gameState.role,
   };
   
@@ -714,7 +622,8 @@ export function Game({ user }: { user: AuthenticatedUser }) {
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory} onPostToMarket={handlePostToMarket} />;
       case 'market':
-        return <TradeMarket playerListings={allMarketListings} stockListings={stockListingsWithShares} bondListings={gameState.bondListings} inventory={gameState.inventory} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
+        // In local mode, allMarketListings is just the player's own listings
+        return <TradeMarket playerListings={gameState.marketListings} stockListings={stockListingsWithShares} bondListings={gameState.bondListings} inventory={gameState.inventory} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
@@ -742,5 +651,3 @@ export function Game({ user }: { user: AuthenticatedUser }) {
     </div>
   );
 }
-
-      

@@ -19,9 +19,6 @@ import type { Notification } from '@/app/game';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { useRouter } from 'next/navigation';
-import { getAuth, signOut } from 'firebase/auth';
-import { app } from '@/lib/firebase';
 
 
 interface AppHeaderProps {
@@ -49,7 +46,6 @@ function formatCurrency(value: number): string {
 }
 
 export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead, playerLevel, playerXP, xpForNextLevel, isAdmin }: AppHeaderProps) {
-    const router = useRouter();
     const formattedMoney = useMemo(() => formatCurrency(money), [money]);
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -59,10 +55,10 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
         }
     }
 
-    const handleLogout = async () => {
-        const auth = getAuth(app);
-        await signOut(auth);
-        router.push('/');
+    const handleLogout = () => {
+        // In local mode, logout can simply reload the page or clear state if we want.
+        // For now, it does nothing as there is no "logged out" state.
+        alert("Logout is not applicable in local mode.");
     }
     
     const xpPercentage = (playerXP / xpForNextLevel) * 100;

@@ -8,8 +8,15 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, type Timestamp } from 'firebase/firestore';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 type Message = {
   id: string;
@@ -19,7 +26,7 @@ type Message = {
     avatar: string;
   };
   text: string;
-  timestamp: Timestamp | null;
+  timestamp: number | null;
 };
 
 type AuthenticatedUser = {
@@ -27,39 +34,49 @@ type AuthenticatedUser = {
     username: string;
 };
 
+const LOCAL_STORAGE_CHAT_KEY = 'uchumi-wa-afrika-chat-';
+
 function ChatGroup({ title, user, chatRoomId }: { title: string; user: AuthenticatedUser, chatRoomId: string }) {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [newMessage, setNewMessage] = React.useState('');
   const scrollViewportRef = React.useRef<HTMLDivElement>(null);
+  const storageKey = LOCAL_STORAGE_CHAT_KEY + chatRoomId;
 
   React.useEffect(() => {
-    const messagesRef = collection(db, 'chats', chatRoomId, 'messages');
-    const q = query(messagesRef, orderBy('timestamp', 'asc'));
+    try {
+        const savedMessages = localStorage.getItem(storageKey);
+        if (savedMessages) {
+            setMessages(JSON.parse(savedMessages));
+        }
+    } catch (e) {
+        console.error("Failed to load chat messages from local storage", e);
+    }
+  }, [storageKey]);
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const newMessages: Message[] = [];
-      querySnapshot.forEach((doc) => {
-        newMessages.push({ id: doc.id, ...doc.data() } as Message);
-      });
-      setMessages(newMessages);
-    });
-
-    return () => unsubscribe();
-  }, [chatRoomId]);
-
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (newMessage.trim()) {
-      const messagesRef = collection(db, 'chats', chatRoomId, 'messages');
-      await addDoc(messagesRef, {
-        uid: user.uid,
-        sender: {
-          name: user.username,
-          avatar: `https://picsum.photos/seed/${user.uid}/40/40`,
-        },
-        text: newMessage.trim(),
-        timestamp: serverTimestamp(),
-      });
+        const message: Message = {
+            id: `${Date.now()}`,
+            uid: user.uid,
+            sender: {
+                name: user.username,
+                avatar: `https://picsum.photos/seed/${user.uid}/40/40`,
+            },
+            text: newMessage.trim(),
+            timestamp: Date.now(),
+        };
+
+        setMessages(prevMessages => {
+            const updatedMessages = [...prevMessages, message];
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(updatedMessages));
+            } catch (e) {
+                console.error("Failed to save chat messages to local storage", e);
+            }
+            return updatedMessages;
+        });
+
       setNewMessage('');
     }
   };
@@ -71,9 +88,9 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
     }
   }, [messages]);
   
-    const formatTimestamp = (timestamp: Timestamp | null) => {
+    const formatTimestamp = (timestamp: number | null) => {
         if (!timestamp) return '';
-        return timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
 
@@ -118,23 +135,13 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
 }
 
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-
 export function Chats({ user }: { user: AuthenticatedUser }) {
   return (
     <Card className="bg-gray-800/60 border-gray-700 text-white">
       <CardHeader>
         <CardTitle>Mawasiliano ya Wachezaji</CardTitle>
         <CardDescription className="text-gray-400">
-          Wasiliana na wachezaji wengine, uliza maswali, na tangaza biashara zako.
+          Chat imehifadhiwa kwenye kivinjari chako. Wachezaji wengine hawataona jumbe hizi.
         </CardDescription>
       </CardHeader>
       <CardContent>

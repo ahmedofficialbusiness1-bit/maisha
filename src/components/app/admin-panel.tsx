@@ -12,16 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { simulateCommodityPrice, type SimulateCommodityPriceInput } from '@/ai/flows/commodity-price-simulation';
-import { Crown, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, type Timestamp } from 'firebase/firestore';
-import type { UserData } from '@/app/game';
-import { Skeleton } from '../ui/skeleton';
-import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
+
 
 const simulationFormSchema = z.object({
   commodity: z.string().min(1, 'Commodity name is required.'),
@@ -192,91 +185,16 @@ function CommoditySimulator() {
 }
 
 function PlayerManagement() {
-  const [players, setPlayers] = React.useState<UserData[]>([]);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, orderBy('netWorth', 'desc'));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const playersData: UserData[] = [];
-      querySnapshot.forEach((doc) => {
-        playersData.push(doc.data() as UserData);
-      });
-      setPlayers(playersData);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const formatLastSeen = (timestamp: Timestamp | Date | null) => {
-    if (!timestamp) return 'N/A';
-    const date = (timestamp as Timestamp).toDate ? (timestamp as Timestamp).toDate() : (timestamp as Date);
-    return formatDistanceToNow(date, { addSuffix: true });
-  }
-
   return (
     <Card className="bg-gray-800/60 border-gray-700 mt-4">
         <CardHeader>
             <CardTitle>Player List</CardTitle>
-            <CardDescription>A real-time list of all registered players.</CardDescription>
+            <CardDescription>Player management is disabled in local mode.</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-             <div className="space-y-2">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
+           <div className="flex items-center justify-center h-48 text-gray-500">
+                <p>Connect to a cloud database to manage players.</p>
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-gray-700 hover:bg-gray-700/50">
-                  <TableHead className="text-white w-[60px]">Rank</TableHead>
-                  <TableHead className="text-white">Player</TableHead>
-                  <TableHead className="text-right text-white">Net Worth</TableHead>
-                  <TableHead className="text-right text-white">Level</TableHead>
-                  <TableHead className="text-right text-white">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {players.map((player, index) => (
-                  <TableRow key={player.uid} className={cn("border-gray-700", index < 3 && "bg-yellow-500/5")}>
-                    <TableCell className="font-bold text-lg text-center">
-                       {index === 0 && <Crown className="h-6 w-6 text-yellow-400 inline" />}
-                       {index > 0 && (index + 1)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={`https://picsum.photos/seed/${player.uid}/40/40`} alt={player.username} data-ai-hint="player avatar" />
-                          <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <span className="font-medium">{player.username}</span>
-                            <p className="text-xs text-gray-400">{player.email}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-green-400 text-base">
-                      ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-blue-400 text-base">
-                        {player.playerLevel}
-                    </TableCell>
-                     <TableCell className="text-right">
-                       <div className={cn('flex items-center justify-end gap-2 text-xs', player.status === 'online' ? 'text-green-400' : 'text-gray-500')}>
-                          <div className={cn('h-2 w-2 rounded-full', player.status === 'online' ? 'bg-green-500' : 'bg-gray-500')} />
-                          {player.status === 'online' ? 'Online' : formatLastSeen(player.lastSeen)}
-                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
         </CardContent>
     </Card>
   );
@@ -291,7 +209,7 @@ export function AdminPanel() {
         <p className="text-muted-foreground">Tools for managing the game world and players.</p>
       </div>
 
-       <Tabs defaultValue="players" className="w-full">
+       <Tabs defaultValue="economy" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-gray-900/50">
             <TabsTrigger value="players">Player Management</TabsTrigger>
             <TabsTrigger value="economy">Economy Tools</TabsTrigger>
@@ -306,5 +224,3 @@ export function AdminPanel() {
     </div>
   );
 }
-
-    
