@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -111,7 +112,7 @@ export function Game() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
 
-  const userDocRef = React.useMemo(() => (firestore && user) ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
+  const userDocRef = React.useMemo(() => (firestore && user?.uid) ? doc(firestore, 'users', user.uid) : null, [firestore, user?.uid]);
   const { data: gameState, setData: setGameState, loading: gameStateLoading } = useDoc<UserData>(userDocRef);
 
   const marketCollectionRef = React.useMemo(() => firestore ? collection(firestore, 'market') : null, [firestore]);
@@ -126,18 +127,20 @@ export function Game() {
 
   // Effect to initialize a new user
   React.useEffect(() => {
-    if (firestore && user && !gameStateLoading && (!gameState || !gameState.uid)) {
-      const newUserData = getInitialUserData(user);
-      const userRef = doc(firestore, 'users', user.uid);
-      
-      setDoc(userRef, newUserData).then(() => {
-          setGameState(newUserData);
-          console.log("New user data initialized in Firestore.");
-      }).catch(error => {
-          console.error("Error initializing user data:", error);
-      });
+    if (user && !gameStateLoading) {
+      if (!gameState) {
+        const newUserData = getInitialUserData(user);
+        if(userDocRef) {
+          setDoc(userDocRef, newUserData).then(() => {
+              setGameState(newUserData);
+              console.log("New user data initialized in Firestore.");
+          }).catch(error => {
+              console.error("Error initializing user data:", error);
+          });
+        }
+      }
     }
-  }, [firestore, user, gameState, gameStateLoading, setGameState]);
+  }, [user, gameState, gameStateLoading, setGameState, userDocRef]);
   
 
   const debouncedSave = useDebouncedCallback((newState: Partial<UserData>) => {
@@ -753,3 +756,5 @@ export function Game() {
     </div>
   );
 }
+
+    
