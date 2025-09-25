@@ -49,15 +49,21 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
 
 
   React.useEffect(() => {
-    if (!messagesRef) return;
+    if (!messagesRef) {
+        setMessages([]);
+        return;
+    };
     const q = query(messagesRef, orderBy('timestamp', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const newMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
         setMessages(newMessages);
+    }, (error) => {
+        console.error(`Error fetching chat for ${chatRoomId}:`, error);
+        setMessages([]);
     });
 
     return () => unsubscribe();
-  }, [messagesRef]);
+  }, [messagesRef, chatRoomId]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,8 +123,9 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           className="flex-grow bg-gray-700 border-gray-600"
+          disabled={!firestore}
         />
-        <Button type="submit" size="icon" className="bg-blue-600 hover:bg-blue-700">
+        <Button type="submit" size="icon" className="bg-blue-600 hover:bg-blue-700" disabled={!firestore}>
           <Send className="h-4 w-4" />
           <span className="sr-only">Tuma</span>
         </Button>
