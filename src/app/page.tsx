@@ -40,6 +40,8 @@ function LandingComponent() {
 
     return (
         <main className="flex-1 flex flex-col items-center justify-center p-4 text-white">
+            <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-cover bg-center bg-fixed" style={{backgroundImage: "url('https://picsum.photos/seed/african-savanna/1920/1080')"}} />
+            <div className="absolute inset-0 -z-10 bg-black/60"></div>
             <div className="text-center max-w-4xl mx-auto">
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight">
                     Karibu <span className="text-blue-400">Uchumi wa Afrika</span>
@@ -99,8 +101,6 @@ function LandingComponent() {
 export default function LandingPage() {
     return (
         <FirebaseClientProvider>
-             <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-cover bg-center bg-fixed" style={{backgroundImage: "url('https://picsum.photos/seed/african-savanna/1920/1080')"}} />
-            <div className="absolute inset-0 -z-10 bg-black/60"></div>
             <LandingComponent />
         </FirebaseClientProvider>
     )
