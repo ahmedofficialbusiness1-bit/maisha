@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -42,7 +41,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { encyclopediaData } from '@/lib/encyclopedia-data';
-import { productCategoryToShopMap } from '@/app/game';
 import type { LucideIcon } from 'lucide-react';
 
 export type BuildingType = {
@@ -660,6 +658,24 @@ const formatTime = (ms: number) => {
         return `${hours}:${minutes}:${seconds}`;
     }
     return `${minutes}:${seconds}`;
+};
+
+const productCategoryToShopMap: Record<string, string> = {
+    'Construction': 'duka_la_ujenzi',
+    'Raw Material': 'duka_la_ujenzi',
+    'Madini': 'duka_la_ujenzi',
+    'Mafuta': 'duka_la_ujenzi',
+    'Agriculture': 'duka_kuu',
+    'Food': 'duka_kuu',
+    'Product': 'duka_kuu',
+    'Mavazi': 'duka_la_nguo_na_vito',
+    'Electronics': 'duka_la_electroniki',
+    'Spares': 'duka_la_magari',
+    'Vehicles': 'duka_la_magari',
+    'Space': 'duka_la_anga',
+    'Documents': 'duka_kuu', // Or a specific admin shop if created
+    'Vifaa': 'duka_la_ujenzi',
+    'Utafiti': 'duka_kuu' // Research items aren't typically sold, but as a fallback
 };
 
 export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onStartSelling, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding, onBuyMaterial }: DashboardProps) {

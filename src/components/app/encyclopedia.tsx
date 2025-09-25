@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -18,8 +17,25 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import { Search } from 'lucide-react';
-import { productCategoryToShopMap } from '@/app/game';
 import { availableBuildings } from './dashboard';
+
+const productCategoryToShopMap: Record<string, string> = {
+    'Construction': 'duka_la_ujenzi',
+    'Raw Material': 'duka_la_ujenzi',
+    'Madini': 'duka_la_ujenzi',
+    'Mafuta': 'duka_la_ujenzi',
+    'Agriculture': 'duka_kuu',
+    'Food': 'duka_kuu',
+    'Product': 'duka_kuu',
+    'Mavazi': 'duka_la_nguo_na_vito',
+    'Electronics': 'duka_la_electroniki',
+    'Spares': 'duka_la_magari',
+    'Vehicles': 'duka_la_magari',
+    'Space': 'duka_la_anga',
+    'Documents': 'duka_kuu', // Or a specific admin shop if created
+    'Vifaa': 'duka_la_ujenzi',
+    'Utafiti': 'duka_kuu' // Research items aren't typically sold, but as a fallback
+};
 
 export function Encyclopedia() {
   const [selectedEntry, setSelectedEntry] = React.useState<EncyclopediaEntry | null>(encyclopediaData[0] || null);
@@ -165,5 +181,3 @@ export function Encyclopedia() {
     </div>
   );
 }
-
-    
