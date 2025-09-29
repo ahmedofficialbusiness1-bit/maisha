@@ -5,6 +5,23 @@
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid"
       }
+    },
+    "players": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid"
+      },
+      ".read": "auth != null"
+    },
+    "market": {
+      ".read": "auth != null",
+      "$listingId": {
+        ".write": "auth != null && (!data.exists() || data.child('sellerUid').val() === auth.uid)"
+      }
+    },
+    "chat": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }

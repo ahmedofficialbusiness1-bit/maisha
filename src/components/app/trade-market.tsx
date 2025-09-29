@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, ChevronsLeft, ChevronsRight, HelpCircle, Search, FileText, Building, LandPlot, ShieldCheck, Landmark } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark } from 'lucide-react';
 import type { InventoryItem } from './inventory';
 import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
 import { cn } from '@/lib/utils';
@@ -33,15 +33,15 @@ import { Separator } from '../ui/separator';
 
 
 export type PlayerListing = {
-  id: number;
+  id: string; // Firebase key
   commodity: string;
   seller: string;
+  sellerUid: string;
   quantity: number;
   price: number;
   avatar: string;
   quality: number;
   imageHint: string;
-  sellerUid?: string; // Added to identify the seller for transactions
 };
 
 export type StockListing = {
@@ -158,8 +158,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
     }
   };
 
-
-  const filteredListings = playerListings.filter(listing => listing.commodity === selectedProduct?.name);
+  const filteredListings = (playerListings || []).filter(listing => listing.commodity === selectedProduct?.name);
   
   const handleProductSelect = (product: EncyclopediaEntry) => {
     setSelectedProduct(product);
@@ -639,7 +638,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
     <div className="flex flex-col gap-4 text-white -m-4 sm:-m-6">
       <PriceTicker inventory={inventory} />
       
-        <Tabs defaultValue="stocks" className="w-full pt-4">
+        <Tabs defaultValue="commodities" className="w-full pt-4">
             <div className="px-4 sm:px-6">
                 <TabsList className="grid w-full grid-cols-3 bg-gray-800/80">
                     <TabsTrigger value="commodities"><LandPlot className='mr-2 h-4 w-4'/>Bidhaa</TabsTrigger>

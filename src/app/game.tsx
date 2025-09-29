@@ -12,15 +12,15 @@ import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
-import { Leaderboard } from '@/components/app/leaderboard';
+import { Leaderboard, type LeaderboardEntry } from '@/components/app/leaderboard';
 import { AdminPanel } from '@/components/app/admin-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
-import { getInitialUserData, saveGameState, loadGameState, type UserData } from '@/services/game-service';
+import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser, useDatabase } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { getDatabase, ref, onValue, DatabaseReference } from 'firebase/database';
+import { getDatabase, ref, onValue, set, get } from 'firebase/database';
 
 export type PlayerStock = {
     ticker: string;
@@ -63,40 +63,37 @@ export function Game() {
   const database = useDatabase();
   const router = useRouter();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
+  const [playerListings, setPlayerListings] = React.useState<PlayerListing[]>([]);
+  const [allPlayers, setAllPlayers] = React.useState<LeaderboardEntry[]>([]);
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
   const { toast } = useToast();
 
-  const userRef = React.useMemo(() => {
-    if (database && user) {
-        return ref(database, `users/${user.uid}`);
-    }
-    return null;
-  }, [database, user]);
+  // Refs for Firebase paths
+  const userRef = React.useMemo(() => database && user ? ref(database, `users/${user.uid}`) : null, [database, user]);
+  const playerPublicRef = React.useMemo(() => database && user ? ref(database, `players/${user.uid}`) : null, [database, user]);
+  const marketRef = React.useMemo(() => database ? ref(database, 'market') : null, [database]);
+  const playersRef = React.useMemo(() => database ? ref(database, 'players') : null, [database]);
+  
 
-  // Load or initialize game state
+  // Load user data or initialize if new
   React.useEffect(() => {
-    if (userLoading) return;
+    if (userLoading || !database) return;
     if (!user) {
       router.replace('/login');
       return;
     }
-    if (!userRef) {
-        // Still waiting for database or user
-        return;
-    }
+    if (!userRef) return;
 
     const unsubscribe = onValue(userRef, (snapshot) => {
       setGameStateLoading(false);
       if (snapshot.exists()) {
         setGameState(snapshot.val());
       } else {
-        // User exists but has no data, create initial data
-        console.log("Creating initial data for new user...");
         const initialData = getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email);
-        saveGameState(userRef, initialData).then(() => {
-            setGameState(initialData);
+        saveUserData(userRef, initialData).then(() => {
+          setGameState(initialData);
         });
       }
     }, (error) => {
@@ -105,14 +102,57 @@ export function Game() {
     });
 
     return () => unsubscribe();
-  }, [user, userLoading, router, userRef]);
+  }, [user, userLoading, router, userRef, database]);
+  
+  // Listen for market changes
+  React.useEffect(() => {
+    if (!marketRef) return;
+    const unsubscribe = onValue(marketRef, (snapshot) => {
+        const listings: PlayerListing[] = [];
+        snapshot.forEach(childSnapshot => {
+            listings.push({ id: childSnapshot.key, ...childSnapshot.val() } as PlayerListing);
+        });
+        setPlayerListings(listings);
+    });
+    return () => unsubscribe();
+  }, [marketRef]);
+
+  // Listen for all players data (leaderboard)
+  React.useEffect(() => {
+    if (!playersRef) return;
+    const unsubscribe = onValue(playersRef, (snapshot) => {
+        const players: LeaderboardEntry[] = [];
+        snapshot.forEach(childSnapshot => {
+            const playerData = childSnapshot.val();
+            players.push({
+                uid: childSnapshot.key!,
+                username: playerData.username,
+                netWorth: playerData.netWorth,
+                avatar: playerData.avatar,
+            });
+        });
+        setAllPlayers(players);
+    });
+    return () => unsubscribe();
+  }, [playersRef]);
+
 
   // Save game state whenever it changes
   React.useEffect(() => {
     if (gameState && userRef) {
-      saveGameState(userRef, gameState);
+      saveUserData(userRef, gameState);
     }
-  }, [gameState, userRef]);
+    // Update public player data
+    if (gameState && playerPublicRef) {
+        set(playerPublicRef, {
+            username: gameState.username,
+            netWorth: gameState.netWorth,
+            avatar: `https://picsum.photos/seed/${gameState.uid}/40/40`,
+            level: gameState.playerLevel,
+            role: gameState.role
+        });
+    }
+  }, [gameState, userRef, playerPublicRef]);
 
 
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
@@ -176,7 +216,7 @@ export function Game() {
 
   const handleMarkNotificationsRead = () => {
     updateState(prev => ({
-        notifications: prev.notifications.map(n => ({ ...n, read: true }))
+        notifications: (prev.notifications || []).map(n => ({ ...n, read: true }))
     }));
   }
 
@@ -355,7 +395,7 @@ export function Game() {
     if (gameState.money < totalCost) return false;
 
     updateState(prev => {
-        let newInventory = [...prev.inventory];
+        let newInventory = [...(prev.inventory || [])];
         const itemIndex = newInventory.findIndex(i => i.item === materialName);
         if (itemIndex > -1) {
             newInventory[itemIndex].quantity += quantity;
@@ -370,8 +410,76 @@ export function Game() {
     return true;
   };
 
-  const handleBuyFromMarket = (listing: PlayerListing, quantityToBuy: number) => {
-    addNotification("Soko la wachezaji halipatikani bado.", 'purchase');
+  const handleBuyFromMarket = async (listing: PlayerListing, quantityToBuy: number) => {
+      if (!database || !user || !gameState) return;
+      if (listing.sellerUid === user.uid) {
+          toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot buy your own items.' });
+          return;
+      }
+      
+      const totalCost = listing.price * quantityToBuy;
+      if (gameState.money < totalCost) {
+          toast({ variant: 'destructive', title: 'Insufficient Funds', description: `You need $${totalCost.toFixed(2)} to make this purchase.` });
+          return;
+      }
+
+      // References to the database locations
+      const listingRef = ref(database, `market/${listing.id}`);
+      const sellerUserRef = ref(database, `users/${listing.sellerUid}`);
+
+      try {
+          // 1. Fetch the seller's data
+          const sellerSnapshot = await get(sellerUserRef);
+          if (!sellerSnapshot.exists()) {
+              throw new Error("Seller not found.");
+          }
+          const sellerData = sellerSnapshot.val() as UserData;
+
+          // 2. Update buyer's state (client-side)
+          updateState(prev => {
+              const newInventory = [...(prev.inventory || [])];
+              const itemIndex = newInventory.findIndex(i => i.item === listing.commodity);
+              if (itemIndex > -1) {
+                  newInventory[itemIndex].quantity += quantityToBuy;
+              } else {
+                  newInventory.push({ item: listing.commodity, quantity: quantityToBuy, marketPrice: listing.price });
+              }
+              addTransaction('expense', totalCost, `Bought ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`);
+              return {
+                  money: prev.money - totalCost,
+                  inventory: newInventory
+              };
+          });
+
+          // 3. Update seller's state (server-side)
+          const newSellerMoney = sellerData.money + totalCost;
+          const newSellerTransactions = [
+              { id: `${Date.now()}-sale`, type: 'income', amount: totalCost, description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`, timestamp: Date.now() },
+              ...(sellerData.transactions || [])
+          ];
+          const newSellerNotifications = [
+               { id: `${Date.now()}-sale-notify`, message: `You sold ${quantityToBuy}x ${listing.commodity} for $${totalCost.toFixed(2)} to ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' },
+              ...(sellerData.notifications || [])
+          ];
+          
+          await set(sellerUserRef, { 
+              ...sellerData, 
+              money: newSellerMoney, 
+              transactions: newSellerTransactions,
+              notifications: newSellerNotifications
+          });
+          
+          // 4. Remove listing from market
+          await set(listingRef, null);
+
+          addNotification(`Umenunua ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, 'purchase');
+          toast({ title: 'Purchase Successful' });
+
+      } catch (error) {
+          console.error("Market transaction failed:", error);
+          toast({ variant: 'destructive', title: 'Purchase Failed', description: 'The transaction could not be completed.' });
+          // Note: In a real app, you would implement a rollback mechanism here
+      }
   };
   
   const handleBuyStock = (stock: StockListing, quantity: number) => {
@@ -394,8 +502,42 @@ export function Game() {
   };
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
-     if (!gameState || quantity <= 0 || quantity > item.quantity) return;
-     addNotification("Soko la wachezaji halipatikani bado.", 'sale');
+     if (!database || !user || !gameState || quantity <= 0 || quantity > item.quantity) return;
+
+     updateState(prev => {
+        const newInventory = [...(prev.inventory || [])];
+        const itemIndex = newInventory.findIndex(i => i.item === item.item);
+        if (itemIndex > -1) {
+            newInventory[itemIndex].quantity -= quantity;
+        }
+        return {
+            inventory: newInventory.filter(i => i.quantity > 0)
+        }
+     });
+     
+     const listingId = `${user.uid}-${Date.now()}`;
+     const listingRef = ref(database, `market/${listingId}`);
+
+     const productInfo = encyclopediaData.find(e => e.name === item.item);
+
+     const newListing: Omit<PlayerListing, 'id'> = {
+         commodity: item.item,
+         quantity,
+         price,
+         seller: gameState.username,
+         sellerUid: user.uid,
+         avatar: `https://picsum.photos/seed/${user.uid}/40/40`,
+         quality: 1, // Placeholder
+         imageHint: productInfo?.imageHint || 'product photo'
+     };
+
+     set(listingRef, newListing).then(() => {
+        toast({ title: 'Item Posted', description: `${quantity}x ${item.item} has been listed on the market.` });
+     }).catch(error => {
+        console.error("Failed to post to market:", error);
+        // TODO: Add the item back to inventory on failure
+        toast({ variant: 'destructive', title: 'Failed to List Item' });
+     });
   };
 
   // Game loop for processing finished activities
@@ -435,7 +577,7 @@ export function Game() {
             updateState(prev => {
                 let newMoney = prev.money;
                 let newXP = prev.playerXP;
-                const newInventory = [...prev.inventory.map(i => ({...i}))];
+                const newInventory = [...(prev.inventory || []).map(i => ({...i}))];
                 let newTransactions = [...(prev.transactions || [])];
                 let newNotifications = [...(prev.notifications || [])];
 
@@ -511,7 +653,7 @@ export function Game() {
         return total + cost;
     }, 0);
     
-    const inventoryValue = gameState.inventory.reduce((total, item) => total + (item.quantity * (item.marketPrice || 0)), 0);
+    const inventoryValue = (gameState.inventory || []).reduce((total, item) => total + (item.quantity * (item.marketPrice || 0)), 0);
 
     const netWorth = gameState.money + stockValue + buildingValue + inventoryValue;
 
@@ -545,7 +687,7 @@ export function Game() {
 
   if (!gameState || !user) return null; // Should be redirected by useEffect
   
-  const myLeaderboardRank = 1;
+  const myLeaderboardRank = allPlayers.sort((a,b) => b.netWorth - a.netWorth).findIndex(p => p.uid === user.uid) + 1;
 
   const profileMetrics: PlayerMetrics = {
     netWorth: gameState.netWorth,
@@ -569,11 +711,11 @@ export function Game() {
   const renderView = () => {
     switch (view) {
       case 'dashboard':
-        return <Dashboard buildingSlots={gameState.buildingSlots} inventory={gameState.inventory} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
+        return <Dashboard buildingSlots={gameState.buildingSlots} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory} onPostToMarket={handlePostToMarket} />;
+        return <Inventory inventoryItems={gameState.inventory || []} onPostToMarket={handlePostToMarket} />;
       case 'market':
-        return <TradeMarket playerListings={[]} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
@@ -581,7 +723,7 @@ export function Game() {
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':
-          return <Leaderboard allPlayers={[{uid: 'local-player', username: gameState.username, netWorth: gameState.netWorth, avatar: `https://picsum.photos/seed/${gameState.uid}/40/40`}]} />;
+          return <Leaderboard allPlayers={allPlayers} />;
       case 'profile':
           return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={profileMetrics} />;
       case 'admin':

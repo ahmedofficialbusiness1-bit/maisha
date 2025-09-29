@@ -1,7 +1,7 @@
-import { getDatabase, ref, get, set, DatabaseReference } from 'firebase/database';
+import { DatabaseReference, set } from 'firebase/database';
 import type { PlayerStock } from '@/app/game';
 
-// Define the shape of the user data
+// This is the private user data, stored under /users/{uid}
 export type UserData = {
   uid: string;
   username: string;
@@ -10,8 +10,8 @@ export type UserData = {
   money: number;
   stars: number;
   netWorth: number;
-  buildingSlots: any[]; // Adjust this type based on your BuildingSlot definition
-  inventory: any[]; // Adjust this type
+  buildingSlots: any[]; 
+  inventory: any[]; 
   playerStocks: PlayerStock[];
   transactions: any[];
   notifications: any[];
@@ -22,6 +22,17 @@ export type UserData = {
   role: 'player' | 'admin';
   lastSeen: number;
 };
+
+// This is public-facing player data, stored under /players/{uid}
+export type PlayerPublicData = {
+    uid: string;
+    username: string;
+    avatar: string;
+    netWorth: number;
+    level: number;
+    role: 'player' | 'admin';
+};
+
 
 // Function to get initial user data
 export const getInitialUserData = (uid: string, username: string, email: string | null): UserData => ({
@@ -43,22 +54,13 @@ export const getInitialUserData = (uid: string, username: string, email: string 
   notifications: [],
   playerLevel: 1,
   playerXP: 0,
-  privateNotes: '',
+  privateNotes: `Karibu kwenye wasifu wangu! Mimi ni mchezaji mpya kwenye Uchumi wa Afrika na nina matumaini ya kujenga himaya kubwa.`,
   status: 'online',
   role: 'player',
   lastSeen: Date.now(),
 });
 
-// Function to save game state to Realtime Database
-export const saveGameState = async (userRef: DatabaseReference, gameState: UserData): Promise<void> => {
+// Function to save private user data to Realtime Database
+export const saveUserData = async (userRef: DatabaseReference, gameState: UserData): Promise<void> => {
   await set(userRef, gameState);
-};
-
-// Function to load game state from Realtime Database
-export const loadGameState = async (userRef: DatabaseReference): Promise<UserData | null> => {
-  const snapshot = await get(userRef);
-  if (snapshot.exists()) {
-    return snapshot.val() as UserData;
-  }
-  return null;
 };

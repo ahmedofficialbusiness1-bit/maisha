@@ -35,14 +35,14 @@ export function Leaderboard({ allPlayers }: LeaderboardProps) {
         <CardHeader>
           <CardTitle>Wachezaji Wanaoongoza kwa Utajiri</CardTitle>
           <CardDescription className="text-gray-400">
-            Ubao wa wanaoongoza haupatikani kwenye mchezo wa ndani.
+            Orodha inajisasisha moja kwa moja.
           </CardDescription>
         </CardHeader>
         <CardContent>
            {sortedPlayers.length > 0 ? (
              <Table>
                 <TableHeader>
-                    <TableRow>
+                    <TableRow className="border-gray-700 hover:bg-gray-700/50">
                         <TableHead className="text-white w-16">#</TableHead>
                         <TableHead className="text-white">Mchezaji</TableHead>
                         <TableHead className="text-right text-white">Utajiri (Net Worth)</TableHead>
@@ -50,14 +50,14 @@ export function Leaderboard({ allPlayers }: LeaderboardProps) {
                 </TableHeader>
                 <TableBody>
                     {sortedPlayers.map((player, index) => (
-                        <TableRow key={player.uid}>
-                            <TableCell className="font-bold text-lg flex items-center gap-2">
+                        <TableRow key={player.uid} className="border-gray-700 hover:bg-gray-700/50">
+                            <TableCell className="font-bold text-lg flex items-center gap-2 p-2 sm:p-4">
                                 {index + 1}
                                 {index === 0 && <Trophy className="h-5 w-5 text-yellow-400" />}
                                 {index === 1 && <Trophy className="h-5 w-5 text-gray-400" />}
                                 {index === 2 && <Trophy className="h-5 w-5 text-orange-400" />}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="p-2 sm:p-4">
                                 <div className="flex items-center gap-3">
                                     <Avatar>
                                         <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
@@ -66,7 +66,7 @@ export function Leaderboard({ allPlayers }: LeaderboardProps) {
                                     <span className="font-semibold">{player.username}</span>
                                 </div>
                             </TableCell>
-                            <TableCell className="text-right font-mono text-lg text-green-400">
+                            <TableCell className="text-right font-mono text-lg text-green-400 p-2 sm:p-4">
                                 ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </TableCell>
                         </TableRow>
