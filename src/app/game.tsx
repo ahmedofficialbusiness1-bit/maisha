@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -425,7 +424,6 @@ export function Game() {
     }
 
     const listingRef = ref(database, `market/${listing.id}`);
-    const sellerUserRef = ref(database, `users/${listing.sellerUid}`);
 
     try {
         const transactionResult = await runTransaction(listingRef, (currentListing) => {
@@ -465,6 +463,7 @@ export function Game() {
         });
 
         // 3. Update seller's state (server-side transaction)
+        const sellerUserRef = ref(database, `users/${listing.sellerUid}`);
         await runTransaction(sellerUserRef, (sellerData) => {
             if (sellerData) {
                 sellerData.money += totalCost;
