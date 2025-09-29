@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -20,7 +21,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser, useDatabase } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { getDatabase, ref, onValue, set, get } from 'firebase/database';
+import { getDatabase, ref, onValue, set, get, runTransaction } from 'firebase/database';
 
 export type PlayerStock = {
     ticker: string;
@@ -411,75 +412,70 @@ export function Game() {
   };
 
   const handleBuyFromMarket = async (listing: PlayerListing, quantityToBuy: number) => {
-      if (!database || !user || !gameState) return;
-      if (listing.sellerUid === user.uid) {
-          toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot buy your own items.' });
-          return;
-      }
-      
-      const totalCost = listing.price * quantityToBuy;
-      if (gameState.money < totalCost) {
-          toast({ variant: 'destructive', title: 'Insufficient Funds', description: `You need $${totalCost.toFixed(2)} to make this purchase.` });
-          return;
-      }
+    if (!database || !user || !gameState) return;
+    if (listing.sellerUid === user.uid) {
+        toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot buy your own items.' });
+        return;
+    }
+    
+    const totalCost = listing.price * quantityToBuy;
+    if (gameState.money < totalCost) {
+        toast({ variant: 'destructive', title: 'Insufficient Funds', description: `You need $${totalCost.toFixed(2)} to make this purchase.` });
+        return;
+    }
 
-      // References to the database locations
-      const listingRef = ref(database, `market/${listing.id}`);
-      const sellerUserRef = ref(database, `users/${listing.sellerUid}`);
+    const listingRef = ref(database, `market/${listing.id}`);
+    const sellerUserRef = ref(database, `users/${listing.sellerUid}`);
 
-      try {
-          // 1. Fetch the seller's data
-          const sellerSnapshot = await get(sellerUserRef);
-          if (!sellerSnapshot.exists()) {
-              throw new Error("Seller not found.");
-          }
-          const sellerData = sellerSnapshot.val() as UserData;
+    try {
+        await runTransaction(listingRef, (currentListing) => {
+            if (!currentListing) {
+                // Listing was already sold or removed.
+                return;
+            }
+            // In a real scenario, you'd handle partial buys. For now, we assume full buys.
+            // This transaction just removes the listing.
+            return null;
+        });
 
-          // 2. Update buyer's state (client-side)
-          updateState(prev => {
-              const newInventory = [...(prev.inventory || [])];
-              const itemIndex = newInventory.findIndex(i => i.item === listing.commodity);
-              if (itemIndex > -1) {
-                  newInventory[itemIndex].quantity += quantityToBuy;
-              } else {
-                  newInventory.push({ item: listing.commodity, quantity: quantityToBuy, marketPrice: listing.price });
-              }
-              addTransaction('expense', totalCost, `Bought ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`);
-              return {
-                  money: prev.money - totalCost,
-                  inventory: newInventory
-              };
-          });
+        // 2. Update buyer's state (client-side)
+        updateState(prev => {
+            const newInventory = [...(prev.inventory || [])];
+            const itemIndex = newInventory.findIndex(i => i.item === listing.commodity);
+            if (itemIndex > -1) {
+                newInventory[itemIndex].quantity += quantityToBuy;
+            } else {
+                newInventory.push({ item: listing.commodity, quantity: quantityToBuy, marketPrice: listing.price });
+            }
+            addTransaction('expense', totalCost, `Bought ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`);
+            return {
+                money: prev.money - totalCost,
+                inventory: newInventory
+            };
+        });
 
-          // 3. Update seller's state (server-side)
-          const newSellerMoney = sellerData.money + totalCost;
-          const newSellerTransactions = [
-              { id: `${Date.now()}-sale`, type: 'income', amount: totalCost, description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`, timestamp: Date.now() },
-              ...(sellerData.transactions || [])
-          ];
-          const newSellerNotifications = [
-               { id: `${Date.now()}-sale-notify`, message: `You sold ${quantityToBuy}x ${listing.commodity} for $${totalCost.toFixed(2)} to ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' },
-              ...(sellerData.notifications || [])
-          ];
-          
-          await set(sellerUserRef, { 
-              ...sellerData, 
-              money: newSellerMoney, 
-              transactions: newSellerTransactions,
-              notifications: newSellerNotifications
-          });
-          
-          // 4. Remove listing from market
-          await set(listingRef, null);
+        // 3. Update seller's state (server-side)
+        await runTransaction(sellerUserRef, (sellerData) => {
+            if (sellerData) {
+                sellerData.money += totalCost;
+                
+                const newTransaction: Transaction = { id: `${Date.now()}-sale`, type: 'income', amount: totalCost, description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`, timestamp: Date.now() };
+                sellerData.transactions = [newTransaction, ...(sellerData.transactions || [])];
 
-          addNotification(`Umenunua ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, 'purchase');
-          toast({ title: 'Purchase Successful' });
+                const newNotification: Notification = { id: `${Date.now()}-sale-notify`, message: `You sold ${quantityToBuy}x ${listing.commodity} for $${totalCost.toFixed(2)} to ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
+                sellerData.notifications = [newNotification, ...(sellerData.notifications || [])];
+            }
+            return sellerData;
+        });
+        
+        addNotification(`Umenunua ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, 'purchase');
+        toast({ title: 'Purchase Successful' });
 
-      } catch (error) {
-          console.error("Market transaction failed:", error);
-          toast({ variant: 'destructive', title: 'Purchase Failed', description: 'The transaction could not be completed.' });
-          // Note: In a real app, you would implement a rollback mechanism here
-      }
+    } catch (error) {
+        console.error("Market transaction failed:", error);
+        toast({ variant: 'destructive', title: 'Purchase Failed', description: 'The transaction could not be completed.' });
+        // Note: In a real app, you would implement a more robust transaction system with rollbacks.
+    }
   };
   
   const handleBuyStock = (stock: StockListing, quantity: number) => {
