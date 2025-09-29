@@ -81,7 +81,7 @@ export function Game() {
   React.useEffect(() => {
     if (userLoading || !database) return;
     if (!user) {
-      router.replace('/login');
+      router.replace('/');
       return;
     }
     if (!userRef) return;
