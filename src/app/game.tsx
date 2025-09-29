@@ -691,8 +691,6 @@ export function Game() {
 
   if (!gameState || !user) return null; // Should be redirected by useEffect
   
-  const myLeaderboardRank = 0; // This will be calculated inside the leaderboard component now
-
   const profileMetrics: PlayerMetrics = {
     netWorth: gameState.netWorth,
     buildingValue: 0, // placeholder
@@ -747,5 +745,3 @@ export function Game() {
     </div>
   );
 }
-
-    
