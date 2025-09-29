@@ -146,8 +146,11 @@ export function Game() {
     if (gameState && userRef) {
       saveUserData(userRef, gameState);
     }
-    // Update public player data
-    if (gameState && playerPublicRef) {
+  }, [gameState, userRef]);
+
+  // Update public player data whenever critical info changes
+  React.useEffect(() => {
+    if (gameState && playerPublicRef && gameState.uid && gameState.username) {
         set(playerPublicRef, {
             uid: gameState.uid,
             username: gameState.username,
@@ -157,7 +160,7 @@ export function Game() {
             role: gameState.role
         });
     }
-  }, [gameState, userRef, playerPublicRef]);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.role, playerPublicRef]);
 
 
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
