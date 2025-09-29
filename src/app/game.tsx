@@ -296,7 +296,7 @@ export function Game() {
         }
       }
 
-      const newSlots = [...-prev.buildingSlots];
+      const newSlots = [...prev.buildingSlots];
       newSlots[slotIndex] = {
         ...slot,
         construction: { startTime: now, endTime: now + constructionTimeMs, targetLevel: slot.level + 1 },
