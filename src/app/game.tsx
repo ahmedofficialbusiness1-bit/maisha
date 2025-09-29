@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -551,7 +552,7 @@ export function Game() {
         const now = Date.now();
         let changed = false;
         
-        const newBuildingSlots = [...gameState.buildingSlots.map(s => ({...s, activity: s.activity ? {...s.activity} : undefined, construction: s.construction ? {...s.construction} : undefined }))];
+        const newBuildingSlots: BuildingSlot[] = JSON.parse(JSON.stringify(gameState.buildingSlots));
 
         const finishedActivities: { type: 'construction' | 'production' | 'sale', slotIndex: number, details: any }[] = [];
 
@@ -560,7 +561,7 @@ export function Game() {
             if (slot.construction && now >= slot.construction.endTime) {
                 finishedActivities.push({type: 'construction', slotIndex: index, details: { targetLevel: slot.construction.targetLevel, buildingName: slot.building?.name }});
                 slot.level = slot.construction.targetLevel;
-                slot.construction = undefined;
+                delete slot.construction;
                 changed = true;
             }
 
@@ -571,7 +572,7 @@ export function Game() {
                 } else if (slot.activity.type === 'sell') {
                     finishedActivities.push({type: 'sale', slotIndex: index, details: { ...slot.activity }});
                 }
-                slot.activity = undefined;
+                delete slot.activity;
                 changed = true;
             }
         });
@@ -744,3 +745,5 @@ export function Game() {
     </div>
   );
 }
+
+    
