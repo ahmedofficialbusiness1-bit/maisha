@@ -48,7 +48,7 @@ function formatCurrency(value: number): string {
 export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead, playerLevel, playerXP, xpForNextLevel, isAdmin }: AppHeaderProps) {
     const router = useRouter();
     const formattedMoney = useMemo(() => formatCurrency(money), [money]);
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = (notifications || []).filter(n => !n.read).length;
 
     const handleOpenNotifications = () => {
         if (unreadCount > 0) {
@@ -135,7 +135,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
             <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white w-80">
                 <DropdownMenuLabel className="flex justify-between items-center">
                     <span>Notifications</span>
-                    {notifications.length > 0 && (
+                    {(notifications || []).length > 0 && (
                         <Button variant="link" className="p-0 h-auto text-xs" onClick={onNotificationsRead}>
                             Mark all as read
                         </Button>
@@ -143,7 +143,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className='bg-gray-600'/>
                 <ScrollArea className="h-96">
-                    {notifications.length > 0 ? (
+                    {(notifications || []).length > 0 ? (
                         notifications.map(n => (
                             <DropdownMenuItem key={n.id} className="gap-3 items-start focus:bg-gray-700/80">
                                 <div className="flex-shrink-0 mt-1">
