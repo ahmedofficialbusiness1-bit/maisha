@@ -2,6 +2,7 @@
 
 import { app } from './config';
 import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 import { getDatabase } from 'firebase/database';
 import { FirebaseProvider, useFirebase, useAuth, useFirestore, useFirebaseApp, useDatabase } from './provider';
 import { FirebaseClientProvider } from './client-provider';
@@ -15,8 +16,7 @@ function initializeFirebase() {
   }
   const auth = getAuth(app);
   const database = getDatabase(app);
-  // Firestore is not used in this version, but we keep the structure
-  const firestore = null; 
+  const firestore = getFirestore(app);
   return { app, auth, firestore, database };
 }
 

@@ -12,15 +12,16 @@ import { buildingData } from '@/lib/building-data';
 import { Chats } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
-import { Leaderboard, type LeaderboardEntry } from '@/components/app/leaderboard';
+import { Leaderboard } from '@/components/app/leaderboard';
 import { AdminPanel } from '@/components/app/admin-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
-import { useUser, useDatabase } from '@/firebase';
+import { useUser, useDatabase, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { getDatabase, ref, onValue, set, get, runTransaction, query, orderByChild, limitToLast } from 'firebase/database';
+import { getDatabase, ref, onValue, set, runTransaction } from 'firebase/database';
+import { doc, setDoc } from 'firebase/firestore';
 
 export type PlayerStock = {
     ticker: string;
@@ -61,10 +62,10 @@ const calculatedPrices = encyclopediaData.reduce((acc, item) => {
 export function Game() {
   const { user, loading: userLoading } = useUser();
   const database = useDatabase();
+  const firestore = useFirestore();
   const router = useRouter();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [playerListings, setPlayerListings] = React.useState<PlayerListing[]>([]);
-  const [allPlayers, setAllPlayers] = React.useState<LeaderboardEntry[]>([]);
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
@@ -74,7 +75,9 @@ export function Game() {
   const userRef = React.useMemo(() => database && user ? ref(database, `users/${user.uid}`) : null, [database, user]);
   const playerPublicRef = React.useMemo(() => database && user ? ref(database, `players/${user.uid}`) : null, [database, user]);
   const marketRef = React.useMemo(() => database ? ref(database, 'market') : null, [database]);
-  const playersRef = React.useMemo(() => database ? ref(database, 'players') : null, [database]);
+  
+  // Firestore ref for leaderboard
+  const leaderboardDocRef = React.useMemo(() => firestore && user ? doc(firestore, 'leaderboard', user.uid) : null, [firestore, user]);
   
 
   // Load user data or initialize if new
@@ -117,30 +120,6 @@ export function Game() {
     return () => unsubscribe();
   }, [marketRef]);
 
-  // Listen for all players data (leaderboard)
-  React.useEffect(() => {
-    if (!playersRef) return;
-    // Query for the top 100 players by net worth
-    const leaderboardQuery = query(playersRef, orderByChild('netWorth'), limitToLast(100));
-
-    const unsubscribe = onValue(leaderboardQuery, (snapshot) => {
-        const players: LeaderboardEntry[] = [];
-        snapshot.forEach(childSnapshot => {
-            const playerData = childSnapshot.val();
-            players.push({
-                uid: childSnapshot.key!,
-                username: playerData.username,
-                netWorth: playerData.netWorth,
-                avatar: playerData.avatar,
-            });
-        });
-        // Firebase returns ascending order, so we reverse to get descending
-        setAllPlayers(players.reverse());
-    });
-    return () => unsubscribe();
-  }, [playersRef]);
-
-
   // Save game state whenever it changes
   React.useEffect(() => {
     if (gameState && userRef) {
@@ -148,19 +127,31 @@ export function Game() {
     }
   }, [gameState, userRef]);
 
-  // Update public player data whenever critical info changes
+  // Update public player data (RTDB) and leaderboard (Firestore) whenever critical info changes
   React.useEffect(() => {
-    if (gameState && playerPublicRef && gameState.uid && gameState.username) {
-        set(playerPublicRef, {
-            uid: gameState.uid,
+    if (gameState && gameState.uid && gameState.username && leaderboardDocRef) {
+        // Update RTDB for general player info
+        if (playerPublicRef) {
+            set(playerPublicRef, {
+                uid: gameState.uid,
+                username: gameState.username,
+                netWorth: gameState.netWorth,
+                avatar: `https://picsum.photos/seed/${gameState.uid}/40/40`,
+                level: gameState.playerLevel,
+                role: gameState.role
+            });
+        }
+
+        // Update Firestore for leaderboard
+        setDoc(leaderboardDocRef, {
+            playerId: gameState.uid,
             username: gameState.username,
-            netWorth: gameState.netWorth,
-            avatar: `https://picsum.photos/seed/${gameState.uid}/40/40`,
+            score: gameState.netWorth,
+            avatar: `https://picsum.photos/seed/${gameState.uid}/100/100`,
             level: gameState.playerLevel,
-            role: gameState.role
-        });
+        }, { merge: true });
     }
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.role, playerPublicRef]);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.role, playerPublicRef, leaderboardDocRef]);
 
 
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
@@ -699,13 +690,13 @@ export function Game() {
 
   if (!gameState || !user) return null; // Should be redirected by useEffect
   
-  const myLeaderboardRank = allPlayers.sort((a,b) => b.netWorth - a.netWorth).findIndex(p => p.uid === user.uid) + 1;
+  const myLeaderboardRank = 0; // This will be calculated inside the leaderboard component now
 
   const profileMetrics: PlayerMetrics = {
     netWorth: gameState.netWorth,
     buildingValue: 0, // placeholder
     stockValue: 0, // placeholder
-    ranking: `${myLeaderboardRank}`,
+    ranking: `N/A`,
     rating: 'A+', // placeholder
   };
   
@@ -735,7 +726,7 @@ export function Game() {
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':
-          return <Leaderboard allPlayers={allPlayers} />;
+          return <Leaderboard />;
       case 'profile':
           return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={profileMetrics} />;
       case 'admin':

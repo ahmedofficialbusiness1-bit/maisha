@@ -21,7 +21,7 @@ export function FirebaseClientProvider({ children }: { children: React.ReactNode
     setServices(firebaseServices);
   }, []);
 
-  if (!services || !services.app || !services.auth || !services.database) {
+  if (!services || !services.app || !services.auth || !services.database || !services.firestore) {
     // You can return a loading spinner here
     return <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">Inapakia Firebase...</div>;
   }

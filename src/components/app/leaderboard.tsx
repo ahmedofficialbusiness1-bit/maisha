@@ -4,30 +4,26 @@ import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Trophy } from 'lucide-react';
+import { Loader2, Trophy } from 'lucide-react';
+import { useLeaderboard, type LeaderboardEntry } from '@/firebase/firestore/use-leaderboard';
 
-export type LeaderboardEntry = {
-    uid: string;
-    username: string;
-    netWorth: number;
-    avatar: string;
-}
+export function Leaderboard() {
+  const { data: sortedPlayers, loading } = useLeaderboard();
 
-interface LeaderboardProps {
-    allPlayers: LeaderboardEntry[];
-}
-
-export function Leaderboard({ allPlayers }: LeaderboardProps) {
-  const sortedPlayers = React.useMemo(() => {
-    return [...allPlayers].sort((a,b) => b.netWorth - a.netWorth)
-  }, [allPlayers]);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96 text-white">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 text-white">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Ubao wa Viongozi</h1>
         <p className="text-muted-foreground">
-          Tazama orodha ya wachezaji matajiri zaidi kwenye mchezo.
+          Tazama orodha ya wachezaji matajiri zaidi kwenye mchezo (Top 100).
         </p>
       </div>
 
@@ -35,11 +31,11 @@ export function Leaderboard({ allPlayers }: LeaderboardProps) {
         <CardHeader>
           <CardTitle>Wachezaji Wanaoongoza kwa Utajiri</CardTitle>
           <CardDescription className="text-gray-400">
-            Orodha inajisasisha moja kwa moja.
+            Orodha inajisasisha moja kwa moja kutoka Firestore.
           </CardDescription>
         </CardHeader>
         <CardContent>
-           {sortedPlayers.length > 0 ? (
+           {sortedPlayers && sortedPlayers.length > 0 ? (
              <Table>
                 <TableHeader>
                     <TableRow className="border-gray-700 hover:bg-gray-700/50">
@@ -50,7 +46,7 @@ export function Leaderboard({ allPlayers }: LeaderboardProps) {
                 </TableHeader>
                 <TableBody>
                     {sortedPlayers.map((player, index) => (
-                        <TableRow key={player.uid} className="border-gray-700 hover:bg-gray-700/50">
+                        <TableRow key={player.playerId} className="border-gray-700 hover:bg-gray-700/50">
                             <TableCell className="font-bold text-lg flex items-center gap-2 p-2 sm:p-4">
                                 {index + 1}
                                 {index === 0 && <Trophy className="h-5 w-5 text-yellow-400" />}
@@ -67,7 +63,7 @@ export function Leaderboard({ allPlayers }: LeaderboardProps) {
                                 </div>
                             </TableCell>
                             <TableCell className="text-right font-mono text-lg text-green-400 p-2 sm:p-4">
-                                ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                ${player.score.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </TableCell>
                         </TableRow>
                     ))}
@@ -75,7 +71,7 @@ export function Leaderboard({ allPlayers }: LeaderboardProps) {
              </Table>
            ) : (
              <div className="flex items-center justify-center h-48 text-gray-500">
-                <p>Hakuna data ya wachezaji kwa sasa.</p>
+                <p>Hakuna data ya wachezaji kwa sasa. Jisajili na uanze kucheza!</p>
             </div>
            )}
         </CardContent>
