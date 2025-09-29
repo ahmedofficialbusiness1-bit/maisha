@@ -18,9 +18,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveGameState, loadGameState, type UserData } from '@/services/game-service';
-import { useUser } from '@/firebase';
+import { useUser, useDatabase } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { getDatabase, ref, onValue, DatabaseReference } from 'firebase/database';
 
 export type PlayerStock = {
     ticker: string;
@@ -60,12 +60,20 @@ const calculatedPrices = encyclopediaData.reduce((acc, item) => {
 
 export function Game() {
   const { user, loading: userLoading } = useUser();
+  const database = useDatabase();
   const router = useRouter();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
   const { toast } = useToast();
+
+  const userRef = React.useMemo(() => {
+    if (database && user) {
+        return ref(database, `users/${user.uid}`);
+    }
+    return null;
+  }, [database, user]);
 
   // Load or initialize game state
   React.useEffect(() => {
@@ -74,32 +82,37 @@ export function Game() {
       router.replace('/login');
       return;
     }
-
-    const db = getDatabase();
-    const userRef = ref(db, `users/${user.uid}`);
+    if (!userRef) {
+        // Still waiting for database or user
+        return;
+    }
 
     const unsubscribe = onValue(userRef, (snapshot) => {
+      setGameStateLoading(false);
       if (snapshot.exists()) {
         setGameState(snapshot.val());
       } else {
         // User exists but has no data, create initial data
+        console.log("Creating initial data for new user...");
         const initialData = getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email);
-        saveGameState(user.uid, initialData).then(() => {
+        saveGameState(userRef, initialData).then(() => {
             setGameState(initialData);
         });
       }
-      setGameStateLoading(false);
+    }, (error) => {
+        console.error("Firebase onValue error:", error);
+        setGameStateLoading(false);
     });
 
     return () => unsubscribe();
-  }, [user, userLoading, router]);
+  }, [user, userLoading, router, userRef]);
 
   // Save game state whenever it changes
   React.useEffect(() => {
-    if (gameState && user) {
-      saveGameState(user.uid, gameState);
+    if (gameState && userRef) {
+      saveGameState(userRef, gameState);
     }
-  }, [gameState, user]);
+  }, [gameState, userRef]);
 
 
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {

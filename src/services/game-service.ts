@@ -1,4 +1,4 @@
-import { getDatabase, ref, get, set } from 'firebase/database';
+import { getDatabase, ref, get, set, DatabaseReference } from 'firebase/database';
 import type { PlayerStock } from '@/app/game';
 
 // Define the shape of the user data
@@ -50,16 +50,12 @@ export const getInitialUserData = (uid: string, username: string, email: string 
 });
 
 // Function to save game state to Realtime Database
-export const saveGameState = async (uid: string, gameState: UserData): Promise<void> => {
-  const db = getDatabase();
-  const userRef = ref(db, `users/${uid}`);
+export const saveGameState = async (userRef: DatabaseReference, gameState: UserData): Promise<void> => {
   await set(userRef, gameState);
 };
 
 // Function to load game state from Realtime Database
-export const loadGameState = async (uid: string): Promise<UserData | null> => {
-  const db = getDatabase();
-  const userRef = ref(db, `users/${uid}`);
+export const loadGameState = async (userRef: DatabaseReference): Promise<UserData | null> => {
   const snapshot = await get(userRef);
   if (snapshot.exists()) {
     return snapshot.val() as UserData;
