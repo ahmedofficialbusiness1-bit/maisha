@@ -293,7 +293,7 @@ export function Game() {
         }
       }
 
-      const newSlots = [...prev.buildingSlots];
+      const newSlots = [...-prev.buildingSlots];
       newSlots[slotIndex] = {
         ...slot,
         construction: { startTime: now, endTime: now + constructionTimeMs, targetLevel: slot.level + 1 },
@@ -428,15 +428,25 @@ export function Game() {
     const sellerUserRef = ref(database, `users/${listing.sellerUid}`);
 
     try {
-        await runTransaction(listingRef, (currentListing) => {
-            if (!currentListing) {
-                // Listing was already sold or removed.
-                return;
+        const transactionResult = await runTransaction(listingRef, (currentListing) => {
+            if (currentListing === null) {
+                return; // Listing already sold or removed
             }
-            // In a real scenario, you'd handle partial buys. For now, we assume full buys.
-            // This transaction just removes the listing.
-            return null;
+            if (currentListing.quantity < quantityToBuy) {
+                 throw new Error("Not enough quantity available.");
+            }
+            if (currentListing.quantity === quantityToBuy) {
+                return null; // Remove the listing
+            } else {
+                currentListing.quantity -= quantityToBuy;
+                return currentListing;
+            }
         });
+
+        if (!transactionResult.committed) {
+             throw new Error("Market transaction to remove listing failed.");
+        }
+
 
         // 2. Update buyer's state (client-side)
         updateState(prev => {
@@ -454,7 +464,7 @@ export function Game() {
             };
         });
 
-        // 3. Update seller's state (server-side)
+        // 3. Update seller's state (server-side transaction)
         await runTransaction(sellerUserRef, (sellerData) => {
             if (sellerData) {
                 sellerData.money += totalCost;
@@ -471,10 +481,9 @@ export function Game() {
         addNotification(`Umenunua ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, 'purchase');
         toast({ title: 'Purchase Successful' });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Market transaction failed:", error);
-        toast({ variant: 'destructive', title: 'Purchase Failed', description: 'The transaction could not be completed.' });
-        // Note: In a real app, you would implement a more robust transaction system with rollbacks.
+        toast({ variant: 'destructive', title: 'Purchase Failed', description: error.message || 'The transaction could not be completed.' });
     }
   };
   
