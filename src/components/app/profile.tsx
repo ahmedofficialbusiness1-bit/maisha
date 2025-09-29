@@ -184,9 +184,9 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                             <FormItem>
                                 <FormLabel>Jina la Kampuni</FormLabel>
                                 <FormControl>
-                                <Input placeholder="Jina la kampuni yako..." {...field} className='bg-gray-700 border-gray-600' disabled/>
+                                <Input placeholder="Jina la kampuni yako..." {...field} className='bg-gray-700 border-gray-600' />
                                 </FormControl>
-                                <FormDescription>Huwezi kubadilisha jina la mtumiaji kwa sasa.</FormDescription>
+                                <FormDescription>Unaweza kubadilisha jina la kampuni yako.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                             )}
