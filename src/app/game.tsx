@@ -19,7 +19,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
-import { useUser, useDatabase, useFirestore } from '@/firebase';
+import { useUser, useDatabase } from '@/firebase';
+import { useLeaderboard } from '@/firebase/firestore/use-leaderboard';
 import { useRouter } from 'next/navigation';
 import { getDatabase, ref, onValue, set, runTransaction } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
@@ -62,8 +63,8 @@ const calculatedPrices = encyclopediaData.reduce((acc, item) => {
 
 export function Game() {
   const { user, loading: userLoading } = useUser();
-  const database = useDatabase();
-  const firestore = useFirestore();
+  const { db: firestore } = useDatabase();
+  const database = getDatabase();
   const router = useRouter();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [playerListings, setPlayerListings] = React.useState<PlayerListing[]>([]);
@@ -71,6 +72,8 @@ export function Game() {
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
   const { toast } = useToast();
+  
+  const { data: leaderboardData } = useLeaderboard();
 
   // Refs for Firebase paths
   const userRef = React.useMemo(() => database && user ? ref(database, `users/${user.uid}`) : null, [database, user]);
@@ -130,28 +133,29 @@ export function Game() {
 
   // Update public player data (RTDB) and leaderboard (Firestore) whenever critical info changes
   React.useEffect(() => {
-    if (gameState && gameState.uid && gameState.username && leaderboardDocRef) {
-        // Update RTDB for general player info
-        if (playerPublicRef) {
-            set(playerPublicRef, {
-                uid: gameState.uid,
-                username: gameState.username,
-                netWorth: gameState.netWorth,
-                avatar: `https://picsum.photos/seed/${gameState.uid}/40/40`,
-                level: gameState.playerLevel,
-                role: gameState.role
-            });
-        }
-
-        // Update Firestore for leaderboard
-        setDoc(leaderboardDocRef, {
-            playerId: gameState.uid,
+    if (!gameState || !gameState.uid || !gameState.username || !leaderboardDocRef) return;
+    
+    // Update RTDB for general player info
+    if (playerPublicRef) {
+        set(playerPublicRef, {
+            uid: gameState.uid,
             username: gameState.username,
-            score: gameState.netWorth,
-            avatar: `https://picsum.photos/seed/${gameState.uid}/100/100`,
+            netWorth: gameState.netWorth,
+            avatar: `https://picsum.photos/seed/${gameState.uid}/40/40`,
             level: gameState.playerLevel,
-        }, { merge: true });
+            role: gameState.role
+        });
     }
+
+    // Update Firestore for leaderboard
+    setDoc(leaderboardDocRef, {
+        playerId: gameState.uid,
+        username: gameState.username,
+        score: gameState.netWorth,
+        avatar: `https://picsum.photos/seed/${gameState.uid}/100/100`,
+        level: gameState.playerLevel,
+    }, { merge: true });
+
   }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.role, playerPublicRef, leaderboardDocRef]);
 
 
@@ -636,17 +640,15 @@ export function Game() {
     return () => clearInterval(interval);
   }, [gameState, updateState, addXP, addNotification]);
 
+  const { buildingValue, stockValue } = React.useMemo(() => {
+    if (!gameState) return { buildingValue: 0, stockValue: 0 };
 
-  // Recalculate net worth 
-  React.useEffect(() => {
-    if (!gameState) return;
-
-    const stockValue = (gameState.playerStocks || []).reduce((total, stock) => {
+    const currentStockValue = (gameState.playerStocks || []).reduce((total, stock) => {
         const stockInfo = companyData.find(s => s.ticker === stock.ticker);
         return total + (stockInfo ? stockInfo.stockPrice * stock.shares : 0);
     }, 0);
 
-    const buildingValue = gameState.buildingSlots.reduce((total, slot) => {
+    const currentBuildingValue = gameState.buildingSlots.reduce((total, slot) => {
         if (!slot?.building) return total;
         const buildCost = buildingData[slot.building.id].buildCost;
         let cost = buildCost.reduce((sum, material) => sum + ((calculatedPrices[material.name] || 0) * material.quantity), 0);
@@ -654,18 +656,42 @@ export function Game() {
             const upgradeCosts = buildingData[slot.building.id].upgradeCost(i);
             cost += upgradeCosts.reduce((sum, material) => sum + ((calculatedPrices[material.name] || 0) * material.quantity), 0);
         }
-        return total + cost;
+        return total + cost * 0.5; // Buildings depreciate to 50% of build cost
     }, 0);
+
+    return { buildingValue: currentBuildingValue, stockValue: currentStockValue };
+  }, [gameState, companyData]);
+
+
+  // Recalculate net worth 
+  React.useEffect(() => {
+    if (!gameState) return;
     
     const inventoryValue = (gameState.inventory || []).reduce((total, item) => total + (item.quantity * (item.marketPrice || 0)), 0);
-
     const netWorth = gameState.money + stockValue + buildingValue + inventoryValue;
 
     if (netWorth !== gameState.netWorth) {
         updateState(prev => ({ netWorth }));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState?.money, gameState?.playerStocks, gameState?.buildingSlots, companyData, gameState?.inventory]);
+  }, [gameState, buildingValue, stockValue, updateState]);
+
+
+  const getPlayerRating = (netWorth: number) => {
+      if (netWorth > 1_000_000) return 'A+';
+      if (netWorth > 500_000) return 'A';
+      if (netWorth > 250_000) return 'B+';
+      if (netWorth > 100_000) return 'B';
+      if (netWorth > 50_000) return 'C+';
+      if (netWorth > 10_000) return 'C';
+      return 'D';
+  };
+
+  const playerRank = React.useMemo(() => {
+      if (!leaderboardData || !user) return 'N/A';
+      const rank = leaderboardData.findIndex(p => p.playerId === user.uid);
+      return rank !== -1 ? `#${rank + 1}` : '100+';
+  }, [leaderboardData, user]);
+
 
   if (userLoading || gameStateLoading) {
     return (
@@ -693,10 +719,10 @@ export function Game() {
   
   const profileMetrics: PlayerMetrics = {
     netWorth: gameState.netWorth,
-    buildingValue: 0, // placeholder
-    stockValue: 0, // placeholder
-    ranking: `N/A`,
-    rating: 'A+', // placeholder
+    buildingValue: buildingValue,
+    stockValue: stockValue,
+    ranking: playerRank,
+    rating: getPlayerRating(gameState.netWorth),
   };
   
   const currentProfile: ProfileData = {
@@ -745,5 +771,7 @@ export function Game() {
     </div>
   );
 }
+
+    
 
     
