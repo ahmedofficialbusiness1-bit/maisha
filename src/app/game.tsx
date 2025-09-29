@@ -20,7 +20,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser, useDatabase } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { getDatabase, ref, onValue, set, get, runTransaction } from 'firebase/database';
+import { getDatabase, ref, onValue, set, get, runTransaction, query, orderByChild, limitToLast } from 'firebase/database';
 
 export type PlayerStock = {
     ticker: string;
@@ -120,7 +120,10 @@ export function Game() {
   // Listen for all players data (leaderboard)
   React.useEffect(() => {
     if (!playersRef) return;
-    const unsubscribe = onValue(playersRef, (snapshot) => {
+    // Query for the top 100 players by net worth
+    const leaderboardQuery = query(playersRef, orderByChild('netWorth'), limitToLast(100));
+
+    const unsubscribe = onValue(leaderboardQuery, (snapshot) => {
         const players: LeaderboardEntry[] = [];
         snapshot.forEach(childSnapshot => {
             const playerData = childSnapshot.val();
@@ -131,7 +134,8 @@ export function Game() {
                 avatar: playerData.avatar,
             });
         });
-        setAllPlayers(players);
+        // Firebase returns ascending order, so we reverse to get descending
+        setAllPlayers(players.reverse());
     });
     return () => unsubscribe();
   }, [playersRef]);
@@ -747,3 +751,5 @@ export function Game() {
     </div>
   );
 }
+
+    
