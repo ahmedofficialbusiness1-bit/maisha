@@ -43,12 +43,17 @@ const profileFormSchema = z.object({
     }),
   avatarUrl: z.string().optional().or(z.literal('')),
   privateNotes: z.string().max(500, { message: 'Maelezo yasizidi herufi 500.'}).optional(),
-  status: z.enum(['online', 'offline']).optional(),
-  lastSeen: z.date().optional(),
-  role: z.enum(['player', 'admin']).optional(),
 });
 
-export type ProfileData = z.infer<typeof profileFormSchema>;
+// We omit the server-controlled fields from the ProfileData for the form
+export type ProfileDataForForm = z.infer<typeof profileFormSchema>;
+
+export type ProfileData = ProfileDataForForm & {
+  status?: 'online' | 'offline';
+  lastSeen?: Date;
+  role?: 'player' | 'admin';
+};
+
 
 export type PlayerMetrics = {
     netWorth: number;
@@ -59,7 +64,7 @@ export type PlayerMetrics = {
 };
 
 interface PlayerProfileProps {
-  onSave: (data: Omit<ProfileData, 'status' | 'lastSeen' | 'role'>) => void;
+  onSave: (data: ProfileDataForForm) => void;
   currentProfile: ProfileData;
   metrics: PlayerMetrics;
 }
@@ -86,12 +91,12 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
 
-  const form = useForm<Omit<ProfileData, 'status' | 'lastSeen' | 'role'>>({
-    resolver: zodResolver(profileFormSchema.omit({ status: true, lastSeen: true, role: true })),
+  const form = useForm<ProfileDataForForm>({
+    resolver: zodResolver(profileFormSchema),
     defaultValues: {
-        playerName: currentProfile.playerName,
-        avatarUrl: currentProfile.avatarUrl,
-        privateNotes: currentProfile.privateNotes,
+        playerName: currentProfile.playerName || '',
+        avatarUrl: currentProfile.avatarUrl || '',
+        privateNotes: currentProfile.privateNotes || '',
     },
   });
   
@@ -99,14 +104,16 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
   const avatarUrl = form.watch('avatarUrl');
 
    React.useEffect(() => {
-    form.reset({
-        playerName: currentProfile.playerName,
-        avatarUrl: currentProfile.avatarUrl,
-        privateNotes: currentProfile.privateNotes,
-    });
+    if (!isEditing) {
+        form.reset({
+            playerName: currentProfile.playerName,
+            avatarUrl: currentProfile.avatarUrl,
+            privateNotes: currentProfile.privateNotes,
+        });
+    }
   }, [currentProfile, form, isEditing]);
 
-  function onSubmit(data: Omit<ProfileData, 'status' | 'lastSeen' | 'role'>) {
+  function onSubmit(data: ProfileDataForForm) {
     onSave(data);
     setIsEditing(false);
   }
@@ -290,3 +297,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
     </div>
   );
 }
+
+
+    
