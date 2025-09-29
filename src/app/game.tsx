@@ -149,6 +149,7 @@ export function Game() {
     // Update public player data
     if (gameState && playerPublicRef) {
         set(playerPublicRef, {
+            uid: gameState.uid,
             username: gameState.username,
             netWorth: gameState.netWorth,
             avatar: `https://picsum.photos/seed/${gameState.uid}/40/40`,
@@ -751,5 +752,3 @@ export function Game() {
     </div>
   );
 }
-
-    
