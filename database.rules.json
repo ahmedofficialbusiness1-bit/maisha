@@ -17,7 +17,7 @@
     "market": {
       ".read": "auth != null",
       "$listingId": {
-        ".write": "auth != null && (!data.exists() || data.child('sellerUid').val() === auth.uid)"
+        ".write": "auth != null"
       }
     },
     "chat": {
