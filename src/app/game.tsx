@@ -380,7 +380,7 @@ export function Game() {
     if (gameState.money < totalCost) return;
 
     updateState(prev => {
-        const newPlayerStocks = [...prev.playerStocks];
+        const newPlayerStocks = [...(prev.playerStocks || [])];
         const stockIndex = newPlayerStocks.findIndex(s => s.ticker === stock.ticker);
         if (stockIndex !== -1) {
             newPlayerStocks[stockIndex].shares += quantity;
@@ -436,8 +436,8 @@ export function Game() {
                 let newMoney = prev.money;
                 let newXP = prev.playerXP;
                 const newInventory = [...prev.inventory.map(i => ({...i}))];
-                let newTransactions = [...prev.transactions];
-                let newNotifications = [...prev.notifications];
+                let newTransactions = [...(prev.transactions || [])];
+                let newNotifications = [...(prev.notifications || [])];
 
                 for (const activity of finishedActivities) {
                     if (activity.type === 'construction') {
@@ -495,7 +495,7 @@ export function Game() {
   React.useEffect(() => {
     if (!gameState) return;
 
-    const stockValue = gameState.playerStocks.reduce((total, stock) => {
+    const stockValue = (gameState.playerStocks || []).reduce((total, stock) => {
         const stockInfo = companyData.find(s => s.ticker === stock.ticker);
         return total + (stockInfo ? stockInfo.stockPrice * stock.shares : 0);
     }, 0);
@@ -579,7 +579,7 @@ export function Game() {
       case 'chats':
           return <Chats user={{ uid: gameState.uid, username: gameState.username }} />;
       case 'accounting':
-          return <Accounting transactions={gameState.transactions} />;
+          return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':
           return <Leaderboard allPlayers={[{uid: 'local-player', username: gameState.username, netWorth: gameState.netWorth, avatar: `https://picsum.photos/seed/${gameState.uid}/40/40`}]} />;
       case 'profile':
@@ -593,7 +593,7 @@ export function Game() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
-      <AppHeader money={gameState.money} stars={gameState.stars} setView={setView} playerName={gameState.username} playerAvatar={`https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={gameState.notifications} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin'} />
+      <AppHeader money={gameState.money} stars={gameState.stars} setView={setView} playerName={gameState.username} playerAvatar={`https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={gameState.notifications || []} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin'} />
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
       </main>
