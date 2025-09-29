@@ -3,8 +3,6 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Factory, CandlestickChart, Wheat, Briefcase, Award } from 'lucide-react';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { useUser } from '@/firebase';
 import { signInWithGoogle } from '@/firebase/auth';
@@ -46,7 +44,7 @@ function LoginComponent() {
     const handleLogin = async () => {
         try {
             await signInWithGoogle();
-            // The useEffect above will handle the redirect
+            // The useEffect above will handle the redirect after successful login
         } catch (error) {
             console.error("Error signing in: ", error);
             // Optionally, show a toast notification to the user
