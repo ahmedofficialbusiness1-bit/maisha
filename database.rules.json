@@ -11,7 +11,7 @@
         ".read": "auth != null",
         ".write": "auth != null && auth.uid === $uid"
       },
-      ".read": "auth != null"
+      ".indexOn": ["netWorth"]
     },
     "market": {
       ".read": "auth != null",
