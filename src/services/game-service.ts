@@ -38,15 +38,16 @@ export type PlayerPublicData = {
 export const getInitialUserData = (uid: string, displayName: string | null, email: string | null): UserData => {
   // For email sign-up, displayName is null. Create a default username.
   const initialUsername = displayName || (email ? email.split('@')[0] : 'Mchezaji');
+  const isAdmin = uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
   
   return {
     uid,
     username: initialUsername,
     email,
     lastLogin: Date.now(),
-    money: 10000,
-    stars: 20,
-    netWorth: 10000,
+    money: isAdmin ? 1000000 : 10000,
+    stars: isAdmin ? 1000 : 20,
+    netWorth: isAdmin ? 1000000 : 10000,
     buildingSlots: Array(20).fill({ building: null, level: 0 }),
     inventory: [
       { item: 'Mbao', quantity: 2000, marketPrice: 2.5 },
@@ -60,7 +61,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     playerXP: 0,
     privateNotes: `Karibu kwenye wasifu wangu! Mimi ni mchezaji mpya kwenye Uchumi wa Afrika na nina matumaini ya kujenga himaya kubwa.`,
     status: 'online',
-    role: 'player',
+    role: isAdmin ? 'admin' : 'player',
     lastSeen: Date.now(),
   };
 }
