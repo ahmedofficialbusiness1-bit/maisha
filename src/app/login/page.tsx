@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -59,6 +60,7 @@ function LoginComponent() {
                 switch(error.code) {
                     case 'auth/user-not-found':
                     case 'auth/wrong-password':
+                    case 'auth/invalid-credential':
                         title = 'Barua pepe au Nenosiri si Sahihi';
                         description = 'Tafadhali angalia taarifa zako na ujaribu tena.';
                         break;
