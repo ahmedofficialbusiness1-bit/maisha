@@ -13,13 +13,15 @@ const firebaseConfig: FirebaseOptions = {
 
 // Initialize Firebase
 function initializeFirebase() {
-    // Firebase services are initialized here, which may be provided by
-    // environment variables from the hosting provider.
+    // This function can be called on the client and the server.
+    // On the server, it will be called with the environment variables set
+    // by the hosting provider.
+    //
+    // On the client, it will be called with the config object above.
     const apps = getApps();
     if (apps.length > 0) {
         return getApp();
     }
-    
     return initializeApp(firebaseConfig);
 }
 
