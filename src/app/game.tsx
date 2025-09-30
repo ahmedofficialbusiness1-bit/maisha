@@ -689,10 +689,10 @@ export function Game() {
   };
 
   const playerRank = React.useMemo(() => {
-      if (!leaderboardData || !user) return 'N/A';
-      const rank = leaderboardData.findIndex(p => p.playerId === user.uid);
+      if (!leaderboardData || !gameState?.uid) return 'N/A';
+      const rank = leaderboardData.findIndex(p => p.playerId === gameState.uid);
       return rank !== -1 ? `#${rank + 1}` : '100+';
-  }, [leaderboardData, user]);
+  }, [leaderboardData, gameState?.uid]);
 
 
   if (userLoading || gameStateLoading) {
@@ -781,3 +781,4 @@ export function Game() {
 
 
     
+
