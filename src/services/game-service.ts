@@ -1,3 +1,4 @@
+
 import { DatabaseReference, set } from 'firebase/database';
 import type { PlayerStock } from '@/app/game';
 
@@ -38,7 +39,7 @@ export type PlayerPublicData = {
 export const getInitialUserData = (uid: string, displayName: string | null, email: string | null): UserData => {
   // For email sign-up, displayName is null. Create a default username.
   const initialUsername = displayName || (email ? email.split('@')[0] : 'Mchezaji');
-  const isAdmin = uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
+  const isAdmin = uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || email === 'elonjazz89@gmail.com';
   
   return {
     uid,
