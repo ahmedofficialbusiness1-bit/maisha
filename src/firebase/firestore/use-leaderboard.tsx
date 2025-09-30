@@ -34,7 +34,8 @@ export function useLeaderboard() {
         setLoading(false);
         const result: LeaderboardEntry[] = [];
         querySnapshot.forEach((doc) => {
-          result.push(doc.data() as LeaderboardEntry);
+          // Use doc.id as the unique key, which is the player's UID
+          result.push({ playerId: doc.id, ...doc.data() } as LeaderboardEntry);
         });
         setData(result);
         setError(null);
