@@ -13,10 +13,8 @@ const firebaseConfig: FirebaseOptions = {
 
 // Initialize Firebase
 function initializeFirebase() {
-    if (!firebaseConfig.apiKey) {
-        return null;
-    }
-    
+    // Firebase services are initialized here, which may be provided by
+    // environment variables from the hosting provider.
     const apps = getApps();
     if (apps.length > 0) {
         return getApp();
