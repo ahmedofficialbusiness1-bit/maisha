@@ -3,12 +3,12 @@
   "rules": {
     "users": {
       "$uid": {
-        ".read": "auth != null",
-        ".write": "auth != null"
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
       }
     },
     "players": {
-      ".read": "auth != null",
+      ".read": true,
       "$uid": {
         ".write": "auth != null && auth.uid === $uid"
       },
@@ -26,3 +26,4 @@
     }
   }
 }
+
