@@ -12,8 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { simulateCommodityPrice, type SimulateCommodityPriceInput } from '@/ai/flows/commodity-price-simulation';
+import { generateAiPlayer, type GenerateAiPlayerOutput } from '@/ai/flows/generate-ai-player';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getDatabase, ref, set } from 'firebase/database';
+import { doc, setDoc } from 'firebase/firestore';
+import { useDatabase } from '@/firebase';
+import { Progress } from '../ui/progress';
 
 
 const simulationFormSchema = z.object({
@@ -185,16 +190,90 @@ function CommoditySimulator() {
 }
 
 function PlayerManagement() {
+    const { toast } = useToast();
+    const rt_db = getDatabase();
+    const { db: firestore } = useDatabase();
+    const [isGenerating, setIsGenerating] = React.useState(false);
+    const [generationProgress, setGenerationProgress] = React.useState(0);
+    const [generatedCount, setGeneratedCount] = React.useState(0);
+    const totalPlayersToGenerate = 100;
+
+    const handleGeneratePlayers = async () => {
+        setIsGenerating(true);
+        setGenerationProgress(0);
+        setGeneratedCount(0);
+
+        for (let i = 0; i < totalPlayersToGenerate; i++) {
+            try {
+                // This is a fake UID for the AI player for DB keying purposes
+                const fakeUid = `ai-${Date.now()}-${i}`;
+                
+                const aiPlayerData: GenerateAiPlayerOutput = await generateAiPlayer({
+                    uid: fakeUid,
+                    email: `${fakeUid}@uchumi.ai`,
+                });
+
+                // Save to Realtime Database (/users/{uid})
+                const userRef = ref(rt_db, `users/${fakeUid}`);
+                await set(userRef, aiPlayerData);
+
+                // Save to Firestore Leaderboard (/leaderboard/{uid})
+                const leaderboardDocRef = doc(firestore, 'leaderboard', fakeUid);
+                await setDoc(leaderboardDocRef, {
+                    playerId: aiPlayerData.uid,
+                    username: aiPlayerData.username,
+                    score: aiPlayerData.netWorth,
+                    avatar: `https://picsum.photos/seed/${aiPlayerData.uid}/100/100`,
+                    level: aiPlayerData.playerLevel,
+                });
+
+                const newCount = i + 1;
+                setGeneratedCount(newCount);
+                setGenerationProgress((newCount / totalPlayersToGenerate) * 100);
+
+            } catch (error) {
+                console.error(`Failed to generate AI player ${i + 1}:`, error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Generation Error',
+                    description: `Failed on player ${i + 1}. Check console for details.`,
+                });
+                break; // Stop generation on error
+            }
+        }
+
+        setIsGenerating(false);
+        if (generatedCount === totalPlayersToGenerate) {
+            toast({
+                title: 'Success!',
+                description: `${totalPlayersToGenerate} AI players have been generated and added to the game.`,
+            });
+        }
+    };
+
+
   return (
     <Card className="bg-gray-800/60 border-gray-700 mt-4">
         <CardHeader>
-            <CardTitle>Player List</CardTitle>
-            <CardDescription>Player management is disabled in local mode.</CardDescription>
+            <CardTitle>AI Player Generation</CardTitle>
+            <CardDescription>Generate AI-powered players to populate the game world.</CardDescription>
         </CardHeader>
         <CardContent>
-           <div className="flex items-center justify-center h-48 text-gray-500">
-                <p>Connect to a cloud database to manage players.</p>
-            </div>
+            {isGenerating ? (
+                <div className="flex flex-col items-center justify-center h-48 gap-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-400"/>
+                    <div className='w-full max-w-sm text-center'>
+                      <p>Generating players... {generatedCount} / {totalPlayersToGenerate}</p>
+                      <Progress value={generationProgress} className="mt-2" />
+                    </div>
+                </div>
+            ) : (
+                <div className="flex items-center justify-center h-48">
+                    <Button onClick={handleGeneratePlayers} disabled={isGenerating}>
+                        Generate 100 AI Players
+                    </Button>
+                </div>
+            )}
         </CardContent>
     </Card>
   );
@@ -209,7 +288,7 @@ export function AdminPanel() {
         <p className="text-muted-foreground">Tools for managing the game world and players.</p>
       </div>
 
-       <Tabs defaultValue="economy" className="w-full">
+       <Tabs defaultValue="players" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-gray-900/50">
             <TabsTrigger value="players">Player Management</TabsTrigger>
             <TabsTrigger value="economy">Economy Tools</TabsTrigger>
