@@ -50,20 +50,28 @@ function LoginComponent() {
             await signInWithGoogle();
             // The useEffect above will handle the redirect after successful login
         } catch (error) {
-            if (error instanceof FirebaseError && error.code === 'auth/popup-closed-by-user') {
-                 toast({
-                    title: 'Umesitisha Kuingia',
-                    description: 'Dirisha la kuingia limefungwa. Jaribu tena.',
-                    variant: 'default',
-                 });
-            } else {
-                console.error("Error signing in: ", error);
-                toast({
-                    title: 'Kosa Limetokea',
-                    description: 'Imeshindikana kuingia. Tafadhali jaribu tena.',
-                    variant: 'destructive',
-                });
+            if (error instanceof FirebaseError) {
+                if (error.code === 'auth/popup-closed-by-user') {
+                    toast({
+                        title: 'Umesitisha Kuingia',
+                        description: 'Dirisha la kuingia limefungwa. Jaribu tena.',
+                        variant: 'default',
+                    });
+                    return; // Don't log this as a generic error
+                }
+                if (error.code === 'auth/cancelled-popup-request') {
+                    // This happens when the user clicks the login button multiple times.
+                    // It's safe to ignore as the last popup request will proceed.
+                    return; 
+                }
             }
+            
+            console.error("Error signing in: ", error);
+            toast({
+                title: 'Kosa Limetokea',
+                description: 'Imeshindikana kuingia. Tafadhali jaribu tena.',
+                variant: 'destructive',
+            });
         }
     };
 
