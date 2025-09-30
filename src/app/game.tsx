@@ -728,6 +728,7 @@ export function Game() {
   };
   
   const currentProfile: ProfileData = {
+      uid: gameState.uid,
       playerName: gameState.username,
       avatarUrl: `https://picsum.photos/seed/${gameState.uid}/100/100`,
       privateNotes: gameState.privateNotes,
@@ -775,5 +776,8 @@ export function Game() {
 }
 
     
+
+    
+
 
     

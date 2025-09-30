@@ -31,6 +31,7 @@ import { Clipboard, Pencil, Upload } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 const profileFormSchema = z.object({
   playerName: z
@@ -49,6 +50,7 @@ const profileFormSchema = z.object({
 export type ProfileDataForForm = z.infer<typeof profileFormSchema>;
 
 export type ProfileData = ProfileDataForForm & {
+  uid: string;
   status?: 'online' | 'offline';
   lastSeen?: Date;
   role?: 'player' | 'admin';
@@ -90,6 +92,7 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 
 export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
+  const { toast } = useToast();
 
   const form = useForm<ProfileDataForForm>({
     resolver: zodResolver(profileFormSchema),
@@ -104,13 +107,12 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
   const avatarUrl = form.watch('avatarUrl');
 
    React.useEffect(() => {
-    if (!isEditing) {
-        form.reset({
-            playerName: currentProfile.playerName,
-            avatarUrl: currentProfile.avatarUrl,
-            privateNotes: currentProfile.privateNotes,
-        });
-    }
+    // Reset form values when currentProfile changes or when editing is toggled off
+    form.reset({
+        playerName: currentProfile.playerName,
+        avatarUrl: currentProfile.avatarUrl,
+        privateNotes: currentProfile.privateNotes,
+    });
   }, [currentProfile, form, isEditing]);
 
   function onSubmit(data: ProfileDataForForm) {
@@ -118,8 +120,9 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
     setIsEditing(false);
   }
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(currentProfile.playerName);
+  const handleCopyUid = () => {
+    navigator.clipboard.writeText(currentProfile.uid);
+    toast({ title: 'UID Copied!', description: 'Player UID has been copied to the clipboard.'});
   }
 
   const handleEditToggle = () => {
@@ -161,27 +164,27 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                     </div>
 
                     <div className='flex-grow space-y-1'>
-                        <div className='flex items-center gap-2'>
-                             <span className={cn(
+                         <span className={cn(
                                 'text-sm font-semibold',
                                 currentProfile.status === 'online' ? 'text-green-400' : 'text-gray-400'
                             )}>
                                 {currentProfile.status === 'online' ? 'Online' : `Offline (${lastSeenText})`}
                             </span>
-                        </div>
-                        <h1 className="text-2xl font-bold tracking-tight">{currentProfile.playerName}</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
                         <p className="text-muted-foreground">{currentProfile.role === 'admin' ? 'Administrator' : 'Sole trader'}</p>
-                        <div className='flex items-center gap-4 pt-2'>
-                            <Button type="button" variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleCopy}>
-                                <Clipboard className='h-4 w-4 mr-1' /> Copy to Clipboard
-                            </Button>
-                            <Button type="button" variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleEditToggle}>
-                                <Pencil className='h-4 w-4 mr-1' /> {isEditing ? 'Cancel Edit' : 'Edit Account'}
-                            </Button>
-                        </div>
+                         <div className='text-xs text-gray-500 font-mono flex items-center gap-2'>
+                            <span>UID: {currentProfile.uid}</span>
+                            <button type="button" onClick={handleCopyUid} className="p-1 hover:bg-gray-700 rounded-full"><Clipboard className='h-3 w-3'/></button>
+                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-6 pt-6">
+                <CardContent className="space-y-6 pt-0">
+                    <div className='flex items-center gap-4'>
+                        <Button type="button" variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleEditToggle}>
+                            <Pencil className='h-4 w-4 mr-1' /> {isEditing ? 'Cancel Edit' : 'Edit Account'}
+                        </Button>
+                    </div>
+                    <Separator className="bg-gray-600"/>
                     {isEditing ? (
                         <>
                         <FormField
@@ -198,7 +201,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                             </FormItem>
                             )}
                         />
-                        {/* Avatar upload is disabled for now as we use picsum */}
                         </>
                     ) : null}
 
@@ -298,5 +300,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
   );
 }
 
+
+    
 
     
