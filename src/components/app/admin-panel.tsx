@@ -12,8 +12,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { simulateCommodityPrice, type SimulateCommodityPriceInput } from '@/ai/flows/commodity-price-simulation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Users, Wifi, WifiOff } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { ScrollArea } from '../ui/scroll-area';
+import { formatDistanceToNow } from 'date-fns';
 
 
 const simulationFormSchema = z.object({
@@ -184,6 +188,101 @@ function CommoditySimulator() {
   );
 }
 
+function PlayerManager() {
+    const { players, loading } = useAllPlayers();
+
+    const { onlinePlayers, offlinePlayers } = React.useMemo(() => {
+        if (!players) return { onlinePlayers: [], offlinePlayers: [] };
+        
+        const now = Date.now();
+        const ONLINE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+
+        const online = players.filter(p => p.lastSeen && (now - p.lastSeen < ONLINE_THRESHOLD));
+        const offline = players.filter(p => !p.lastSeen || (now - p.lastSeen >= ONLINE_THRESHOLD));
+
+        return { onlinePlayers: online, offlinePlayers: offline };
+    }, [players]);
+
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-400"/>
+            </div>
+        )
+    }
+
+    return (
+        <div className="mt-6">
+            <Card className="bg-gray-800/60 border-gray-700">
+                 <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Users /> Player Management
+                    </CardTitle>
+                    <CardDescription>
+                        Total Players: {players?.length || 0}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Online Players */}
+                        <div className="flex flex-col">
+                            <h3 className="font-bold mb-2 flex items-center gap-2"><Wifi className="text-green-400" /> Online ({onlinePlayers.length})</h3>
+                            <ScrollArea className="h-72 flex-grow p-3 rounded-md bg-gray-900/50 border border-gray-700">
+                                {onlinePlayers.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {onlinePlayers.map(player => (
+                                            <div key={player.uid} className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
+                                                        <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-semibold">{player.username}</span>
+                                                </div>
+                                                <Button variant="ghost" size="sm">Manage</Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-gray-500">No players currently online.</div>
+                                )}
+                            </ScrollArea>
+                        </div>
+
+                        {/* Offline Players */}
+                        <div className="flex flex-col">
+                            <h3 className="font-bold mb-2 flex items-center gap-2"><WifiOff className="text-red-400" /> Offline ({offlinePlayers.length})</h3>
+                             <ScrollArea className="h-72 flex-grow p-3 rounded-md bg-gray-900/50 border border-gray-700">
+                                {offlinePlayers.length > 0 ? (
+                                     <div className="space-y-3">
+                                        {offlinePlayers.map(player => (
+                                            <div key={player.uid} className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
+                                                        <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-semibold">{player.username}</span>
+                                                </div>
+                                                <p className="text-xs text-gray-400">
+                                                    Last seen {player.lastSeen ? formatDistanceToNow(new Date(player.lastSeen), { addSuffix: true }) : 'never'}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-gray-500">No offline players.</div>
+                                )}
+                            </ScrollArea>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
 
 export function AdminPanel() {
 
@@ -194,7 +293,20 @@ export function AdminPanel() {
         <p className="text-muted-foreground">Tools for managing the game world.</p>
       </div>
 
-      <CommoditySimulator />
+       <Tabs defaultValue="players" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-900/50">
+            <TabsTrigger value="players">Player Management</TabsTrigger>
+            <TabsTrigger value="economy">Economy Tools</TabsTrigger>
+          </TabsList>
+          <TabsContent value="players">
+            <PlayerManager />
+          </TabsContent>
+          <TabsContent value="economy">
+             <CommoditySimulator />
+          </TabsContent>
+        </Tabs>
+
     </div>
   );
 }
+
