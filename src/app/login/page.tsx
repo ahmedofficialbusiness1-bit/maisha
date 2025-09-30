@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { useUser } from '@/firebase';
 import { signInWithGoogle } from '@/firebase/auth';
+import { useToast } from '@/hooks/use-toast';
+import { FirebaseError } from 'firebase/app';
+
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -34,6 +37,7 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 function LoginComponent() {
     const router = useRouter();
     const { user, loading } = useUser();
+    const { toast } = useToast();
     
     React.useEffect(() => {
         if (!loading && user) {
@@ -46,8 +50,20 @@ function LoginComponent() {
             await signInWithGoogle();
             // The useEffect above will handle the redirect after successful login
         } catch (error) {
-            console.error("Error signing in: ", error);
-            // Optionally, show a toast notification to the user
+            if (error instanceof FirebaseError && error.code === 'auth/popup-closed-by-user') {
+                 toast({
+                    title: 'Umesitisha Kuingia',
+                    description: 'Dirisha la kuingia limefungwa. Jaribu tena.',
+                    variant: 'default',
+                 });
+            } else {
+                console.error("Error signing in: ", error);
+                toast({
+                    title: 'Kosa Limetokea',
+                    description: 'Imeshindikana kuingia. Tafadhali jaribu tena.',
+                    variant: 'destructive',
+                });
+            }
         }
     };
 
