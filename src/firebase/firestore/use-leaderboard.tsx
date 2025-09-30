@@ -1,6 +1,6 @@
 'use client';
 import * as React from 'react';
-import { collection, query, orderBy, limit, onSnapshot, type DocumentData } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { useFirestore } from '..';
 
 export type LeaderboardEntry = {
@@ -26,7 +26,8 @@ export function useLeaderboard() {
 
     setLoading(true);
     const leaderboardRef = collection(firestore, 'leaderboard');
-    const q = query(leaderboardRef, orderBy('score', 'desc'), limit(100));
+    // Removed the limit(100) to fetch all players
+    const q = query(leaderboardRef, orderBy('score', 'desc'));
 
     const unsubscribe = onSnapshot(
       q,
