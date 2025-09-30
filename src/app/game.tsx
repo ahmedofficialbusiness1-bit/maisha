@@ -98,7 +98,13 @@ export function Game() {
     const unsubscribe = onValue(userRef, (snapshot) => {
       setGameStateLoading(false);
       if (snapshot.exists()) {
-        setGameState(snapshot.val());
+        const data = snapshot.val();
+         // Force admin check on load
+        const isAdmin = data.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || data.email === 'elonjazz89@gmail.com';
+        if (isAdmin && data.role !== 'admin') {
+            data.role = 'admin';
+        }
+        setGameState(data);
       } else {
         const initialData = getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email);
         saveUserData(userRef, initialData).then(() => {
@@ -135,8 +141,12 @@ export function Game() {
 
   // Update public player data (RTDB) and leaderboard (Firestore) whenever critical info changes
   React.useEffect(() => {
-    if (!gameState || !gameState.uid || !gameState.username || !leaderboardDocRef) return;
+    if (!gameState || !gameState.uid || !gameState.username || !leaderboardDocRef || !user) return;
     
+    // Check and apply admin role
+    const isAdmin = gameState.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || user.email === 'elonjazz89@gmail.com';
+    const currentRole = isAdmin ? 'admin' : 'player';
+
     // Update RTDB for general player info
     if (playerPublicRef) {
         set(playerPublicRef, {
@@ -145,7 +155,7 @@ export function Game() {
             netWorth: gameState.netWorth,
             avatar: `https://picsum.photos/seed/${gameState.uid}/40/40`,
             level: gameState.playerLevel,
-            role: gameState.role
+            role: currentRole
         });
     }
 
@@ -157,8 +167,13 @@ export function Game() {
         avatar: `https://picsum.photos/seed/${gameState.uid}/100/100`,
         level: gameState.playerLevel,
     }, { merge: true });
+    
+    // Update local game state if role changed
+    if (gameState.role !== currentRole) {
+        updateState(prev => ({ role: currentRole }));
+    }
 
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.role, playerPublicRef, leaderboardDocRef]);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, playerPublicRef, leaderboardDocRef, user]);
 
 
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
