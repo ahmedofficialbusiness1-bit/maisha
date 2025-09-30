@@ -3,13 +3,13 @@
   "rules": {
     "users": {
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
+        ".read": "auth != null",
         ".write": "auth != null"
       }
     },
     "players": {
+      ".read": "auth != null",
       "$uid": {
-        ".read": "auth != null",
         ".write": "auth != null && auth.uid === $uid"
       },
       ".indexOn": ["netWorth"]
@@ -26,3 +26,4 @@
     }
   }
 }
+
