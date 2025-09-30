@@ -6,7 +6,8 @@ import {
     GoogleAuthProvider, 
     signOut as firebaseSignOut,
     createUserWithEmailAndPassword,
-    signInWithEmailAndPassword
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import { app } from '../config';
 
@@ -40,3 +41,12 @@ export const signOut = async () => {
         throw error;
     }
 }
+
+export const sendPasswordReset = async (email: string) => {
+    try {
+        await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+        console.error("Error sending password reset email", error);
+        throw error;
+    }
+};

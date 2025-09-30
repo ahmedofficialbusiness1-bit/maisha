@@ -12,15 +12,21 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { useUser } from '@/firebase';
-import { signInWithEmail, signUpWithEmail } from '@/firebase/auth';
+import { signInWithEmail, signUpWithEmail, sendPasswordReset } from '@/firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Tafadhali ingiza barua pepe sahihi.' }),
   password: z.string().min(6, { message: 'Nenosiri lazima liwe na angalau herufi 6.' }),
 });
+
+const passwordResetSchema = z.object({
+    email: z.string().email({ message: 'Tafadhali ingiza barua pepe sahihi ili kutuma maelekezo.' }),
+});
+
 
 function LoginComponent() {
     const router = useRouter();
@@ -28,6 +34,8 @@ function LoginComponent() {
     const { toast } = useToast();
     const [isLoginView, setIsLoginView] = React.useState(true);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [isResettingPassword, setIsResettingPassword] = React.useState(false);
+    const [isResetDialogOpen, setIsResetDialogOpen] = React.useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -35,6 +43,11 @@ function LoginComponent() {
         email: '',
         password: '',
         },
+    });
+
+    const resetForm = useForm<z.infer<typeof passwordResetSchema>>({
+        resolver: zodResolver(passwordResetSchema),
+        defaultValues: { email: '' },
     });
 
     React.useEffect(() => {
@@ -88,6 +101,28 @@ function LoginComponent() {
             setIsSubmitting(false);
         }
     };
+    
+    const onPasswordReset = async (values: z.infer<typeof passwordResetSchema>) => {
+        setIsResettingPassword(true);
+        try {
+            await sendPasswordReset(values.email);
+            toast({
+                title: 'Barua Pepe Imetumwa',
+                description: 'Tumekutumia maelekezo ya kuweka upya nenosiri. Angalia barua pepe yako.',
+            });
+            setIsResetDialogOpen(false);
+            resetForm.reset();
+        } catch (error) {
+            toast({
+                title: 'Kosa Limetokea',
+                description: 'Imeshindikana kutuma barua pepe. Hakikisha anwani ni sahihi.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsResettingPassword(false);
+        }
+    }
+
 
     if (userLoading || user) {
         return <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">Inapakia...</div>;
@@ -105,7 +140,7 @@ function LoginComponent() {
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                             <FormField
                                 control={form.control}
                                 name="email"
@@ -132,6 +167,48 @@ function LoginComponent() {
                                     </FormItem>
                                 )}
                             />
+                             {isLoginView && (
+                                <div className="text-right">
+                                    <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button variant="link" className="text-blue-400 px-0">
+                                                Umesahau nenosiri?
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="bg-gray-900 border-gray-700 text-white">
+                                            <DialogHeader>
+                                                <DialogTitle>Weka Upya Nenosiri</DialogTitle>
+                                                <DialogDescription>
+                                                    Ingiza barua pepe yako. Utatumiwa link ya kuweka upya nenosiri.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <Form {...resetForm}>
+                                                <form onSubmit={resetForm.handleSubmit(onPasswordReset)} className="space-y-4">
+                                                    <FormField
+                                                        control={resetForm.control}
+                                                        name="email"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Barua Pepe</FormLabel>
+                                                                <FormControl>
+                                                                    <Input type="email" placeholder="jina@mfano.com" {...field} className="bg-gray-800 border-gray-600"/>
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                    <DialogFooter>
+                                                        <Button type="submit" className="w-full" disabled={isResettingPassword}>
+                                                             {isResettingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                            Tuma Barua Pepe
+                                                        </Button>
+                                                    </DialogFooter>
+                                                </form>
+                                            </Form>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
+                            )}
                             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {isLoginView ? 'Ingia' : 'Jisajili'}
