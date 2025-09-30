@@ -35,30 +35,35 @@ export type PlayerPublicData = {
 
 
 // Function to get initial user data
-export const getInitialUserData = (uid: string, username: string, email: string | null): UserData => ({
-  uid,
-  username,
-  email,
-  lastLogin: Date.now(),
-  money: 10000,
-  stars: 20,
-  netWorth: 10000,
-  buildingSlots: Array(20).fill({ building: null, level: 0 }),
-  inventory: [
-    { item: 'Mbao', quantity: 2000, marketPrice: 2.5 },
-    { item: 'Matofali', quantity: 4000, marketPrice: 1.2 },
-    { item: 'Saruji', quantity: 1000, marketPrice: 10 },
-  ],
-  playerStocks: [],
-  transactions: [],
-  notifications: [],
-  playerLevel: 1,
-  playerXP: 0,
-  privateNotes: `Karibu kwenye wasifu wangu! Mimi ni mchezaji mpya kwenye Uchumi wa Afrika na nina matumaini ya kujenga himaya kubwa.`,
-  status: 'online',
-  role: 'player',
-  lastSeen: Date.now(),
-});
+export const getInitialUserData = (uid: string, displayName: string | null, email: string | null): UserData => {
+  // For email sign-up, displayName is null. Create a default username.
+  const initialUsername = displayName || (email ? email.split('@')[0] : 'Mchezaji');
+  
+  return {
+    uid,
+    username: initialUsername,
+    email,
+    lastLogin: Date.now(),
+    money: 10000,
+    stars: 20,
+    netWorth: 10000,
+    buildingSlots: Array(20).fill({ building: null, level: 0 }),
+    inventory: [
+      { item: 'Mbao', quantity: 2000, marketPrice: 2.5 },
+      { item: 'Matofali', quantity: 4000, marketPrice: 1.2 },
+      { item: 'Saruji', quantity: 1000, marketPrice: 10 },
+    ],
+    playerStocks: [],
+    transactions: [],
+    notifications: [],
+    playerLevel: 1,
+    playerXP: 0,
+    privateNotes: `Karibu kwenye wasifu wangu! Mimi ni mchezaji mpya kwenye Uchumi wa Afrika na nina matumaini ya kujenga himaya kubwa.`,
+    status: 'online',
+    role: 'player',
+    lastSeen: Date.now(),
+  };
+}
 
 // Function to save private user data to Realtime Database
 export const saveUserData = async (userRef: DatabaseReference, gameState: UserData): Promise<void> => {
