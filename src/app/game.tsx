@@ -21,7 +21,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser, useDatabase } from '@/firebase';
 import { useLeaderboard } from '@/firebase/firestore/use-leaderboard';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getDatabase, ref, onValue, set, runTransaction, get } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAllPlayers } from '@/firebase/database/use-all-players';
@@ -67,6 +67,7 @@ export function Game() {
   const { db: firestore } = useDatabase();
   const database = getDatabase();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [playerListings, setPlayerListings] = React.useState<PlayerListing[]>([]);
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
@@ -80,6 +81,7 @@ export function Game() {
   const [viewedProfileUid, setViewedProfileUid] = React.useState<string | null>(null);
   const [viewedProfileData, setViewedProfileData] = React.useState<UserData | null>(null);
   const [isViewingProfile, setIsViewingProfile] = React.useState(false);
+  const [initialChatUserId, setInitialChatUserId] = React.useState<string | null>(null);
 
   // Refs for Firebase paths
   const userRef = React.useMemo(() => database && user ? ref(database, `users/${user.uid}`) : null, [database, user]);
@@ -98,6 +100,17 @@ export function Game() {
         const newState = { ...prev, ...updates };
         return newState;
     });
+  }, []);
+  
+  const handleSetView = React.useCallback((newView: View) => {
+    setView(newView);
+    // When changing view, clear the profile/chat state unless we are going to chats
+    if (newView !== 'chats') {
+      setInitialChatUserId(null);
+    }
+    if (newView !== 'profile') {
+        setViewedProfileUid(null);
+    }
   }, []);
 
   // Periodically update lastSeen to keep user online
@@ -278,12 +291,12 @@ export function Game() {
         avatarUrl: data.avatarUrl,
         privateNotes: data.privateNotes || ''
     }));
-    setView('dashboard');
+    handleSetView('dashboard');
   }
 
   const handleViewProfile = (playerId: string) => {
     if (playerId === user?.uid) {
-        setView('profile');
+        handleSetView('profile');
     } else {
         setViewedProfileUid(playerId);
     }
@@ -291,6 +304,12 @@ export function Game() {
 
   const handleBackFromProfileView = () => {
       setViewedProfileUid(null);
+  };
+  
+  const handleStartChatWithUser = (userId: string) => {
+    setInitialChatUserId(userId);
+    handleSetView('chats');
+    setViewedProfileUid(null);
   };
 
 
@@ -833,7 +852,7 @@ export function Game() {
                     isViewOnly={true}
                     onBack={handleBackFromProfileView}
                     viewerRole={gameState.role}
-                    setView={setView}
+                    onStartChat={handleStartChatWithUser}
                 />;
     }
     switch (view) {
@@ -846,7 +865,7 @@ export function Game() {
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} onViewProfile={handleViewProfile} />;
+          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} onViewProfile={handleViewProfile} initialChatUserId={initialChatUserId} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':
@@ -862,11 +881,11 @@ export function Game() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
-      <AppHeader money={gameState.money} stars={gameState.stars} setView={setView} playerName={gameState.username} playerAvatar={gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={gameState.notifications || []} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin'} />
+      <AppHeader money={gameState.money} stars={gameState.stars} setView={handleSetView} playerName={gameState.username} playerAvatar={gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={gameState.notifications || []} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin'} />
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
       </main>
-      <AppFooter activeView={view} setView={setView} />
+      <AppFooter activeView={view} setView={handleSetView} />
     </div>
   );
 }

@@ -74,7 +74,7 @@ interface PlayerProfileProps {
   isViewOnly?: boolean;
   onBack?: () => void;
   viewerRole?: 'player' | 'admin';
-  setView?: (view: View) => void;
+  onStartChat?: (userId: string) => void;
 }
 
 function InfoItem({ label, value, smallText = false }: { label: string; value: React.ReactNode, smallText?: boolean }) {
@@ -96,7 +96,7 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 }
 
 
-export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole, setView }: PlayerProfileProps) {
+export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole, onStartChat }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const { toast } = useToast();
 
@@ -147,9 +147,9 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     }
   };
   
-  const handleStartChat = () => {
-    if (setView) {
-      setView('chats');
+  const handleStartChatInternal = () => {
+    if (onStartChat) {
+      onStartChat(currentProfile.uid);
     }
   };
 
@@ -169,8 +169,8 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                 Rudi Nyuma
             </Button>
             
-            {setView && (
-                 <Button type="button" onClick={handleStartChat}>
+            {onStartChat && (
+                 <Button type="button" onClick={handleStartChatInternal}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Chat with {currentProfile.playerName}
                 </Button>
@@ -257,10 +257,10 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                 {currentProfile.email && (isViewOnly ? viewerRole === 'admin' : true) && (
                     <div>
                         <div className='bg-gray-900/70 p-2 mb-2 rounded-t-md'>
-                            <h3 className='font-semibold text-sm'>Barua Pepe {isViewOnly ? '(Inaonekana na Admin tu)' : ''}</h3>
+                            <h3 className='font-semibold text-sm'>Barua Pepe {isViewOnly && viewerRole === 'admin' ? '' : '(Inaonekana na Admin tu)'}</h3>
                         </div>
                         <div className='p-4 bg-gray-700/50 rounded-b-md text-sm font-mono'>
-                            {currentProfile.email}
+                             {isViewOnly && viewerRole !== 'admin' ? '**********' : currentProfile.email}
                         </div>
                     </div>
                 )}
