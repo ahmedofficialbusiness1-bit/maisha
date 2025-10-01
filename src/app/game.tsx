@@ -90,6 +90,23 @@ export function Game() {
     firestore && gameState?.uid ? doc(firestore, 'leaderboard', gameState.uid) : null
   , [firestore, gameState?.uid]);
   
+  const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
+    setGameState(prev => {
+        if(!prev) return null;
+        const updates = updater(prev);
+        const newState = { ...prev, ...updates };
+        return newState;
+    });
+  }, []);
+
+  // Periodically update lastSeen to keep user online
+  React.useEffect(() => {
+      const interval = setInterval(() => {
+          updateState(() => ({ lastSeen: Date.now() }));
+      }, 60 * 1000); // every minute
+
+      return () => clearInterval(interval);
+  }, [updateState]);
 
   // Load user data or initialize if new
   React.useEffect(() => {
@@ -196,20 +213,10 @@ export function Game() {
     
     // Update local game state if role or email changed
     if (gameState.role !== currentRole || gameState.email !== user.email) {
-        updateState(prev => ({ role: currentRole, email: user.email }));
+        updateState(prev => ({ ...prev, role: currentRole, email: user.email }));
     }
 
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, leaderboardDocRef, user]);
-
-
-  const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
-    setGameState(prev => {
-        if(!prev) return null;
-        const updates = updater(prev);
-        const newState = { ...prev, ...updates, lastSeen: Date.now() };
-        return newState;
-    });
-  }, []);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, leaderboardDocRef, user, updateState]);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -225,6 +232,7 @@ export function Game() {
         icon,
     };
     updateState(prev => ({
+        ...prev,
         notifications: [newNotification, ...(prev.notifications || [])].slice(0, 50)
     }));
   }, [updateState]);
@@ -241,7 +249,7 @@ export function Game() {
             addNotification(`Hongera! Umefikia Level ${newLevel}!`, 'level-up');
             xpForNextLevel = getXpForNextLevel(newLevel);
         }
-        return { playerXP: newXP, playerLevel: newLevel };
+        return { ...prev, playerXP: newXP, playerLevel: newLevel };
     });
   }, [updateState, addNotification]);
 
@@ -254,6 +262,7 @@ export function Game() {
       timestamp: Date.now(),
     };
     updateState(prev => ({
+        ...prev,
         transactions: [newTransaction, ...(prev.transactions || [])]
     }));
     if (type === 'income') {
@@ -263,12 +272,14 @@ export function Game() {
 
   const handleMarkNotificationsRead = () => {
     updateState(prev => ({
+        ...prev,
         notifications: (prev.notifications || []).map(n => ({ ...n, read: true }))
     }));
   }
 
   const handleUpdateProfile = (data: ProfileData) => {
     updateState(prev => ({
+        ...prev,
         username: data.playerName,
         avatarUrl: data.avatarUrl,
         privateNotes: data.privateNotes || ''
@@ -321,7 +332,7 @@ export function Game() {
         construction: { startTime: now, endTime: now + constructionTimeMs, targetLevel: 1 },
       };
 
-      return { inventory: newInventory.filter(item => item.quantity > 0), buildingSlots: newSlots };
+      return { ...prev, inventory: newInventory.filter(item => item.quantity > 0), buildingSlots: newSlots };
     });
     addNotification(`Ujenzi wa ${building.name} umeanza.`, 'construction');
   };
@@ -359,7 +370,7 @@ export function Game() {
         construction: { startTime: now, endTime: now + constructionTimeMs, targetLevel: slot.level + 1 },
       };
 
-      return { inventory: newInventory.filter(item => item.quantity > 0), buildingSlots: newSlots };
+      return { ...prev, inventory: newInventory.filter(item => item.quantity > 0), buildingSlots: newSlots };
     });
     addNotification(`Uboreshaji wa ${slot.building.name} hadi Lvl ${slot.level + 1} umeanza.`, 'construction');
   };
@@ -368,7 +379,7 @@ export function Game() {
     updateState(prev => {
         const newSlots = [...prev.buildingSlots];
         newSlots[slotIndex] = { building: null, level: 0 };
-        return { buildingSlots: newSlots };
+        return { ...prev, buildingSlots: newSlots };
     });
   };
 
@@ -397,6 +408,7 @@ export function Game() {
         }
         
         return {
+            ...prev,
             inventory: newInventory.filter(item => item.quantity > 0),
             buildingSlots: newSlots,
         }
@@ -427,6 +439,7 @@ export function Game() {
         }
         
         return {
+            ...prev,
             inventory: newInventory.filter(i => i.quantity > 0),
             buildingSlots: newSlots,
         }
@@ -443,7 +456,7 @@ export function Game() {
         if (slot && slot.construction) {
             slot.construction.endTime -= timeReduction;
         }
-        return { stars: prev.stars - starsToUse, buildingSlots: newSlots };
+        return { ...prev, stars: prev.stars - starsToUse, buildingSlots: newSlots };
     });
   };
   
@@ -464,7 +477,7 @@ export function Game() {
             newInventory.push({ item: materialName, quantity, marketPrice: costPerUnit });
         }
         addTransaction('expense', totalCost, `Nunua ${quantity}x ${materialName}`);
-        return { money: prev.money - totalCost, inventory: newInventory };
+        return { ...prev, money: prev.money - totalCost, inventory: newInventory };
     });
 
     addNotification(`Umenunua ${quantity}x ${materialName} kwa $${totalCost.toFixed(2)}.`, 'purchase');
@@ -518,6 +531,7 @@ export function Game() {
             }
             addTransaction('expense', totalCost, `Bought ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`);
             return {
+                ...prev,
                 money: prev.money - totalCost,
                 inventory: newInventory
             };
@@ -561,7 +575,7 @@ export function Game() {
             newPlayerStocks.push({ ticker: stock.ticker, shares: quantity });
         }
         addTransaction('expense', totalCost, `Nunua hisa ${quantity}x ${stock.ticker}`);
-        return { money: prev.money - totalCost, playerStocks: newPlayerStocks };
+        return { ...prev, money: prev.money - totalCost, playerStocks: newPlayerStocks };
     });
     addNotification(`Umenunua hisa ${quantity}x ${stock.ticker}.`, 'purchase');
   };
@@ -576,6 +590,7 @@ export function Game() {
             newInventory[itemIndex].quantity -= quantity;
         }
         return {
+            ...prev,
             inventory: newInventory.filter(i => i.quantity > 0)
         }
      });
@@ -682,6 +697,7 @@ export function Game() {
                 }
 
                 return {
+                    ...prev,
                     buildingSlots: newBuildingSlots,
                     inventory: newInventory.filter(i => i.quantity > 0),
                     money: newMoney,
@@ -728,7 +744,7 @@ export function Game() {
     const netWorth = gameState.money + stockValue + buildingValue + inventoryValue;
 
     if (netWorth !== gameState.netWorth) {
-        updateState(prev => ({ netWorth }));
+        updateState(prev => ({ ...prev, netWorth }));
     }
   }, [gameState, buildingValue, stockValue, updateState]);
 
@@ -865,5 +881,7 @@ export function Game() {
 
 
 
+
+    
 
     
