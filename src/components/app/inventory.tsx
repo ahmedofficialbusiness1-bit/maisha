@@ -49,17 +49,28 @@ export type InventoryItem = {
 interface InventoryProps {
   inventoryItems: InventoryItem[];
   onPostToMarket: (item: InventoryItem, quantity: number, price: number) => void;
+  onCreateContract: (item: InventoryItem, quantityPerDelivery: number, totalQuantity: number, pricePerUnit: number, deliveryIntervalDays: number) => void;
 }
 
 
-export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
+export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: InventoryProps) {
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
+  const [isContractDialogOpen, setIsContractDialogOpen] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState<InventoryItem | null>(null);
-  const [quantity, setQuantity] = React.useState(1);
-  const [price, setPrice] = React.useState(0);
+  
+  // State for Market Sell
+  const [marketQuantity, setMarketQuantity] = React.useState(1);
+  const [marketPrice, setMarketPrice] = React.useState(0);
   const [officialPrice, setOfficialPrice] = React.useState(0);
   const [priceFloor, setPriceFloor] = React.useState(0);
   const [priceCeiling, setPriceCeiling] = React.useState(0);
+
+  // State for Contract
+  const [contractQtyPerDelivery, setContractQtyPerDelivery] = React.useState(1);
+  const [contractTotalQty, setContractTotalQty] = React.useState(1);
+  const [contractPrice, setContractPrice] = React.useState(0);
+  const [contractInterval, setContractInterval] = React.useState(1);
+
   
   const handleOpenSellDialog = (item: InventoryItem) => {
     const entry = encyclopediaData.find(e => e.name === item.item);
@@ -70,17 +81,37 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
 
     setSelectedItem(item);
     setOfficialPrice(officialMarketPrice);
-    setPrice(officialMarketPrice);
+    setMarketPrice(officialMarketPrice);
     setPriceFloor(floor);
     setPriceCeiling(ceiling);
-    setQuantity(1);
+    setMarketQuantity(1);
     setIsSellDialogOpen(true);
   };
+  
+  const handleOpenContractDialog = (item: InventoryItem) => {
+    const entry = encyclopediaData.find(e => e.name === item.item);
+    const officialMarketPrice = entry ? parseFloat(entry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : item.marketPrice;
+
+    setSelectedItem(item);
+    setContractPrice(officialMarketPrice * 0.95); // Default contract price to 95% of market
+    setContractQtyPerDelivery(10);
+    setContractTotalQty(100);
+    setContractInterval(1);
+    setIsContractDialogOpen(true);
+  };
+
 
   const handleConfirmPost = () => {
     if (selectedItem) {
-      onPostToMarket(selectedItem, quantity, price);
+      onPostToMarket(selectedItem, marketQuantity, marketPrice);
       setIsSellDialogOpen(false);
+    }
+  };
+  
+  const handleConfirmContract = () => {
+    if (selectedItem) {
+      onCreateContract(selectedItem, contractQtyPerDelivery, contractTotalQty, contractPrice, contractInterval);
+      setIsContractDialogOpen(false);
     }
   };
 
@@ -150,7 +181,7 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
                               <DropdownMenuItem onClick={() => handleOpenSellDialog(item)}>
                                   Sell on Market
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleOpenContractDialog(item)}>
                                   Create Contract
                               </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -171,6 +202,7 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
         </Card>
       </div>
 
+      {/* Market Sell Dialog */}
       <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
         <DialogContent className="bg-gray-900 border-gray-700 text-white">
           <DialogHeader>
@@ -186,8 +218,8 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
                     <Input 
                         id="quantity" 
                         type="number"
-                        value={quantity}
-                        onChange={(e) => setQuantity(Math.max(1, Math.min(Number(e.target.value), selectedItem.quantity)))}
+                        value={marketQuantity}
+                        onChange={(e) => setMarketQuantity(Math.max(1, Math.min(Number(e.target.value), selectedItem.quantity)))}
                         min="1"
                         max={selectedItem.quantity}
                         className="sm:col-span-3 bg-gray-800 border-gray-600"
@@ -198,8 +230,8 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
                     <Input 
                         id="price" 
                         type="number"
-                        value={price}
-                        onChange={(e) => setPrice(Math.max(priceFloor, Math.min(Number(e.target.value), priceCeiling)))}
+                        value={marketPrice}
+                        onChange={(e) => setMarketPrice(Math.max(priceFloor, Math.min(Number(e.target.value), priceCeiling)))}
                         min={priceFloor}
                         max={priceCeiling}
                         step="0.01"
@@ -213,7 +245,7 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
                 <Separator className="my-2 bg-gray-700"/>
                 <div className='text-center'>
                     <p className="text-lg font-bold">Total Sale Value</p>
-                    <p className='text-2xl font-mono text-green-400'>${(quantity * price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <p className='text-2xl font-mono text-green-400'>${(marketQuantity * marketPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     <p className="text-xs text-gray-500 mt-1">A 5% market tax will be deducted upon sale.</p>
                 </div>
              </div>
@@ -222,10 +254,88 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
             <Button variant="outline" onClick={() => setIsSellDialogOpen(false)}>Cancel</Button>
             <Button 
               className="bg-green-600 hover:bg-green-700 text-white"
-              disabled={!selectedItem || quantity <= 0 || quantity > selectedItem.quantity}
+              disabled={!selectedItem || marketQuantity <= 0 || marketQuantity > selectedItem.quantity}
               onClick={handleConfirmPost}
             >
               Post to Market
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Create Contract Dialog */}
+       <Dialog open={isContractDialogOpen} onOpenChange={setIsContractDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Create a Contract for {selectedItem?.item}</DialogTitle>
+            <DialogDescription>
+                Weka masharti ya mkataba wako. Itakuwa wazi kwa wachezaji wengine kuukubali.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedItem && (
+             <div className="space-y-4 py-4">
+                <div>
+                  <Label htmlFor="c-price">Bei kwa Kipande (Price/Unit)</Label>
+                  <Input 
+                      id="c-price" 
+                      type="number"
+                      value={contractPrice}
+                      onChange={(e) => setContractPrice(Number(e.target.value))}
+                      step="0.01"
+                      className="bg-gray-800 border-gray-600"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Bei elekezi sokoni ni ${selectedItem.marketPrice.toFixed(2)}. Weka bei ya kuvutia.</p>
+                </div>
+                 <div>
+                  <Label htmlFor="c-qty-delivery">Kiasi kwa Usafirishaji (Qty per Delivery)</Label>
+                  <Input 
+                      id="c-qty-delivery" 
+                      type="number"
+                      value={contractQtyPerDelivery}
+                      onChange={(e) => setContractQtyPerDelivery(Math.max(1, Number(e.target.value)))}
+                      min="1"
+                      className="bg-gray-800 border-gray-600"
+                  />
+                </div>
+                 <div>
+                  <Label htmlFor="c-qty-total">Jumla ya Kiasi (Total Quantity)</Label>
+                  <Input 
+                      id="c-qty-total" 
+                      type="number"
+                      value={contractTotalQty}
+                      onChange={(e) => setContractTotalQty(Math.max(contractQtyPerDelivery, Number(e.target.value)))}
+                      min={contractQtyPerDelivery}
+                      className="bg-gray-800 border-gray-600"
+                  />
+                </div>
+                 <div>
+                  <Label htmlFor="c-interval">Muda kati ya Usafirishaji (kwa Siku)</Label>
+                  <Input 
+                      id="c-interval" 
+                      type="number"
+                      value={contractInterval}
+                      onChange={(e) => setContractInterval(Math.max(1, Number(e.target.value)))}
+                      min="1"
+                      className="bg-gray-800 border-gray-600"
+                  />
+                </div>
+                <Separator className="my-4 bg-gray-700"/>
+                <div className="p-4 bg-gray-800 rounded-lg space-y-2 text-sm">
+                    <div className="flex justify-between"><span>Jumla ya Usafirishaji:</span> <span className="font-bold">{Math.ceil(contractTotalQty / contractQtyPerDelivery)}</span></div>
+                    <div className="flex justify-between"><span>Mapato kwa Usafirishaji:</span> <span className="font-bold text-green-400">${(contractQtyPerDelivery * contractPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
+                    <div className="flex justify-between"><span>Jumla ya Mapato ya Mkataba:</span> <span className="font-bold text-green-400">${(contractTotalQty * contractPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
+                </div>
+
+             </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsContractDialogOpen(false)}>Ghairi</Button>
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={!selectedItem || contractQtyPerDelivery <= 0 || contractTotalQty < contractQtyPerDelivery || contractPrice <= 0 || contractInterval <= 0}
+              onClick={handleConfirmContract}
+            >
+              Chapisha Mkataba
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -234,4 +344,3 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
   );
 }
 
-    

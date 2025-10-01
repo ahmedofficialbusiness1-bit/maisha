@@ -6,7 +6,7 @@ import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
-import { TradeMarket, type PlayerListing, type StockListing, type BondListing } from '@/components/app/trade-market';
+import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type ContractListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { buildingData } from '@/lib/building-data';
@@ -21,7 +21,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser, useDatabase } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getDatabase, ref, onValue, set, runTransaction, get } from 'firebase/database';
+import { getDatabase, ref, onValue, set, runTransaction, get, push } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAllPlayers } from '@/firebase/database/use-all-players';
 
@@ -69,6 +69,7 @@ export function Game() {
   const searchParams = useSearchParams();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [playerListings, setPlayerListings] = React.useState<PlayerListing[]>([]);
+  const [contractListings, setContractListings] = React.useState<ContractListing[]>([]);
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
@@ -84,12 +85,13 @@ export function Game() {
   
   // State for public chat metadata
   const [chatMetadata, setChatMetadata] = React.useState<Record<string, ChatMetadata>>({});
-
+  const { players: allPlayers } = useAllPlayers();
 
   // Refs for Firebase paths
   const userRef = React.useMemo(() => database && user ? ref(database, `users/${user.uid}`) : null, [database, user]);
   const playerPublicRef = React.useMemo(() => database && user ? ref(database, `players/${user.uid}`) : null, [database, user]);
   const marketRef = React.useMemo(() => database ? ref(database, 'market') : null, [database]);
+  const contractsRef = React.useMemo(() => database ? ref(database, 'contracts') : null, [database]);
   const chatMetadataRef = React.useMemo(() => database ? ref(database, 'chat-metadata') : null, [database]);
 
   
@@ -196,12 +198,26 @@ export function Game() {
     const unsubscribe = onValue(marketRef, (snapshot) => {
         const listings: PlayerListing[] = [];
         snapshot.forEach(childSnapshot => {
-            listings.push({ id: childSnapshot.key, ...childSnapshot.val() } as PlayerListing);
+            listings.push({ id: childSnapshot.key!, ...childSnapshot.val() } as PlayerListing);
         });
         setPlayerListings(listings);
     });
     return () => unsubscribe();
   }, [marketRef]);
+  
+    // Listen for contract changes
+  React.useEffect(() => {
+    if (!contractsRef) return;
+    const unsubscribe = onValue(contractsRef, (snapshot) => {
+        const listings: ContractListing[] = [];
+        snapshot.forEach(childSnapshot => {
+            listings.push({ id: childSnapshot.key!, ...childSnapshot.val() } as ContractListing);
+        });
+        setContractListings(listings);
+    });
+    return () => unsubscribe();
+  }, [contractsRef]);
+
 
   // Save game state whenever it changes
   React.useEffect(() => {
@@ -650,6 +666,39 @@ export function Game() {
      });
   };
 
+  const handleCreateContract = (item: InventoryItem, quantityPerDelivery: number, totalQuantity: number, pricePerUnit: number, deliveryIntervalDays: number) => {
+    if (!database || !user || !gameState || quantityPerDelivery <= 0 || totalQuantity <= 0 || pricePerUnit <= 0 || deliveryIntervalDays <= 0) return;
+    if (quantityPerDelivery > item.quantity) {
+        toast({ variant: 'destructive', title: 'Insufficient Inventory', description: `You only have ${item.quantity} units to create the first delivery.` });
+        return;
+    }
+
+    const newContractRef = push(ref(database, 'contracts'));
+    
+    const productInfo = encyclopediaData.find(e => e.name === item.item);
+
+    const newContract: Omit<ContractListing, 'id'> = {
+        commodity: item.item,
+        quantityPerDelivery,
+        totalQuantity,
+        pricePerUnit,
+        deliveryInterval: deliveryIntervalDays * 24 * 60 * 60 * 1000, // days to ms
+        sellerUid: user.uid,
+        sellerName: gameState.username,
+        sellerAvatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
+        status: 'open',
+        createdAt: Date.now(),
+        imageHint: productInfo?.imageHint || 'product photo'
+    };
+
+    set(newContractRef, newContract).then(() => {
+        toast({ title: 'Contract Created', description: `Your contract for ${item.item} has been posted.` });
+    }).catch(error => {
+        console.error("Failed to create contract:", error);
+        toast({ variant: 'destructive', title: 'Failed to Create Contract' });
+    });
+  }
+
   // Game loop for processing finished activities
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -789,14 +838,11 @@ export function Game() {
       return 'D';
   };
 
-  const { players: allPlayers } = useAllPlayers();
-
     const unreadPrivateMessagesCount = React.useMemo(() => {
-        if (!gameState || !chatMetadata || !user) return 0;
+        if (!chatMetadata || !user) return 0;
         let count = 0;
         for (const chatId in chatMetadata) {
             const metadata = chatMetadata[chatId];
-            // Check if it's a private chat involving the current user
             if (metadata.participants && metadata.participants[user.uid]) {
                 const selfParticipant = metadata.participants[user.uid];
                 if (metadata.lastMessageTimestamp > (selfParticipant.lastReadTimestamp || 0)) {
@@ -805,13 +851,13 @@ export function Game() {
             }
         }
         return count;
-    }, [chatMetadata, user, gameState]);
+    }, [chatMetadata, user]);
   
   const unreadPublicChats = React.useMemo(() => {
     if (!gameState || !gameState.lastPublicRead || !chatMetadata) return {};
     const unread: Record<string, boolean> = {};
     for (const roomId in chatMetadata) {
-        if (chatMetadata[roomId].lastMessageTimestamp > (gameState.lastPublicRead[roomId] || 0)) {
+        if (['general', 'trade', 'help'].includes(roomId) && chatMetadata[roomId].lastMessageTimestamp > (gameState.lastPublicRead[roomId] || 0)) {
             unread[roomId] = true;
         }
     }
@@ -900,13 +946,13 @@ export function Game() {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} onPostToMarket={handlePostToMarket} />;
+        return <Inventory inventoryItems={gameState.inventory || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} contractListings={contractListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={handlePublicRoomRead} players={allPlayers} />;
+          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={handlePublicRoomRead} players={allPlayers || []} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':
@@ -943,4 +989,3 @@ export function Game() {
   );
 }
 
-    

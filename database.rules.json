@@ -18,6 +18,10 @@
       ".read": "auth != null",
       ".write": "auth != null"
     },
+    "contracts": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
     "chat": {
       "$chatRoomId": {
         ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.beginsWith(auth.uid) || $chatRoomId.endsWith(auth.uid))",
@@ -32,3 +36,4 @@
 }
 
     
+

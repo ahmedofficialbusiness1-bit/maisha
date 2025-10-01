@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark, FileSignature } from 'lucide-react';
 import type { InventoryItem } from './inventory';
 import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
 import { cn } from '@/lib/utils';
@@ -43,6 +43,25 @@ export type PlayerListing = {
   quality: number;
   imageHint: string;
 };
+
+export type ContractListing = {
+  id: string; // Firebase key
+  commodity: string;
+  quantityPerDelivery: number;
+  totalQuantity: number;
+  pricePerUnit: number;
+  deliveryInterval: number; // in ms
+  sellerUid: string;
+  sellerName: string;
+  sellerAvatar: string;
+  status: 'open' | 'active' | 'completed' | 'cancelled';
+  createdAt: number;
+  imageHint: string;
+  buyerUid?: string;
+  buyerName?: string;
+  nextDeliveryTimestamp?: number;
+};
+
 
 export type StockListing = {
     id: string;
@@ -127,13 +146,14 @@ interface TradeMarketProps {
   playerListings: PlayerListing[];
   stockListings: (StockListing & { sharesAvailable: number })[];
   bondListings: BondListing[];
+  contractListings: ContractListing[];
   inventory: InventoryItem[];
   onBuyStock: (stock: StockListing, quantity: number) => void;
   onBuyFromMarket: (listing: PlayerListing, quantity: number) => void;
   playerName: string;
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, contractListings, inventory, onBuyStock, onBuyFromMarket, playerName }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -633,6 +653,61 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             </Card>
         </div>
     );
+    
+    const renderContractsMarket = () => (
+        <div className="p-1 sm:p-2 md:p-4 lg:p-6">
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Soko la Mikataba</CardTitle>
+                    <CardDescription>Tafuta mikataba ya muda mrefu ya ununuzi wa bidhaa kwa bei ya uhakika.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {contractListings.filter(c => c.status === 'open').map(contract => (
+                             <Card key={contract.id} className="bg-gray-900/50">
+                                <CardHeader>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-10 w-10">
+                                                <AvatarImage src={contract.sellerAvatar} alt={contract.sellerName} data-ai-hint={contract.imageHint} />
+                                                <AvatarFallback>{contract.sellerName.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <CardTitle className="text-base">{contract.sellerName}</CardTitle>
+                                                <CardDescription>Anauza {contract.commodity}</CardDescription>
+                                            </div>
+                                        </div>
+                                        <Image src={encyclopediaData.find(e => e.name === contract.commodity)?.imageUrl || ''} alt={contract.commodity} data-ai-hint={contract.imageHint} width={32} height={32} className="rounded-md" />
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                        <div className="text-gray-400">Bei/Kipande</div>
+                                        <div className="font-mono text-right font-bold">${contract.pricePerUnit.toFixed(2)}</div>
+                                        <div className="text-gray-400">Kiasi/Usafirishaji</div>
+                                        <div className="font-mono text-right">{contract.quantityPerDelivery.toLocaleString()}</div>
+                                        <div className="text-gray-400">Jumla ya Kiasi</div>
+                                        <div className="font-mono text-right">{contract.totalQuantity.toLocaleString()}</div>
+                                        <div className="text-gray-400">Muda wa Usafirishaji</div>
+                                        <div className="font-mono text-right">Kila Siku {contract.deliveryInterval / (1000*60*60*24)}</div>
+                                    </div>
+                                    <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700" disabled={contract.sellerUid === playerName}>
+                                        Kubali Mkataba
+                                    </Button>
+                                </CardContent>
+                             </Card>
+                        ))}
+                         {contractListings.filter(c => c.status === 'open').length === 0 && (
+                            <div className="col-span-full flex items-center justify-center h-48 text-gray-400">
+                                <p>Hakuna mikataba mipya kwa sasa.</p>
+                            </div>
+                         )}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+
 
   return (
     <>
@@ -641,14 +716,18 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
       
         <Tabs defaultValue="commodities" className="w-full pt-4">
             <div className="px-4 sm:px-6">
-                <TabsList className="grid w-full grid-cols-3 bg-gray-800/80">
+                <TabsList className="grid w-full grid-cols-4 bg-gray-800/80">
                     <TabsTrigger value="commodities"><LandPlot className='mr-2 h-4 w-4'/>Bidhaa</TabsTrigger>
+                    <TabsTrigger value="contracts"><FileSignature className='mr-2 h-4 w-4'/>Mikataba</TabsTrigger>
                     <TabsTrigger value="stocks"><Landmark className='mr-2 h-4 w'/>Hisa</TabsTrigger>
                     <TabsTrigger value="bonds"><FileText className='mr-2 h-4 w-4'/>Hatifungani</TabsTrigger>
                 </TabsList>
             </div>
             <TabsContent value="commodities" className="mt-4">
                 {renderCommoditiesMarket()}
+            </TabsContent>
+            <TabsContent value="contracts" className="mt-4">
+                {renderContractsMarket()}
             </TabsContent>
             <TabsContent value="stocks" className="mt-4">
                 {renderStocksMarket()}
