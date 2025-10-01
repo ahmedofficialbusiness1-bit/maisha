@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -12,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useDatabase } from '@/firebase';
-import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, runTransaction } from 'firebase/database';
+import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, runTransaction, get } from 'firebase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -104,7 +105,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened }: { user: Aut
           <TabsTrigger value="private"><User className="mr-2 h-4 w-4"/> Meseji za Faragha</TabsTrigger>
         </TabsList>
         <TabsContent value="public" className="flex-grow mt-0">
-          <PublicChatsView user={user} selectedRoom={selectedPublicRoom} onSelectRoom={setSelectedPublicRoom} />
+          <PublicChatsView user={user} selectedRoom={selectedRoom} onSelectRoom={setSelectedPublicRoom} />
         </TabsContent>
         <TabsContent value="private" className="flex-grow mt-0">
           {selectedPrivateChat ? (
@@ -257,13 +258,27 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
         const senderChatRef = ref(database, `user-chats/${user.uid}/${chat.otherPlayer.uid}`);
         await set(senderChatRef, {
             lastMessage: textToSend,
-            timestamp: timestamp, // Use server timestamp for consistency
+            timestamp: timestamp,
             unreadCount: 0
         });
 
-        // The logic to update the receiver's chat list (lastMessage, timestamp, unreadCount)
-        // is now handled by a conceptual Cloud Function triggered by new messages in /chat/{chatId}.
-        // This avoids the client-side permission errors.
+        // Update receiver's user-chat list using a transaction
+        const receiverChatRef = ref(database, `user-chats/${chat.otherPlayer.uid}/${user.uid}`);
+        runTransaction(receiverChatRef, (currentData) => {
+            if (currentData) {
+                currentData.lastMessage = textToSend;
+                currentData.timestamp = timestamp;
+                currentData.unreadCount = (currentData.unreadCount || 0) + 1;
+            } else {
+                // If receiver has no chat history with sender, create it.
+                currentData = {
+                    lastMessage: textToSend,
+                    timestamp: timestamp,
+                    unreadCount: 1,
+                };
+            }
+            return currentData;
+        });
     };
 
     return <ChatWindowLayout user={user} messages={messages} newMessage={newMessage} setNewMessage={setNewMessage} handleSendMessage={handleSendMessage} scrollAreaRef={scrollAreaRef} />;
@@ -401,3 +416,4 @@ function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSen
         </div>
     )
 }
+
