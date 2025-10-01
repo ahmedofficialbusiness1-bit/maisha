@@ -75,6 +75,7 @@ interface PlayerProfileProps {
   onBack?: () => void;
   viewerRole?: 'player' | 'admin';
   setView: (view: View) => void;
+  onStartPrivateChat: (uid: string) => void;
 }
 
 function InfoItem({ label, value, smallText = false }: { label: string; value: React.ReactNode, smallText?: boolean }) {
@@ -96,7 +97,7 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 }
 
 
-export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole, setView }: PlayerProfileProps) {
+export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole, setView, onStartPrivateChat }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const { toast } = useToast();
 
@@ -146,6 +147,10 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
       reader.readAsDataURL(file);
     }
   };
+
+  const handleChatClick = () => {
+    onStartPrivateChat(currentProfile.uid);
+  }
   
   const isOnline = currentProfile.lastSeen && (Date.now() - new Date(currentProfile.lastSeen).getTime() < 5 * 60 * 1000);
   const lastSeenText = currentProfile.lastSeen 
@@ -218,7 +223,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             </Button>
                         )}
                         {isViewOnly && (
-                            <Button type="button" size='sm' onClick={() => setView('chats')}>
+                            <Button type="button" size='sm' onClick={handleChatClick}>
                                 <MessageSquare className='h-4 w-4 mr-2'/>
                                 Anzisha Soga
                             </Button>

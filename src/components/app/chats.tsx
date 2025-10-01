@@ -1,9 +1,10 @@
+
 'use client';
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Bot } from 'lucide-react';
+import { Send, Bot, Users, User } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -12,12 +13,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useDatabase } from '@/firebase';
-import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast } from 'firebase/database';
+import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, get } from 'firebase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useUser } from '@/firebase/auth/use-user';
+import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 
 type AuthenticatedUser = {
     uid: string;
@@ -34,9 +37,273 @@ type ChatMessage = {
     timestamp: number;
 };
 
-type ChatRoom = 'general' | 'trade' | 'help';
+type PublicChatRoom = 'general' | 'trade' | 'help';
+const publicRooms: { id: PublicChatRoom, name: string }[] = [
+    { id: 'general', name: 'Soga ya Kawaida' },
+    { id: 'trade', name: 'Biashara' },
+    { id: 'help', name: 'Msaada' },
+];
 
-function ChatRoomWindow({ user, room }: { user: AuthenticatedUser, room: ChatRoom }) {
+type UserChat = {
+    chatId: string;
+    otherPlayer: PlayerPublicData;
+    lastMessage: string;
+    timestamp: number;
+    unreadCount: number;
+};
+
+// Main Chat Component
+export function Chats({ user, initialPrivateChatUid, onChatOpened }: { user: AuthenticatedUser, initialPrivateChatUid?: string | null, onChatOpened: () => void }) {
+  const [activeTab, setActiveTab] = React.useState(initialPrivateChatUid ? 'private' : 'public');
+  const [selectedPublicRoom, setSelectedPublicRoom] = React.useState<PublicChatRoom>('general');
+  const [selectedPrivateChat, setSelectedPrivateChat] = React.useState<UserChat | null>(null);
+  const { players } = useAllPlayers();
+
+  React.useEffect(() => {
+    if (initialPrivateChatUid && players) {
+      const otherPlayer = players.find(p => p.uid === initialPrivateChatUid);
+      if (otherPlayer) {
+          const chatId = [user.uid, otherPlayer.uid].sort().join('-');
+          setSelectedPrivateChat({
+              chatId,
+              otherPlayer,
+              lastMessage: '',
+              timestamp: 0,
+              unreadCount: 0
+          });
+          setActiveTab('private');
+          onChatOpened();
+      }
+    }
+  }, [initialPrivateChatUid, players, user.uid, onChatOpened]);
+
+
+  const handleSelectPrivateChat = (chat: UserChat) => {
+    setSelectedPrivateChat(chat);
+  }
+  
+  const handleBackToList = () => {
+    setSelectedPrivateChat(null);
+  }
+
+  return (
+    <Card className="bg-gray-800/60 border-gray-700 text-white w-full h-[80vh] flex flex-col">
+      <CardHeader className="flex-row items-center justify-between">
+        <div>
+            <CardTitle>Mawasiliano</CardTitle>
+            <CardDescription className="text-gray-400">
+                Wasiliana na wachezaji wengine.
+            </CardDescription>
+        </div>
+        {activeTab === 'private' && selectedPrivateChat && (
+            <Button variant="ghost" onClick={handleBackToList}>Back to Chats</Button>
+        )}
+      </CardHeader>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-grow flex flex-col">
+        <TabsList className="grid w-full grid-cols-2 bg-gray-900/50 mx-auto px-6">
+          <TabsTrigger value="public"><Users className="mr-2 h-4 w-4"/> Magrupu ya Umma</TabsTrigger>
+          <TabsTrigger value="private"><User className="mr-2 h-4 w-4"/> Meseji za Faragha</TabsTrigger>
+        </TabsList>
+        <TabsContent value="public" className="flex-grow">
+          <PublicChatsView user={user} selectedRoom={selectedPublicRoom} onSelectRoom={setSelectedPublicRoom} />
+        </TabsContent>
+        <TabsContent value="private" className="flex-grow">
+          {selectedPrivateChat ? (
+             <PrivateChatWindow user={user} chat={selectedPrivateChat} />
+          ) : (
+             <PrivateChatListView user={user} onSelectChat={handleSelectPrivateChat} />
+          )}
+        </TabsContent>
+      </Tabs>
+    </Card>
+  );
+}
+
+
+// --- PRIVATE CHATS ---
+
+function PrivateChatListView({ user, onSelectChat }: { user: AuthenticatedUser, onSelectChat: (chat: UserChat) => void }) {
+    const database = useDatabase();
+    const [userChats, setUserChats] = React.useState<UserChat[]>([]);
+    const [loading, setLoading] = React.useState(true);
+    const { players } = useAllPlayers();
+
+    React.useEffect(() => {
+        if (!database || !players) return;
+        const userChatsRef = query(ref(database, `user-chats/${user.uid}`), orderByChild('timestamp'));
+
+        const unsubscribe = onValue(userChatsRef, (snapshot) => {
+            const chats: UserChat[] = [];
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    const otherPlayer = players.find(p => p.uid === child.key);
+                    if (otherPlayer) {
+                        chats.push({
+                            chatId: [user.uid, otherPlayer.uid].sort().join('-'),
+                            otherPlayer,
+                            lastMessage: data.lastMessage || '',
+                            timestamp: data.timestamp || 0,
+                            unreadCount: data.unreadCount || 0,
+                        });
+                    }
+                });
+            }
+            setUserChats(chats.reverse());
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [database, user.uid, players]);
+    
+    if (loading) return <div className="flex items-center justify-center h-full"><Bot className="h-12 w-12 text-gray-500 animate-pulse" /></div>
+
+    if (userChats.length === 0) {
+         return (
+            <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4">
+                <User className="h-12 w-12 mb-4" />
+                <h3 className="text-lg font-semibold">Hakuna soga za faragha.</h3>
+                <p className="text-sm">Bofya kwenye wasifu wa mchezaji na uchague "Chat" ili kuanzisha mazungumzo.</p>
+            </div>
+        );
+    }
+
+    return (
+        <ScrollArea className="h-full">
+            <div className='p-2 space-y-1'>
+                {userChats.map(chat => (
+                    <button key={chat.chatId} onClick={() => onSelectChat(chat)} className='w-full text-left p-2 rounded-lg hover:bg-gray-700/50 flex items-center gap-3'>
+                        <Avatar className="h-10 w-10">
+                            <AvatarImage src={chat.otherPlayer.avatar} data-ai-hint="player avatar" />
+                            <AvatarFallback>{chat.otherPlayer.username.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className='flex-grow overflow-hidden'>
+                            <div className='flex justify-between items-center'>
+                                <p className='font-semibold truncate'>{chat.otherPlayer.username}</p>
+                                <p className='text-xs text-gray-400'>{formatDistanceToNow(new Date(chat.timestamp), { addSuffix: true })}</p>
+                            </div>
+                            <div className='flex justify-between items-center'>
+                                <p className={cn('text-sm text-gray-300 truncate', chat.unreadCount > 0 && 'font-bold text-white')}>{chat.lastMessage}</p>
+                                {chat.unreadCount > 0 && (
+                                    <div className='bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>{chat.unreadCount}</div>
+                                )}
+                            </div>
+                        </div>
+                    </button>
+                ))}
+            </div>
+        </ScrollArea>
+    );
+}
+
+function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: UserChat }) {
+    const database = useDatabase();
+    const [messages, setMessages] = React.useState<ChatMessage[]>([]);
+    const [newMessage, setNewMessage] = React.useState('');
+    const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+
+    const messagesRef = React.useMemo(() => 
+        database ? query(ref(database, `chat/${chat.chatId}`), orderByChild('timestamp'), limitToLast(100)) : null
+    , [database, chat.chatId]);
+
+    // Effect to fetch messages and mark as read
+    React.useEffect(() => {
+      if (!messagesRef || !database) return;
+      
+      const unsubscribe = onValue(messagesRef, (snapshot) => {
+          const messageData: ChatMessage[] = [];
+          snapshot.forEach((child) => {
+              messageData.push({ id: child.key!, ...child.val() });
+          });
+          setMessages(messageData);
+
+          // Mark messages as read
+          const userChatRef = ref(database, `user-chats/${user.uid}/${chat.otherPlayer.uid}/unreadCount`);
+          set(userChatRef, 0);
+      });
+
+      return () => unsubscribe();
+    }, [messagesRef, database, user.uid, chat.otherPlayer.uid]);
+
+    // Auto-scroll
+    React.useEffect(() => {
+        if(scrollAreaRef.current) {
+            scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newMessage.trim() || !database) return;
+
+        const timestamp = serverTimestamp();
+        const message = {
+            uid: user.uid,
+            username: user.username,
+            avatar: user.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
+            text: newMessage,
+            timestamp: timestamp,
+        };
+        
+        // Push message to the chat room
+        const chatRoomRef = ref(database, `chat/${chat.chatId}`);
+        push(chatRoomRef, message);
+        
+        const now = Date.now();
+
+        // Update sender's user-chat list
+        const senderChatRef = ref(database, `user-chats/${user.uid}/${chat.otherPlayer.uid}`);
+        set(senderChatRef, {
+            lastMessage: newMessage,
+            timestamp: now,
+            unreadCount: 0
+        });
+
+        // Update receiver's user-chat list and increment unread count
+        const receiverChatRef = ref(database, `user-chats/${chat.otherPlayer.uid}/${user.uid}`);
+        const receiverData = (await get(receiverChatRef)).val();
+        set(receiverChatRef, {
+            lastMessage: newMessage,
+            timestamp: now,
+            unreadCount: (receiverData?.unreadCount || 0) + 1
+        });
+
+        setNewMessage('');
+    };
+
+    return <ChatWindowLayout user={user} messages={messages} newMessage={newMessage} setNewMessage={setNewMessage} handleSendMessage={handleSendMessage} scrollAreaRef={scrollAreaRef} />;
+}
+
+
+// --- PUBLIC CHATS ---
+
+function PublicChatsView({ user, selectedRoom, onSelectRoom }: { user: AuthenticatedUser, selectedRoom: PublicChatRoom, onSelectRoom: (room: PublicChatRoom) => void }) {
+    return (
+        <div className="flex h-full">
+            <div className="w-1/3 border-r border-gray-700">
+                <ScrollArea className="h-full">
+                    <div className="p-2 space-y-1">
+                        {publicRooms.map(room => (
+                            <Button 
+                                key={room.id}
+                                variant={selectedRoom === room.id ? 'secondary' : 'ghost'}
+                                className="w-full justify-start"
+                                onClick={() => onSelectRoom(room.id)}
+                            >
+                                # {room.name}
+                            </Button>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </div>
+            <div className="w-2/3 flex flex-col">
+                <PublicChatWindow user={user} room={selectedRoom} />
+            </div>
+        </div>
+    )
+}
+
+function PublicChatWindow({ user, room }: { user: AuthenticatedUser, room: PublicChatRoom }) {
   const database = useDatabase();
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = React.useState('');
@@ -59,7 +326,6 @@ function ChatRoomWindow({ user, room }: { user: AuthenticatedUser, room: ChatRoo
   }, [messagesRef]);
 
   React.useEffect(() => {
-      // Scroll to bottom when new messages arrive
       if(scrollAreaRef.current) {
           scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
       }
@@ -82,85 +348,61 @@ function ChatRoomWindow({ user, room }: { user: AuthenticatedUser, room: ChatRoo
     setNewMessage('');
   };
   
-  return (
-    <div className="flex flex-col h-[70vh]">
-        <ScrollArea className="flex-grow p-4" viewportRef={scrollAreaRef}>
-            <div className='space-y-4'>
-                {messages.map(msg => (
-                    <div key={msg.id} className={cn("flex items-end gap-3", msg.uid === user.uid && "justify-end")}>
-                        {msg.uid !== user.uid && (
-                           <Avatar className="h-8 w-8">
+  return <ChatWindowLayout user={user} messages={messages} newMessage={newMessage} setNewMessage={setNewMessage} handleSendMessage={handleSendMessage} scrollAreaRef={scrollAreaRef} roomName={room} />
+}
+
+
+// --- COMMON CHAT UI ---
+
+function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSendMessage, scrollAreaRef, roomName }: { user: AuthenticatedUser, messages: ChatMessage[], newMessage: string, setNewMessage: (val: string) => void, handleSendMessage: (e: React.FormEvent) => void, scrollAreaRef: React.RefObject<HTMLDivElement>, roomName?: string }) {
+    return (
+        <div className="flex flex-col h-full">
+            <ScrollArea className="flex-grow p-4" viewportRef={scrollAreaRef}>
+                <div className='space-y-4'>
+                    {messages.map(msg => (
+                        <div key={msg.id} className={cn("flex items-end gap-3", msg.uid === user.uid && "justify-end")}>
+                            {msg.uid !== user.uid && (
+                            <Avatar className="h-8 w-8">
                                 <AvatarImage src={msg.avatar} data-ai-hint="player avatar" />
                                 <AvatarFallback>{msg.username.charAt(0)}</AvatarFallback>
                             </Avatar>
-                        )}
-                         <div className={cn(
-                             "max-w-xs md:max-w-md p-3 rounded-lg", 
-                             msg.uid === user.uid ? "bg-blue-600 text-white rounded-br-none" : "bg-gray-700 text-gray-200 rounded-bl-none"
-                         )}>
-                             {msg.uid !== user.uid && <p className='text-xs font-bold text-blue-300 mb-1'>{msg.username}</p>}
-                             <p className='text-sm'>{msg.text}</p>
-                             <p className={cn(
-                                 "text-[10px] mt-2 opacity-70",
-                                  msg.uid === user.uid ? "text-right" : "text-left"
-                             )}>
-                                 {msg.timestamp ? formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true }) : 'sending...'}
-                             </p>
-                         </div>
-                    </div>
-                ))}
-            </div>
-             {messages.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
-                    <Bot className="h-12 w-12 mb-4" />
-                    <h3 className="text-lg font-semibold">Welcome to the chat!</h3>
-                    <p className="text-sm">Be the first to send a message in the #{room} channel.</p>
+                            )}
+                            <div className={cn(
+                                "max-w-xs md:max-w-md p-3 rounded-lg", 
+                                msg.uid === user.uid ? "bg-blue-600 text-white rounded-br-none" : "bg-gray-700 text-gray-200 rounded-bl-none"
+                            )}>
+                                {msg.uid !== user.uid && <p className='text-xs font-bold text-blue-300 mb-1'>{msg.username}</p>}
+                                <p className='text-sm'>{msg.text}</p>
+                                <p className={cn(
+                                    "text-[10px] mt-2 opacity-70",
+                                    msg.uid === user.uid ? "text-right" : "text-left"
+                                )}>
+                                    {msg.timestamp ? formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true }) : 'sending...'}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            )}
-        </ScrollArea>
-      <form onSubmit={handleSendMessage} className="flex items-center gap-2 border-t border-gray-700 p-4">
-        <Input
-          placeholder="Andika ujumbe wako..."
-          className="flex-grow bg-gray-700 border-gray-600"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-        />
-        <Button type="submit" size="icon" className="bg-blue-600 hover:bg-blue-700" disabled={!newMessage.trim()}>
-          <Send className="h-4 w-4" />
-          <span className="sr-only">Tuma</span>
-        </Button>
-      </form>
-    </div>
-  )
-}
-
-export function Chats({ user }: { user: AuthenticatedUser }) {
-  return (
-    <Card className="bg-gray-800/60 border-gray-700 text-white">
-      <CardHeader>
-        <CardTitle>Mawasiliano</CardTitle>
-        <CardDescription className="text-gray-400">
-          Shiriki kwenye soga za umma na wachezaji wengine.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className='p-0'>
-        <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-gray-900/50 rounded-none">
-                <TabsTrigger value="general">Soga ya Kawaida</TabsTrigger>
-                <TabsTrigger value="trade">Biashara</TabsTrigger>
-                <TabsTrigger value="help">Msaada</TabsTrigger>
-            </TabsList>
-            <TabsContent value="general">
-                <ChatRoomWindow user={user} room="general" />
-            </TabsContent>
-            <TabsContent value="trade">
-                <ChatRoomWindow user={user} room="trade" />
-            </TabsContent>
-            <TabsContent value="help">
-                 <ChatRoomWindow user={user} room="help" />
-            </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
+                {messages.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                        <Bot className="h-12 w-12 mb-4" />
+                        <h3 className="text-lg font-semibold">Welcome to the chat!</h3>
+                        {roomName ? <p className="text-sm">Be the first to send a message in the #{roomName} channel.</p> : <p className="text-sm">Start the conversation.</p>}
+                    </div>
+                )}
+            </ScrollArea>
+        <form onSubmit={handleSendMessage} className="flex items-center gap-2 border-t border-gray-700 p-4">
+            <Input
+            placeholder="Andika ujumbe wako..."
+            className="flex-grow bg-gray-700 border-gray-600"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            />
+            <Button type="submit" size="icon" className="bg-blue-600 hover:bg-blue-700" disabled={!newMessage.trim()}>
+            <Send className="h-4 w-4" />
+            <span className="sr-only">Tuma</span>
+            </Button>
+        </form>
+        </div>
+    )
 }

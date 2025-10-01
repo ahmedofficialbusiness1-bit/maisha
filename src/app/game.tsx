@@ -78,6 +78,9 @@ export function Game() {
   const [viewedProfileUid, setViewedProfileUid] = React.useState<string | null>(null);
   const [viewedProfileData, setViewedProfileData] = React.useState<UserData | null>(null);
   const [isViewingProfile, setIsViewingProfile] = React.useState(false);
+  
+  // State for opening private chat from profile
+  const [initialPrivateChatUid, setInitialPrivateChatUid] = React.useState<string | null>(null);
 
   // Refs for Firebase paths
   const userRef = React.useMemo(() => database && user ? ref(database, `users/${user.uid}`) : null, [database, user]);
@@ -97,6 +100,9 @@ export function Game() {
     setView(newView);
     if (newView !== 'profile') {
         setViewedProfileUid(null);
+    }
+    if (newView !== 'chats') {
+        setInitialPrivateChatUid(null);
     }
   }, []);
 
@@ -295,6 +301,15 @@ export function Game() {
       setViewedProfileUid(null);
       setView('leaderboard'); // Or wherever you want to go back to
   };
+
+  const handleStartPrivateChat = (uid: string) => {
+    setInitialPrivateChatUid(uid);
+    setView('chats');
+  }
+
+  const handleChatOpened = () => {
+    setInitialPrivateChatUid(null);
+  }
   
   const handleBuild = (slotIndex: number, building: BuildingType) => {
     if (!gameState) return;
@@ -757,14 +772,6 @@ export function Game() {
 
   const { players: allPlayers } = useAllPlayers();
 
-  const playerRank = React.useMemo(() => {
-    if (!allPlayers || !gameState?.uid) return 'N/A';
-    const sortedPlayers = [...allPlayers].sort((a, b) => b.netWorth - a.score);
-    const rank = sortedPlayers.findIndex(p => p.uid === gameState.uid);
-    return rank !== -1 ? `#${rank + 1}` : '100+';
-  }, [allPlayers, gameState?.uid]);
-
-
   if (userLoading || gameStateLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-900 text-white">
@@ -839,7 +846,7 @@ export function Game() {
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} />;
+          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':
@@ -854,9 +861,10 @@ export function Game() {
                         onBack={handleBackFromProfileView}
                         viewerRole={gameState.role}
                         setView={setView}
+                        onStartPrivateChat={handleStartPrivateChat}
                     />;
         }
-        return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView}/>;
+        return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} />;
       case 'admin':
           return <AdminPanel onViewProfile={handleViewProfile} />;
       default:
