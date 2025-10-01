@@ -24,6 +24,7 @@ import { useLeaderboard } from '@/firebase/firestore/use-leaderboard';
 import { useRouter } from 'next/navigation';
 import { getDatabase, ref, onValue, set, runTransaction, get } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
+import { useAllPlayers } from '@/firebase/database/use-all-players';
 
 export type PlayerStock = {
     ticker: string;
@@ -73,7 +74,7 @@ export function Game() {
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
   const { toast } = useToast();
   
-  const { data: leaderboardData } = useLeaderboard();
+  const { players: leaderboardData } = useAllPlayers();
 
   // State for viewing other players' profiles
   const [viewedProfileUid, setViewedProfileUid] = React.useState<string | null>(null);
@@ -186,7 +187,7 @@ export function Game() {
 
   // Update public player data (RTDB) and leaderboard (Firestore) whenever critical info changes
   React.useEffect(() => {
-    if (!gameState || !gameState.uid || !gameState.username || !leaderboardDocRef || !user) return;
+    if (!gameState || !gameState.uid || !gameState.username || !user) return;
     
     // Check and apply admin role
     const isAdmin = gameState.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || user.email === 'elonjazz89@gmail.com';
@@ -203,22 +204,13 @@ export function Game() {
             role: currentRole
         });
     }
-
-    // Update Firestore for leaderboard
-    setDoc(leaderboardDocRef, {
-        playerId: gameState.uid,
-        username: gameState.username,
-        score: gameState.netWorth,
-        avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/100/100`,
-        level: gameState.playerLevel,
-    }, { merge: true });
     
     // Update local game state if role or email changed
     if (gameState.role !== currentRole || gameState.email !== user.email) {
         updateState(prev => ({ ...prev, role: currentRole, email: user.email }));
     }
 
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, leaderboardDocRef, user, updateState]);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, updateState]);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -763,7 +755,8 @@ export function Game() {
 
   const playerRank = React.useMemo(() => {
       if (!leaderboardData || !gameState?.uid) return 'N/A';
-      const rank = leaderboardData.findIndex(p => p.playerId === gameState.uid);
+      const sortedPlayers = [...leaderboardData].sort((a, b) => b.netWorth - a.netWorth);
+      const rank = sortedPlayers.findIndex(p => p.uid === gameState.uid);
       return rank !== -1 ? `#${rank + 1}` : '100+';
   }, [leaderboardData, gameState?.uid]);
 
@@ -815,8 +808,9 @@ export function Game() {
   } : null;
 
   const getMetricsForProfile = (profileData: UserData | null): PlayerMetrics => {
-    if (!profileData) return { netWorth: 0, buildingValue: 0, stockValue: 0, ranking: 'N/A', rating: 'D' };
-    const rank = leaderboardData?.findIndex(p => p.playerId === profileData.uid);
+    if (!profileData || !leaderboardData) return { netWorth: 0, buildingValue: 0, stockValue: 0, ranking: 'N/A', rating: 'D' };
+    const sortedPlayers = [...leaderboardData].sort((a, b) => b.netWorth - a.netWorth);
+    const rank = sortedPlayers.findIndex(p => p.uid === profileData.uid);
     // Note: buildingValue and stockValue would need to be calculated for the other user. 
     // This is a simplification and only shows Net Worth correctly.
     return {
@@ -839,6 +833,7 @@ export function Game() {
                     isViewOnly={true}
                     onBack={handleBackFromProfileView}
                     viewerRole={gameState.role}
+                    setView={setView}
                 />;
     }
     switch (view) {
@@ -875,20 +870,3 @@ export function Game() {
     </div>
   );
 }
-
-    
-
-    
-
-
-    
-
-
-
-
-
-    
-
-    
-
-    

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -26,11 +27,12 @@ import {
 } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Textarea } from '../ui/textarea';
-import { Clipboard, Pencil, Upload, ArrowLeft } from 'lucide-react';
+import { Clipboard, Pencil, Upload, ArrowLeft, MessageSquare } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import type { View } from '@/app/game';
 
 const profileFormSchema = z.object({
   playerName: z
@@ -72,6 +74,7 @@ interface PlayerProfileProps {
   isViewOnly?: boolean;
   onBack?: () => void;
   viewerRole?: 'player' | 'admin';
+  setView?: (view: View) => void;
 }
 
 function InfoItem({ label, value, smallText = false }: { label: string; value: React.ReactNode, smallText?: boolean }) {
@@ -93,7 +96,7 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 }
 
 
-export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole }: PlayerProfileProps) {
+export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole, setView }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const { toast } = useToast();
 
@@ -143,6 +146,13 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
       reader.readAsDataURL(file);
     }
   };
+  
+  const handleStartChat = () => {
+    if (setView) {
+      setView('chats');
+    }
+  };
+
 
   const isOnline = currentProfile.lastSeen && (Date.now() - new Date(currentProfile.lastSeen).getTime() < 5 * 60 * 1000);
   const lastSeenText = currentProfile.lastSeen 
@@ -153,10 +163,19 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
   return (
     <div className="flex flex-col gap-4 text-white">
       {isViewOnly && onBack && (
-        <Button variant="outline" onClick={onBack} className="mr-auto">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Rudi Nyuma
-        </Button>
+         <div className='flex justify-between items-center'>
+            <Button variant="outline" onClick={onBack} className="mr-auto">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Rudi Nyuma
+            </Button>
+            
+            {setView && (
+                 <Button onClick={handleStartChat}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Chat with {currentProfile.playerName}
+                </Button>
+            )}
+        </div>
       )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -342,4 +361,3 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     </div>
   );
 }
-    
