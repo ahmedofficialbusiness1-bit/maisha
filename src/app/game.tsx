@@ -666,28 +666,27 @@ export function Game() {
      });
   };
 
-  const handleCreateContract = (item: InventoryItem, quantityPerDelivery: number, totalQuantity: number, pricePerUnit: number, deliveryIntervalDays: number) => {
-    if (!database || !user || !gameState || quantityPerDelivery <= 0 || totalQuantity <= 0 || pricePerUnit <= 0 || deliveryIntervalDays <= 0) return;
-    if (quantityPerDelivery > item.quantity) {
-        toast({ variant: 'destructive', title: 'Insufficient Inventory', description: `You only have ${item.quantity} units to create the first delivery.` });
+  const handleCreateContract = (item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => {
+    if (!database || !user || !gameState || quantity <= 0 || pricePerUnit <= 0) return;
+    if (quantity > item.quantity) {
+        toast({ variant: 'destructive', title: 'Insufficient Inventory', description: `You only have ${item.quantity} units to create this contract.` });
         return;
     }
 
     const newContractRef = push(ref(database, 'contracts'));
-    
     const productInfo = encyclopediaData.find(e => e.name === item.item);
 
     const newContract: Omit<ContractListing, 'id'> = {
         commodity: item.item,
-        quantityPerDelivery,
-        totalQuantity,
+        quantity,
         pricePerUnit,
-        deliveryInterval: deliveryIntervalDays * 24 * 60 * 60 * 1000, // days to ms
         sellerUid: user.uid,
         sellerName: gameState.username,
         sellerAvatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
         status: 'open',
         createdAt: Date.now(),
+        expiresAt: Date.now() + 5 * 24 * 60 * 60 * 1000, // 5 days expiry
+        buyerIdentifier: targetIdentifier,
         imageHint: productInfo?.imageHint || 'product photo'
     };
 
@@ -708,7 +707,6 @@ export function Game() {
         status: 'active',
         buyerUid: user.uid,
         buyerName: gameState.username,
-        nextDeliveryTimestamp: Date.now() + contract.deliveryInterval,
     };
 
     update(contractRef, updates).then(() => {
@@ -1009,4 +1007,3 @@ export function Game() {
     </div>
   );
 }
-

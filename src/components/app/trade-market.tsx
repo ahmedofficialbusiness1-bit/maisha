@@ -47,20 +47,20 @@ export type PlayerListing = {
 export type ContractListing = {
   id: string; // Firebase key
   commodity: string;
-  quantityPerDelivery: number;
-  totalQuantity: number;
+  quantity: number;
   pricePerUnit: number;
-  deliveryInterval: number; // in ms
   sellerUid: string;
   sellerName: string;
   sellerAvatar: string;
-  status: 'open' | 'active' | 'completed' | 'cancelled';
+  status: 'open' | 'active' | 'completed' | 'cancelled' | 'expired';
   createdAt: number;
+  expiresAt: number;
   imageHint: string;
-  buyerUid?: string;
+  buyerIdentifier?: string; // UID or username of the target buyer (optional)
+  buyerUid?: string; // Confirmed UID of the buyer after acceptance
   buyerName?: string;
-  nextDeliveryTimestamp?: number;
 };
+
 
 
 export type StockListing = {
@@ -575,6 +575,8 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
                                     statusColor = "text-green-400";
                                 } else if (contract.status === 'completed') {
                                     statusColor = "text-blue-400";
+                                } else if (contract.status === 'expired') {
+                                    statusColor = "text-red-400";
                                 }
 
 
@@ -602,12 +604,10 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
                                         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                                             <div className="text-gray-400">Bei/Kipande</div>
                                             <div className="font-mono text-right font-bold">${contract.pricePerUnit.toFixed(2)}</div>
-                                            <div className="text-gray-400">Kiasi/Usafirishaji</div>
-                                            <div className="font-mono text-right">{contract.quantityPerDelivery.toLocaleString()}</div>
                                             <div className="text-gray-400">Jumla ya Kiasi</div>
-                                            <div className="font-mono text-right">{contract.totalQuantity.toLocaleString()}</div>
-                                            <div className="text-gray-400">Muda wa Usafirishaji</div>
-                                            <div className="font-mono text-right">Kila Siku {contract.deliveryInterval / (1000*60*60*24)}</div>
+                                            <div className="font-mono text-right">{contract.quantity.toLocaleString()}</div>
+                                            <div className="text-gray-400">Jumla ya Gharama</div>
+                                            <div className="font-mono text-right font-bold text-green-300">${(contract.quantity * contract.pricePerUnit).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                                         </div>
                                         <Button 
                                             size="sm" 

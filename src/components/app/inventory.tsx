@@ -49,7 +49,7 @@ export type InventoryItem = {
 interface InventoryProps {
   inventoryItems: InventoryItem[];
   onPostToMarket: (item: InventoryItem, quantity: number, price: number) => void;
-  onCreateContract: (item: InventoryItem, quantityPerDelivery: number, totalQuantity: number, pricePerUnit: number, deliveryIntervalDays: number) => void;
+  onCreateContract: (item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => void;
 }
 
 
@@ -66,10 +66,9 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
   const [priceCeiling, setPriceCeiling] = React.useState(0);
 
   // State for Contract
-  const [contractQtyPerDelivery, setContractQtyPerDelivery] = React.useState(10);
-  const [contractTotalQty, setContractTotalQty] = React.useState(100);
+  const [contractQuantity, setContractQuantity] = React.useState(10);
   const [contractPrice, setContractPrice] = React.useState(0);
-  const [contractInterval, setContractInterval] = React.useState(1);
+  const [contractTarget, setContractTarget] = React.useState('');
 
   
   const handleOpenSellDialog = (item: InventoryItem) => {
@@ -94,9 +93,8 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
 
     setSelectedItem(item);
     setContractPrice(officialMarketPrice * 0.95); // Default contract price to 95% of market
-    setContractQtyPerDelivery(10);
-    setContractTotalQty(100);
-    setContractInterval(1);
+    setContractQuantity(10);
+    setContractTarget('');
     setIsContractDialogOpen(true);
   };
 
@@ -110,7 +108,7 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
   
   const handleConfirmContract = () => {
     if (selectedItem) {
-      onCreateContract(selectedItem, contractQtyPerDelivery, contractTotalQty, contractPrice, contractInterval);
+      onCreateContract(selectedItem, contractQuantity, contractPrice, contractTarget);
       setIsContractDialogOpen(false);
     }
   };
@@ -269,13 +267,36 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
           <DialogHeader>
             <DialogTitle>Create a Contract for {selectedItem?.item}</DialogTitle>
             <DialogDescription>
-                Weka masharti ya mkataba wako. Itakuwa wazi kwa wachezaji wengine kuukubali.
+                Weka masharti ya mkataba wako. Mkataba utaisha baada ya siku 5 kama haujakubaliwa.
             </DialogDescription>
           </DialogHeader>
           
           <div className="flex-grow overflow-y-auto -mr-6 pr-6">
             {selectedItem && (
               <div className="space-y-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="c-target">Mpokeaji (Jina au UID)</Label>
+                    <Input 
+                        id="c-target" 
+                        type="text"
+                        placeholder="Acha wazi kwa mkataba wa umma"
+                        value={contractTarget}
+                        onChange={(e) => setContractTarget(e.target.value)}
+                        className="bg-gray-800 border-gray-600"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="c-qty">Kiasi (Una: {selectedItem.quantity.toLocaleString()})</Label>
+                    <Input 
+                        id="c-qty" 
+                        type="number"
+                        value={contractQuantity}
+                        onChange={(e) => setContractQuantity(Math.max(1, Math.min(Number(e.target.value), selectedItem.quantity)))}
+                        min="1"
+                        max={selectedItem.quantity}
+                        className="bg-gray-800 border-gray-600"
+                    />
+                  </div>
                   <div className="grid gap-2">
                     <Label htmlFor="c-price">Bei kwa Kipande (Price/Unit)</Label>
                     <Input 
@@ -288,44 +309,11 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
                     />
                     <p className="text-xs text-gray-400 mt-1">Bei elekezi sokoni ni ${selectedItem.marketPrice.toFixed(2)}. Weka bei ya kuvutia.</p>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="c-qty-delivery">Kiasi kwa Usafirishaji (Qty per Delivery)</Label>
-                    <Input 
-                        id="c-qty-delivery" 
-                        type="number"
-                        value={contractQtyPerDelivery}
-                        onChange={(e) => setContractQtyPerDelivery(Math.max(1, Number(e.target.value)))}
-                        min="1"
-                        className="bg-gray-800 border-gray-600"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="c-qty-total">Jumla ya Kiasi (Total Quantity)</Label>
-                    <Input 
-                        id="c-qty-total" 
-                        type="number"
-                        value={contractTotalQty}
-                        onChange={(e) => setContractTotalQty(Math.max(contractQtyPerDelivery, Number(e.target.value)))}
-                        min={contractQtyPerDelivery}
-                        className="bg-gray-800 border-gray-600"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="c-interval">Muda kati ya Usafirishaji (kwa Siku)</Label>
-                    <Input 
-                        id="c-interval" 
-                        type="number"
-                        value={contractInterval}
-                        onChange={(e) => setContractInterval(Math.max(1, Number(e.target.value)))}
-                        min="1"
-                        className="bg-gray-800 border-gray-600"
-                    />
-                  </div>
+                  
                   <Separator className="my-4 bg-gray-700"/>
+
                   <div className="p-4 bg-gray-800 rounded-lg space-y-2 text-sm">
-                      <div className="flex justify-between"><span>Jumla ya Usafirishaji:</span> <span className="font-bold">{Math.ceil(contractTotalQty / contractQtyPerDelivery)}</span></div>
-                      <div className="flex justify-between"><span>Mapato kwa Usafirishaji:</span> <span className="font-bold text-green-400">${(contractQtyPerDelivery * contractPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
-                      <div className="flex justify-between"><span>Jumla ya Mapato ya Mkataba:</span> <span className="font-bold text-green-400">${(contractTotalQty * contractPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
+                      <div className="flex justify-between"><span>Jumla ya Gharama ya Mkataba:</span> <span className="font-bold text-green-400">${(contractQuantity * contractPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
                   </div>
               </div>
             )}
@@ -335,7 +323,7 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
             <Button variant="outline" onClick={() => setIsContractDialogOpen(false)}>Ghairi</Button>
             <Button 
               className="bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={!selectedItem || contractQtyPerDelivery <= 0 || contractTotalQty < contractQtyPerDelivery || contractPrice <= 0 || contractInterval <= 0}
+              disabled={!selectedItem || contractQuantity <= 0 || contractQuantity > selectedItem.quantity || contractPrice <= 0}
               onClick={handleConfirmContract}
             >
               Chapisha Mkataba
