@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -50,6 +51,7 @@ export type ProfileDataForForm = z.infer<typeof profileFormSchema>;
 
 export type ProfileData = ProfileDataForForm & {
   uid: string;
+  email: string | null;
   status?: 'online' | 'offline';
   lastSeen?: Date;
   role?: 'player' | 'admin';
@@ -232,6 +234,17 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         />
                         </>
                     ) : null}
+                
+                {currentProfile.email && (
+                    <div>
+                        <div className='bg-gray-900/70 p-2 mb-2 rounded-t-md'>
+                            <h3 className='font-semibold text-sm'>Barua Pepe (Inaonekana na Admin tu)</h3>
+                        </div>
+                        <div className='p-4 bg-gray-700/50 rounded-b-md text-sm font-mono'>
+                            {currentProfile.email}
+                        </div>
+                    </div>
+                )}
 
                 <div>
                     <div className='bg-gray-900/70 p-2 mb-2 rounded-t-md'>
@@ -328,3 +341,4 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     </div>
   );
 }
+    

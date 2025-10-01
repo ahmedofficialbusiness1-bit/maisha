@@ -102,7 +102,9 @@ export function Game() {
   // Periodically update lastSeen to keep user online
   React.useEffect(() => {
       const interval = setInterval(() => {
-          updateState(() => ({ lastSeen: Date.now() }));
+          if(document.hasFocus()) {
+            updateState(() => ({ lastSeen: Date.now() }));
+          }
       }, 60 * 1000); // every minute
 
       return () => clearInterval(interval);
@@ -798,6 +800,7 @@ export function Game() {
       status: gameState.status,
       lastSeen: new Date(gameState.lastSeen || Date.now()),
       role: gameState.role,
+      email: gameState.email,
   };
   
   const viewedProfileForDisplay: ProfileData | null = viewedProfileData ? {
@@ -808,6 +811,7 @@ export function Game() {
         status: viewedProfileData.status,
         lastSeen: new Date(viewedProfileData.lastSeen || Date.now()),
         role: viewedProfileData.role,
+        email: viewedProfileData.email,
   } : null;
 
   const getMetricsForProfile = (profileData: UserData | null): PlayerMetrics => {
@@ -854,7 +858,7 @@ export function Game() {
       case 'profile':
           return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} />;
       case 'admin':
-          return <AdminPanel />;
+          return <AdminPanel onViewProfile={handleViewProfile} />;
       default:
         return null;
     }
@@ -881,6 +885,8 @@ export function Game() {
 
 
 
+
+    
 
     
 

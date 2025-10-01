@@ -18,6 +18,7 @@ import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-al
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 
 const simulationFormSchema = z.object({
@@ -27,6 +28,10 @@ const simulationFormSchema = z.object({
   worldEvents: z.string().min(1, 'World events description is required.'),
   adminAdjustment: z.coerce.number().optional(),
 });
+
+interface AdminPanelProps {
+    onViewProfile: (playerId: string) => void;
+}
 
 function CommoditySimulator() {
   const { toast } = useToast();
@@ -188,7 +193,7 @@ function CommoditySimulator() {
   );
 }
 
-function PlayerManager() {
+function PlayerManager({ onViewProfile }: AdminPanelProps) {
     const { players, loading } = useAllPlayers();
 
     const { onlinePlayers, offlinePlayers } = React.useMemo(() => {
@@ -211,6 +216,30 @@ function PlayerManager() {
             </div>
         )
     }
+    
+    const PlayerListItem = ({ player }: { player: PlayerPublicData }) => (
+      <div 
+        key={player.uid} 
+        className="flex items-center justify-between p-2 rounded-md hover:bg-gray-700/50 cursor-pointer"
+        onClick={() => onViewProfile(player.uid)}
+      >
+          <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                  <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
+                  <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div>
+                  <p className="font-semibold">{player.username}</p>
+                  <p className="text-xs text-gray-400">{player.email}</p>
+              </div>
+          </div>
+          {player.lastSeen && !onlinePlayers.some(p => p.uid === player.uid) && (
+              <p className="text-xs text-gray-400">
+                  Last seen {formatDistanceToNow(new Date(player.lastSeen), { addSuffix: true })}
+              </p>
+          )}
+      </div>
+    );
 
     return (
         <div className="mt-6">
@@ -228,24 +257,10 @@ function PlayerManager() {
                         {/* Online Players */}
                         <div className="flex flex-col">
                             <h3 className="font-bold mb-2 flex items-center gap-2"><Wifi className="text-green-400" /> Online ({onlinePlayers.length})</h3>
-                            <ScrollArea className="h-72 flex-grow p-3 rounded-md bg-gray-900/50 border border-gray-700">
+                            <ScrollArea className="h-72 flex-grow p-1 rounded-md bg-gray-900/50 border border-gray-700">
                                 {onlinePlayers.length > 0 ? (
-                                    <div className="space-y-3">
-                                        {onlinePlayers.map(player => (
-                                            <div key={player.uid} className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar className="h-10 w-10">
-                                                        <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
-                                                        <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <div>
-                                                        <p className="font-semibold">{player.username}</p>
-                                                        <p className="text-xs text-gray-400">{player.email}</p>
-                                                    </div>
-                                                </div>
-                                                <Button variant="ghost" size="sm">Manage</Button>
-                                            </div>
-                                        ))}
+                                    <div className="space-y-1">
+                                        {onlinePlayers.map(player => <PlayerListItem key={player.uid} player={player} />)}
                                     </div>
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-gray-500">No players currently online.</div>
@@ -256,26 +271,10 @@ function PlayerManager() {
                         {/* Offline Players */}
                         <div className="flex flex-col">
                             <h3 className="font-bold mb-2 flex items-center gap-2"><WifiOff className="text-red-400" /> Offline ({offlinePlayers.length})</h3>
-                             <ScrollArea className="h-72 flex-grow p-3 rounded-md bg-gray-900/50 border border-gray-700">
+                             <ScrollArea className="h-72 flex-grow p-1 rounded-md bg-gray-900/50 border border-gray-700">
                                 {offlinePlayers.length > 0 ? (
-                                     <div className="space-y-3">
-                                        {offlinePlayers.map(player => (
-                                            <div key={player.uid} className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar className="h-10 w-10">
-                                                        <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
-                                                        <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <div>
-                                                        <p className="font-semibold">{player.username}</p>
-                                                        <p className="text-xs text-gray-400">{player.email}</p>
-                                                    </div>
-                                                </div>
-                                                <p className="text-xs text-gray-400">
-                                                    Last seen {player.lastSeen ? formatDistanceToNow(new Date(player.lastSeen), { addSuffix: true }) : 'never'}
-                                                </p>
-                                            </div>
-                                        ))}
+                                     <div className="space-y-1">
+                                        {offlinePlayers.map(player => <PlayerListItem key={player.uid} player={player} />)}
                                     </div>
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-gray-500">No offline players.</div>
@@ -290,7 +289,7 @@ function PlayerManager() {
 }
 
 
-export function AdminPanel() {
+export function AdminPanel({ onViewProfile }: AdminPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -305,7 +304,7 @@ export function AdminPanel() {
             <TabsTrigger value="economy">Economy Tools</TabsTrigger>
           </TabsList>
           <TabsContent value="players">
-            <PlayerManager />
+            <PlayerManager onViewProfile={onViewProfile} />
           </TabsContent>
           <TabsContent value="economy">
              <CommoditySimulator />
@@ -316,6 +315,8 @@ export function AdminPanel() {
   );
 }
 
+
+    
 
     
 
