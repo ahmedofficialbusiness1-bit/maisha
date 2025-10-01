@@ -20,18 +20,13 @@
     },
     "chat": {
       "$chatRoomId": {
-        // Public rooms are readable/writable by anyone authenticated
-        // Private rooms (containing '-') are only accessible by participants
         ".read": "auth != null && ($chatRoomId == 'general' || $chatRoomId == 'trade' || $chatRoomId == 'help' || $chatRoomId.contains(auth.uid))",
         ".write": "auth != null && ($chatRoomId == 'general' || $chatRoomId == 'trade' || $chatRoomId == 'help' || $chatRoomId.contains(auth.uid))"
       }
     },
     "user-chats": {
       "$uid": {
-        // A user can only read their own list of chats
         ".read": "auth != null && auth.uid === $uid",
-        // Any authenticated user can write to another user's chat list 
-        // (e.g., to update last message and unread count)
         ".write": "auth != null"
       }
     }
