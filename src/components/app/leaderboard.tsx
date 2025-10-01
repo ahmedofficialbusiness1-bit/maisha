@@ -6,11 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Loader2, Trophy } from 'lucide-react';
-import { useLeaderboard, type LeaderboardEntry } from '@/firebase/firestore/use-leaderboard';
+import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Button } from '../ui/button';
 
 export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: string) => void }) {
-  const { data: sortedPlayers, loading } = useLeaderboard();
+  const { players, loading } = useAllPlayers();
+
+  const sortedPlayers = React.useMemo(() => {
+    if (!players) return [];
+    // Sort players by netWorth in descending order
+    return [...players].sort((a, b) => b.netWorth - a.netWorth);
+  }, [players]);
 
   if (loading) {
     return (
@@ -25,7 +31,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Ubao wa Viongozi</h1>
         <p className="text-muted-foreground">
-          Tazama orodha ya wachezaji matajiri zaidi kwenye mchezo (Top 100).
+          Tazama orodha ya wachezaji matajiri zaidi kwenye mchezo.
         </p>
       </div>
 
@@ -33,7 +39,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
         <CardHeader>
           <CardTitle>Wachezaji Wanaoongoza kwa Utajiri</CardTitle>
           <CardDescription className="text-gray-400">
-            Orodha inajisasisha moja kwa moja kutoka Firestore.
+            Orodha inajisasisha moja kwa moja kutoka Realtime Database.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -49,7 +55,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                 <TableBody>
                     {sortedPlayers.map((player, index) => (
                         <TableRow 
-                          key={player.playerId} 
+                          key={player.uid} 
                           className="border-gray-700 hover:bg-gray-700/50"
                         >
                             <TableCell className="font-bold text-lg flex items-center gap-2 p-2 sm:p-4">
@@ -59,7 +65,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                 {index === 2 && <Trophy className="h-5 w-5 text-orange-400" />}
                             </TableCell>
                             <TableCell className="p-2 sm:p-4">
-                                <Button variant="ghost" className="flex items-center gap-3 p-0 h-auto hover:bg-transparent" onClick={() => onViewProfile(player.playerId)}>
+                                <Button variant="ghost" className="flex items-center gap-3 p-0 h-auto hover:bg-transparent" onClick={() => onViewProfile(player.uid)}>
                                     <Avatar>
                                         <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                         <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
@@ -68,7 +74,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                 </Button>
                             </TableCell>
                             <TableCell className="text-right font-mono text-lg text-green-400 p-2 sm:p-4">
-                                ${player.score.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </TableCell>
                         </TableRow>
                     ))}
