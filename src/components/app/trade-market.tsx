@@ -564,66 +564,114 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
                     <CardDescription>Tafuta mikataba ya muda mrefu ya ununuzi wa bidhaa kwa bei ya uhakika.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {contractListings.map(contract => {
-                            const isOwner = contract.sellerName === playerName;
-                            let statusText = contract.status.charAt(0).toUpperCase() + contract.status.slice(1);
-                            let statusColor = "text-yellow-400";
-                            if (contract.status === 'active') {
-                                statusText = `Active (with ${contract.buyerName})`;
-                                statusColor = "text-green-400";
-                            } else if (contract.status === 'completed') {
-                                statusColor = "text-blue-400";
-                            }
+                     <ScrollArea className="h-[70vh]">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
+                            {contractListings.map(contract => {
+                                const isOwner = contract.sellerName === playerName;
+                                let statusText = contract.status.charAt(0).toUpperCase() + contract.status.slice(1);
+                                let statusColor = "text-yellow-400";
+                                if (contract.status === 'active') {
+                                    statusText = `Active (with ${contract.buyerName})`;
+                                    statusColor = "text-green-400";
+                                } else if (contract.status === 'completed') {
+                                    statusColor = "text-blue-400";
+                                }
 
 
-                            return (
-                             <Card key={contract.id} className="bg-gray-900/50">
-                                <CardHeader>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-10 w-10">
-                                                <AvatarImage src={contract.sellerAvatar} alt={contract.sellerName} data-ai-hint={contract.imageHint} />
-                                                <AvatarFallback>{contract.sellerName.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <CardTitle className="text-base">{contract.sellerName}</CardTitle>
-                                                <CardDescription className={cn("font-semibold", statusColor)}>{statusText}</CardDescription>
+                                return (
+                                <Card key={contract.id} className="bg-gray-900/50">
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className="h-10 w-10">
+                                                    <AvatarImage src={contract.sellerAvatar} alt={contract.sellerName} data-ai-hint={contract.imageHint} />
+                                                    <AvatarFallback>{contract.sellerName.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <CardTitle className="text-base">{contract.sellerName}</CardTitle>
+                                                    <CardDescription className={cn("font-semibold", statusColor)}>{statusText}</CardDescription>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <Image src={encyclopediaData.find(e => e.name === contract.commodity)?.imageUrl || ''} alt={contract.commodity} data-ai-hint={contract.imageHint} width={32} height={32} className="rounded-md ml-auto" />
+                                                <p className="text-xs text-gray-400 mt-1">{contract.commodity}</p>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <Image src={encyclopediaData.find(e => e.name === contract.commodity)?.imageUrl || ''} alt={contract.commodity} data-ai-hint={contract.imageHint} width={32} height={32} className="rounded-md ml-auto" />
-                                             <p className="text-xs text-gray-400 mt-1">{contract.commodity}</p>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                            <div className="text-gray-400">Bei/Kipande</div>
+                                            <div className="font-mono text-right font-bold">${contract.pricePerUnit.toFixed(2)}</div>
+                                            <div className="text-gray-400">Kiasi/Usafirishaji</div>
+                                            <div className="font-mono text-right">{contract.quantityPerDelivery.toLocaleString()}</div>
+                                            <div className="text-gray-400">Jumla ya Kiasi</div>
+                                            <div className="font-mono text-right">{contract.totalQuantity.toLocaleString()}</div>
+                                            <div className="text-gray-400">Muda wa Usafirishaji</div>
+                                            <div className="font-mono text-right">Kila Siku {contract.deliveryInterval / (1000*60*60*24)}</div>
+                                        </div>
+                                        <Button 
+                                            size="sm" 
+                                            className="w-full bg-blue-600 hover:bg-blue-700" 
+                                            disabled={isOwner || contract.status !== 'open'}
+                                            onClick={() => onAcceptContract(contract)}
+                                        >
+                                            {isOwner ? 'Mkataba Wako' : contract.status === 'open' ? 'Kubali Mkataba' : 'Umekubaliwa'}
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            )})}
+                            {contractListings.filter(c => c.status === 'open').length === 0 && (
+                                <div className="col-span-full flex items-center justify-center h-48 text-gray-400">
+                                    <p>Hakuna mikataba mipya kwa sasa.</p>
+                                </div>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
+        </div>
+    );
+    
+    const renderBondsMarket = () => (
+        <div className="p-1 sm:p-2 md:p-4 lg:p-6">
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Soko la Hatifungani</CardTitle>
+                    <CardDescription>Wekeza kwenye hatifungani za serikali na makampuni kwa mapato ya uhakika.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {bondListings.map(bond => (
+                             <Card key={bond.id} className="bg-gray-900/50">
+                                <CardHeader>
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-10 w-10">
+                                            <AvatarImage src={bond.issuerLogo} alt={bond.issuer} data-ai-hint={bond.imageHint} />
+                                            <AvatarFallback>{bond.issuer.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <CardTitle className="text-base">{bond.issuer}</CardTitle>
+                                            <CardDescription>Credit Rating: {bond.creditRating}</CardDescription>
                                         </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                        <div className="text-gray-400">Bei/Kipande</div>
-                                        <div className="font-mono text-right font-bold">${contract.pricePerUnit.toFixed(2)}</div>
-                                        <div className="text-gray-400">Kiasi/Usafirishaji</div>
-                                        <div className="font-mono text-right">{contract.quantityPerDelivery.toLocaleString()}</div>
-                                        <div className="text-gray-400">Jumla ya Kiasi</div>
-                                        <div className="font-mono text-right">{contract.totalQuantity.toLocaleString()}</div>
-                                        <div className="text-gray-400">Muda wa Usafirishaji</div>
-                                        <div className="font-mono text-right">Kila Siku {contract.deliveryInterval / (1000*60*60*24)}</div>
-                                    </div>
-                                    <Button 
-                                        size="sm" 
-                                        className="w-full bg-blue-600 hover:bg-blue-700" 
-                                        disabled={isOwner || contract.status !== 'open'}
-                                        onClick={() => onAcceptContract(contract)}
-                                    >
-                                        {isOwner ? 'Mkataba Wako' : contract.status === 'open' ? 'Kubali Mkataba' : 'Umekubaliwa'}
-                                    </Button>
+                                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                         <div className="text-gray-400">Bei</div>
+                                         <div className="font-mono text-right font-bold">${bond.price.toFixed(2)}</div>
+                                         <div className="text-gray-400">Thamani (Face Value)</div>
+                                         <div className="font-mono text-right">${bond.faceValue.toFixed(2)}</div>
+                                         <div className="text-gray-400">Kiwango cha Riba</div>
+                                         <div className="font-mono text-right text-green-400">{bond.couponRate.toFixed(2)}%</div>
+                                         <div className="text-gray-400">Ukomo</div>
+                                         <div className="font-mono text-right">{new Date(bond.maturityDate).toLocaleDateString()}</div>
+                                     </div>
+                                     <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700" disabled>
+                                         Nunua
+                                     </Button>
                                 </CardContent>
                              </Card>
-                        )})}
-                         {contractListings.filter(c => c.status === 'open').length === 0 && (
-                            <div className="col-span-full flex items-center justify-center h-48 text-gray-400">
-                                <p>Hakuna mikataba mipya kwa sasa.</p>
-                            </div>
-                         )}
+                        ))}
                     </div>
                 </CardContent>
             </Card>
@@ -752,3 +800,5 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
     </>
   );
 }
+
+    
