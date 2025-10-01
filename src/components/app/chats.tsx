@@ -288,9 +288,22 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
 // --- PUBLIC CHATS ---
 
 function PublicChatsView({ user, selectedRoom, onSelectRoom }: { user: AuthenticatedUser, selectedRoom: PublicChatRoom, onSelectRoom: (room: PublicChatRoom) => void }) {
+    const [mobileView, setMobileView] = React.useState<'list' | 'chat'>('list');
+
+    const handleSelectRoom = (room: PublicChatRoom) => {
+        onSelectRoom(room);
+        setMobileView('chat');
+    };
+
+    const handleBackToList = () => {
+        setMobileView('list');
+    };
+
     return (
         <div className="flex h-full">
-            <div className="w-full md:w-1/3 border-r border-gray-700">
+            {/* Room List */}
+            <div className={cn("w-full md:w-1/3 border-r border-gray-700", mobileView === 'chat' && 'hidden md:block')}>
+                 <h3 className="text-lg font-semibold p-4 border-b border-gray-700">Vyumba vya Soga</h3>
                 <ScrollArea className="h-full">
                     <div className="p-2 space-y-1">
                         {publicRooms.map(room => (
@@ -298,7 +311,7 @@ function PublicChatsView({ user, selectedRoom, onSelectRoom }: { user: Authentic
                                 key={room.id}
                                 variant={selectedRoom === room.id ? 'secondary' : 'ghost'}
                                 className="w-full justify-start"
-                                onClick={() => onSelectRoom(room.id)}
+                                onClick={() => handleSelectRoom(room.id)}
                             >
                                 # {room.name}
                             </Button>
@@ -306,7 +319,14 @@ function PublicChatsView({ user, selectedRoom, onSelectRoom }: { user: Authentic
                     </div>
                 </ScrollArea>
             </div>
-            <div className="w-2/3 flex-col hidden md:flex">
+            {/* Chat Window */}
+            <div className={cn("w-full md:w-2/3 flex-col", mobileView === 'list' && 'hidden md:flex')}>
+                 <div className="p-4 border-b border-gray-700 flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="md:hidden" onClick={handleBackToList}>
+                        <ArrowLeft />
+                    </Button>
+                    <h3 className="text-lg font-semibold"># {publicRooms.find(r => r.id === selectedRoom)?.name}</h3>
+                </div>
                 <PublicChatWindow user={user} room={selectedRoom} />
             </div>
         </div>
