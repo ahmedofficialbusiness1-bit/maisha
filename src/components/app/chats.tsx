@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useDatabase } from '@/firebase';
-import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, get } from 'firebase/database';
+import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, runTransaction } from 'firebase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -245,30 +245,40 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
             timestamp: timestamp,
         };
         
+        const now = Date.now();
+        const textToSend = newMessage;
+        setNewMessage('');
+
         // Push message to the chat room
         const chatRoomRef = ref(database, `chat/${chat.chatId}`);
-        push(chatRoomRef, message);
+        await push(chatRoomRef, message);
         
-        const now = Date.now();
 
         // Update sender's user-chat list
         const senderChatRef = ref(database, `user-chats/${user.uid}/${chat.otherPlayer.uid}`);
         set(senderChatRef, {
-            lastMessage: newMessage,
+            lastMessage: textToSend,
             timestamp: now,
             unreadCount: 0
         });
 
-        // Update receiver's user-chat list and increment unread count
+        // Update receiver's user-chat list and increment unread count using a transaction
         const receiverChatRef = ref(database, `user-chats/${chat.otherPlayer.uid}/${user.uid}`);
-        const receiverData = (await get(receiverChatRef)).val();
-        set(receiverChatRef, {
-            lastMessage: newMessage,
-            timestamp: now,
-            unreadCount: (receiverData?.unreadCount || 0) + 1
+        runTransaction(receiverChatRef, (data) => {
+            if (data) {
+                data.lastMessage = textToSend;
+                data.timestamp = now;
+                data.unreadCount = (data.unreadCount || 0) + 1;
+            } else {
+                // If the receiver has no chat entry for the sender yet
+                return {
+                    lastMessage: textToSend,
+                    timestamp: now,
+                    unreadCount: 1
+                }
+            }
+            return data;
         });
-
-        setNewMessage('');
     };
 
     return <ChatWindowLayout user={user} messages={messages} newMessage={newMessage} setNewMessage={setNewMessage} handleSendMessage={handleSendMessage} scrollAreaRef={scrollAreaRef} />;
@@ -406,3 +416,5 @@ function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSen
         </div>
     )
 }
+
+    
