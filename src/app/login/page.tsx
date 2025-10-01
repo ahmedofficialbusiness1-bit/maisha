@@ -11,12 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { useUser } from '@/firebase';
+import { useUser, useDatabase } from '@/firebase';
 import { signInWithEmail, signUpWithEmail, sendPasswordReset } from '@/firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { getInitialUserData } from '@/services/game-service';
+import { getDatabase, ref, set } from 'firebase/database';
+
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Tafadhali ingiza barua pepe sahihi.' }),
@@ -36,6 +39,7 @@ function LoginComponent() {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isResettingPassword, setIsResettingPassword] = React.useState(false);
     const [isResetDialogOpen, setIsResetDialogOpen] = React.useState(false);
+    const database = getDatabase();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -62,7 +66,22 @@ function LoginComponent() {
             if (isLoginView) {
                 await signInWithEmail(values.email, values.password);
             } else {
-                await signUpWithEmail(values.email, values.password);
+                const newUser = await signUpWithEmail(values.email, values.password);
+                if (newUser) {
+                    const initialData = getInitialUserData(newUser.uid, newUser.displayName || 'Mchezaji', newUser.email);
+                    const userRef = ref(database, `users/${newUser.uid}`);
+                    await set(userRef, initialData);
+
+                    const playerPublicRef = ref(database, `players/${newUser.uid}`);
+                    await set(playerPublicRef, {
+                        uid: initialData.uid,
+                        username: initialData.username,
+                        netWorth: initialData.netWorth,
+                        avatar: `https://picsum.photos/seed/${initialData.uid}/40/40`,
+                        level: initialData.playerLevel,
+                        role: initialData.role
+                    });
+                }
             }
             // The useEffect will handle redirect on successful login/signup
         } catch (error) {
