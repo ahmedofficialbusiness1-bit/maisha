@@ -170,7 +170,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
             </Button>
             
             {setView && (
-                 <Button onClick={handleStartChat}>
+                 <Button type="button" onClick={handleStartChat}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Chat with {currentProfile.playerName}
                 </Button>
@@ -257,7 +257,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                 {currentProfile.email && (isViewOnly ? viewerRole === 'admin' : true) && (
                     <div>
                         <div className='bg-gray-900/70 p-2 mb-2 rounded-t-md'>
-                            <h3 className='font-semibold text-sm'>Barua Pepe (Inaonekana na Admin tu)</h3>
+                            <h3 className='font-semibold text-sm'>Barua Pepe {isViewOnly ? '(Inaonekana na Admin tu)' : ''}</h3>
                         </div>
                         <div className='p-4 bg-gray-700/50 rounded-b-md text-sm font-mono'>
                             {currentProfile.email}
