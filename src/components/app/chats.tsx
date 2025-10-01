@@ -13,13 +13,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useDatabase } from '@/firebase';
-import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, runTransaction, get } from 'firebase/database';
+import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, get } from 'firebase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useUser } from '@/firebase/auth/use-user';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 
 type AuthenticatedUser = {
@@ -87,7 +86,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened }: { user: Aut
   }
 
   return (
-    <Card className="bg-gray-800/60 border-gray-700 text-white w-full h-[80vh] flex flex-col">
+    <Card className="bg-gray-800/60 border-gray-700 text-white w-full h-full flex flex-col">
       <CardHeader className="flex-row items-center justify-between">
         <div>
             <CardTitle>Mawasiliano</CardTitle>
@@ -261,7 +260,7 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
             unreadCount: 0 // Sender has 0 unread
         });
         
-        // 3. Update receiver's user-chat list 
+        // 3. Update receiver's user-chat list with an incremented unread count
         const receiverChatRef = ref(database, `user-chats/${chat.otherPlayer.uid}/${user.uid}`);
         const receiverSnapshot = await get(receiverChatRef);
         const currentData = receiverSnapshot.val();
@@ -433,5 +432,3 @@ function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSen
         </div>
     )
 }
-
-    
