@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -60,6 +59,7 @@ interface InventoryProps {
   onRejectContract: (contract: ContractListing) => void;
   onCancelContract: (contract: ContractListing) => void;
   currentUserId: string;
+  currentUsername: string;
 }
 
 function ItemInventoryView({ inventoryItems, onPostToMarket, onCreateContract }: Pick<InventoryProps, 'inventoryItems' | 'onPostToMarket' | 'onCreateContract'>) {
@@ -333,18 +333,25 @@ function ItemInventoryView({ inventoryItems, onPostToMarket, onCreateContract }:
   );
 }
 
-function ContractInventoryView({ contractListings, currentUserId, onAcceptContract, onRejectContract, onCancelContract }: Pick<InventoryProps, 'contractListings' | 'currentUserId' | 'onAcceptContract' | 'onRejectContract' | 'onCancelContract'>) {
-    const { pending, history } = React.useMemo(() => {
-        const myContracts = contractListings.filter(c => c.sellerUid === currentUserId || c.buyerIdentifier === currentUserId || c.buyerUid === currentUserId);
-        const pending = myContracts.filter(c => c.status === 'open');
-        const history = myContracts.filter(c => ['completed', 'rejected', 'cancelled', 'expired'].includes(c.status));
-        return { pending, history };
-    }, [contractListings, currentUserId]);
+function ContractInventoryView({ contractListings, currentUserId, currentUsername, onAcceptContract, onRejectContract, onCancelContract }: Pick<InventoryProps, 'contractListings' | 'currentUserId' | 'currentUsername' | 'onAcceptContract' | 'onRejectContract' | 'onCancelContract'>) {
+    const { incoming, outgoing, history } = React.useMemo(() => {
+        const myContracts = contractListings.filter(c => {
+            const isSeller = c.sellerUid === currentUserId;
+            const isTargetedBuyer = c.buyerIdentifier === currentUserId || c.buyerIdentifier === currentUsername;
+            const isPublicAndOpen = !c.buyerIdentifier && c.status === 'open';
+            return isSeller || isTargetedBuyer || isPublicAndOpen;
+        });
+
+        const incoming = myContracts.filter(c => c.status === 'open' && c.sellerUid !== currentUserId);
+        const outgoing = myContracts.filter(c => c.status === 'open' && c.sellerUid === currentUserId);
+        const history = myContracts.filter(c => c.status !== 'open');
+
+        return { incoming, outgoing, history };
+    }, [contractListings, currentUserId, currentUsername]);
 
     const renderContractCard = (contract: ContractListing) => {
         const isSeller = contract.sellerUid === currentUserId;
-        const isBuyer = !isSeller && (contract.buyerIdentifier === currentUserId || contract.buyerUid === currentUserId || !contract.buyerIdentifier);
-        const isPendingForMe = contract.status === 'open' && isBuyer;
+        const isBuyer = !isSeller;
 
         let statusText = contract.status.charAt(0).toUpperCase() + contract.status.slice(1);
         let statusColor = "text-gray-400";
@@ -379,11 +386,11 @@ function ContractInventoryView({ contractListings, currentUserId, onAcceptContra
                         <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
                                 <AvatarImage src={isSeller ? contract.buyerName ? `https://picsum.photos/seed/${contract.buyerUid}/40/40` : 'https://picsum.photos/seed/public/40/40' : contract.sellerAvatar} alt={isSeller ? contract.buyerName : contract.sellerName} />
-                                <AvatarFallback>{(isSeller ? contract.buyerName || '?' : contract.sellerName).charAt(0)}</AvatarFallback>
+                                <AvatarFallback>{(isSeller ? contract.buyerName || contract.buyerIdentifier || 'P' : contract.sellerName).charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                                <CardDescription>{isSeller ? 'Mnunuzi' : 'Muuzaji'}</CardDescription>
-                                <CardTitle className="text-base">{isSeller ? contract.buyerName || contract.buyerIdentifier || 'Mkataba wa Umma' : contract.sellerName}</CardTitle>
+                                <CardDescription>{isSeller ? 'Unauza Kwa' : 'Unanunua Kutoka'}</CardDescription>
+                                <CardTitle className="text-base">{isSeller ? contract.buyerIdentifier || 'Mkataba wa Umma' : contract.sellerName}</CardTitle>
                             </div>
                         </div>
                         <div className="text-right">
@@ -409,7 +416,7 @@ function ContractInventoryView({ contractListings, currentUserId, onAcceptContra
                             </>
                         )}
                      </div>
-                     {isPendingForMe && (
+                     {isBuyer && contract.status === 'open' && (
                         <div className="flex gap-2 pt-2">
                             <Button size="sm" className="w-full bg-green-600 hover:bg-green-700" onClick={() => onAcceptContract(contract)}>
                                 <Check className="mr-1 h-4 w-4" /> Kubali
@@ -443,10 +450,13 @@ function ContractInventoryView({ contractListings, currentUserId, onAcceptContra
         </Card>
     )
 
+    const allMyContracts = [...incoming, ...outgoing, ...history];
+
     return (
         <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-                <StatCard icon={Inbox} title="Mikataba Mipya" value={pending.length} />
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <StatCard icon={Inbox} title="Mikataba Mipya" value={incoming.length} />
+                <StatCard icon={Hourglass} title="Inayosubiri" value={outgoing.length} />
                 <StatCard icon={History} title="Historia" value={history.length} />
             </div>
              <Card className="bg-gray-800/60 border-gray-700 text-white">
@@ -458,9 +468,9 @@ function ContractInventoryView({ contractListings, currentUserId, onAcceptContra
                 </CardHeader>
                 <CardContent>
                     <ScrollArea className="h-[calc(100vh-28rem)]">
-                        {contractListings.length > 0 ? (
+                        {allMyContracts.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
-                                {contractListings.map(renderContractCard)}
+                                {allMyContracts.map(renderContractCard)}
                             </div>
                         ) : (
                              <div className="flex items-center justify-center h-48 text-gray-400">
@@ -475,13 +485,13 @@ function ContractInventoryView({ contractListings, currentUserId, onAcceptContra
 }
 
 export function Inventory(props: InventoryProps) {
-
   const newContractsCount = React.useMemo(() => {
     return props.contractListings.filter(c => {
-        const isBuyer = c.buyerIdentifier === props.currentUserId || !c.buyerIdentifier;
-        return c.status === 'open' && c.sellerUid !== props.currentUserId && isBuyer;
+        const isTargetedBuyer = c.buyerIdentifier === props.currentUserId || c.buyerIdentifier === props.currentUsername;
+        const isPublicAndOpen = !c.buyerIdentifier && c.status === 'open';
+        return c.status === 'open' && c.sellerUid !== props.currentUserId && (isTargetedBuyer || isPublicAndOpen);
     }).length;
-  }, [props.contractListings, props.currentUserId]);
+  }, [props.contractListings, props.currentUserId, props.currentUsername]);
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -497,7 +507,7 @@ export function Inventory(props: InventoryProps) {
             <TabsTrigger value="contracts" className="relative">
                 <FileSignature className='mr-2 h-4 w-4'/> Mikataba
                 {newContractsCount > 0 && (
-                    <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold text-white">
+                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold text-white">
                         {newContractsCount}
                     </span>
                 )}

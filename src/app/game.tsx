@@ -790,7 +790,7 @@ export function Game() {
     if (contract.sellerUid === user.uid) return;
 
     // Just remove the contract, items are already deducted from seller.
-    // The seller needs to get их items back.
+    // The seller needs to get their items back.
     const contractRef = ref(database, `contracts/${contract.id}`);
     await remove(contractRef);
 
@@ -925,7 +925,7 @@ export function Game() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [gameState, updateState, addNotification]);
+  }, [gameState, updateState]);
 
   const { buildingValue, stockValue } = React.useMemo(() => {
     if (!gameState) return { buildingValue: 0, stockValue: 0 };
@@ -1090,7 +1090,7 @@ export function Game() {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} contractListings={contractListings} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} currentUserId={user.uid} />;
+        return <Inventory inventoryItems={gameState.inventory || []} contractListings={contractListings} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} currentUserId={user.uid} currentUsername={gameState.username} />;
       case 'market':
         return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
       case 'encyclopedia':
