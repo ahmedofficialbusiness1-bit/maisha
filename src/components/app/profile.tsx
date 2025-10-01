@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -72,6 +71,7 @@ interface PlayerProfileProps {
   metrics: PlayerMetrics;
   isViewOnly?: boolean;
   onBack?: () => void;
+  viewerRole?: 'player' | 'admin';
 }
 
 function InfoItem({ label, value, smallText = false }: { label: string; value: React.ReactNode, smallText?: boolean }) {
@@ -93,7 +93,7 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 }
 
 
-export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack }: PlayerProfileProps) {
+export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const { toast } = useToast();
 
@@ -235,7 +235,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         </>
                     ) : null}
                 
-                {currentProfile.email && (
+                {currentProfile.email && (isViewOnly ? viewerRole === 'admin' : true) && (
                     <div>
                         <div className='bg-gray-900/70 p-2 mb-2 rounded-t-md'>
                             <h3 className='font-semibold text-sm'>Barua Pepe (Inaonekana na Admin tu)</h3>
@@ -245,6 +245,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         </div>
                     </div>
                 )}
+
 
                 <div>
                     <div className='bg-gray-900/70 p-2 mb-2 rounded-t-md'>

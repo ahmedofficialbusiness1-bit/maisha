@@ -838,6 +838,7 @@ export function Game() {
                     onSave={() => {}} 
                     isViewOnly={true}
                     onBack={handleBackFromProfileView}
+                    viewerRole={gameState.role}
                 />;
     }
     switch (view) {
