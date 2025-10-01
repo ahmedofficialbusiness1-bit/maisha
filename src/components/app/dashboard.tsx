@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -894,18 +895,20 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       return totalSeconds * 1000; // time in ms
   }
 
- const calculateSaleTime = (quantity: number): number => {
-      if (!selectedSlot || !selectedInventoryItem) return 0;
+  const calculateSaleTime = (quantity: number): number => {
+      if (!selectedSlot || !selectedInventoryItem || !selectedSlot.building) return 0;
       
       const recipe = recipes.find(r => r.output.name === selectedInventoryItem.item);
-      // If there's no recipe, it's a base item, assume a fast default production time.
-      const buildingId = recipe ? recipe.buildingId : 'shamba';
-      const buildingInfo = buildingData[buildingId];
-      if (!buildingInfo) return 5000 * quantity;
+      const buildingId = recipe ? recipe.buildingId : 'shamba'; // Fallback for base items
+      const itemBuildingInfo = buildingData[buildingId];
+      if (!itemBuildingInfo) return 5000 * quantity;
 
-      // Time in seconds for one batch, adjusted by level
-      const ratePerHr = (buildingInfo.productionRate * 5) * (1 + (selectedSlot.level - 1) * 0.4); // Shops sell 5x faster
-      if (ratePerHr <= 0) return 5000 * quantity; 
+      const shopInfo = buildingData[selectedSlot.building.id];
+      const saleMultiplier = shopInfo.saleRateMultiplier || 1;
+
+      // Time in seconds for one batch, adjusted by shop level and sale multiplier
+      const ratePerHr = (itemBuildingInfo.productionRate * saleMultiplier) * (1 + (selectedSlot.level - 1) * 0.4);
+      if (ratePerHr <= 0) return 5000 * quantity; // Avoid division by zero
       
       const totalBatches = quantity;
       const totalSeconds = (totalBatches / ratePerHr) * 3600;
