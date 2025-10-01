@@ -925,7 +925,7 @@ export function Game() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [gameState, updateState, addXP, addNotification]);
+  }, [gameState, updateState, addNotification]);
 
   const { buildingValue, stockValue } = React.useMemo(() => {
     if (!gameState) return { buildingValue: 0, stockValue: 0 };
