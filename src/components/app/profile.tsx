@@ -144,7 +144,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
 
   const isOnline = currentProfile.lastSeen && (Date.now() - new Date(currentProfile.lastSeen).getTime() < 5 * 60 * 1000);
   const lastSeenText = currentProfile.lastSeen 
-    ? `was ${formatDistanceToNow(currentProfile.lastSeen, { addSuffix: true })}`
+    ? `was ${formatDistanceToNow(new Date(currentProfile.lastSeen), { addSuffix: true })}`
     : 'recently';
 
 
@@ -162,10 +162,26 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader className="flex-row gap-4 items-center">
                     <div className="relative">
-                        <Avatar className="h-20 w-20 border-2 border-yellow-400 rounded-md">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          disabled={!isEditing}
+                        />
+                        <Avatar 
+                          className={cn("h-20 w-20 border-2 border-yellow-400 rounded-md", isEditing && "cursor-pointer hover:opacity-80 transition-opacity")}
+                          onClick={() => isEditing && fileInputRef.current?.click()}
+                        >
                             <AvatarImage src={avatarUrl} alt={currentProfile.playerName} data-ai-hint="player logo" className="rounded-none" />
                             <AvatarFallback className="rounded-md">{currentProfile.playerName.charAt(0)}</AvatarFallback>
                         </Avatar>
+                        {isEditing && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-md pointer-events-none">
+                                <Upload className="h-6 w-6 text-white" />
+                            </div>
+                        )}
                         <div className={cn(
                             "absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-gray-800",
                             isOnline ? 'bg-green-500' : 'bg-gray-500'
@@ -177,7 +193,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                                 'text-sm font-semibold',
                                 isOnline ? 'text-green-400' : 'text-gray-400'
                             )}>
-                                {isOnline ? 'Online' : `Offline (was ${lastSeenText})`}
+                                {isOnline ? 'Online' : `Offline (${lastSeenText})`}
                             </span>
                         <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
                         <p className="text-muted-foreground">{currentProfile.role === 'admin' ? 'Administrator' : 'Sole trader'}</p>
@@ -312,9 +328,3 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     </div>
   );
 }
-
-
-    
-
-    
-
