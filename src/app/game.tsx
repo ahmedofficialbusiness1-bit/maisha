@@ -1003,6 +1003,14 @@ export function Game() {
   const totalUnreadPublicMessages = Object.values(unreadPublicChats).filter(Boolean).length;
   const totalUnreadMessages = unreadPrivateMessagesCount + totalUnreadPublicMessages;
 
+  const unreadContracts = React.useMemo(() => {
+    if (!contractListings || !user || !gameState) return 0;
+    return contractListings.filter(c => {
+        const isTargeted = !c.buyerIdentifier || c.buyerIdentifier === user.uid || c.buyerIdentifier === gameState.username;
+        return c.status === 'open' && c.sellerUid !== user.uid && isTargeted;
+    }).length;
+  }, [contractListings, user, gameState]);
+
 
   if (userLoading || gameStateLoading) {
     return (
@@ -1120,7 +1128,7 @@ export function Game() {
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
       </main>
-      <AppFooter activeView={view} setView={handleSetView} unreadMessages={totalUnreadMessages} />
+      <AppFooter activeView={view} setView={handleSetView} unreadMessages={totalUnreadMessages} unreadContracts={unreadContracts} />
     </div>
   );
 }

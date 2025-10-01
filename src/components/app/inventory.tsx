@@ -497,7 +497,7 @@ export function Inventory(props: InventoryProps) {
             <TabsTrigger value="contracts" className="relative">
                 <FileSignature className='mr-2 h-4 w-4'/> Mikataba
                 {newContractsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                    <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold text-white">
                         {newContractsCount}
                     </span>
                 )}

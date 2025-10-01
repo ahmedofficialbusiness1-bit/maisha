@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -18,9 +19,10 @@ interface AppFooterProps {
   activeView: View;
   setView: (view: View) => void;
   unreadMessages: number;
+  unreadContracts: number;
 }
 
-export function AppFooter({ activeView, setView, unreadMessages }: AppFooterProps) {
+export function AppFooter({ activeView, setView, unreadMessages, unreadContracts }: AppFooterProps) {
   const navItems = [
     {
       view: 'dashboard' as View,
@@ -30,7 +32,16 @@ export function AppFooter({ activeView, setView, unreadMessages }: AppFooterProp
     {
       view: 'inventory' as View,
       label: 'Inventory',
-      icon: <Archive className="h-5 w-5" />,
+      icon: (
+        <div className="relative">
+          <Archive className="h-5 w-5" />
+          {unreadContracts > 0 && (
+            <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+              {unreadContracts}
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       view: 'market' as View,
