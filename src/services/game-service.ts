@@ -73,3 +73,5 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
 export const saveUserData = async (userRef: DatabaseReference, gameState: UserData): Promise<void> => {
   await set(userRef, gameState);
 };
+
+    

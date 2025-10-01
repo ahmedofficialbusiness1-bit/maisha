@@ -106,8 +106,9 @@ export function Game() {
         const data = snapshot.val();
          // Force admin check on load
         const isAdmin = data.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || data.email === 'elonjazz89@gmail.com';
-        if (isAdmin && data.role !== 'admin') {
+        if (isAdmin && (data.role !== 'admin' || data.email !== user.email)) {
             data.role = 'admin';
+            data.email = user.email; // Ensure email is in the private user data
         }
         setGameState(data);
       } else {
@@ -193,9 +194,9 @@ export function Game() {
         level: gameState.playerLevel,
     }, { merge: true });
     
-    // Update local game state if role changed
-    if (gameState.role !== currentRole) {
-        updateState(prev => ({ role: currentRole }));
+    // Update local game state if role or email changed
+    if (gameState.role !== currentRole || gameState.email !== user.email) {
+        updateState(prev => ({ role: currentRole, email: user.email }));
     }
 
   }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, leaderboardDocRef, user]);
@@ -863,3 +864,6 @@ export function Game() {
 
 
 
+
+
+    
