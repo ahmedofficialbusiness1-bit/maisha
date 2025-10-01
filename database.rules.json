@@ -21,16 +21,14 @@
     "chat": {
       "$chatRoomId": {
         ".read": "auth != null && ($chatRoomId == 'general' || $chatRoomId == 'trade' || $chatRoomId == 'help' || $chatRoomId.contains(auth.uid))",
-        ".write": "auth != null && ($chatRoomId == 'general' || $chatRoomId == 'trade' || $chatRoomId == 'help' || $chatRoomId.contains(auth.uid))"
+        ".write": "auth != null"
       }
     },
     "user-chats": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null"
+        ".write": "auth != null && auth.uid === $uid"
       }
     }
   }
 }
-
-    

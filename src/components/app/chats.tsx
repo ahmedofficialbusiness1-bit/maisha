@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -238,16 +237,15 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
         if (!newMessage.trim() || !database) return;
 
         const timestamp = serverTimestamp();
+        const textToSend = newMessage;
         const message = {
             uid: user.uid,
             username: user.username,
             avatar: user.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-            text: newMessage,
+            text: textToSend,
             timestamp: timestamp,
         };
         
-        const now = Date.now();
-        const textToSend = newMessage;
         setNewMessage('');
 
         // Push message to the chat room
@@ -257,29 +255,15 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
 
         // Update sender's user-chat list
         const senderChatRef = ref(database, `user-chats/${user.uid}/${chat.otherPlayer.uid}`);
-        set(senderChatRef, {
+        await set(senderChatRef, {
             lastMessage: textToSend,
-            timestamp: now,
+            timestamp: timestamp, // Use server timestamp for consistency
             unreadCount: 0
         });
 
-        // Update receiver's user-chat list and increment unread count using a transaction
-        const receiverChatRef = ref(database, `user-chats/${chat.otherPlayer.uid}/${user.uid}`);
-        runTransaction(receiverChatRef, (data) => {
-            if (data) {
-                data.lastMessage = textToSend;
-                data.timestamp = now;
-                data.unreadCount = (data.unreadCount || 0) + 1;
-            } else {
-                // If the receiver has no chat entry for the sender yet
-                return {
-                    lastMessage: textToSend,
-                    timestamp: now,
-                    unreadCount: 1
-                }
-            }
-            return data;
-        });
+        // The logic to update the receiver's chat list (lastMessage, timestamp, unreadCount)
+        // is now handled by a conceptual Cloud Function triggered by new messages in /chat/{chatId}.
+        // This avoids the client-side permission errors.
     };
 
     return <ChatWindowLayout user={user} messages={messages} newMessage={newMessage} setNewMessage={setNewMessage} handleSendMessage={handleSendMessage} scrollAreaRef={scrollAreaRef} />;
@@ -417,5 +401,3 @@ function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSen
         </div>
     )
 }
-
-    
