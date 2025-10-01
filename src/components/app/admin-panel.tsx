@@ -309,23 +309,36 @@ function PlayerManager({ onViewProfile }: Pick<AdminPanelProps, 'onViewProfile'>
 function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick<AdminPanelProps, 'onAdminSendItem' | 'onAdminSendMoney' | 'onAdminSendStars'>) {
     const { toast } = useToast();
     
+    const defaultItemValues = {
+        itemName: '',
+        quantity: 0,
+        targetUid: '',
+    };
+    const defaultCurrencyValues = {
+        amount: 0,
+        targetUid: '',
+    };
+
     // States for Item Sender
     const [isItemLoading, setIsItemLoading] = React.useState(false);
     const [isItemPopoverOpen, setIsItemPopoverOpen] = React.useState(false);
     const itemForm = useForm<z.infer<typeof itemSenderFormSchema>>({
         resolver: zodResolver(itemSenderFormSchema),
+        defaultValues: defaultItemValues,
     });
 
     // States for Money Sender
     const [isMoneyLoading, setIsMoneyLoading] = React.useState(false);
     const moneyForm = useForm<z.infer<typeof currencySenderSchema>>({
         resolver: zodResolver(currencySenderSchema),
+        defaultValues: defaultCurrencyValues,
     });
 
     // States for Stars Sender
     const [isStarsLoading, setIsStarsLoading] = React.useState(false);
     const starsForm = useForm<z.infer<typeof currencySenderSchema>>({
         resolver: zodResolver(currencySenderSchema),
+        defaultValues: defaultCurrencyValues,
     });
 
     const onSendItemSubmit = (values: z.infer<typeof itemSenderFormSchema>) => {
@@ -336,7 +349,7 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
                 title: "Items Sent!",
                 description: `Sent ${values.quantity}x ${values.itemName} to player ${values.targetUid}.`,
             });
-            itemForm.reset({ quantity: 0, targetUid: '' });
+            itemForm.reset(defaultItemValues);
         } catch (error) {
             console.error("Failed to send item:", error);
             toast({
@@ -353,7 +366,7 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
         setIsMoneyLoading(true);
         try {
             onAdminSendMoney(values.amount, values.targetUid);
-            moneyForm.reset();
+            moneyForm.reset(defaultCurrencyValues);
         } catch (error) {
             console.error("Failed to send money:", error);
         } finally {
@@ -365,7 +378,7 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
         setIsStarsLoading(true);
         try {
             onAdminSendStars(values.amount, values.targetUid);
-            starsForm.reset();
+            starsForm.reset(defaultCurrencyValues);
         } catch (error) {
              console.error("Failed to send stars:", error);
         } finally {
