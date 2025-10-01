@@ -21,7 +21,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser, useDatabase } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getDatabase, ref, onValue, set, runTransaction, get, push, update } from 'firebase/database';
+import { getDatabase, ref, onValue, set, runTransaction, get, push, update, remove } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAllPlayers } from '@/firebase/database/use-all-players';
 
@@ -719,40 +719,118 @@ export function Game() {
     });
   }
 
-  const handleAcceptContract = (contract: ContractListing) => {
+  const handleAcceptContract = async (contract: ContractListing) => {
     if (!database || !user || !gameState) return;
 
+    if (contract.sellerUid === user.uid) {
+        toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot accept your own contract.' });
+        return;
+    }
+
+    const totalCost = contract.quantity * contract.pricePerUnit;
+    if (gameState.money < totalCost) {
+        toast({ variant: 'destructive', title: 'Insufficient Funds', description: `You need $${totalCost.toFixed(2)} for this contract.` });
+        return;
+    }
+
     const contractRef = ref(database, `contracts/${contract.id}`);
 
-    const updates: Partial<ContractListing> = {
-        status: 'active',
-        buyerUid: user.uid,
-        buyerName: gameState.username,
-    };
+    try {
+        const transactionResult = await runTransaction(contractRef, (currentContract) => {
+            if (currentContract && currentContract.status === 'open') {
+                return null; // Atomically remove the contract if it's still open
+            }
+            return; // Abort if contract is already taken, or doesn't exist
+        });
 
-    update(contractRef, updates).then(() => {
-        toast({ title: 'Mkataba Umekubaliwa', description: `Umeingia mkataba wa kununua ${contract.commodity} kutoka kwa ${contract.sellerName}.`});
-        addNotification(`Umekubali mkataba wa ${contract.commodity} kutoka kwa ${contract.sellerName}.`, 'purchase');
-    }).catch(error => {
-        console.error("Failed to accept contract:", error);
-        toast({ variant: 'destructive', title: 'Failed to Accept Contract' });
-    });
+        if (!transactionResult.committed) {
+             throw new Error("Contract is no longer available.");
+        }
+
+        // Buyer gets items and loses money
+        updateState(prev => {
+            const newInventory = [...(prev.inventory || [])];
+            const itemIndex = newInventory.findIndex(i => i.item === contract.commodity);
+            if (itemIndex > -1) {
+                newInventory[itemIndex].quantity += contract.quantity;
+            } else {
+                newInventory.push({ item: contract.commodity, quantity: contract.quantity, marketPrice: contract.pricePerUnit });
+            }
+            addTransaction('expense', totalCost, `Contract purchase: ${contract.quantity}x ${contract.commodity}`);
+            return {
+                ...prev,
+                money: prev.money - totalCost,
+                inventory: newInventory
+            };
+        });
+
+        // Seller gets money and notification
+        const sellerUserRef = ref(database, `users/${contract.sellerUid}`);
+        await runTransaction(sellerUserRef, (sellerData) => {
+            if (sellerData) {
+                sellerData.money += totalCost;
+                const newTransaction: Transaction = { id: `${Date.now()}-contract-sale`, type: 'income', amount: totalCost, description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`, timestamp: Date.now() };
+                sellerData.transactions = [newTransaction, ...(sellerData.transactions || [])];
+                const newNotification: Notification = { id: `${Date.now()}-contract-notify`, message: `Your contract for ${contract.quantity}x ${contract.commodity} was accepted by ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
+                sellerData.notifications = [newNotification, ...(sellerData.notifications || [])];
+            }
+            return sellerData;
+        });
+
+        toast({ title: 'Contract Accepted!', description: `You purchased ${contract.quantity}x ${contract.commodity}.` });
+
+    } catch (error: any) {
+        console.error("Contract acceptance failed:", error);
+        toast({ variant: 'destructive', title: 'Contract Failed', description: error.message || 'The contract could not be completed.' });
+    }
   };
   
-  const handleRejectContract = (contract: ContractListing) => {
+  const handleRejectContract = async (contract: ContractListing) => {
     if (!database || !user) return;
+    if (contract.sellerUid === user.uid) return;
+
+    // Just remove the contract, items are already deducted from seller.
+    // The seller needs to get их items back.
     const contractRef = ref(database, `contracts/${contract.id}`);
-    update(contractRef, { status: 'rejected' }).then(() => {
-      toast({ title: 'Mkataba umekataliwa.' });
+    await remove(contractRef);
+
+    const sellerUserRef = ref(database, `users/${contract.sellerUid}`);
+    await runTransaction(sellerUserRef, (sellerData) => {
+        if (sellerData) {
+            const itemIndex = sellerData.inventory.findIndex((i: InventoryItem) => i.item === contract.commodity);
+            if (itemIndex > -1) {
+                sellerData.inventory[itemIndex].quantity += contract.quantity;
+            } else {
+                sellerData.inventory.push({ item: contract.commodity, quantity: contract.quantity, marketPrice: contract.pricePerUnit });
+            }
+            const newNotification: Notification = { id: `${Date.now()}-contract-reject`, message: `Your contract for ${contract.quantity}x ${contract.commodity} was rejected. Items have been returned.`, timestamp: Date.now(), read: false, icon: 'purchase' };
+            sellerData.notifications = [newNotification, ...(sellerData.notifications || [])];
+        }
+        return sellerData;
     });
+
+    toast({ title: 'Mkataba umekataliwa.' });
   };
 
-  const handleCancelContract = (contract: ContractListing) => {
-    if (!database || !user) return;
+  const handleCancelContract = async (contract: ContractListing) => {
+    if (!database || !user || user.uid !== contract.sellerUid) return;
+
     const contractRef = ref(database, `contracts/${contract.id}`);
-    update(contractRef, { status: 'cancelled' }).then(() => {
-      toast({ title: 'Mkataba umeghairiwa.' });
+    await remove(contractRef);
+
+    // Return items to seller
+    updateState(prev => {
+        const newInventory = [...prev.inventory];
+        const itemIndex = newInventory.findIndex(i => i.item === contract.commodity);
+        if (itemIndex > -1) {
+            newInventory[itemIndex].quantity += contract.quantity;
+        } else {
+            newInventory.push({ item: contract.commodity, quantity: contract.quantity, marketPrice: contract.pricePerUnit });
+        }
+        return { ...prev, inventory: newInventory };
     });
+
+    toast({ title: 'Mkataba umeghairiwa.' });
   };
 
 
@@ -1010,7 +1088,7 @@ export function Game() {
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} players={allPlayers || []} />;
+          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} players={allPlayers || []} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={handlePublicRoomRead} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':

@@ -334,31 +334,42 @@ function ItemInventoryView({ inventoryItems, onPostToMarket, onCreateContract }:
 }
 
 function ContractInventoryView({ contractListings, currentUserId, onAcceptContract, onRejectContract, onCancelContract }: Pick<InventoryProps, 'contractListings' | 'currentUserId' | 'onAcceptContract' | 'onRejectContract' | 'onCancelContract'>) {
-    const { received, sent, active, pending, history } = React.useMemo(() => {
-        const received = contractListings.filter(c => c.buyerIdentifier === currentUserId || c.buyerUid === currentUserId);
-        const sent = contractListings.filter(c => c.sellerUid === currentUserId);
-        const active = contractListings.filter(c => c.status === 'active' && (c.sellerUid === currentUserId || c.buyerUid === currentUserId));
-        const pending = contractListings.filter(c => c.status === 'open' && (c.sellerUid === currentUserId || c.buyerIdentifier === currentUserId));
-        const history = contractListings.filter(c => ['completed', 'rejected', 'cancelled', 'expired'].includes(c.status) && (c.sellerUid === currentUserId || c.buyerUid === currentUserId));
-        return { received, sent, active, pending, history };
+    const { pending, history } = React.useMemo(() => {
+        const myContracts = contractListings.filter(c => c.sellerUid === currentUserId || c.buyerIdentifier === currentUserId || c.buyerUid === currentUserId);
+        const pending = myContracts.filter(c => c.status === 'open');
+        const history = myContracts.filter(c => ['completed', 'rejected', 'cancelled', 'expired'].includes(c.status));
+        return { pending, history };
     }, [contractListings, currentUserId]);
 
     const renderContractCard = (contract: ContractListing) => {
         const isSeller = contract.sellerUid === currentUserId;
-        const isBuyer = contract.buyerUid === currentUserId || contract.buyerIdentifier === currentUserId;
-        const isPendingBuyer = contract.status === 'open' && contract.buyerIdentifier === currentUserId;
+        const isBuyer = !isSeller && (contract.buyerIdentifier === currentUserId || contract.buyerUid === currentUserId || !contract.buyerIdentifier);
+        const isPendingForMe = contract.status === 'open' && isBuyer;
 
         let statusText = contract.status.charAt(0).toUpperCase() + contract.status.slice(1);
         let statusColor = "text-gray-400";
-        if (contract.status === 'open') {
-             statusText = 'Inasubiri Kukubaliwa';
-             statusColor = "text-yellow-400";
-        } else if (contract.status === 'active') {
-             statusText = 'Inaendelea';
-             statusColor = "text-green-400";
-        } else if (contract.status === 'rejected' || contract.status === 'cancelled' || contract.status === 'expired') {
-             statusText = contract.status.charAt(0).toUpperCase() + contract.status.slice(1);
-             statusColor = "text-red-400";
+        
+        switch (contract.status) {
+            case 'open':
+                statusText = 'Inasubiri Kukubaliwa';
+                statusColor = "text-yellow-400";
+                break;
+            case 'completed':
+                statusText = 'Imekamilika';
+                statusColor = "text-green-400";
+                break;
+            case 'rejected':
+                statusText = 'Imekataliwa';
+                statusColor = "text-red-400";
+                break;
+            case 'cancelled':
+                statusText = 'Imeghairiwa';
+                statusColor = "text-orange-400";
+                break;
+            case 'expired':
+                statusText = 'Muda Umeisha';
+                statusColor = "text-gray-500";
+                break;
         }
 
         return (
@@ -367,7 +378,7 @@ function ContractInventoryView({ contractListings, currentUserId, onAcceptContra
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
-                                <AvatarImage src={isSeller ? contract.buyerName ? 'https://picsum.photos/seed/buyer/40/40' : undefined : contract.sellerAvatar} alt={isSeller ? contract.buyerName : contract.sellerName} />
+                                <AvatarImage src={isSeller ? contract.buyerName ? `https://picsum.photos/seed/${contract.buyerUid}/40/40` : 'https://picsum.photos/seed/public/40/40' : contract.sellerAvatar} alt={isSeller ? contract.buyerName : contract.sellerName} />
                                 <AvatarFallback>{(isSeller ? contract.buyerName || '?' : contract.sellerName).charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
@@ -391,10 +402,14 @@ function ContractInventoryView({ contractListings, currentUserId, onAcceptContra
                         <div className="font-mono text-right font-bold text-green-300">${(contract.quantity * contract.pricePerUnit).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                         <div className="text-gray-400">Status</div>
                         <div className={cn("font-semibold text-right", statusColor)}>{statusText}</div>
-                        <div className="text-gray-400">Itaisha</div>
-                        <div className="text-right text-xs">{formatDistanceToNow(new Date(contract.expiresAt), { addSuffix: true })}</div>
+                        {contract.status === 'open' && (
+                            <>
+                                <div className="text-gray-400">Itaisha</div>
+                                <div className="text-right text-xs">{formatDistanceToNow(new Date(contract.expiresAt), { addSuffix: true })}</div>
+                            </>
+                        )}
                      </div>
-                     {isPendingBuyer && (
+                     {isPendingForMe && (
                         <div className="flex gap-2 pt-2">
                             <Button size="sm" className="w-full bg-green-600 hover:bg-green-700" onClick={() => onAcceptContract(contract)}>
                                 <Check className="mr-1 h-4 w-4" /> Kubali
@@ -430,11 +445,9 @@ function ContractInventoryView({ contractListings, currentUserId, onAcceptContra
 
     return (
         <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-4">
                 <StatCard icon={Inbox} title="Mikataba Mipya" value={pending.length} />
-                <StatCard icon={Handshake} title="Inayoendelea" value={active.length} />
-                <StatCard icon={History} title="Iliyotumwa" value={sent.length} />
-                <StatCard icon={Check} title="Historia" value={history.length} />
+                <StatCard icon={History} title="Historia" value={history.length} />
             </div>
              <Card className="bg-gray-800/60 border-gray-700 text-white">
                 <CardHeader>
