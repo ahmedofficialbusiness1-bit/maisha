@@ -253,7 +253,6 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
         const chatRoomRef = ref(database, `chat/${chat.chatId}`);
         await push(chatRoomRef, message);
         
-
         // 2. Update sender's own user-chat list
         const senderChatRef = ref(database, `user-chats/${user.uid}/${chat.otherPlayer.uid}`);
         await set(senderChatRef, {
@@ -262,15 +261,14 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
             unreadCount: 0 // Sender has 0 unread
         });
         
-        // 3. Create a placeholder for the receiver's chat list if it doesn't exist.
-        // The unread count logic is removed from the client to prevent permission errors.
+        // 3. Update receiver's user-chat list using a transaction
         const receiverChatRef = ref(database, `user-chats/${chat.otherPlayer.uid}/${user.uid}`);
          runTransaction(receiverChatRef, (currentData) => {
             if (currentData) {
-                // The chat already exists, we can update it.
+                // The chat already exists, update it.
                 currentData.lastMessage = textToSend;
                 currentData.timestamp = timestamp;
-                 currentData.unreadCount = (currentData.unreadCount || 0) + 1;
+                currentData.unreadCount = (currentData.unreadCount || 0) + 1;
             } else {
                 // The chat does not exist, create it.
                 return {
