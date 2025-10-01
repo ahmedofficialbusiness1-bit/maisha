@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Textarea } from '../ui/textarea';
-import { Clipboard, Pencil, Upload, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Clipboard, Pencil, Upload, ArrowLeft } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -74,7 +74,6 @@ interface PlayerProfileProps {
   isViewOnly?: boolean;
   onBack?: () => void;
   viewerRole?: 'player' | 'admin';
-  onStartChat?: (userId: string) => void;
 }
 
 function InfoItem({ label, value, smallText = false }: { label: string; value: React.ReactNode, smallText?: boolean }) {
@@ -96,7 +95,7 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 }
 
 
-export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole, onStartChat }: PlayerProfileProps) {
+export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const { toast } = useToast();
 
@@ -147,13 +146,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     }
   };
   
-  const handleStartChatInternal = () => {
-    if (onStartChat) {
-      onStartChat(currentProfile.uid);
-    }
-  };
-
-
   const isOnline = currentProfile.lastSeen && (Date.now() - new Date(currentProfile.lastSeen).getTime() < 5 * 60 * 1000);
   const lastSeenText = currentProfile.lastSeen 
     ? `was ${formatDistanceToNow(new Date(currentProfile.lastSeen), { addSuffix: true })}`
@@ -168,13 +160,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Rudi Nyuma
             </Button>
-            
-            {onStartChat && (
-                 <Button type="button" onClick={handleStartChatInternal}>
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Chat with {currentProfile.playerName}
-                </Button>
-            )}
         </div>
       )}
       <Form {...form}>
@@ -257,7 +242,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                 {currentProfile.email && (isViewOnly ? viewerRole === 'admin' : true) && (
                     <div>
                         <div className='bg-gray-900/70 p-2 mb-2 rounded-t-md'>
-                            <h3 className='font-semibold text-sm'>Barua Pepe {isViewOnly && viewerRole === 'admin' ? '' : '(Inaonekana na Admin tu)'}</h3>
+                            <h3 className='font-semibold text-sm'>Barua Pepe {isViewOnly && viewerRole !== 'admin' ? '(Inaonekana na Admin tu)' : ''}</h3>
                         </div>
                         <div className='p-4 bg-gray-700/50 rounded-b-md text-sm font-mono'>
                              {isViewOnly && viewerRole !== 'admin' ? '**********' : currentProfile.email}

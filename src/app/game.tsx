@@ -20,11 +20,9 @@ import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser, useDatabase } from '@/firebase';
-import { useLeaderboard } from '@/firebase/firestore/use-leaderboard';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getDatabase, ref, onValue, set, runTransaction, get } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
-import { useAllPlayers } from '@/firebase/database/use-all-players';
 
 export type PlayerStock = {
     ticker: string;
@@ -75,13 +73,10 @@ export function Game() {
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
   const { toast } = useToast();
   
-  const { players: leaderboardData } = useAllPlayers();
-
   // State for viewing other players' profiles
   const [viewedProfileUid, setViewedProfileUid] = React.useState<string | null>(null);
   const [viewedProfileData, setViewedProfileData] = React.useState<UserData | null>(null);
   const [isViewingProfile, setIsViewingProfile] = React.useState(false);
-  const [initialChatUserId, setInitialChatUserId] = React.useState<string | null>(null);
 
   // Refs for Firebase paths
   const userRef = React.useMemo(() => database && user ? ref(database, `users/${user.uid}`) : null, [database, user]);
@@ -104,10 +99,6 @@ export function Game() {
   
   const handleSetView = React.useCallback((newView: View) => {
     setView(newView);
-    // When changing view, clear the profile/chat state unless we are going to chats
-    if (newView !== 'chats') {
-      setInitialChatUserId(null);
-    }
     if (newView !== 'profile') {
         setViewedProfileUid(null);
     }
@@ -306,13 +297,6 @@ export function Game() {
       setViewedProfileUid(null);
   };
   
-  const handleStartChatWithUser = (userId: string) => {
-    setInitialChatUserId(userId);
-    handleSetView('chats');
-    setViewedProfileUid(null);
-  };
-
-
   const handleBuild = (slotIndex: number, building: BuildingType) => {
     if (!gameState) return;
     const costs = buildingData[building.id]?.buildCost;
@@ -726,8 +710,8 @@ export function Game() {
     return () => clearInterval(interval);
   }, [gameState, updateState, addXP, addNotification]);
 
-  const { buildingValue, stockValue } = React.useMemo(() => {
-    if (!gameState) return { buildingValue: 0, stockValue: 0 };
+  const { buildingValue, stockValue, leaderboardData } = React.useMemo(() => {
+    if (!gameState) return { buildingValue: 0, stockValue: 0, leaderboardData: [] };
 
     const currentStockValue = (gameState.playerStocks || []).reduce((total, stock) => {
         const stockInfo = companyData.find(s => s.ticker === stock.ticker);
@@ -745,7 +729,7 @@ export function Game() {
         return total + cost * 0.5; // Buildings depreciate to 50% of build cost
     }, 0);
 
-    return { buildingValue: currentBuildingValue, stockValue: currentStockValue };
+    return { buildingValue: currentBuildingValue, stockValue: currentStockValue, leaderboardData: [] };
   }, [gameState, companyData]);
 
 
@@ -774,8 +758,8 @@ export function Game() {
 
   const playerRank = React.useMemo(() => {
       if (!leaderboardData || !gameState?.uid) return 'N/A';
-      const sortedPlayers = [...leaderboardData].sort((a, b) => b.netWorth - a.netWorth);
-      const rank = sortedPlayers.findIndex(p => p.uid === gameState.uid);
+      const sortedPlayers = [...leaderboardData].sort((a, b) => b.score - a.score);
+      const rank = sortedPlayers.findIndex(p => p.playerId === gameState.uid);
       return rank !== -1 ? `#${rank + 1}` : '100+';
   }, [leaderboardData, gameState?.uid]);
 
@@ -828,8 +812,8 @@ export function Game() {
 
   const getMetricsForProfile = (profileData: UserData | null): PlayerMetrics => {
     if (!profileData || !leaderboardData) return { netWorth: 0, buildingValue: 0, stockValue: 0, ranking: 'N/A', rating: 'D' };
-    const sortedPlayers = [...leaderboardData].sort((a, b) => b.netWorth - a.netWorth);
-    const rank = sortedPlayers.findIndex(p => p.uid === profileData.uid);
+    const sortedPlayers = [...leaderboardData].sort((a, b) => b.score - a.score);
+    const rank = sortedPlayers.findIndex(p => p.playerId === profileData.uid);
     // Note: buildingValue and stockValue would need to be calculated for the other user. 
     // This is a simplification and only shows Net Worth correctly.
     return {
@@ -852,7 +836,6 @@ export function Game() {
                     isViewOnly={true}
                     onBack={handleBackFromProfileView}
                     viewerRole={gameState.role}
-                    onStartChat={handleStartChatWithUser}
                 />;
     }
     switch (view) {
@@ -865,7 +848,7 @@ export function Game() {
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} onViewProfile={handleViewProfile} initialChatUserId={initialChatUserId} />;
+          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':
