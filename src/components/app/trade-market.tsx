@@ -563,8 +563,8 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
                     <CardTitle>Soko la Mikataba</CardTitle>
                     <CardDescription>Tafuta mikataba ya muda mrefu ya ununuzi wa bidhaa kwa bei ya uhakika.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                     <ScrollArea className="h-[70vh]">
+                <CardContent className="flex flex-col h-[calc(100vh-20rem)]">
+                     <ScrollArea className="flex-grow">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
                             {contractListings.map(contract => {
                                 const isOwner = contract.sellerName === playerName;
