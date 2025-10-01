@@ -23,7 +23,7 @@ import { useUser, useDatabase } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getDatabase, ref, onValue, set, runTransaction, get, push, update, remove } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
-import { useAllPlayers } from '@/firebase/database/use-all-players';
+import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 
 export type PlayerStock = {
     ticker: string;
@@ -284,7 +284,7 @@ export function Game() {
             addNotification(`Hongera! Umefikia Level ${newLevel}!`, 'level-up');
             xpForNextLevel = getXpForNextLevel(newLevel);
         }
-        return { ...prev, playerXP: newXP, playerLevel: newLevel };
+        return { playerXP: newXP, playerLevel: newLevel };
     });
   }, [updateState, addNotification]);
 
@@ -313,12 +313,29 @@ export function Game() {
   }
 
   const handleUpdateProfile = (data: ProfileData) => {
+    if (!allPlayers || !gameState) return;
+
+    const newName = data.playerName;
+    const isNameTaken = allPlayers.some(player => 
+        player.username.toLowerCase() === newName.toLowerCase() && player.uid !== gameState.uid
+    );
+
+    if (isNameTaken) {
+        toast({
+            variant: 'destructive',
+            title: 'Jina Tayari Linatumika',
+            description: 'Tafadhali chagua jina lingine.',
+        });
+        return;
+    }
+      
     updateState(prev => ({
         ...prev,
         username: data.playerName,
         avatarUrl: data.avatarUrl,
         privateNotes: data.privateNotes || ''
     }));
+    toast({ title: 'Wasifu Umehifadhiwa', description: 'Mabadiliko yako yamehifadhiwa.' });
     handleSetView('dashboard');
   }
 
@@ -911,7 +928,6 @@ export function Game() {
                 }
 
                 return {
-                    ...prev,
                     buildingSlots: newBuildingSlots,
                     inventory: newInventory.filter(i => i.quantity > 0),
                     money: newMoney,
@@ -958,7 +974,7 @@ export function Game() {
     const netWorth = gameState.money + stockValue + buildingValue + inventoryValue;
 
     if (netWorth !== gameState.netWorth) {
-        updateState(prev => ({ ...prev, netWorth }));
+        updateState(prev => ({ netWorth }));
     }
   }, [gameState, buildingValue, stockValue, updateState]);
 
