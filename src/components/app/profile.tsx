@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Textarea } from '../ui/textarea';
-import { Clipboard, Pencil, Upload, ArrowLeft } from 'lucide-react';
+import { Clipboard, Pencil, Upload, ArrowLeft, MessageSquare } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -74,6 +74,7 @@ interface PlayerProfileProps {
   isViewOnly?: boolean;
   onBack?: () => void;
   viewerRole?: 'player' | 'admin';
+  setView: (view: View) => void;
 }
 
 function InfoItem({ label, value, smallText = false }: { label: string; value: React.ReactNode, smallText?: boolean }) {
@@ -95,7 +96,7 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 }
 
 
-export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole }: PlayerProfileProps) {
+export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole, setView }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const { toast } = useToast();
 
@@ -210,16 +211,21 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-0">
-                    {!isViewOnly && (
-                        <>
-                            <div className='flex items-center gap-4'>
-                                <Button type="button" variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleEditToggle}>
-                                    <Pencil className='h-4 w-4 mr-1' /> {isEditing ? 'Cancel Edit' : 'Edit Account'}
-                                </Button>
-                            </div>
-                            <Separator className="bg-gray-600"/>
-                        </>
-                    )}
+                    <div className='flex items-center gap-4'>
+                        {!isViewOnly && (
+                            <Button type="button" variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleEditToggle}>
+                                <Pencil className='h-4 w-4 mr-1' /> {isEditing ? 'Cancel Edit' : 'Edit Account'}
+                            </Button>
+                        )}
+                        {isViewOnly && (
+                            <Button type="button" size='sm' onClick={() => setView('chats')}>
+                                <MessageSquare className='h-4 w-4 mr-2'/>
+                                Anzisha Soga
+                            </Button>
+                        )}
+                    </div>
+                    <Separator className="bg-gray-600"/>
+                    
                     {isEditing ? (
                         <>
                         <FormField

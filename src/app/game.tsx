@@ -23,6 +23,7 @@ import { useUser, useDatabase } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getDatabase, ref, onValue, set, runTransaction, get } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
+import { useAllPlayers } from '@/firebase/database/use-all-players';
 
 export type PlayerStock = {
     ticker: string;
@@ -287,14 +288,17 @@ export function Game() {
 
   const handleViewProfile = (playerId: string) => {
     if (playerId === user?.uid) {
-        handleSetView('profile');
+        setView('profile');
+        setViewedProfileUid(null);
     } else {
         setViewedProfileUid(playerId);
+        setView('profile'); // Switch to profile view
     }
   };
 
   const handleBackFromProfileView = () => {
       setViewedProfileUid(null);
+      setView('leaderboard'); // Or wherever you want to go back to
   };
   
   const handleBuild = (slotIndex: number, building: BuildingType) => {
@@ -710,8 +714,8 @@ export function Game() {
     return () => clearInterval(interval);
   }, [gameState, updateState, addXP, addNotification]);
 
-  const { buildingValue, stockValue, leaderboardData } = React.useMemo(() => {
-    if (!gameState) return { buildingValue: 0, stockValue: 0, leaderboardData: [] };
+  const { buildingValue, stockValue } = React.useMemo(() => {
+    if (!gameState) return { buildingValue: 0, stockValue: 0 };
 
     const currentStockValue = (gameState.playerStocks || []).reduce((total, stock) => {
         const stockInfo = companyData.find(s => s.ticker === stock.ticker);
@@ -729,7 +733,7 @@ export function Game() {
         return total + cost * 0.5; // Buildings depreciate to 50% of build cost
     }, 0);
 
-    return { buildingValue: currentBuildingValue, stockValue: currentStockValue, leaderboardData: [] };
+    return { buildingValue: currentBuildingValue, stockValue: currentStockValue };
   }, [gameState, companyData]);
 
 
@@ -756,12 +760,14 @@ export function Game() {
       return 'D';
   };
 
+  const { players: allPlayers } = useAllPlayers();
+
   const playerRank = React.useMemo(() => {
-      if (!leaderboardData || !gameState?.uid) return 'N/A';
-      const sortedPlayers = [...leaderboardData].sort((a, b) => b.score - a.score);
-      const rank = sortedPlayers.findIndex(p => p.playerId === gameState.uid);
-      return rank !== -1 ? `#${rank + 1}` : '100+';
-  }, [leaderboardData, gameState?.uid]);
+    if (!allPlayers || !gameState?.uid) return 'N/A';
+    const sortedPlayers = [...allPlayers].sort((a, b) => b.netWorth - a.score);
+    const rank = sortedPlayers.findIndex(p => p.uid === gameState.uid);
+    return rank !== -1 ? `#${rank + 1}` : '100+';
+  }, [allPlayers, gameState?.uid]);
 
 
   if (userLoading || gameStateLoading) {
@@ -811,16 +817,16 @@ export function Game() {
   } : null;
 
   const getMetricsForProfile = (profileData: UserData | null): PlayerMetrics => {
-    if (!profileData || !leaderboardData) return { netWorth: 0, buildingValue: 0, stockValue: 0, ranking: 'N/A', rating: 'D' };
-    const sortedPlayers = [...leaderboardData].sort((a, b) => b.score - a.score);
-    const rank = sortedPlayers.findIndex(p => p.playerId === profileData.uid);
+    if (!profileData || !allPlayers) return { netWorth: 0, buildingValue: 0, stockValue: 0, ranking: 'N/A', rating: 'D' };
+    const sortedPlayers = [...allPlayers].sort((a, b) => b.netWorth - a.netWorth);
+    const rank = sortedPlayers.findIndex(p => p.uid === profileData.uid);
     // Note: buildingValue and stockValue would need to be calculated for the other user. 
     // This is a simplification and only shows Net Worth correctly.
     return {
         netWorth: profileData.netWorth,
         buildingValue: 0, // Simplified for now
         stockValue: 0, // Simplified for now
-        ranking: rank !== -1 && rank !== undefined ? `#${rank + 1}` : '100+',
+        ranking: rank !== -1 ? `#${rank + 1}` : '100+',
         rating: getPlayerRating(profileData.netWorth),
     }
   }
@@ -828,16 +834,6 @@ export function Game() {
   const stockListingsWithShares = companyData.map(s => ({...s, sharesAvailable: Math.floor(s.totalShares * 0.4)}));
 
   const renderView = () => {
-    if (isViewingProfile && viewedProfileForDisplay) {
-        return <PlayerProfile 
-                    currentProfile={viewedProfileForDisplay} 
-                    metrics={getMetricsForProfile(viewedProfileData)}
-                    onSave={() => {}} 
-                    isViewOnly={true}
-                    onBack={handleBackFromProfileView}
-                    viewerRole={gameState.role}
-                />;
-    }
     switch (view) {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
@@ -854,7 +850,18 @@ export function Game() {
       case 'leaderboard':
           return <Leaderboard onViewProfile={handleViewProfile} />;
       case 'profile':
-          return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} />;
+          if (isViewingProfile && viewedProfileForDisplay) {
+            return <PlayerProfile 
+                        currentProfile={viewedProfileForDisplay} 
+                        metrics={getMetricsForProfile(viewedProfileData)}
+                        onSave={() => {}} 
+                        isViewOnly={true}
+                        onBack={handleBackFromProfileView}
+                        viewerRole={gameState.role}
+                        setView={setView}
+                    />;
+        }
+        return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView}/>;
       case 'admin':
           return <AdminPanel onViewProfile={handleViewProfile} />;
       default:
