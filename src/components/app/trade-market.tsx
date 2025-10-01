@@ -52,7 +52,7 @@ export type ContractListing = {
   sellerUid: string;
   sellerName: string;
   sellerAvatar: string;
-  status: 'open' | 'active' | 'completed' | 'cancelled' | 'expired';
+  status: 'open' | 'active' | 'completed' | 'cancelled' | 'expired' | 'rejected';
   createdAt: number;
   expiresAt: number;
   imageHint: string;
@@ -146,15 +146,13 @@ interface TradeMarketProps {
   playerListings: PlayerListing[];
   stockListings: (StockListing & { sharesAvailable: number })[];
   bondListings: BondListing[];
-  contractListings: ContractListing[];
   inventory: InventoryItem[];
   onBuyStock: (stock: StockListing, quantity: number) => void;
   onBuyFromMarket: (listing: PlayerListing, quantity: number) => void;
   playerName: string;
-  onAcceptContract: (contract: ContractListing) => void;
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, contractListings, inventory, onBuyStock, onBuyFromMarket, playerName, onAcceptContract }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -556,82 +554,6 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
         </div>
     );
     
-    const renderContractsMarket = () => (
-        <div className="p-1 sm:p-2 md:p-4 lg:p-6">
-            <Card className="bg-gray-800/60 border-gray-700">
-                <CardHeader>
-                    <CardTitle>Soko la Mikataba</CardTitle>
-                    <CardDescription>Tafuta mikataba ya muda mrefu ya ununuzi wa bidhaa kwa bei ya uhakika.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col h-[calc(100vh-20rem)]">
-                     <ScrollArea className="flex-grow">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
-                            {contractListings.map(contract => {
-                                const isOwner = contract.sellerName === playerName;
-                                let statusText = contract.status.charAt(0).toUpperCase() + contract.status.slice(1);
-                                let statusColor = "text-yellow-400";
-                                if (contract.status === 'active') {
-                                    statusText = `Active (with ${contract.buyerName})`;
-                                    statusColor = "text-green-400";
-                                } else if (contract.status === 'completed') {
-                                    statusColor = "text-blue-400";
-                                } else if (contract.status === 'expired') {
-                                    statusColor = "text-red-400";
-                                }
-
-
-                                return (
-                                <Card key={contract.id} className="bg-gray-900/50">
-                                    <CardHeader>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className="h-10 w-10">
-                                                    <AvatarImage src={contract.sellerAvatar} alt={contract.sellerName} data-ai-hint={contract.imageHint} />
-                                                    <AvatarFallback>{contract.sellerName.charAt(0)}</AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <CardTitle className="text-base">{contract.sellerName}</CardTitle>
-                                                    <CardDescription className={cn("font-semibold", statusColor)}>{statusText}</CardDescription>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <Image src={encyclopediaData.find(e => e.name === contract.commodity)?.imageUrl || ''} alt={contract.commodity} data-ai-hint={contract.imageHint} width={32} height={32} className="rounded-md ml-auto" />
-                                                <p className="text-xs text-gray-400 mt-1">{contract.commodity}</p>
-                                            </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                            <div className="text-gray-400">Bei/Kipande</div>
-                                            <div className="font-mono text-right font-bold">${contract.pricePerUnit.toFixed(2)}</div>
-                                            <div className="text-gray-400">Jumla ya Kiasi</div>
-                                            <div className="font-mono text-right">{contract.quantity.toLocaleString()}</div>
-                                            <div className="text-gray-400">Jumla ya Gharama</div>
-                                            <div className="font-mono text-right font-bold text-green-300">${(contract.quantity * contract.pricePerUnit).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
-                                        </div>
-                                        <Button 
-                                            size="sm" 
-                                            className="w-full bg-blue-600 hover:bg-blue-700" 
-                                            disabled={isOwner || contract.status !== 'open'}
-                                            onClick={() => onAcceptContract(contract)}
-                                        >
-                                            {isOwner ? 'Mkataba Wako' : contract.status === 'open' ? 'Kubali Mkataba' : 'Umekubaliwa'}
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            )})}
-                            {contractListings.filter(c => c.status === 'open').length === 0 && (
-                                <div className="col-span-full flex items-center justify-center h-48 text-gray-400">
-                                    <p>Hakuna mikataba mipya kwa sasa.</p>
-                                </div>
-                            )}
-                        </div>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
-        </div>
-    );
-    
     const renderBondsMarket = () => (
         <div className="p-1 sm:p-2 md:p-4 lg:p-6">
             <Card className="bg-gray-800/60 border-gray-700">
@@ -686,18 +608,14 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
       
         <Tabs defaultValue="commodities" className="w-full pt-4">
             <div className="px-4 sm:px-6">
-                <TabsList className="grid w-full grid-cols-4 bg-gray-800/80">
+                <TabsList className="grid w-full grid-cols-3 bg-gray-800/80">
                     <TabsTrigger value="commodities"><LandPlot className='mr-2 h-4 w-4'/>Bidhaa</TabsTrigger>
-                    <TabsTrigger value="contracts"><FileSignature className='mr-2 h-4 w-4'/>Mikataba</TabsTrigger>
                     <TabsTrigger value="stocks"><Landmark className='mr-2 h-4 w'/>Hisa</TabsTrigger>
                     <TabsTrigger value="bonds"><FileText className='mr-2 h-4 w-4'/>Hatifungani</TabsTrigger>
                 </TabsList>
             </div>
             <TabsContent value="commodities" className="mt-4">
                 {renderCommoditiesMarket()}
-            </TabsContent>
-            <TabsContent value="contracts" className="mt-4">
-                {renderContractsMarket()}
             </TabsContent>
             <TabsContent value="stocks" className="mt-4">
                 {renderStocksMarket()}
@@ -800,5 +718,3 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
     </>
   );
 }
-
-    

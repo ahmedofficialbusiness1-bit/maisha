@@ -689,12 +689,33 @@ export function Game() {
         buyerIdentifier: targetIdentifier,
         imageHint: productInfo?.imageHint || 'product photo'
     };
+    
+    // Deduct items from inventory optimistically
+    updateState(prev => {
+        const newInventory = [...prev.inventory];
+        const itemIndex = newInventory.findIndex(i => i.item === item.item);
+        if (itemIndex > -1) {
+            newInventory[itemIndex].quantity -= quantity;
+        }
+        return { ...prev, inventory: newInventory.filter(i => i.quantity > 0) };
+    });
 
     set(newContractRef, newContract).then(() => {
         toast({ title: 'Contract Created', description: `Your contract for ${item.item} has been posted.` });
     }).catch(error => {
         console.error("Failed to create contract:", error);
         toast({ variant: 'destructive', title: 'Failed to Create Contract' });
+        // Re-add items to inventory on failure
+        updateState(prev => {
+            const newInventory = [...prev.inventory];
+            const itemIndex = newInventory.findIndex(i => i.item === item.item);
+            if (itemIndex > -1) {
+                newInventory[itemIndex].quantity += quantity;
+            } else {
+                newInventory.push({ ...item, quantity });
+            }
+            return { ...prev, inventory: newInventory };
+        });
     });
   }
 
@@ -717,6 +738,23 @@ export function Game() {
         toast({ variant: 'destructive', title: 'Failed to Accept Contract' });
     });
   };
+  
+  const handleRejectContract = (contract: ContractListing) => {
+    if (!database || !user) return;
+    const contractRef = ref(database, `contracts/${contract.id}`);
+    update(contractRef, { status: 'rejected' }).then(() => {
+      toast({ title: 'Mkataba umekataliwa.' });
+    });
+  };
+
+  const handleCancelContract = (contract: ContractListing) => {
+    if (!database || !user) return;
+    const contractRef = ref(database, `contracts/${contract.id}`);
+    update(contractRef, { status: 'cancelled' }).then(() => {
+      toast({ title: 'Mkataba umeghairiwa.' });
+    });
+  };
+
 
   // Game loop for processing finished activities
   React.useEffect(() => {
@@ -862,7 +900,8 @@ export function Game() {
         let count = 0;
         for (const chatId in chatMetadata) {
             const metadata = chatMetadata[chatId];
-            if (metadata.participants && metadata.participants[user.uid]) {
+            const otherPlayerId = Object.keys(metadata.participants || {}).find(pId => pId !== user.uid);
+            if (otherPlayerId && metadata.participants && metadata.participants[user.uid]) {
                 const selfParticipant = metadata.participants[user.uid];
                 if (metadata.lastMessageTimestamp > (selfParticipant.lastReadTimestamp || 0)) {
                     count++;
@@ -965,13 +1004,13 @@ export function Game() {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} />;
+        return <Inventory inventoryItems={gameState.inventory || []} contractListings={contractListings} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} currentUserId={user.uid} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} contractListings={contractListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} onAcceptContract={handleAcceptContract} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={handlePublicRoomRead} players={allPlayers || []} />;
+          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} players={allPlayers || []} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':

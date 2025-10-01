@@ -36,9 +36,14 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, FileSignature, Archive, Handshake, Inbox, Check, X, Hourglass, History } from 'lucide-react';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { ScrollArea } from '../ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import type { ContractListing } from './trade-market';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 export type InventoryItem = {
   item: string;
@@ -48,12 +53,16 @@ export type InventoryItem = {
 
 interface InventoryProps {
   inventoryItems: InventoryItem[];
+  contractListings: ContractListing[];
   onPostToMarket: (item: InventoryItem, quantity: number, price: number) => void;
   onCreateContract: (item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => void;
+  onAcceptContract: (contract: ContractListing) => void;
+  onRejectContract: (contract: ContractListing) => void;
+  onCancelContract: (contract: ContractListing) => void;
+  currentUserId: string;
 }
 
-
-export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: InventoryProps) {
+function ItemInventoryView({ inventoryItems, onPostToMarket, onCreateContract }: Pick<InventoryProps, 'inventoryItems' | 'onPostToMarket' | 'onCreateContract'>) {
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
   const [isContractDialogOpen, setIsContractDialogOpen] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState<InventoryItem | null>(null);
@@ -70,7 +79,6 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
   const [contractPrice, setContractPrice] = React.useState(0);
   const [contractTarget, setContractTarget] = React.useState('');
 
-  
   const handleOpenSellDialog = (item: InventoryItem) => {
     const entry = encyclopediaData.find(e => e.name === item.item);
     const officialMarketPrice = entry ? parseFloat(entry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : item.marketPrice;
@@ -113,18 +121,9 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
     }
   };
 
-
   return (
     <>
-      <div className="flex flex-col gap-4 text-white">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Ghala (Inventory)</h1>
-          <p className="text-muted-foreground">
-            Tazama bidhaa zako zote ulizonunua na kuzalisha.
-          </p>
-        </div>
-        <Separator className="bg-white/20" />
-        <Card className="bg-gray-800/60 border-gray-700 text-white">
+      <Card className="bg-gray-800/60 border-gray-700 text-white">
           <CardHeader>
             <CardTitle>Orodha ya Bidhaa</CardTitle>
             <CardDescription className="text-gray-400">
@@ -198,7 +197,6 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
               )}
           </CardContent>
         </Card>
-      </div>
 
       {/* Market Sell Dialog */}
       <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
@@ -332,5 +330,158 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function ContractInventoryView({ contractListings, currentUserId, onAcceptContract, onRejectContract, onCancelContract }: Pick<InventoryProps, 'contractListings' | 'currentUserId' | 'onAcceptContract' | 'onRejectContract' | 'onCancelContract'>) {
+    const { received, sent, active, pending, history } = React.useMemo(() => {
+        const received = contractListings.filter(c => c.buyerIdentifier === currentUserId || c.buyerUid === currentUserId);
+        const sent = contractListings.filter(c => c.sellerUid === currentUserId);
+        const active = contractListings.filter(c => c.status === 'active' && (c.sellerUid === currentUserId || c.buyerUid === currentUserId));
+        const pending = contractListings.filter(c => c.status === 'open' && (c.sellerUid === currentUserId || c.buyerIdentifier === currentUserId));
+        const history = contractListings.filter(c => ['completed', 'rejected', 'cancelled', 'expired'].includes(c.status) && (c.sellerUid === currentUserId || c.buyerUid === currentUserId));
+        return { received, sent, active, pending, history };
+    }, [contractListings, currentUserId]);
+
+    const renderContractCard = (contract: ContractListing) => {
+        const isSeller = contract.sellerUid === currentUserId;
+        const isBuyer = contract.buyerUid === currentUserId || contract.buyerIdentifier === currentUserId;
+        const isPendingBuyer = contract.status === 'open' && contract.buyerIdentifier === currentUserId;
+
+        let statusText = contract.status.charAt(0).toUpperCase() + contract.status.slice(1);
+        let statusColor = "text-gray-400";
+        if (contract.status === 'open') {
+             statusText = 'Inasubiri Kukubaliwa';
+             statusColor = "text-yellow-400";
+        } else if (contract.status === 'active') {
+             statusText = 'Inaendelea';
+             statusColor = "text-green-400";
+        } else if (contract.status === 'rejected' || contract.status === 'cancelled' || contract.status === 'expired') {
+             statusText = contract.status.charAt(0).toUpperCase() + contract.status.slice(1);
+             statusColor = "text-red-400";
+        }
+
+        return (
+            <Card key={contract.id} className="bg-gray-900/50">
+                <CardHeader>
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10">
+                                <AvatarImage src={isSeller ? contract.buyerName ? 'https://picsum.photos/seed/buyer/40/40' : undefined : contract.sellerAvatar} alt={isSeller ? contract.buyerName : contract.sellerName} />
+                                <AvatarFallback>{(isSeller ? contract.buyerName || '?' : contract.sellerName).charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <CardDescription>{isSeller ? 'Mnunuzi' : 'Muuzaji'}</CardDescription>
+                                <CardTitle className="text-base">{isSeller ? contract.buyerName || contract.buyerIdentifier || 'Mkataba wa Umma' : contract.sellerName}</CardTitle>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                           <Image src={encyclopediaData.find(e => e.name === contract.commodity)?.imageUrl || ''} alt={contract.commodity} data-ai-hint={contract.imageHint} width={32} height={32} className="rounded-md ml-auto" />
+                           <p className="text-xs text-gray-400 mt-1">{contract.commodity}</p>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <div className="text-gray-400">Bei/Kipande</div>
+                        <div className="font-mono text-right font-bold">${contract.pricePerUnit.toFixed(2)}</div>
+                        <div className="text-gray-400">Jumla ya Kiasi</div>
+                        <div className="font-mono text-right">{contract.quantity.toLocaleString()}</div>
+                        <div className="text-gray-400">Jumla ya Gharama</div>
+                        <div className="font-mono text-right font-bold text-green-300">${(contract.quantity * contract.pricePerUnit).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                        <div className="text-gray-400">Status</div>
+                        <div className={cn("font-semibold text-right", statusColor)}>{statusText}</div>
+                        <div className="text-gray-400">Itaisha</div>
+                        <div className="text-right text-xs">{formatDistanceToNow(new Date(contract.expiresAt), { addSuffix: true })}</div>
+                     </div>
+                     {isPendingBuyer && (
+                        <div className="flex gap-2 pt-2">
+                            <Button size="sm" className="w-full bg-green-600 hover:bg-green-700" onClick={() => onAcceptContract(contract)}>
+                                <Check className="mr-1 h-4 w-4" /> Kubali
+                            </Button>
+                            <Button size="sm" variant="destructive" className="w-full" onClick={() => onRejectContract(contract)}>
+                                <X className="mr-1 h-4 w-4" /> Kataa
+                            </Button>
+                        </div>
+                     )}
+                     {isSeller && contract.status === 'open' && (
+                         <Button size="sm" variant="outline" className="w-full" onClick={() => onCancelContract(contract)}>
+                            Ghairi Mkataba
+                        </Button>
+                     )}
+                </CardContent>
+            </Card>
+        );
+    }
+
+    const StatCard = ({ icon, title, value }: { icon: React.ElementType, title: string, value: number }) => (
+        <Card className="bg-gray-900/50">
+            <CardContent className="p-4 flex items-center gap-4">
+                <div className="p-2 bg-gray-700 rounded-md">
+                    {React.createElement(icon, { className: "h-6 w-6 text-blue-300" })}
+                </div>
+                <div>
+                    <p className="text-sm text-gray-400">{title}</p>
+                    <p className="text-2xl font-bold">{value}</p>
+                </div>
+            </CardContent>
+        </Card>
+    )
+
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <StatCard icon={Inbox} title="Mikataba Mipya" value={pending.length} />
+                <StatCard icon={Handshake} title="Inayoendelea" value={active.length} />
+                <StatCard icon={History} title="Iliyotumwa" value={sent.length} />
+                <StatCard icon={Check} title="Historia" value={history.length} />
+            </div>
+             <Card className="bg-gray-800/60 border-gray-700 text-white">
+                <CardHeader>
+                    <CardTitle>Orodha ya Mikataba</CardTitle>
+                    <CardDescription className="text-gray-400">
+                        Simamia mikataba uliyotuma na uliyopokea.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ScrollArea className="h-[calc(100vh-28rem)]">
+                        {contractListings.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
+                                {contractListings.map(renderContractCard)}
+                            </div>
+                        ) : (
+                             <div className="flex items-center justify-center h-48 text-gray-400">
+                                <p>Huna mikataba yoyote kwa sasa.</p>
+                            </div>
+                        )}
+                    </ScrollArea>
+                </CardContent>
+             </Card>
+        </div>
+    );
+}
+
+export function Inventory(props: InventoryProps) {
+  return (
+    <div className="flex flex-col gap-4 text-white">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Ghala (Inventory)</h1>
+        <p className="text-muted-foreground">
+          Tazama bidhaa zako na simamia mikataba yako.
+        </p>
+      </div>
+      <Tabs defaultValue="items" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 bg-gray-900/80 max-w-sm">
+            <TabsTrigger value="items"><Archive className='mr-2 h-4 w-4'/> Bidhaa</TabsTrigger>
+            <TabsTrigger value="contracts"><FileSignature className='mr-2 h-4 w-4'/> Mikataba</TabsTrigger>
+        </TabsList>
+        <TabsContent value="items" className="mt-4">
+          <ItemInventoryView {...props} />
+        </TabsContent>
+        <TabsContent value="contracts" className="mt-4">
+          <ContractInventoryView {...props} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
