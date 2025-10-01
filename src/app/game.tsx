@@ -10,7 +10,7 @@ import { TradeMarket, type PlayerListing, type StockListing, type BondListing } 
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { buildingData } from '@/lib/building-data';
-import { Chats } from '@/components/app/chats';
+import { Chats, type ChatMetadata } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
 import { Leaderboard } from '@/components/app/leaderboard';
@@ -81,11 +81,17 @@ export function Game() {
   
   // State for opening private chat from profile
   const [initialPrivateChatUid, setInitialPrivateChatUid] = React.useState<string | null>(null);
+  
+  // State for public chat metadata
+  const [chatMetadata, setChatMetadata] = React.useState<Record<string, ChatMetadata>>({});
+
 
   // Refs for Firebase paths
   const userRef = React.useMemo(() => database && user ? ref(database, `users/${user.uid}`) : null, [database, user]);
   const playerPublicRef = React.useMemo(() => database && user ? ref(database, `players/${user.uid}`) : null, [database, user]);
   const marketRef = React.useMemo(() => database ? ref(database, 'market') : null, [database]);
+  const chatMetadataRef = React.useMemo(() => database ? ref(database, 'chat-metadata') : null, [database]);
+
   
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
     setGameState(prev => {
@@ -135,6 +141,9 @@ export function Game() {
         if (isAdmin && data.role !== 'admin') {
             data.role = 'admin';
         }
+        if (!data.lastPublicRead) {
+            data.lastPublicRead = { general: 0, trade: 0, help: 0 };
+        }
         setGameState(data);
       } else {
         const initialData = getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email);
@@ -149,6 +158,16 @@ export function Game() {
 
     return () => unsubscribe();
   }, [user, userLoading, router, userRef, database]);
+  
+  // Listen for chat metadata changes
+    React.useEffect(() => {
+        if (!chatMetadataRef) return;
+        const unsubscribe = onValue(chatMetadataRef, (snapshot) => {
+            setChatMetadata(snapshot.val() || {});
+        });
+        return () => unsubscribe();
+    }, [chatMetadataRef]);
+
 
   // Effect to fetch data for a viewed profile
   React.useEffect(() => {
@@ -771,10 +790,24 @@ export function Game() {
 
   const { players: allPlayers } = useAllPlayers();
 
-  const totalUnreadMessages = React.useMemo(() => {
+  const totalUnreadPrivateMessages = React.useMemo(() => {
       if (!gameState || !gameState.userChats) return 0;
       return Object.values(gameState.userChats).reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
   }, [gameState]);
+  
+  const unreadPublicChats = React.useMemo(() => {
+    if (!gameState || !gameState.lastPublicRead || !chatMetadata) return {};
+    const unread: Record<string, boolean> = {};
+    for (const roomId in chatMetadata) {
+        if (chatMetadata[roomId].lastMessageTimestamp > (gameState.lastPublicRead[roomId] || 0)) {
+            unread[roomId] = true;
+        }
+    }
+    return unread;
+  }, [gameState, chatMetadata]);
+
+  const totalUnreadPublicMessages = Object.values(unreadPublicChats).filter(Boolean).length;
+  const totalUnreadMessages = totalUnreadPrivateMessages + totalUnreadPublicMessages;
 
 
   if (userLoading || gameStateLoading) {
@@ -843,6 +876,13 @@ export function Game() {
   
   const stockListingsWithShares = companyData.map(s => ({...s, sharesAvailable: Math.floor(s.totalShares * 0.4)}));
 
+  const handlePublicRoomRead = (roomId: string) => {
+    if (database && user) {
+        const readRef = ref(database, `users/${user.uid}/lastPublicRead/${roomId}`);
+        set(readRef, Date.now());
+    }
+  };
+
   const renderView = () => {
     switch (view) {
       case 'dashboard':
@@ -854,7 +894,7 @@ export function Game() {
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} />;
+          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={handlePublicRoomRead} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':

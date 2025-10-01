@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useDatabase } from '@/firebase';
-import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, runTransaction } from 'firebase/database';
+import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, runTransaction, get } from 'firebase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -36,6 +36,12 @@ type ChatMessage = {
     timestamp: number;
 };
 
+export type ChatMetadata = {
+    lastMessageText: string;
+    lastMessageTimestamp: number;
+};
+
+
 type PublicChatRoom = 'general' | 'trade' | 'help';
 const publicRooms: { id: PublicChatRoom, name: string }[] = [
     { id: 'general', name: 'Soga ya Kawaida' },
@@ -51,8 +57,18 @@ type UserChat = {
     unreadCount: number;
 };
 
+interface ChatsProps {
+    user: AuthenticatedUser;
+    initialPrivateChatUid?: string | null;
+    onChatOpened: () => void;
+    chatMetadata: Record<string, ChatMetadata>;
+    unreadPublicChats: Record<string, boolean>;
+    onPublicRoomRead: (roomId: string) => void;
+}
+
+
 // Main Chat Component
-export function Chats({ user, initialPrivateChatUid, onChatOpened }: { user: AuthenticatedUser, initialPrivateChatUid?: string | null, onChatOpened: () => void }) {
+export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata, unreadPublicChats, onPublicRoomRead }: ChatsProps) {
   const [activeTab, setActiveTab] = React.useState(initialPrivateChatUid ? 'private' : 'public');
   const [selectedPublicRoom, setSelectedPublicRoom] = React.useState<PublicChatRoom>('general');
   const [selectedPrivateChat, setSelectedPrivateChat] = React.useState<UserChat | null>(null);
@@ -104,7 +120,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened }: { user: Aut
           <TabsTrigger value="private"><User className="mr-2 h-4 w-4"/> Meseji za Faragha</TabsTrigger>
         </TabsList>
         <TabsContent value="public" className="flex-grow mt-0">
-           <PublicChatsView user={user} selectedRoom={selectedPublicRoom} onSelectRoom={setSelectedPublicRoom} />
+           <PublicChatsView user={user} selectedRoom={selectedPublicRoom} onSelectRoom={setSelectedPublicRoom} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={onPublicRoomRead} />
         </TabsContent>
         <TabsContent value="private" className="flex-grow mt-0">
           {selectedPrivateChat ? (
@@ -285,12 +301,25 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
 
 // --- PUBLIC CHATS ---
 
-function PublicChatsView({ user, selectedRoom, onSelectRoom }: { user: AuthenticatedUser, selectedRoom: PublicChatRoom, onSelectRoom: (room: PublicChatRoom) => void }) {
+interface PublicChatsViewProps {
+    user: AuthenticatedUser;
+    selectedRoom: PublicChatRoom;
+    onSelectRoom: (room: PublicChatRoom) => void;
+    chatMetadata: Record<string, ChatMetadata>;
+    unreadPublicChats: Record<string, boolean>;
+    onPublicRoomRead: (roomId: string) => void;
+}
+
+
+function PublicChatsView({ user, selectedRoom, onSelectRoom, chatMetadata, unreadPublicChats, onPublicRoomRead }: PublicChatsViewProps) {
     const [mobileView, setMobileView] = React.useState<'list' | 'chat'>('list');
 
     const handleSelectRoom = (room: PublicChatRoom) => {
         onSelectRoom(room);
         setMobileView('chat');
+        if (unreadPublicChats[room]) {
+            onPublicRoomRead(room);
+        }
     };
 
     const handleBackToList = () => {
@@ -305,13 +334,18 @@ function PublicChatsView({ user, selectedRoom, onSelectRoom }: { user: Authentic
                 <ScrollArea className="h-full">
                     <div className="p-2 space-y-1">
                         {publicRooms.map(room => (
-                            <Button 
+                             <Button
                                 key={room.id}
-                                variant={selectedRoom === room.id ? 'secondary' : 'ghost'}
-                                className="w-full justify-start"
+                                variant={selectedRoom === room.id && mobileView === 'chat' ? 'secondary' : 'ghost'}
+                                className="w-full justify-between"
                                 onClick={() => handleSelectRoom(room.id)}
                             >
-                                # {room.name}
+                                <div className="flex items-center gap-2">
+                                    <span># {room.name}</span>
+                                </div>
+                                {unreadPublicChats[room.id] && (
+                                    <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+                                )}
                             </Button>
                         ))}
                     </div>
@@ -362,18 +396,27 @@ function PublicChatWindow({ user, room }: { user: AuthenticatedUser, room: Publi
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !database) return;
+    
+    const textToSend = newMessage;
+    setNewMessage('');
 
     const chatRef = ref(database, `chat/${room}`);
     const message = {
         uid: user.uid,
         username: user.username,
         avatar: user.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-        text: newMessage,
+        text: textToSend,
         timestamp: serverTimestamp(),
     };
     
     push(chatRef, message);
-    setNewMessage('');
+    
+    // Update chat metadata
+    const metadataRef = ref(database, `chat-metadata/${room}`);
+    set(metadataRef, {
+        lastMessageText: textToSend,
+        lastMessageTimestamp: serverTimestamp(),
+    });
   };
   
   return <ChatWindowLayout user={user} messages={messages} newMessage={newMessage} setNewMessage={setNewMessage} handleSendMessage={handleSendMessage} scrollAreaRef={scrollAreaRef} roomName={room} />

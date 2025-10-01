@@ -29,6 +29,7 @@ export type UserData = {
   role: 'player' | 'admin';
   lastSeen: number;
   userChats: Record<string, UserChatData>;
+  lastPublicRead: Record<string, number>;
 };
 
 // This is public-facing player data, stored under /players/{uid}
@@ -72,6 +73,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     role: isAdmin ? 'admin' : 'player',
     lastSeen: Date.now(),
     userChats: {},
+    lastPublicRead: { general: 0, trade: 0, help: 0 },
   };
 }
 
