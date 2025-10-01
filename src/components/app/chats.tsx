@@ -80,6 +80,11 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
     push(chatRef, message);
     setNewMessage('');
   };
+  
+  const handleViewProfile = (playerId: string) => {
+      console.log("Viewing profile for:", playerId);
+      // Logic to show player profile will go here
+  }
 
 
   return (
@@ -89,10 +94,12 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
                 {messages.map(msg => (
                     <div key={msg.id} className={cn("flex items-start gap-3", msg.uid === user.uid && "justify-end")}>
                         {msg.uid !== user.uid && (
-                           <Avatar className="h-8 w-8">
-                                <AvatarImage src={msg.avatar} data-ai-hint="player avatar" />
-                                <AvatarFallback>{msg.username.charAt(0)}</AvatarFallback>
-                            </Avatar>
+                           <Button variant="ghost" className="p-0 h-auto rounded-full" onClick={() => handleViewProfile(msg.uid)}>
+                             <Avatar className="h-8 w-8">
+                                  <AvatarImage src={msg.avatar} data-ai-hint="player avatar" />
+                                  <AvatarFallback>{msg.username.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                           </Button>
                         )}
                          <div className={cn(
                              "max-w-xs md:max-w-md p-3 rounded-lg", 
@@ -103,8 +110,13 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
                                  "text-xs mt-2 opacity-70",
                                   msg.uid === user.uid ? "text-right" : "text-left"
                              )}>
-                                 {msg.uid !== user.uid && <span className='font-semibold'>{msg.username} &middot; </span>}
-                                 {msg.timestamp ? formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true }) : 'sending...'}
+                                 {msg.uid !== user.uid && (
+                                     <Button variant="link" className="p-0 h-auto text-xs font-semibold text-gray-300 hover:text-white" onClick={() => handleViewProfile(msg.uid)}>
+                                         {msg.username}
+                                     </Button>
+                                 )}
+                                 <span className='ml-1'>&middot;</span> 
+                                 <span className='ml-1'>{msg.timestamp ? formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true }) : 'sending...'}</span>
                              </p>
                          </div>
                     </div>
