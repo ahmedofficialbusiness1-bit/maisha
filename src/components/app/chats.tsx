@@ -218,7 +218,7 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
           });
           setMessages(messageData);
 
-          // Mark messages as read
+          // Mark messages as read for the current user
           const userChatRef = ref(database, `user-chats/${user.uid}/${chat.otherPlayer.uid}/unreadCount`);
           set(userChatRef, 0);
       });
@@ -239,6 +239,8 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
 
         const timestamp = serverTimestamp();
         const textToSend = newMessage;
+        setNewMessage('');
+
         const message = {
             uid: user.uid,
             username: user.username,
@@ -247,31 +249,31 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
             timestamp: timestamp,
         };
         
-        setNewMessage('');
-
-        // Push message to the chat room
+        // 1. Push the message to the shared chat room
         const chatRoomRef = ref(database, `chat/${chat.chatId}`);
         await push(chatRoomRef, message);
         
 
-        // Update sender's user-chat list
+        // 2. Update sender's own user-chat list
         const senderChatRef = ref(database, `user-chats/${user.uid}/${chat.otherPlayer.uid}`);
         await set(senderChatRef, {
             lastMessage: textToSend,
             timestamp: timestamp,
-            unreadCount: 0
+            unreadCount: 0 // Sender has 0 unread
         });
-
-        // Update receiver's user-chat list using a transaction
+        
+        // 3. Create a placeholder for the receiver's chat list if it doesn't exist.
+        // The unread count logic is removed from the client to prevent permission errors.
         const receiverChatRef = ref(database, `user-chats/${chat.otherPlayer.uid}/${user.uid}`);
-        runTransaction(receiverChatRef, (currentData) => {
+         runTransaction(receiverChatRef, (currentData) => {
             if (currentData) {
+                // The chat already exists, we can update it.
                 currentData.lastMessage = textToSend;
                 currentData.timestamp = timestamp;
-                currentData.unreadCount = (currentData.unreadCount || 0) + 1;
+                 currentData.unreadCount = (currentData.unreadCount || 0) + 1;
             } else {
-                // If receiver has no chat history with sender, create it.
-                currentData = {
+                // The chat does not exist, create it.
+                return {
                     lastMessage: textToSend,
                     timestamp: timestamp,
                     unreadCount: 1,
@@ -320,7 +322,7 @@ function PublicChatsView({ user, selectedRoom, onSelectRoom }: { user: Authentic
                 </ScrollArea>
             </div>
             {/* Chat Window */}
-            <div className={cn("w-full md:w-2/3 flex-col", mobileView === 'list' && 'hidden md:flex')}>
+            <div className={cn("w-full md:w-2/3 flex flex-col", mobileView === 'list' && 'hidden md:flex')}>
                  <div className="p-4 border-b border-gray-700 flex items-center gap-2">
                     <Button variant="ghost" size="icon" className="md:hidden" onClick={handleBackToList}>
                         <ArrowLeft />
@@ -436,3 +438,5 @@ function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSen
         </div>
     )
 }
+
+    

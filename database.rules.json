@@ -20,8 +20,8 @@
     },
     "chat": {
       "$chatRoomId": {
-        ".read": "auth != null && ($chatRoomId == 'general' || $chatRoomId == 'trade' || $chatRoomId == 'help' || $chatRoomId.contains(auth.uid))",
-        ".write": "auth != null && ($chatRoomId == 'general' || $chatRoomId == 'trade' || $chatRoomId == 'help' || $chatRoomId.contains(auth.uid))"
+        ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.includes(auth.uid))",
+        ".write": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.includes(auth.uid))"
       }
     },
     "user-chats": {
@@ -30,3 +30,5 @@
     }
   }
 }
+
+    
