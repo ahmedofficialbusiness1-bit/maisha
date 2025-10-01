@@ -73,16 +73,17 @@ export type BondListing = {
 
 function PriceTicker({ inventory }: { inventory: InventoryItem[] }) {
   const tickerItems = React.useMemo(() => {
-    if (!inventory || inventory.length === 0) return [];
-    const items = inventory.map((item, index) => ({
-      commodity: item.item,
-      price: item.marketPrice,
+    const allMarketItems = encyclopediaData.filter(item => item.category !== 'Utafiti' && item.category !== 'Documents' && !item.name.endsWith('Mashine'));
+    
+    const items = allMarketItems.map((item, index) => ({
+      commodity: item.name,
+      price: parseFloat(item.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0'),
       // Simulate change for visual effect
       change: (Math.random() - 0.5) * 5,
     }));
     // Duplicate for seamless loop
     return [...items, ...items];
-  }, [inventory]);
+  }, []);
 
   if (tickerItems.length === 0) return null;
 

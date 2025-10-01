@@ -7,6 +7,7 @@ export type UserData = {
   uid: string;
   username: string;
   email: string | null;
+  avatarUrl?: string; // Made optional
   lastLogin: number;
   money: number;
   stars: number;
@@ -46,6 +47,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     username: initialUsername,
     email,
     lastLogin: Date.now(),
+    avatarUrl: `https://picsum.photos/seed/${uid}/100/100`,
     money: isAdmin ? 1000000 : 10000,
     stars: isAdmin ? 1000 : 20,
     netWorth: isAdmin ? 1000000 : 10000,

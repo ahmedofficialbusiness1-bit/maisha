@@ -38,6 +38,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { MoreHorizontal } from 'lucide-react';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
+import { ScrollArea } from '../ui/scroll-area';
 
 export type InventoryItem = {
   item: string;
@@ -102,63 +103,70 @@ export function Inventory({ inventoryItems, onPostToMarket }: InventoryProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow className="border-gray-700 hover:bg-gray-700/50">
-                  <TableHead className="text-white">Bidhaa</TableHead>
-                  <TableHead className="text-right text-white">Idadi</TableHead>
-                  <TableHead className="text-right text-white">Vitendo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {inventoryItems.map(item => {
-                   const productInfo = encyclopediaData.find(e => e.name === item.item);
-                   return (
-                    <TableRow
-                        key={item.item}
-                        className="border-gray-700 hover:bg-gray-700/50"
-                    >
-                        <TableCell className="font-medium">
-                            <div className="flex items-center gap-3">
-                                {productInfo && (
-                                    <Image 
-                                        src={productInfo.imageUrl}
-                                        alt={productInfo.name}
-                                        data-ai-hint={productInfo.imageHint}
-                                        width={40}
-                                        height={40}
-                                        className="rounded-md"
-                                    />
-                                )}
-                                <span>{item.item}</span>
-                            </div>
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                        {item.quantity.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0" disabled={item.quantity <= 0}>
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white">
-                            <DropdownMenuItem onClick={() => handleOpenSellDialog(item)}>
-                                Sell on Market
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                Create Contract
-                            </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        </TableCell>
-                    </TableRow>
-                   )
-                })}
-              </TableBody>
-            </Table>
+            <ScrollArea className="h-[calc(100vh-20rem)]">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-gray-700 hover:bg-gray-700/50 sticky top-0 bg-gray-800/95">
+                    <TableHead className="text-white">Bidhaa</TableHead>
+                    <TableHead className="text-right text-white">Idadi</TableHead>
+                    <TableHead className="text-right text-white">Vitendo</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {inventoryItems.map(item => {
+                    const productInfo = encyclopediaData.find(e => e.name === item.item);
+                    return (
+                      <TableRow
+                          key={item.item}
+                          className="border-gray-700 hover:bg-gray-700/50"
+                      >
+                          <TableCell className="font-medium">
+                              <div className="flex items-center gap-3">
+                                  {productInfo && (
+                                      <Image 
+                                          src={productInfo.imageUrl}
+                                          alt={productInfo.name}
+                                          data-ai-hint={productInfo.imageHint}
+                                          width={40}
+                                          height={40}
+                                          className="rounded-md"
+                                      />
+                                  )}
+                                  <span>{item.item}</span>
+                              </div>
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                          {item.quantity.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                          <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0" disabled={item.quantity <= 0}>
+                                  <span className="sr-only">Open menu</span>
+                                  <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white">
+                              <DropdownMenuItem onClick={() => handleOpenSellDialog(item)}>
+                                  Sell on Market
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                  Create Contract
+                              </DropdownMenuItem>
+                              </DropdownMenuContent>
+                          </DropdownMenu>
+                          </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+              {inventoryItems.length === 0 && (
+                <div className="flex items-center justify-center h-48 text-gray-400">
+                    <p>Ghala lako ni tupu.</p>
+                </div>
+              )}
           </CardContent>
         </Card>
       </div>

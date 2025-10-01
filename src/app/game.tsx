@@ -178,7 +178,7 @@ export function Game() {
             uid: gameState.uid,
             username: gameState.username,
             netWorth: gameState.netWorth,
-            avatar: `https://picsum.photos/seed/${gameState.uid}/40/40`,
+            avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
             level: gameState.playerLevel,
             role: currentRole
         });
@@ -189,7 +189,7 @@ export function Game() {
         playerId: gameState.uid,
         username: gameState.username,
         score: gameState.netWorth,
-        avatar: `https://picsum.photos/seed/${gameState.uid}/100/100`,
+        avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/100/100`,
         level: gameState.playerLevel,
     }, { merge: true });
     
@@ -198,7 +198,7 @@ export function Game() {
         updateState(prev => ({ role: currentRole }));
     }
 
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, playerPublicRef, leaderboardDocRef, user]);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, leaderboardDocRef, user]);
 
 
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
@@ -269,6 +269,7 @@ export function Game() {
   const handleUpdateProfile = (data: ProfileData) => {
     updateState(prev => ({
         username: data.playerName,
+        avatarUrl: data.avatarUrl,
         privateNotes: data.privateNotes || ''
     }));
     setView('dashboard');
@@ -589,7 +590,7 @@ export function Game() {
          price,
          seller: gameState.username,
          sellerUid: user.uid,
-         avatar: `https://picsum.photos/seed/${user.uid}/40/40`,
+         avatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
          quality: 1, // Placeholder
          imageHint: productInfo?.imageHint || 'product photo'
      };
@@ -775,7 +776,7 @@ export function Game() {
   const currentProfile: ProfileData = {
       uid: gameState.uid,
       playerName: gameState.username,
-      avatarUrl: `https://picsum.photos/seed/${gameState.uid}/100/100`,
+      avatarUrl: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/100/100`,
       privateNotes: gameState.privateNotes,
       status: gameState.status,
       lastSeen: new Date(gameState.lastSeen || Date.now()),
@@ -785,7 +786,7 @@ export function Game() {
   const viewedProfileForDisplay: ProfileData | null = viewedProfileData ? {
         uid: viewedProfileData.uid,
         playerName: viewedProfileData.username,
-        avatarUrl: `https://picsum.photos/seed/${viewedProfileData.uid}/100/100`,
+        avatarUrl: viewedProfileData.avatarUrl || `https://picsum.photos/seed/${viewedProfileData.uid}/100/100`,
         privateNotes: viewedProfileData.privateNotes,
         status: viewedProfileData.status,
         lastSeen: new Date(viewedProfileData.lastSeen || Date.now()),
@@ -828,7 +829,7 @@ export function Game() {
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={{ uid: gameState.uid, username: gameState.username }} onViewProfile={handleViewProfile} />;
+          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} onViewProfile={handleViewProfile} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':
@@ -844,7 +845,7 @@ export function Game() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
-      <AppHeader money={gameState.money} stars={gameState.stars} setView={setView} playerName={gameState.username} playerAvatar={`https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={gameState.notifications || []} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin'} />
+      <AppHeader money={gameState.money} stars={gameState.stars} setView={setView} playerName={gameState.username} playerAvatar={gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={gameState.notifications || []} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin'} />
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
       </main>
@@ -859,5 +860,6 @@ export function Game() {
 
 
     
+
 
 

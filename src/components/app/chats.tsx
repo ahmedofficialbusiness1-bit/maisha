@@ -23,6 +23,7 @@ import { formatDistanceToNow } from 'date-fns';
 type AuthenticatedUser = {
     uid: string;
     username: string;
+    avatarUrl?: string;
 };
 
 type ChatMessage = {
@@ -73,7 +74,7 @@ function ChatGroup({ title, user, chatRoomId, onViewProfile }: { title: string; 
     const message = {
         uid: user.uid,
         username: user.username,
-        avatar: `https://picsum.photos/seed/${user.uid}/40/40`,
+        avatar: user.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
         text: newMessage,
         timestamp: serverTimestamp(),
     };
