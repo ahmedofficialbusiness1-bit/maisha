@@ -21,8 +21,10 @@
       }
     },
     "chat": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "$chatRoomId": {
+        ".read": "auth != null && $chatRoomId.contains(auth.uid)",
+        ".write": "auth != null && $chatRoomId.contains(auth.uid)"
+      }
     },
     "user-chats": {
       "$uid": {
@@ -32,6 +34,3 @@
     }
   }
 }
-
-
-
