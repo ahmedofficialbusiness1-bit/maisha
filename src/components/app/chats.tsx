@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useDatabase } from '@/firebase';
-import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, get } from 'firebase/database';
+import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, runTransaction } from 'firebase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -260,20 +260,22 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
             unreadCount: 0 // Sender has 0 unread
         });
         
-        // 3. Update receiver's user-chat list with an incremented unread count
+        // 3. Update receiver's user-chat list with an incremented unread count using a transaction
         const receiverChatRef = ref(database, `user-chats/${chat.otherPlayer.uid}/${user.uid}`);
-        const receiverSnapshot = await get(receiverChatRef);
-        const currentData = receiverSnapshot.val();
-
-        let newUnreadCount = 1;
-        if (currentData && typeof currentData.unreadCount === 'number') {
-            newUnreadCount = currentData.unreadCount + 1;
-        }
-
-        await set(receiverChatRef, {
-            lastMessage: textToSend,
-            timestamp: timestamp,
-            unreadCount: newUnreadCount
+        await runTransaction(receiverChatRef, (currentData) => {
+            if (currentData === null) {
+                // If the receiver's chat entry doesn't exist, create it.
+                return {
+                    lastMessage: textToSend,
+                    timestamp: timestamp,
+                    unreadCount: 1
+                };
+            }
+            // Otherwise, increment the unread count.
+            currentData.unreadCount = (currentData.unreadCount || 0) + 1;
+            currentData.lastMessage = textToSend;
+            currentData.timestamp = timestamp;
+            return currentData;
         });
     };
 
