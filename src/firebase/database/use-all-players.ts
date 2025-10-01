@@ -32,12 +32,13 @@ export function useAllPlayers() {
     const playersRef = query(ref(database, 'players'), orderByChild('username'));
     const usersRef = ref(database, 'users');
 
-    let playersData: Record<string, PlayerPublicData> = {};
+    let playersData: Record<string, Omit<PlayerPublicData, 'uid'>> = {};
     let usersData: Record<string, { lastSeen?: number; email?: string | null }> = {};
     
     const combineData = () => {
         const combined = Object.keys(playersData).map(uid => ({
             ...playersData[uid],
+            uid,
             lastSeen: usersData[uid]?.lastSeen,
             email: usersData[uid]?.email,
         }));
@@ -46,11 +47,6 @@ export function useAllPlayers() {
 
     const playersUnsubscribe = onValue(playersRef, (snapshot) => {
         playersData = snapshot.val() || {};
-        Object.keys(playersData).forEach(uid => {
-            if (playersData[uid]) {
-               playersData[uid].uid = uid;
-            }
-        });
         combineData();
         setLoading(false);
     }, (err) => {
