@@ -230,7 +230,6 @@ function PlayerManager({ onViewProfile }: AdminPanelProps) {
               </Avatar>
               <div>
                   <p className="font-semibold">{player.username}</p>
-                  <p className="text-xs text-gray-400">{player.email}</p>
               </div>
           </div>
           {player.lastSeen && !onlinePlayers.some(p => p.uid === player.uid) && (

@@ -815,21 +815,26 @@ export function Game() {
         status: viewedProfileData.status,
         lastSeen: new Date(viewedProfileData.lastSeen || Date.now()),
         role: viewedProfileData.role,
-        email: viewedProfileData.email,
+        email: null,
   } : null;
 
   const getMetricsForProfile = (profileData: UserData | null): PlayerMetrics => {
     if (!profileData || !allPlayers) return { netWorth: 0, buildingValue: 0, stockValue: 0, ranking: 'N/A', rating: 'D' };
+    
+    const publicData = allPlayers.find(p => p.uid === profileData.uid);
+    const netWorth = publicData?.netWorth || profileData.netWorth;
+
     const sortedPlayers = [...allPlayers].sort((a, b) => b.netWorth - a.netWorth);
     const rank = sortedPlayers.findIndex(p => p.uid === profileData.uid);
+    
     // Note: buildingValue and stockValue would need to be calculated for the other user. 
     // This is a simplification and only shows Net Worth correctly.
     return {
-        netWorth: profileData.netWorth,
+        netWorth: netWorth,
         buildingValue: 0, // Simplified for now
         stockValue: 0, // Simplified for now
         ranking: rank !== -1 ? `#${rank + 1}` : '100+',
-        rating: getPlayerRating(profileData.netWorth),
+        rating: getPlayerRating(netWorth),
     }
   }
   

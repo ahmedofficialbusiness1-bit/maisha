@@ -7,7 +7,6 @@ import { useDatabase } from '..';
 export type PlayerPublicData = {
     uid: string;
     username: string;
-    email?: string | null;
     netWorth: number;
     avatar: string;
     level: number;
@@ -30,24 +29,14 @@ export function useAllPlayers() {
 
     setLoading(true);
     const playersRef = query(ref(database, 'players'), orderByChild('username'));
-    const usersRef = ref(database, 'users');
 
-    let playersData: Record<string, Omit<PlayerPublicData, 'uid'>> = {};
-    let usersData: Record<string, { lastSeen?: number; email?: string | null }> = {};
-    
-    const combineData = () => {
-        const combined = Object.keys(playersData).map(uid => ({
+    const unsubscribe = onValue(playersRef, (snapshot) => {
+        const playersData = snapshot.val() || {};
+        const playersList: PlayerPublicData[] = Object.keys(playersData).map(uid => ({
             ...playersData[uid],
             uid,
-            lastSeen: usersData[uid]?.lastSeen,
-            email: usersData[uid]?.email,
         }));
-        setPlayers(combined);
-    };
-
-    const playersUnsubscribe = onValue(playersRef, (snapshot) => {
-        playersData = snapshot.val() || {};
-        combineData();
+        setPlayers(playersList);
         setLoading(false);
     }, (err) => {
         setError(err);
@@ -55,16 +44,9 @@ export function useAllPlayers() {
         console.error("Error fetching players:", err);
     });
 
-    const usersUnsubscribe = onValue(usersRef, (snapshot) => {
-        usersData = snapshot.val() || {};
-        combineData();
-    }, (err) => {
-        console.warn("Could not fetch all user details for status:", err.message);
-    });
 
     return () => {
-        playersUnsubscribe();
-        usersUnsubscribe();
+        unsubscribe();
     };
   }, [database]);
 
