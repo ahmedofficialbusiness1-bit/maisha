@@ -84,11 +84,6 @@ export function Game() {
   const playerPublicRef = React.useMemo(() => database && user ? ref(database, `players/${user.uid}`) : null, [database, user]);
   const marketRef = React.useMemo(() => database ? ref(database, 'market') : null, [database]);
   
-  // Firestore ref for leaderboard - IMPORTANT: It uses gameState.uid to correctly identify the player document
-  const leaderboardDocRef = React.useMemo(() => 
-    firestore && gameState?.uid ? doc(firestore, 'leaderboard', gameState.uid) : null
-  , [firestore, gameState?.uid]);
-  
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
     setGameState(prev => {
         if(!prev) return null;
