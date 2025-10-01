@@ -105,7 +105,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened }: { user: Aut
           <TabsTrigger value="private"><User className="mr-2 h-4 w-4"/> Meseji za Faragha</TabsTrigger>
         </TabsList>
         <TabsContent value="public" className="flex-grow mt-0">
-          <PublicChatsView user={user} selectedRoom={selectedRoom} onSelectRoom={setSelectedPublicRoom} />
+          <PublicChatsView user={user} selectedRoom={selectedPublicRoom} onSelectRoom={setSelectedPublicRoom} />
         </TabsContent>
         <TabsContent value="private" className="flex-grow mt-0">
           {selectedPrivateChat ? (
@@ -416,4 +416,3 @@ function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSen
         </div>
     )
 }
-
