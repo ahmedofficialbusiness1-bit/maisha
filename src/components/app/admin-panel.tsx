@@ -234,11 +234,14 @@ function PlayerManager() {
                                         {onlinePlayers.map(player => (
                                             <div key={player.uid} className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <Avatar className="h-8 w-8">
+                                                    <Avatar className="h-10 w-10">
                                                         <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                                         <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                                     </Avatar>
-                                                    <span className="font-semibold">{player.username}</span>
+                                                    <div>
+                                                        <p className="font-semibold">{player.username}</p>
+                                                        <p className="text-xs text-gray-400">{player.email}</p>
+                                                    </div>
                                                 </div>
                                                 <Button variant="ghost" size="sm">Manage</Button>
                                             </div>
@@ -259,11 +262,14 @@ function PlayerManager() {
                                         {offlinePlayers.map(player => (
                                             <div key={player.uid} className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <Avatar className="h-8 w-8">
+                                                    <Avatar className="h-10 w-10">
                                                         <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                                         <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                                     </Avatar>
-                                                    <span className="font-semibold">{player.username}</span>
+                                                    <div>
+                                                        <p className="font-semibold">{player.username}</p>
+                                                        <p className="text-xs text-gray-400">{player.email}</p>
+                                                    </div>
                                                 </div>
                                                 <p className="text-xs text-gray-400">
                                                     Last seen {player.lastSeen ? formatDistanceToNow(new Date(player.lastSeen), { addSuffix: true }) : 'never'}
@@ -310,3 +316,5 @@ export function AdminPanel() {
   );
 }
 
+
+    

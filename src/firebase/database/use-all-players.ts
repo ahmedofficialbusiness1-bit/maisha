@@ -7,11 +7,12 @@ import { useDatabase } from '..';
 export type PlayerPublicData = {
     uid: string;
     username: string;
+    email?: string | null;
     netWorth: number;
     avatar: string;
     level: number;
     role: 'player' | 'admin';
-    lastSeen?: number; // Added to track online status
+    lastSeen?: number;
 };
 
 export function useAllPlayers() {
@@ -28,19 +29,17 @@ export function useAllPlayers() {
     }
 
     setLoading(true);
-    // Reference to the public player data
     const playersRef = query(ref(database, 'players'), orderByChild('username'));
-
-    // We will merge data from '/users' for the 'lastSeen' timestamp
     const usersRef = ref(database, 'users');
 
     let playersData: Record<string, PlayerPublicData> = {};
-    let usersData: Record<string, { lastSeen?: number }> = {};
+    let usersData: Record<string, { lastSeen?: number; email?: string | null }> = {};
     
     const combineData = () => {
         const combined = Object.keys(playersData).map(uid => ({
             ...playersData[uid],
             lastSeen: usersData[uid]?.lastSeen,
+            email: usersData[uid]?.email,
         }));
         setPlayers(combined);
     };
@@ -48,7 +47,9 @@ export function useAllPlayers() {
     const playersUnsubscribe = onValue(playersRef, (snapshot) => {
         playersData = snapshot.val() || {};
         Object.keys(playersData).forEach(uid => {
-            playersData[uid].uid = uid; // Ensure UID is part of the object
+            if (playersData[uid]) {
+               playersData[uid].uid = uid;
+            }
         });
         combineData();
         setLoading(false);
@@ -62,8 +63,6 @@ export function useAllPlayers() {
         usersData = snapshot.val() || {};
         combineData();
     }, (err) => {
-        // Errors from this listener can be noisy if rules restrict access,
-        // so we might choose to log them quietly.
         console.warn("Could not fetch all user details for status:", err.message);
     });
 
@@ -76,3 +75,4 @@ export function useAllPlayers() {
   return { players, loading, error };
 }
 
+    
