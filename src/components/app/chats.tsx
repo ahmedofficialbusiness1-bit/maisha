@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useDatabase } from '@/firebase';
-import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, runTransaction, get } from 'firebase/database';
+import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, get } from 'firebase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -39,6 +39,7 @@ type ChatMessage = {
 export type ChatMetadata = {
     lastMessageText: string;
     lastMessageTimestamp: number;
+    participants?: Record<string, boolean>; // For private chats
 };
 
 
@@ -54,7 +55,7 @@ type UserChat = {
     otherPlayer: PlayerPublicData;
     lastMessage: string;
     timestamp: number;
-    unreadCount: number;
+    isUnread: boolean;
 };
 
 interface ChatsProps {
@@ -84,7 +85,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
               otherPlayer,
               lastMessage: '',
               timestamp: 0,
-              unreadCount: 0
+              isUnread: false
           });
           setActiveTab('private');
           onChatOpened();
@@ -126,7 +127,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
           {selectedPrivateChat ? (
              <PrivateChatWindow user={user} chat={selectedPrivateChat} />
           ) : (
-             <PrivateChatListView user={user} onSelectChat={handleSelectPrivateChat} />
+             <PrivateChatListView user={user} onSelectChat={handleSelectPrivateChat} chatMetadata={chatMetadata} />
           )}
         </TabsContent>
       </Tabs>
@@ -137,40 +138,42 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
 
 // --- PRIVATE CHATS ---
 
-function PrivateChatListView({ user, onSelectChat }: { user: AuthenticatedUser, onSelectChat: (chat: UserChat) => void }) {
+function PrivateChatListView({ user, onSelectChat, chatMetadata }: { user: AuthenticatedUser, onSelectChat: (chat: UserChat) => void, chatMetadata: Record<string, ChatMetadata>}) {
     const database = useDatabase();
     const [userChats, setUserChats] = React.useState<UserChat[]>([]);
     const [loading, setLoading] = React.useState(true);
     const { players } = useAllPlayers();
 
     React.useEffect(() => {
-        if (!database || !players) return;
-        const userChatsRef = query(ref(database, `user-chats/${user.uid}`), orderByChild('timestamp'));
+        if (!database || !players || !chatMetadata) return;
 
-        const unsubscribe = onValue(userChatsRef, (snapshot) => {
-            const chats: UserChat[] = [];
-            if (snapshot.exists()) {
-                snapshot.forEach(child => {
-                    const data = child.val();
-                    const otherPlayerId = child.key;
+        const chats: UserChat[] = [];
+        for (const chatId in chatMetadata) {
+            const metadata = chatMetadata[chatId];
+            if (metadata.participants && metadata.participants[user.uid]) {
+                const otherPlayerId = Object.keys(metadata.participants).find(pId => pId !== user.uid);
+                if (otherPlayerId) {
                     const otherPlayer = players.find(p => p.uid === otherPlayerId);
                     if (otherPlayer) {
+                        const lastReadTimestamp = (metadata as any).participants[user.uid]?.lastReadTimestamp || 0;
+                        const isUnread = metadata.lastMessageTimestamp > lastReadTimestamp;
+
                         chats.push({
-                            chatId: [user.uid, otherPlayer.uid].sort().join('-'),
+                            chatId,
                             otherPlayer,
-                            lastMessage: data.lastMessage || '',
-                            timestamp: data.timestamp || 0,
-                            unreadCount: data.unreadCount || 0,
+                            lastMessage: metadata.lastMessageText || '',
+                            timestamp: metadata.lastMessageTimestamp || 0,
+                            isUnread,
                         });
                     }
-                });
+                }
             }
-            setUserChats(chats.reverse());
-            setLoading(false);
-        });
+        }
+        
+        setUserChats(chats.sort((a, b) => b.timestamp - a.timestamp));
+        setLoading(false);
 
-        return () => unsubscribe();
-    }, [database, user.uid, players]);
+    }, [database, user.uid, players, chatMetadata]);
     
     if (loading) return <div className="flex items-center justify-center h-full"><Bot className="h-12 w-12 text-gray-500 animate-pulse" /></div>
 
@@ -199,9 +202,9 @@ function PrivateChatListView({ user, onSelectChat }: { user: AuthenticatedUser, 
                                 { chat.timestamp > 0 && <p className='text-xs text-gray-400'>{formatDistanceToNow(new Date(chat.timestamp), { addSuffix: true })}</p> }
                             </div>
                             <div className='flex justify-between items-center'>
-                                <p className={cn('text-sm text-gray-300 truncate', chat.unreadCount > 0 && 'font-bold text-white')}>{chat.lastMessage}</p>
-                                {chat.unreadCount > 0 && (
-                                    <div className='bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>{chat.unreadCount}</div>
+                                <p className={cn('text-sm text-gray-300 truncate', chat.isUnread && 'font-bold text-white')}>{chat.lastMessage}</p>
+                                {chat.isUnread && (
+                                    <div className='bg-blue-500 rounded-full h-2.5 w-2.5 flex-shrink-0' />
                                 )}
                             </div>
                         </div>
@@ -234,12 +237,12 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
           setMessages(messageData);
 
           // Mark messages as read for the current user
-          const userChatRef = ref(database, `user-chats/${user.uid}/${chat.otherPlayer.uid}/unreadCount`);
-          set(userChatRef, 0);
+          const userLastReadRef = ref(database, `chat-metadata/${chat.chatId}/participants/${user.uid}/lastReadTimestamp`);
+          set(userLastReadRef, serverTimestamp());
       });
 
       return () => unsubscribe();
-    }, [messagesRef, database, user.uid, chat.otherPlayer.uid]);
+    }, [messagesRef, database, user.uid, chat.chatId]);
 
     // Auto-scroll
     React.useEffect(() => {
@@ -268,31 +271,17 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
         const chatRoomRef = ref(database, `chat/${chat.chatId}`);
         await push(chatRoomRef, message);
         
-        // 2. Update sender's own user-chat list
-        const senderChatRef = ref(database, `user-chats/${user.uid}/${chat.otherPlayer.uid}`);
-        await set(senderChatRef, {
-            lastMessage: textToSend,
-            timestamp: timestamp,
-            unreadCount: 0 // Sender has 0 unread
-        });
-        
-        // 3. Update receiver's user-chat list with an incremented unread count using a transaction
-        const receiverChatRef = ref(database, `user-chats/${chat.otherPlayer.uid}/${user.uid}`);
-        await runTransaction(receiverChatRef, (currentData) => {
-            if (currentData === null) {
-                // If the receiver's chat entry doesn't exist, create it.
-                return {
-                    lastMessage: textToSend,
-                    timestamp: timestamp,
-                    unreadCount: 1
-                };
+        // 2. Update the shared metadata for this chat
+        const metadataRef = ref(database, `chat-metadata/${chat.chatId}`);
+        const newMetadata = {
+            lastMessageText: textToSend,
+            lastMessageTimestamp: timestamp,
+            participants: {
+                [user.uid]: true,
+                [chat.otherPlayer.uid]: true
             }
-            // Otherwise, increment the unread count.
-            currentData.unreadCount = (currentData.unreadCount || 0) + 1;
-            currentData.lastMessage = textToSend;
-            currentData.timestamp = timestamp;
-            return currentData;
-        });
+        };
+        await set(metadataRef, newMetadata);
     };
 
     return <ChatWindowLayout user={user} messages={messages} newMessage={newMessage} setNewMessage={setNewMessage} handleSendMessage={handleSendMessage} scrollAreaRef={scrollAreaRef} />;

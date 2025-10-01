@@ -28,7 +28,6 @@ export type UserData = {
   status: 'online' | 'offline';
   role: 'player' | 'admin';
   lastSeen: number;
-  userChats: Record<string, UserChatData>;
   lastPublicRead: Record<string, number>;
 };
 
@@ -72,7 +71,6 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     status: 'online',
     role: isAdmin ? 'admin' : 'player',
     lastSeen: Date.now(),
-    userChats: {},
     lastPublicRead: { general: 0, trade: 0, help: 0 },
   };
 }

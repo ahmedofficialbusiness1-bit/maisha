@@ -790,10 +790,21 @@ export function Game() {
 
   const { players: allPlayers } = useAllPlayers();
 
-  const totalUnreadPrivateMessages = React.useMemo(() => {
-      if (!gameState || !gameState.userChats) return 0;
-      return Object.values(gameState.userChats).reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
-  }, [gameState]);
+    const unreadPrivateMessagesCount = React.useMemo(() => {
+        if (!gameState || !chatMetadata || !user) return 0;
+        let count = 0;
+        for (const chatId in chatMetadata) {
+            const metadata = chatMetadata[chatId];
+            // Check if it's a private chat involving the current user
+            if (metadata.participants && metadata.participants[user.uid]) {
+                const lastReadTimestamp = (metadata as any).participants[user.uid]?.lastReadTimestamp || 0;
+                if (metadata.lastMessageTimestamp > lastReadTimestamp) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }, [gameState, chatMetadata, user]);
   
   const unreadPublicChats = React.useMemo(() => {
     if (!gameState || !gameState.lastPublicRead || !chatMetadata) return {};
@@ -807,7 +818,7 @@ export function Game() {
   }, [gameState, chatMetadata]);
 
   const totalUnreadPublicMessages = Object.values(unreadPublicChats).filter(Boolean).length;
-  const totalUnreadMessages = totalUnreadPrivateMessages + totalUnreadPublicMessages;
+  const totalUnreadMessages = unreadPrivateMessagesCount + totalUnreadPublicMessages;
 
 
   if (userLoading || gameStateLoading) {
