@@ -131,10 +131,9 @@ export function Game() {
       if (snapshot.exists()) {
         const data = snapshot.val();
          // Force admin check on load
-        const isAdmin = data.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || data.email === 'elonjazz89@gmail.com';
-        if (isAdmin && (data.role !== 'admin' || data.email !== user.email)) {
+        const isAdmin = data.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
+        if (isAdmin && data.role !== 'admin') {
             data.role = 'admin';
-            data.email = user.email; // Ensure email is in the private user data
         }
         setGameState(data);
       } else {
@@ -196,7 +195,7 @@ export function Game() {
     if (!gameState || !gameState.uid || !gameState.username || !user) return;
     
     // Check and apply admin role
-    const isAdmin = gameState.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || user.email === 'elonjazz89@gmail.com';
+    const isAdmin = gameState.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
     const currentRole = isAdmin ? 'admin' : 'player';
 
     // Update RTDB for general player info
@@ -212,8 +211,8 @@ export function Game() {
     }
     
     // Update local game state if role or email changed
-    if (gameState.role !== currentRole || gameState.email !== user.email) {
-        updateState(prev => ({ ...prev, role: currentRole, email: user.email }));
+    if (gameState.role !== currentRole) {
+        updateState(prev => ({ ...prev, role: currentRole }));
     }
 
   }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, updateState]);
@@ -772,6 +771,12 @@ export function Game() {
 
   const { players: allPlayers } = useAllPlayers();
 
+  const totalUnreadMessages = React.useMemo(() => {
+      if (!gameState || !gameState.userChats) return 0;
+      return Object.values(gameState.userChats).reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
+  }, [gameState]);
+
+
   if (userLoading || gameStateLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-900 text-white">
@@ -804,7 +809,6 @@ export function Game() {
       status: gameState.status,
       lastSeen: new Date(gameState.lastSeen || Date.now()),
       role: gameState.role,
-      email: gameState.email,
   };
   
   const viewedProfileForDisplay: ProfileData | null = viewedProfileData ? {
@@ -815,7 +819,6 @@ export function Game() {
         status: viewedProfileData.status,
         lastSeen: new Date(viewedProfileData.lastSeen || Date.now()),
         role: viewedProfileData.role,
-        email: null,
   } : null;
 
   const getMetricsForProfile = (profileData: UserData | null): PlayerMetrics => {
@@ -883,7 +886,7 @@ export function Game() {
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
       </main>
-      <AppFooter activeView={view} setView={handleSetView} />
+      <AppFooter activeView={view} setView={handleSetView} unreadMessages={totalUnreadMessages} />
     </div>
   );
 }

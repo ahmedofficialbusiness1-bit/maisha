@@ -17,9 +17,10 @@ import { cn } from '@/lib/utils';
 interface AppFooterProps {
   activeView: View;
   setView: (view: View) => void;
+  unreadMessages: number;
 }
 
-export function AppFooter({ activeView, setView }: AppFooterProps) {
+export function AppFooter({ activeView, setView, unreadMessages }: AppFooterProps) {
   const navItems = [
     {
       view: 'dashboard' as View,
@@ -44,7 +45,16 @@ export function AppFooter({ activeView, setView }: AppFooterProps) {
     {
       view: 'chats' as View,
       label: 'Chats',
-      icon: <MessageSquare className="h-5 w-5" />,
+      icon: (
+        <div className="relative">
+          <MessageSquare className="h-5 w-5" />
+          {unreadMessages > 0 && (
+            <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+              {unreadMessages}
+            </span>
+          )}
+        </div>
+      ),
     }
   ];
 

@@ -52,7 +52,6 @@ export type ProfileDataForForm = z.infer<typeof profileFormSchema>;
 
 export type ProfileData = ProfileDataForForm & {
   uid: string;
-  email: string | null;
   status?: 'online' | 'offline';
   lastSeen?: Date;
   role?: 'player' | 'admin';
@@ -250,18 +249,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         </>
                     ) : null}
                 
-                {currentProfile.email && (isViewOnly ? viewerRole === 'admin' : true) && (
-                    <div>
-                        <div className='bg-gray-900/70 p-2 mb-2 rounded-t-md'>
-                            <h3 className='font-semibold text-sm'>Barua Pepe {isViewOnly && viewerRole !== 'admin' ? '(Inaonekana na Admin tu)' : ''}</h3>
-                        </div>
-                        <div className='p-4 bg-gray-700/50 rounded-b-md text-sm font-mono'>
-                             {isViewOnly && viewerRole !== 'admin' ? '**********' : currentProfile.email}
-                        </div>
-                    </div>
-                )}
-
-
                 <div>
                     <div className='bg-gray-900/70 p-2 mb-2 rounded-t-md'>
                         <h3 className='font-semibold text-sm'>Maelezo ya kibinafsi kuhusu {currentProfile.playerName}</h3>

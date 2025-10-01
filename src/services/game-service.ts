@@ -2,11 +2,16 @@
 import { DatabaseReference, set } from 'firebase/database';
 import type { PlayerStock } from '@/app/game';
 
+export type UserChatData = {
+  lastMessage: string;
+  timestamp: number;
+  unreadCount: number;
+};
+
 // This is the private user data, stored under /users/{uid}
 export type UserData = {
   uid: string;
   username: string;
-  email: string | null;
   avatarUrl?: string; // Made optional
   lastLogin: number;
   money: number;
@@ -23,6 +28,7 @@ export type UserData = {
   status: 'online' | 'offline';
   role: 'player' | 'admin';
   lastSeen: number;
+  userChats: Record<string, UserChatData>;
 };
 
 // This is public-facing player data, stored under /players/{uid}
@@ -40,12 +46,11 @@ export type PlayerPublicData = {
 export const getInitialUserData = (uid: string, displayName: string | null, email: string | null): UserData => {
   // For email sign-up, displayName is null. Create a default username.
   const initialUsername = displayName || (email ? email.split('@')[0] : 'Mchezaji');
-  const isAdmin = uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || email === 'elonjazz89@gmail.com';
+  const isAdmin = uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
   
   return {
     uid,
     username: initialUsername,
-    email,
     lastLogin: Date.now(),
     avatarUrl: `https://picsum.photos/seed/${uid}/100/100`,
     money: isAdmin ? 1000000 : 10000,
@@ -66,6 +71,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     status: 'online',
     role: isAdmin ? 'admin' : 'player',
     lastSeen: Date.now(),
+    userChats: {},
   };
 }
 
