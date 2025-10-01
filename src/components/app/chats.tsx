@@ -436,5 +436,3 @@ function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSen
         </div>
     )
 }
-
-    
