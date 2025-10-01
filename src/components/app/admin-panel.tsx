@@ -3,7 +3,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFormState } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { simulateCommodityPrice, type SimulateCommodityPriceInput } from '@/ai/flows/commodity-price-simulation';
-import { Check, ChevronsUpDown, Gift, Loader2, Users, Wifi, WifiOff } from 'lucide-react';
+import { Check, ChevronsUpDown, CircleDollarSign, Gift, Loader2, Star, Users, Wifi, WifiOff } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -39,10 +39,17 @@ const itemSenderFormSchema = z.object({
     targetUid: z.string().min(1, 'Target UID is required.'),
 });
 
+const currencySenderSchema = z.object({
+    amount: z.coerce.number().min(1, "Amount must be greater than 0."),
+    targetUid: z.string().min(1, "Target UID is required."),
+});
+
 
 interface AdminPanelProps {
     onViewProfile: (playerId: string) => void;
     onAdminSendItem: (itemName: string, quantity: number, targetUid: string) => void;
+    onAdminSendMoney: (amount: number, targetUid: string) => void;
+    onAdminSendStars: (amount: number, targetUid: string) => void;
 }
 
 function CommoditySimulator() {
@@ -299,24 +306,37 @@ function PlayerManager({ onViewProfile }: Pick<AdminPanelProps, 'onViewProfile'>
     )
 }
 
-function GameTools({ onAdminSendItem }: Pick<AdminPanelProps, 'onAdminSendItem'>) {
+function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick<AdminPanelProps, 'onAdminSendItem' | 'onAdminSendMoney' | 'onAdminSendStars'>) {
     const { toast } = useToast();
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [open, setOpen] = React.useState(false)
-
-    const form = useForm<z.infer<typeof itemSenderFormSchema>>({
+    
+    // States for Item Sender
+    const [isItemLoading, setIsItemLoading] = React.useState(false);
+    const [isItemPopoverOpen, setIsItemPopoverOpen] = React.useState(false);
+    const itemForm = useForm<z.infer<typeof itemSenderFormSchema>>({
         resolver: zodResolver(itemSenderFormSchema),
     });
 
-    const onSubmit = (values: z.infer<typeof itemSenderFormSchema>) => {
-        setIsLoading(true);
+    // States for Money Sender
+    const [isMoneyLoading, setIsMoneyLoading] = React.useState(false);
+    const moneyForm = useForm<z.infer<typeof currencySenderSchema>>({
+        resolver: zodResolver(currencySenderSchema),
+    });
+
+    // States for Stars Sender
+    const [isStarsLoading, setIsStarsLoading] = React.useState(false);
+    const starsForm = useForm<z.infer<typeof currencySenderSchema>>({
+        resolver: zodResolver(currencySenderSchema),
+    });
+
+    const onSendItemSubmit = (values: z.infer<typeof itemSenderFormSchema>) => {
+        setIsItemLoading(true);
         try {
             onAdminSendItem(values.itemName, values.quantity, values.targetUid);
             toast({
                 title: "Items Sent!",
                 description: `Sent ${values.quantity}x ${values.itemName} to player ${values.targetUid}.`,
             });
-            form.reset({ quantity: 0, targetUid: '' });
+            itemForm.reset({ quantity: 0, targetUid: '' });
         } catch (error) {
             console.error("Failed to send item:", error);
             toast({
@@ -325,33 +345,57 @@ function GameTools({ onAdminSendItem }: Pick<AdminPanelProps, 'onAdminSendItem'>
                 description: 'An error occurred while sending the item contract.',
             });
         } finally {
-            setIsLoading(false);
+            setIsItemLoading(false);
+        }
+    };
+    
+    const onSendMoneySubmit = (values: z.infer<typeof currencySenderSchema>) => {
+        setIsMoneyLoading(true);
+        try {
+            onAdminSendMoney(values.amount, values.targetUid);
+            moneyForm.reset();
+        } catch (error) {
+            console.error("Failed to send money:", error);
+        } finally {
+            setIsMoneyLoading(false);
+        }
+    };
+
+    const onSendStarsSubmit = (values: z.infer<typeof currencySenderSchema>) => {
+        setIsStarsLoading(true);
+        try {
+            onAdminSendStars(values.amount, values.targetUid);
+            starsForm.reset();
+        } catch (error) {
+             console.error("Failed to send stars:", error);
+        } finally {
+            setIsStarsLoading(false);
         }
     };
     
     const items = encyclopediaData;
 
     return (
-        <div className="mt-6">
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Gift /> Admin Item Sender
                     </CardTitle>
                     <CardDescription>
-                        Send any item in any quantity to a player as a free contract.
+                        Send any item as a free contract.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-lg mx-auto">
+                    <Form {...itemForm}>
+                        <form onSubmit={itemForm.handleSubmit(onSendItemSubmit)} className="space-y-6">
                             <FormField
-                                control={form.control}
+                                control={itemForm.control}
                                 name="itemName"
                                 render={({ field }) => (
                                 <FormItem className="flex flex-col">
                                     <FormLabel>Item</FormLabel>
-                                    <Popover open={open} onOpenChange={setOpen}>
+                                    <Popover open={isItemPopoverOpen} onOpenChange={setIsItemPopoverOpen}>
                                     <PopoverTrigger asChild>
                                         <FormControl>
                                         <Button
@@ -382,8 +426,8 @@ function GameTools({ onAdminSendItem }: Pick<AdminPanelProps, 'onAdminSendItem'>
                                                         value={item.name}
                                                         key={item.id}
                                                         onSelect={() => {
-                                                            form.setValue("itemName", item.name)
-                                                            setOpen(false)
+                                                            itemForm.setValue("itemName", item.name)
+                                                            setIsItemPopoverOpen(false)
                                                         }}
                                                     >
                                                         <Check
@@ -408,7 +452,7 @@ function GameTools({ onAdminSendItem }: Pick<AdminPanelProps, 'onAdminSendItem'>
                             />
 
                              <FormField
-                                control={form.control}
+                                control={itemForm.control}
                                 name="quantity"
                                 render={({ field }) => (
                                 <FormItem>
@@ -422,7 +466,7 @@ function GameTools({ onAdminSendItem }: Pick<AdminPanelProps, 'onAdminSendItem'>
                             />
 
                             <FormField
-                                control={form.control}
+                                control={itemForm.control}
                                 name="targetUid"
                                 render={({ field }) => (
                                 <FormItem>
@@ -435,20 +479,115 @@ function GameTools({ onAdminSendItem }: Pick<AdminPanelProps, 'onAdminSendItem'>
                                 )}
                             />
                             
-                            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
-                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isItemLoading}>
+                                {isItemLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Send Item Contract
                             </Button>
                         </form>
                     </Form>
                 </CardContent>
             </Card>
+
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <CircleDollarSign /> Send Money
+                    </CardTitle>
+                    <CardDescription>
+                        Directly add money to a player's account.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Form {...moneyForm}>
+                        <form onSubmit={moneyForm.handleSubmit(onSendMoneySubmit)} className="space-y-6">
+                            <FormField
+                                control={moneyForm.control}
+                                name="amount"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Amount</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" placeholder="10000" {...field} className="bg-gray-700 border-gray-600" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={moneyForm.control}
+                                name="targetUid"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Target Player UID</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Enter player UID" {...field} className="bg-gray-700 border-gray-600" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isMoneyLoading}>
+                                {isMoneyLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Send Money
+                            </Button>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
+
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Star /> Send Stars
+                    </CardTitle>
+                    <CardDescription>
+                        Directly add Star Boosts to a player's account.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Form {...starsForm}>
+                        <form onSubmit={starsForm.handleSubmit(onSendStarsSubmit)} className="space-y-6">
+                             <FormField
+                                control={starsForm.control}
+                                name="amount"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Amount</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" placeholder="100" {...field} className="bg-gray-700 border-gray-600" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={starsForm.control}
+                                name="targetUid"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Target Player UID</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Enter player UID" {...field} className="bg-gray-700 border-gray-600" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <Button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-700" disabled={isStarsLoading}>
+                                {isStarsLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Send Stars
+                            </Button>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
+
         </div>
     )
 }
 
 
-export function AdminPanel({ onViewProfile, onAdminSendItem }: AdminPanelProps) {
+export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, onAdminSendStars }: AdminPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -470,7 +609,7 @@ export function AdminPanel({ onViewProfile, onAdminSendItem }: AdminPanelProps) 
              <CommoditySimulator />
           </TabsContent>
           <TabsContent value="tools">
-             <GameTools onAdminSendItem={onAdminSendItem} />
+             <GameTools onAdminSendItem={onAdminSendItem} onAdminSendMoney={onAdminSendMoney} onAdminSendStars={onAdminSendStars} />
           </TabsContent>
         </Tabs>
 

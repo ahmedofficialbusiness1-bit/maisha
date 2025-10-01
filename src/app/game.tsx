@@ -763,6 +763,46 @@ export function Game() {
     });
   };
 
+  const handleAdminSendMoney = (amount: number, targetUid: string) => {
+    if (!database || !user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+
+    const targetUserRef = ref(database, `users/${targetUid}`);
+    runTransaction(targetUserRef, (userData) => {
+        if (userData) {
+            userData.money += amount;
+            const newTransaction: Transaction = { id: `${Date.now()}-admin-gift`, type: 'income', amount: amount, description: `Admin Gift: Money`, timestamp: Date.now() };
+            userData.transactions = [newTransaction, ...(userData.transactions || [])];
+            const newNotification: Notification = { id: `${Date.now()}-admin-money`, message: `You received $${amount.toLocaleString()} from an Admin.`, timestamp: Date.now(), read: false, icon: 'purchase' };
+            userData.notifications = [newNotification, ...(userData.notifications || [])];
+        }
+        return userData;
+    }).then(() => {
+        toast({ title: "Money Sent!", description: `Sent $${amount.toLocaleString()} to player ${targetUid}`});
+    }).catch((error) => {
+        console.error("Failed to send money:", error);
+        toast({ variant: 'destructive', title: 'Failed to Send Money' });
+    });
+  }
+
+  const handleAdminSendStars = (amount: number, targetUid: string) => {
+    if (!database || !user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+    
+    const targetUserRef = ref(database, `users/${targetUid}`);
+    runTransaction(targetUserRef, (userData) => {
+        if (userData) {
+            userData.stars += amount;
+            const newNotification: Notification = { id: `${Date.now()}-admin-stars`, message: `You received ${amount.toLocaleString()} Stars from an Admin.`, timestamp: Date.now(), read: false, icon: 'purchase' };
+            userData.notifications = [newNotification, ...(userData.notifications || [])];
+        }
+        return userData;
+    }).then(() => {
+        toast({ title: "Stars Sent!", description: `Sent ${amount.toLocaleString()} Stars to player ${targetUid}`});
+    }).catch((error) => {
+        console.error("Failed to send stars:", error);
+        toast({ variant: 'destructive', title: 'Failed to Send Stars' });
+    });
+  }
+
   const handleAcceptContract = async (contract: ContractListing) => {
     if (!database || !user || !gameState) return;
 
@@ -833,7 +873,7 @@ export function Game() {
   
   const handleRejectContract = async (contract: ContractListing) => {
     if (!database || !user) return;
-    if (contract.sellerUid === user.uid) return;
+    if (contract.buyerIdentifier && contract.buyerIdentifier !== user.uid && contract.buyerIdentifier !== gameState?.username) return;
 
     // Just remove the contract. If seller is not admin, return items.
     const contractRef = ref(database, `contracts/${contract.id}`);
@@ -1162,7 +1202,7 @@ export function Game() {
         }
         return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} />;
       case 'admin':
-          return <AdminPanel onViewProfile={handleViewProfile} onAdminSendItem={handleAdminSendItem} />;
+          return <AdminPanel onViewProfile={handleViewProfile} onAdminSendItem={handleAdminSendItem} onAdminSendMoney={handleAdminSendMoney} onAdminSendStars={handleAdminSendStars} />;
       default:
         return null;
     }
