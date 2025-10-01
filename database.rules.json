@@ -20,13 +20,15 @@
     },
     "chat": {
       "$chatRoomId": {
-        ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.includes(auth.uid))",
-        ".write": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.includes(auth.uid))"
+        ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.beginsWith(auth.uid) || $chatRoomId.endsWith(auth.uid))",
+        ".write": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.beginsWith(auth.uid) || $chatRoomId.endsWith(auth.uid))"
       }
     },
     "user-chats": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
     }
   }
 }
