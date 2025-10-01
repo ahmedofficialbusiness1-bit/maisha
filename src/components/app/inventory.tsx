@@ -272,65 +272,66 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
                 Weka masharti ya mkataba wako. Itakuwa wazi kwa wachezaji wengine kuukubali.
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-grow -mr-6 pr-6">
-          {selectedItem && (
-             <div className="space-y-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="c-price">Bei kwa Kipande (Price/Unit)</Label>
-                  <Input 
-                      id="c-price" 
-                      type="number"
-                      value={contractPrice}
-                      onChange={(e) => setContractPrice(Number(e.target.value))}
-                      step="0.01"
-                      className="bg-gray-800 border-gray-600"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Bei elekezi sokoni ni ${selectedItem.marketPrice.toFixed(2)}. Weka bei ya kuvutia.</p>
-                </div>
-                 <div className="grid gap-2">
-                  <Label htmlFor="c-qty-delivery">Kiasi kwa Usafirishaji (Qty per Delivery)</Label>
-                  <Input 
-                      id="c-qty-delivery" 
-                      type="number"
-                      value={contractQtyPerDelivery}
-                      onChange={(e) => setContractQtyPerDelivery(Math.max(1, Number(e.target.value)))}
-                      min="1"
-                      className="bg-gray-800 border-gray-600"
-                  />
-                </div>
-                 <div className="grid gap-2">
-                  <Label htmlFor="c-qty-total">Jumla ya Kiasi (Total Quantity)</Label>
-                  <Input 
-                      id="c-qty-total" 
-                      type="number"
-                      value={contractTotalQty}
-                      onChange={(e) => setContractTotalQty(Math.max(contractQtyPerDelivery, Number(e.target.value)))}
-                      min={contractQtyPerDelivery}
-                      className="bg-gray-800 border-gray-600"
-                  />
-                </div>
-                 <div className="grid gap-2">
-                  <Label htmlFor="c-interval">Muda kati ya Usafirishaji (kwa Siku)</Label>
-                  <Input 
-                      id="c-interval" 
-                      type="number"
-                      value={contractInterval}
-                      onChange={(e) => setContractInterval(Math.max(1, Number(e.target.value)))}
-                      min="1"
-                      className="bg-gray-800 border-gray-600"
-                  />
-                </div>
-                <Separator className="my-4 bg-gray-700"/>
-                <div className="p-4 bg-gray-800 rounded-lg space-y-2 text-sm">
-                    <div className="flex justify-between"><span>Jumla ya Usafirishaji:</span> <span className="font-bold">{Math.ceil(contractTotalQty / contractQtyPerDelivery)}</span></div>
-                    <div className="flex justify-between"><span>Mapato kwa Usafirishaji:</span> <span className="font-bold text-green-400">${(contractQtyPerDelivery * contractPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
-                    <div className="flex justify-between"><span>Jumla ya Mapato ya Mkataba:</span> <span className="font-bold text-green-400">${(contractTotalQty * contractPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
-                </div>
-
-             </div>
-          )}
-          </ScrollArea>
-          <DialogFooter className="mt-auto pt-4">
+          
+          <div className="flex-grow overflow-y-auto -mr-6 pr-6">
+            {selectedItem && (
+              <div className="space-y-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="c-price">Bei kwa Kipande (Price/Unit)</Label>
+                    <Input 
+                        id="c-price" 
+                        type="number"
+                        value={contractPrice}
+                        onChange={(e) => setContractPrice(Number(e.target.value))}
+                        step="0.01"
+                        className="bg-gray-800 border-gray-600"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Bei elekezi sokoni ni ${selectedItem.marketPrice.toFixed(2)}. Weka bei ya kuvutia.</p>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="c-qty-delivery">Kiasi kwa Usafirishaji (Qty per Delivery)</Label>
+                    <Input 
+                        id="c-qty-delivery" 
+                        type="number"
+                        value={contractQtyPerDelivery}
+                        onChange={(e) => setContractQtyPerDelivery(Math.max(1, Number(e.target.value)))}
+                        min="1"
+                        className="bg-gray-800 border-gray-600"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="c-qty-total">Jumla ya Kiasi (Total Quantity)</Label>
+                    <Input 
+                        id="c-qty-total" 
+                        type="number"
+                        value={contractTotalQty}
+                        onChange={(e) => setContractTotalQty(Math.max(contractQtyPerDelivery, Number(e.target.value)))}
+                        min={contractQtyPerDelivery}
+                        className="bg-gray-800 border-gray-600"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="c-interval">Muda kati ya Usafirishaji (kwa Siku)</Label>
+                    <Input 
+                        id="c-interval" 
+                        type="number"
+                        value={contractInterval}
+                        onChange={(e) => setContractInterval(Math.max(1, Number(e.target.value)))}
+                        min="1"
+                        className="bg-gray-800 border-gray-600"
+                    />
+                  </div>
+                  <Separator className="my-4 bg-gray-700"/>
+                  <div className="p-4 bg-gray-800 rounded-lg space-y-2 text-sm">
+                      <div className="flex justify-between"><span>Jumla ya Usafirishaji:</span> <span className="font-bold">{Math.ceil(contractTotalQty / contractQtyPerDelivery)}</span></div>
+                      <div className="flex justify-between"><span>Mapato kwa Usafirishaji:</span> <span className="font-bold text-green-400">${(contractQtyPerDelivery * contractPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
+                      <div className="flex justify-between"><span>Jumla ya Mapato ya Mkataba:</span> <span className="font-bold text-green-400">${(contractTotalQty * contractPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
+                  </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="mt-auto pt-4 border-t border-gray-800 -mx-6 px-6 pb-6">
             <Button variant="outline" onClick={() => setIsContractDialogOpen(false)}>Ghairi</Button>
             <Button 
               className="bg-blue-600 hover:bg-blue-700 text-white"
