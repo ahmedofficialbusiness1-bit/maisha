@@ -475,6 +475,14 @@ function ContractInventoryView({ contractListings, currentUserId, onAcceptContra
 }
 
 export function Inventory(props: InventoryProps) {
+
+  const newContractsCount = React.useMemo(() => {
+    return props.contractListings.filter(c => {
+        const isBuyer = c.buyerIdentifier === props.currentUserId || !c.buyerIdentifier;
+        return c.status === 'open' && c.sellerUid !== props.currentUserId && isBuyer;
+    }).length;
+  }, [props.contractListings, props.currentUserId]);
+
   return (
     <div className="flex flex-col gap-4 text-white">
       <div>
@@ -486,7 +494,14 @@ export function Inventory(props: InventoryProps) {
       <Tabs defaultValue="items" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-gray-900/80 max-w-sm">
             <TabsTrigger value="items"><Archive className='mr-2 h-4 w-4'/> Bidhaa</TabsTrigger>
-            <TabsTrigger value="contracts"><FileSignature className='mr-2 h-4 w-4'/> Mikataba</TabsTrigger>
+            <TabsTrigger value="contracts" className="relative">
+                <FileSignature className='mr-2 h-4 w-4'/> Mikataba
+                {newContractsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                        {newContractsCount}
+                    </span>
+                )}
+            </TabsTrigger>
         </TabsList>
         <TabsContent value="items" className="mt-4">
           <ItemInventoryView {...props} />
