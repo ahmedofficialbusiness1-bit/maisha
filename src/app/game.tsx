@@ -799,7 +799,7 @@ export function Game() {
             // Check if it's a private chat involving the current user
             if (metadata.participants && metadata.participants[user.uid]) {
                 const selfParticipant = metadata.participants[user.uid];
-                if (metadata.lastMessageTimestamp > selfParticipant.lastReadTimestamp) {
+                if (metadata.lastMessageTimestamp > (selfParticipant.lastReadTimestamp || 0)) {
                     count++;
                 }
             }
@@ -906,7 +906,7 @@ export function Game() {
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={handlePublicRoomRead} />;
+          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={handlePublicRoomRead} players={allPlayers} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':
@@ -942,3 +942,5 @@ export function Game() {
     </div>
   );
 }
+
+    
