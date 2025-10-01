@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Bot, Users, User } from 'lucide-react';
+import { Send, Bot, Users, User, ArrowLeft } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -96,18 +96,18 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened }: { user: Aut
             </CardDescription>
         </div>
         {activeTab === 'private' && selectedPrivateChat && (
-            <Button variant="ghost" onClick={handleBackToList}>Back to Chats</Button>
+            <Button variant="ghost" onClick={handleBackToList}><ArrowLeft className="mr-2 h-4 w-4" />Rudi kwenye Soga</Button>
         )}
       </CardHeader>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-grow flex flex-col">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-900/50 mx-auto px-6">
+        <TabsList className="grid w-full grid-cols-2 bg-gray-900/50 mx-auto px-6 max-w-lg">
           <TabsTrigger value="public"><Users className="mr-2 h-4 w-4"/> Magrupu ya Umma</TabsTrigger>
           <TabsTrigger value="private"><User className="mr-2 h-4 w-4"/> Meseji za Faragha</TabsTrigger>
         </TabsList>
-        <TabsContent value="public" className="flex-grow">
+        <TabsContent value="public" className="flex-grow mt-0">
           <PublicChatsView user={user} selectedRoom={selectedPublicRoom} onSelectRoom={setSelectedPublicRoom} />
         </TabsContent>
-        <TabsContent value="private" className="flex-grow">
+        <TabsContent value="private" className="flex-grow mt-0">
           {selectedPrivateChat ? (
              <PrivateChatWindow user={user} chat={selectedPrivateChat} />
           ) : (
@@ -137,7 +137,8 @@ function PrivateChatListView({ user, onSelectChat }: { user: AuthenticatedUser, 
             if (snapshot.exists()) {
                 snapshot.forEach(child => {
                     const data = child.val();
-                    const otherPlayer = players.find(p => p.uid === child.key);
+                    const otherPlayerId = child.key;
+                    const otherPlayer = players.find(p => p.uid === otherPlayerId);
                     if (otherPlayer) {
                         chats.push({
                             chatId: [user.uid, otherPlayer.uid].sort().join('-'),
@@ -180,7 +181,7 @@ function PrivateChatListView({ user, onSelectChat }: { user: AuthenticatedUser, 
                         <div className='flex-grow overflow-hidden'>
                             <div className='flex justify-between items-center'>
                                 <p className='font-semibold truncate'>{chat.otherPlayer.username}</p>
-                                <p className='text-xs text-gray-400'>{formatDistanceToNow(new Date(chat.timestamp), { addSuffix: true })}</p>
+                                { chat.timestamp > 0 && <p className='text-xs text-gray-400'>{formatDistanceToNow(new Date(chat.timestamp), { addSuffix: true })}</p> }
                             </div>
                             <div className='flex justify-between items-center'>
                                 <p className={cn('text-sm text-gray-300 truncate', chat.unreadCount > 0 && 'font-bold text-white')}>{chat.lastMessage}</p>
@@ -290,7 +291,7 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
 function PublicChatsView({ user, selectedRoom, onSelectRoom }: { user: AuthenticatedUser, selectedRoom: PublicChatRoom, onSelectRoom: (room: PublicChatRoom) => void }) {
     return (
         <div className="flex h-full">
-            <div className="w-1/3 border-r border-gray-700">
+            <div className="w-full md:w-1/3 border-r border-gray-700">
                 <ScrollArea className="h-full">
                     <div className="p-2 space-y-1">
                         {publicRooms.map(room => (
@@ -306,7 +307,7 @@ function PublicChatsView({ user, selectedRoom, onSelectRoom }: { user: Authentic
                     </div>
                 </ScrollArea>
             </div>
-            <div className="w-2/3 flex flex-col">
+            <div className="w-2/3 flex-col hidden md:flex">
                 <PublicChatWindow user={user} room={selectedRoom} />
             </div>
         </div>
