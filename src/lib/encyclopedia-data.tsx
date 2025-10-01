@@ -3,13 +3,13 @@
 import React from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { 
-    Apple, Bean, Beef, Boat, ToyBrick, Building, Carrot, Citrus, Component,
+    Apple, Bean, Beef, ToyBrick, Building, Carrot, Citrus, Component,
     Egg, Factory, Feather, Fish, Gem, GlassWater, Grape, Hammer, Leaf,
     Milestone, Mountain, Package, Palmtree, Recycle, Shell, Ship, Shrub, Sprout,
     Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText, ScrollText, Droplets, Zap,
     Building2, Glasses, FlaskConical, Shirt, Watch, Footprints, CircleDollarSign, Medal, Crown,
     Tv, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, HardDrive, Speaker, CircuitBoard,
-    Monitor, Car, Bike, Plane, Tractor, Rocket, ShieldCheck, Award, Diamond, Coins, Square, CookingPot, Beer, Fuel, ShipWheel, Anchor, WarehouseIcon, ShieldBan, Pickaxe, Drill
+    Monitor, Car, Bike, Plane, Tractor, Rocket, ShieldCheck, Award, Diamond, Coins, Square, CookingPot, Beer, Fuel, ShipWheel, Anchor, WarehouseIcon, ShieldBan, Pickaxe, Drill, Bot
 } from 'lucide-react';
 import { recipes, type Recipe } from './recipe-data';
 import { buildingData } from './building-data';
@@ -142,7 +142,7 @@ const itemIconMap: Record<string, LucideIcon> = {
     'Chungwa': Citrus, 'Korosho': Shell, 'Karafuu': Sun, 'Pamba': Feather,
     'Katani': Sprout,
     'Yai': Egg, 'Kuku': Beef, 'Ngombe': Beef, 'Nyama': Beef,
-    'Sukari': Package, 'Bwawa': ShipWheel, 'Boat': Boat,
+    'Sukari': Package, 'Bwawa': ShipWheel, 'Boat': Ship,
     'Samaki': Fish, 'Chumvi': Package,
     'Wali wa Samaki': CookingPot, 'Maharage na Ndizi': CookingPot, 'Chipsi Nyama': CookingPot,
     'Pilau ya Nyama': CookingPot, 'Ugali Maharage': CookingPot, 'Ugali Samaki': CookingPot,
@@ -192,6 +192,8 @@ allItems.forEach(itemName => {
 
         if (recipe.buildingId.startsWith('utafiti_')) {
             // Special case for research "products". Their cost is arbitrary.
+            // The cost is handled in the recipe definition inputs (or lack thereof)
+            // For encyclopedia purposes, we can assign a representative value.
             if(itemName.includes("Kilimo")) inputCost = 10000;
             else if(itemName.includes("Ujenzi")) inputCost = 15000;
             else if(itemName.includes("Nguo")) inputCost = 20000;
