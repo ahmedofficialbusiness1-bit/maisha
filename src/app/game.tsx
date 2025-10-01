@@ -22,7 +22,7 @@ import { getInitialUserData, saveUserData, type UserData } from '@/services/game
 import { useUser, useDatabase } from '@/firebase';
 import { useLeaderboard } from '@/firebase/firestore/use-leaderboard';
 import { useRouter } from 'next/navigation';
-import { getDatabase, ref, onValue, set, runTransaction } from 'firebase/database';
+import { getDatabase, ref, onValue, set, runTransaction, get } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
 
 export type PlayerStock = {
@@ -75,6 +75,11 @@ export function Game() {
   
   const { data: leaderboardData } = useLeaderboard();
 
+  // State for viewing other players' profiles
+  const [viewedProfileUid, setViewedProfileUid] = React.useState<string | null>(null);
+  const [viewedProfileData, setViewedProfileData] = React.useState<UserData | null>(null);
+  const [isViewingProfile, setIsViewingProfile] = React.useState(false);
+
   // Refs for Firebase paths
   const userRef = React.useMemo(() => database && user ? ref(database, `users/${user.uid}`) : null, [database, user]);
   const playerPublicRef = React.useMemo(() => database && user ? ref(database, `players/${user.uid}`) : null, [database, user]);
@@ -118,6 +123,26 @@ export function Game() {
 
     return () => unsubscribe();
   }, [user, userLoading, router, userRef, database]);
+
+  // Effect to fetch data for a viewed profile
+  React.useEffect(() => {
+    if (viewedProfileUid && database) {
+        const profileUserRef = ref(database, `users/${viewedProfileUid}`);
+        get(profileUserRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                setViewedProfileData(snapshot.val() as UserData);
+                setIsViewingProfile(true); // Explicitly set the viewing state
+            } else {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not find player profile.' });
+                setViewedProfileUid(null);
+            }
+        });
+    } else {
+        setViewedProfileData(null);
+        setIsViewingProfile(false);
+    }
+  }, [viewedProfileUid, database, toast]);
+
   
   // Listen for market changes
   React.useEffect(() => {
@@ -248,6 +273,19 @@ export function Game() {
     }));
     setView('dashboard');
   }
+
+  const handleViewProfile = (playerId: string) => {
+    if (playerId === user?.uid) {
+        setView('profile');
+    } else {
+        setViewedProfileUid(playerId);
+    }
+  };
+
+  const handleBackFromProfileView = () => {
+      setViewedProfileUid(null);
+  };
+
 
   const handleBuild = (slotIndex: number, building: BuildingType) => {
     if (!gameState) return;
@@ -734,14 +772,6 @@ export function Game() {
 
   if (!gameState || !user) return null; // Should be redirected by useEffect
   
-  const profileMetrics: PlayerMetrics = {
-    netWorth: gameState.netWorth,
-    buildingValue: buildingValue,
-    stockValue: stockValue,
-    ranking: playerRank,
-    rating: getPlayerRating(gameState.netWorth),
-  };
-  
   const currentProfile: ProfileData = {
       uid: gameState.uid,
       playerName: gameState.username,
@@ -752,9 +782,42 @@ export function Game() {
       role: gameState.role,
   };
   
+  const viewedProfileForDisplay: ProfileData | null = viewedProfileData ? {
+        uid: viewedProfileData.uid,
+        playerName: viewedProfileData.username,
+        avatarUrl: `https://picsum.photos/seed/${viewedProfileData.uid}/100/100`,
+        privateNotes: viewedProfileData.privateNotes,
+        status: viewedProfileData.status,
+        lastSeen: new Date(viewedProfileData.lastSeen || Date.now()),
+        role: viewedProfileData.role,
+  } : null;
+
+  const getMetricsForProfile = (profileData: UserData | null): PlayerMetrics => {
+    if (!profileData) return { netWorth: 0, buildingValue: 0, stockValue: 0, ranking: 'N/A', rating: 'D' };
+    const rank = leaderboardData?.findIndex(p => p.playerId === profileData.uid);
+    // Note: buildingValue and stockValue would need to be calculated for the other user. 
+    // This is a simplification and only shows Net Worth correctly.
+    return {
+        netWorth: profileData.netWorth,
+        buildingValue: 0, // Simplified for now
+        stockValue: 0, // Simplified for now
+        ranking: rank !== -1 && rank !== undefined ? `#${rank + 1}` : '100+',
+        rating: getPlayerRating(profileData.netWorth),
+    }
+  }
+  
   const stockListingsWithShares = companyData.map(s => ({...s, sharesAvailable: Math.floor(s.totalShares * 0.4)}));
 
   const renderView = () => {
+    if (isViewingProfile && viewedProfileForDisplay) {
+        return <PlayerProfile 
+                    currentProfile={viewedProfileForDisplay} 
+                    metrics={getMetricsForProfile(viewedProfileData)}
+                    onSave={() => {}} 
+                    isViewOnly={true}
+                    onBack={handleBackFromProfileView}
+                />;
+    }
     switch (view) {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
@@ -765,13 +828,13 @@ export function Game() {
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={{ uid: gameState.uid, username: gameState.username }} />;
+          return <Chats user={{ uid: gameState.uid, username: gameState.username }} onViewProfile={handleViewProfile} />;
       case 'accounting':
           return <Accounting transactions={gameState.transactions || []} />;
       case 'leaderboard':
-          return <Leaderboard />;
+          return <Leaderboard onViewProfile={handleViewProfile} />;
       case 'profile':
-          return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={profileMetrics} />;
+          return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} />;
       case 'admin':
           return <AdminPanel />;
       default:
@@ -796,4 +859,5 @@ export function Game() {
 
 
     
+
 

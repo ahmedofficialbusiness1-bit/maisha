@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -34,7 +35,7 @@ type ChatMessage = {
 };
 
 
-function ChatGroup({ title, user, chatRoomId }: { title: string; user: AuthenticatedUser, chatRoomId: string }) {
+function ChatGroup({ title, user, chatRoomId, onViewProfile }: { title: string; user: AuthenticatedUser, chatRoomId: string, onViewProfile: (playerId: string) => void; }) {
   const database = useDatabase();
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = React.useState('');
@@ -80,12 +81,6 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
     push(chatRef, message);
     setNewMessage('');
   };
-  
-  const handleViewProfile = (playerId: string) => {
-      console.log("Viewing profile for:", playerId);
-      // Logic to show player profile will go here
-  }
-
 
   return (
     <div className="flex flex-col h-[70vh]">
@@ -94,7 +89,7 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
                 {messages.map(msg => (
                     <div key={msg.id} className={cn("flex items-start gap-3", msg.uid === user.uid && "justify-end")}>
                         {msg.uid !== user.uid && (
-                           <Button variant="ghost" className="p-0 h-auto rounded-full" onClick={() => handleViewProfile(msg.uid)}>
+                           <Button variant="ghost" className="p-0 h-auto rounded-full" onClick={() => onViewProfile(msg.uid)}>
                              <Avatar className="h-8 w-8">
                                   <AvatarImage src={msg.avatar} data-ai-hint="player avatar" />
                                   <AvatarFallback>{msg.username.charAt(0)}</AvatarFallback>
@@ -111,7 +106,7 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
                                   msg.uid === user.uid ? "text-right" : "text-left"
                              )}>
                                  {msg.uid !== user.uid && (
-                                     <Button variant="link" className="p-0 h-auto text-xs font-semibold text-gray-300 hover:text-white" onClick={() => handleViewProfile(msg.uid)}>
+                                     <Button variant="link" className="p-0 h-auto text-xs font-semibold text-gray-300 hover:text-white" onClick={() => onViewProfile(msg.uid)}>
                                          {msg.username}
                                      </Button>
                                  )}
@@ -147,7 +142,7 @@ function ChatGroup({ title, user, chatRoomId }: { title: string; user: Authentic
 }
 
 
-export function Chats({ user }: { user: AuthenticatedUser }) {
+export function Chats({ user, onViewProfile }: { user: AuthenticatedUser, onViewProfile: (playerId: string) => void; }) {
   return (
     <Card className="bg-gray-800/60 border-gray-700 text-white">
       <CardHeader>
@@ -164,13 +159,13 @@ export function Chats({ user }: { user: AuthenticatedUser }) {
             <TabsTrigger value="msaada">Msaada</TabsTrigger>
           </TabsList>
           <TabsContent value="general">
-            <ChatGroup title="General" user={user} chatRoomId="general" />
+            <ChatGroup title="General" user={user} chatRoomId="general" onViewProfile={onViewProfile} />
           </TabsContent>
           <TabsContent value="biashara">
-             <ChatGroup title="Biashara" user={user} chatRoomId="trade" />
+             <ChatGroup title="Biashara" user={user} chatRoomId="trade" onViewProfile={onViewProfile} />
           </TabsContent>
           <TabsContent value="msaada">
-             <ChatGroup title="Msaada" user={user} chatRoomId="help" />
+             <ChatGroup title="Msaada" user={user} chatRoomId="help" onViewProfile={onViewProfile} />
           </TabsContent>
         </Tabs>
       </CardContent>

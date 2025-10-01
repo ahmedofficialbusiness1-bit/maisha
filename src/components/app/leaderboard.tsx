@@ -9,14 +9,8 @@ import { Loader2, Trophy } from 'lucide-react';
 import { useLeaderboard, type LeaderboardEntry } from '@/firebase/firestore/use-leaderboard';
 import { Button } from '../ui/button';
 
-export function Leaderboard() {
+export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: string) => void }) {
   const { data: sortedPlayers, loading } = useLeaderboard();
-
-  // TODO: Add function to handle viewing a player's profile
-  const handleViewProfile = (playerId: string) => {
-    console.log("Viewing profile for:", playerId);
-    // This is where navigation to a player's profile page would happen.
-  };
 
   if (loading) {
     return (
@@ -56,8 +50,7 @@ export function Leaderboard() {
                     {sortedPlayers.map((player, index) => (
                         <TableRow 
                           key={player.playerId} 
-                          className="border-gray-700 hover:bg-gray-700/50 cursor-pointer"
-                          onClick={() => handleViewProfile(player.playerId)}
+                          className="border-gray-700 hover:bg-gray-700/50"
                         >
                             <TableCell className="font-bold text-lg flex items-center gap-2 p-2 sm:p-4">
                                 {index + 1}
@@ -66,12 +59,12 @@ export function Leaderboard() {
                                 {index === 2 && <Trophy className="h-5 w-5 text-orange-400" />}
                             </TableCell>
                             <TableCell className="p-2 sm:p-4">
-                                <Button variant="ghost" className="flex items-center gap-3 p-0 h-auto hover:bg-transparent">
+                                <Button variant="ghost" className="flex items-center gap-3 p-0 h-auto hover:bg-transparent" onClick={() => onViewProfile(player.playerId)}>
                                     <Avatar>
                                         <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                         <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                     </Avatar>
-                                    <span className="font-semibold">{player.username}</span>
+                                    <span className="font-semibold text-white">{player.username}</span>
                                 </Button>
                             </TableCell>
                             <TableCell className="text-right font-mono text-lg text-green-400 p-2 sm:p-4">

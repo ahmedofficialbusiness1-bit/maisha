@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Textarea } from '../ui/textarea';
-import { Clipboard, Pencil, Upload } from 'lucide-react';
+import { Clipboard, Pencil, Upload, ArrowLeft } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -69,6 +69,8 @@ interface PlayerProfileProps {
   onSave: (data: ProfileDataForForm) => void;
   currentProfile: ProfileData;
   metrics: PlayerMetrics;
+  isViewOnly?: boolean;
+  onBack?: () => void;
 }
 
 function InfoItem({ label, value, smallText = false }: { label: string; value: React.ReactNode, smallText?: boolean }) {
@@ -90,7 +92,7 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 }
 
 
-export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfileProps) {
+export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const { toast } = useToast();
 
@@ -126,6 +128,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
   }
 
   const handleEditToggle = () => {
+    if (isViewOnly) return;
     setIsEditing(!isEditing);
   }
   
@@ -147,6 +150,12 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
 
   return (
     <div className="flex flex-col gap-4 text-white">
+      {isViewOnly && onBack && (
+        <Button variant="outline" onClick={onBack} className="mr-auto">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Rudi Nyuma
+        </Button>
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 flex flex-col gap-4">
@@ -179,12 +188,16 @@ export function PlayerProfile({ onSave, currentProfile, metrics }: PlayerProfile
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-0">
-                    <div className='flex items-center gap-4'>
-                        <Button type="button" variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleEditToggle}>
-                            <Pencil className='h-4 w-4 mr-1' /> {isEditing ? 'Cancel Edit' : 'Edit Account'}
-                        </Button>
-                    </div>
-                    <Separator className="bg-gray-600"/>
+                    {!isViewOnly && (
+                        <>
+                            <div className='flex items-center gap-4'>
+                                <Button type="button" variant='ghost' size='sm' className='p-0 h-auto text-blue-400' onClick={handleEditToggle}>
+                                    <Pencil className='h-4 w-4 mr-1' /> {isEditing ? 'Cancel Edit' : 'Edit Account'}
+                                </Button>
+                            </div>
+                            <Separator className="bg-gray-600"/>
+                        </>
+                    )}
                     {isEditing ? (
                         <>
                         <FormField
