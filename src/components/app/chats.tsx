@@ -139,7 +139,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
           {selectedPrivateChat ? (
              <PrivateChatWindow user={user} chat={selectedPrivateChat} />
           ) : (
-             <PrivateChatListView user={user} onSelectChat={handleSelectPrivateChat} chatMetadata={chatMetadata} />
+             <PrivateChatListView user={user} onSelectChat={handleSelectPrivateChat} />
           )}
         </TabsContent>
       </Tabs>
@@ -150,43 +150,53 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
 
 // --- PRIVATE CHATS ---
 
-function PrivateChatListView({ user, onSelectChat, chatMetadata }: { user: AuthenticatedUser, onSelectChat: (chat: UserChat) => void, chatMetadata: Record<string, ChatMetadata>}) {
+function PrivateChatListView({ user, onSelectChat }: { user: AuthenticatedUser, onSelectChat: (chat: UserChat) => void}) {
     const database = useDatabase();
     const [userChats, setUserChats] = React.useState<UserChat[]>([]);
     const [loading, setLoading] = React.useState(true);
+    const metadataRef = React.useMemo(() => database ? ref(database, 'chat-metadata') : null, [database]);
 
     React.useEffect(() => {
-        const allMetadata: Record<string, ChatMetadata> = chatMetadata || {};
-        const chats: UserChat[] = [];
+        if (!metadataRef) {
+            setLoading(false);
+            return;
+        }
 
-        for (const chatId in allMetadata) {
-            const metadata = allMetadata[chatId];
-            if (metadata.participants && metadata.participants[user.uid]) {
-                const otherPlayerId = Object.keys(metadata.participants).find(pId => pId !== user.uid);
-                
-                if (otherPlayerId && metadata.participants[otherPlayerId]) {
-                    const selfParticipant = metadata.participants[user.uid];
-                    const otherParticipant = metadata.participants[otherPlayerId];
+        const unsubscribe = onValue(metadataRef, (snapshot) => {
+            const allMetadata: Record<string, ChatMetadata> = snapshot.val() || {};
+            const chats: UserChat[] = [];
+
+            for (const chatId in allMetadata) {
+                const metadata = allMetadata[chatId];
+                if (metadata.participants && metadata.participants[user.uid]) {
+                    const otherPlayerId = Object.keys(metadata.participants).find(pId => pId !== user.uid);
                     
-                    const isUnread = metadata.lastMessageTimestamp > (selfParticipant?.lastReadTimestamp || 0);
+                    if (otherPlayerId && metadata.participants[otherPlayerId]) {
+                        const selfParticipant = metadata.participants[user.uid];
+                        const otherParticipant = metadata.participants[otherPlayerId];
+                        
+                        const isUnread = metadata.lastMessageTimestamp > (selfParticipant?.lastReadTimestamp || 0);
 
-                    chats.push({
-                        chatId,
-                        otherPlayer: {
-                            uid: otherParticipant.uid,
-                            username: otherParticipant.username,
-                            avatar: otherParticipant.avatar,
-                        },
-                        lastMessage: metadata.lastMessageText || '',
-                        timestamp: metadata.lastMessageTimestamp || 0,
-                        isUnread,
-                    });
+                        chats.push({
+                            chatId,
+                            otherPlayer: {
+                                uid: otherParticipant.uid,
+                                username: otherParticipant.username,
+                                avatar: otherParticipant.avatar,
+                            },
+                            lastMessage: metadata.lastMessageText || '',
+                            timestamp: metadata.lastMessageTimestamp || 0,
+                            isUnread,
+                        });
+                    }
                 }
             }
-        }
-        setUserChats(chats.sort((a, b) => b.timestamp - a.timestamp));
-        setLoading(false);
-    }, [chatMetadata, user.uid]);
+            setUserChats(chats.sort((a, b) => b.timestamp - a.timestamp));
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [metadataRef, user.uid]);
     
     if (loading) return <div className="flex items-center justify-center h-full"><Loader2 className="h-12 w-12 text-gray-500 animate-spin" /></div>;
 
@@ -200,11 +210,22 @@ function PrivateChatListView({ user, onSelectChat, chatMetadata }: { user: Authe
         );
     }
 
+    const handleChatSelect = (chat: UserChat) => {
+        const otherPlayerId = chat.chatId.split('-').find(id => id !== user.uid);
+        onSelectChat({
+            ...chat,
+            otherPlayer: {
+                ...chat.otherPlayer,
+                uid: otherPlayerId || chat.otherPlayer.uid // Ensure UID is present
+            }
+        });
+    }
+
     return (
         <ScrollArea className="h-full">
             <div className='p-2 space-y-1'>
                 {userChats.map(chat => (
-                    <button key={chat.chatId} onClick={() => onSelectChat(chat)} className='w-full text-left p-2 rounded-lg hover:bg-gray-700/50 flex items-center gap-3'>
+                    <button key={chat.chatId} onClick={() => handleChatSelect(chat)} className='w-full text-left p-2 rounded-lg hover:bg-gray-700/50 flex items-center gap-3'>
                         <Avatar className="h-10 w-10">
                             <AvatarImage src={chat.otherPlayer.avatar} data-ai-hint="player avatar" />
                             <AvatarFallback>{chat.otherPlayer.username?.charAt(0) || '?'}</AvatarFallback>
@@ -494,5 +515,3 @@ function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSen
         </div>
     )
 }
-
-    
