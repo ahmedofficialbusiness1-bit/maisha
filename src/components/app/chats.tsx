@@ -70,13 +70,14 @@ interface ChatsProps {
     user: AuthenticatedUser;
     initialPrivateChatUid?: string | null;
     onChatOpened: () => void;
+    chatMetadata: Record<string, ChatMetadata>;
     unreadPublicChats: Record<string, boolean>;
     onPublicRoomRead: (roomId: string) => void;
 }
 
 
 // Main Chat Component
-export function Chats({ user, initialPrivateChatUid, onChatOpened, unreadPublicChats, onPublicRoomRead }: ChatsProps) {
+export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata, unreadPublicChats, onPublicRoomRead }: ChatsProps) {
   const [activeTab, setActiveTab] = React.useState(initialPrivateChatUid ? 'private' : 'public');
   const [selectedPublicRoom, setSelectedPublicRoom] = React.useState<PublicChatRoom>('general');
   const [selectedPrivateChat, setSelectedPrivateChat] = React.useState<UserChat | null>(null);
@@ -138,7 +139,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, unreadPublicC
           {selectedPrivateChat ? (
              <PrivateChatWindow user={user} chat={selectedPrivateChat} />
           ) : (
-             <PrivateChatListView user={user} onSelectChat={handleSelectPrivateChat} />
+             <PrivateChatListView user={user} onSelectChat={handleSelectPrivateChat} chatMetadata={chatMetadata} />
           )}
         </TabsContent>
       </Tabs>
@@ -149,51 +150,43 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, unreadPublicC
 
 // --- PRIVATE CHATS ---
 
-function PrivateChatListView({ user, onSelectChat }: { user: AuthenticatedUser, onSelectChat: (chat: UserChat) => void}) {
+function PrivateChatListView({ user, onSelectChat, chatMetadata }: { user: AuthenticatedUser, onSelectChat: (chat: UserChat) => void, chatMetadata: Record<string, ChatMetadata>}) {
     const database = useDatabase();
     const [userChats, setUserChats] = React.useState<UserChat[]>([]);
     const [loading, setLoading] = React.useState(true);
-    const chatMetadataRef = React.useMemo(() => database ? ref(database, 'chat-metadata') : null, [database]);
 
     React.useEffect(() => {
-        if (!chatMetadataRef) return;
+        const allMetadata: Record<string, ChatMetadata> = chatMetadata || {};
+        const chats: UserChat[] = [];
 
-        const unsubscribe = onValue(chatMetadataRef, (snapshot) => {
-            const allMetadata: Record<string, ChatMetadata> = snapshot.val() || {};
-            const chats: UserChat[] = [];
-
-            for (const chatId in allMetadata) {
-                const metadata = allMetadata[chatId];
-                // Check if it's a private chat involving the current user
-                if (metadata.participants && metadata.participants[user.uid]) {
-                    const otherPlayerId = Object.keys(metadata.participants).find(pId => pId !== user.uid);
+        for (const chatId in allMetadata) {
+            const metadata = allMetadata[chatId];
+            if (metadata.participants && metadata.participants[user.uid]) {
+                const otherPlayerId = Object.keys(metadata.participants).find(pId => pId !== user.uid);
+                
+                if (otherPlayerId && metadata.participants[otherPlayerId]) {
+                    const selfParticipant = metadata.participants[user.uid];
+                    const otherParticipant = metadata.participants[otherPlayerId];
                     
-                    if (otherPlayerId && metadata.participants[otherPlayerId]) {
-                        const selfParticipant = metadata.participants[user.uid];
-                        const otherParticipant = metadata.participants[otherPlayerId];
-                        
-                        const isUnread = metadata.lastMessageTimestamp > (selfParticipant?.lastReadTimestamp || 0);
+                    const isUnread = metadata.lastMessageTimestamp > (selfParticipant?.lastReadTimestamp || 0);
 
-                        chats.push({
-                            chatId,
-                            otherPlayer: {
-                                uid: otherParticipant.uid,
-                                username: otherParticipant.username,
-                                avatar: otherParticipant.avatar,
-                            },
-                            lastMessage: metadata.lastMessageText || '',
-                            timestamp: metadata.lastMessageTimestamp || 0,
-                            isUnread,
-                        });
-                    }
+                    chats.push({
+                        chatId,
+                        otherPlayer: {
+                            uid: otherParticipant.uid,
+                            username: otherParticipant.username,
+                            avatar: otherParticipant.avatar,
+                        },
+                        lastMessage: metadata.lastMessageText || '',
+                        timestamp: metadata.lastMessageTimestamp || 0,
+                        isUnread,
+                    });
                 }
             }
-            setUserChats(chats.sort((a, b) => b.timestamp - a.timestamp));
-            setLoading(false);
-        });
-        
-        return () => unsubscribe();
-    }, [chatMetadataRef, user.uid]);
+        }
+        setUserChats(chats.sort((a, b) => b.timestamp - a.timestamp));
+        setLoading(false);
+    }, [chatMetadata, user.uid]);
     
     if (loading) return <div className="flex items-center justify-center h-full"><Loader2 className="h-12 w-12 text-gray-500 animate-spin" /></div>;
 
@@ -273,7 +266,7 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: { ch
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !database) return;
+        if (!newMessage.trim() || !database || !chat.otherPlayer.uid) return;
 
         const timestamp = serverTimestamp();
         const textToSend = newMessage;
@@ -501,3 +494,5 @@ function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSen
         </div>
     )
 }
+
+    
