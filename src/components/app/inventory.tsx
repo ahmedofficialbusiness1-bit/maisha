@@ -1,7 +1,7 @@
+
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import {
   Table,
   TableBody,
@@ -151,14 +151,9 @@ function ItemInventoryView({ inventoryItems, onPostToMarket, onCreateContract }:
                           <TableCell className="font-medium">
                               <div className="flex items-center gap-3">
                                   {productInfo && (
-                                      <Image 
-                                          src={productInfo.imageUrl}
-                                          alt={productInfo.name}
-                                          data-ai-hint={productInfo.imageHint}
-                                          width={40}
-                                          height={40}
-                                          className="rounded-md"
-                                      />
+                                      <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-gray-700/60'>
+                                        {React.createElement(productInfo.icon, { className: 'h-6 w-6' })}
+                                      </div>
                                   )}
                                   <span>{item.item}</span>
                               </div>
@@ -352,6 +347,7 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
     const renderContractCard = (contract: ContractListing) => {
         const isSeller = contract.sellerUid === currentUserId;
         const isBuyer = !isSeller;
+        const productInfo = encyclopediaData.find(e => e.name === contract.commodity);
 
         let statusText = contract.status.charAt(0).toUpperCase() + contract.status.slice(1);
         let statusColor = "text-gray-400";
@@ -394,7 +390,7 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
                             </div>
                         </div>
                         <div className="text-right">
-                           <Image src={encyclopediaData.find(e => e.name === contract.commodity)?.imageUrl || ''} alt={contract.commodity} data-ai-hint={contract.imageHint} width={32} height={32} className="rounded-md ml-auto" />
+                           {productInfo && React.createElement(productInfo.icon, { className: "h-8 w-8 ml-auto text-gray-300" })}
                            <p className="text-xs text-gray-400 mt-1">{contract.commodity}</p>
                         </div>
                     </div>

@@ -9,7 +9,7 @@ import {
     Sun, TreeDeciduous, Utensils, Warehouse, Wheat, Wind, Wrench, FileText, ScrollText, Droplets, Zap,
     Building2, Glasses, FlaskConical, Shirt, Watch, Footprints, CircleDollarSign, Medal, Crown,
     Tv, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, HardDrive, Speaker, CircuitBoard,
-    Monitor, Car, Bike, Plane, Tractor, Rocket, ShieldCheck, Award
+    Monitor, Car, Bike, Plane, Tractor, Rocket, ShieldCheck, Award, Diamond, Coins, Square, CookingPot, Beer, Fuel, ShipWheel, Anchor, WarehouseIcon, ShieldBan, Pickaxe, Drill
 } from 'lucide-react';
 import { recipes, type Recipe } from './recipe-data';
 import { buildingData } from './building-data';
@@ -19,9 +19,8 @@ export type EncyclopediaEntry = {
   id: string;
   name: string;
   category: string;
+  icon: LucideIcon;
   description: string;
-  imageUrl: string;
-  imageHint: string;
   properties: {
     label: string;
     value: string;
@@ -130,6 +129,49 @@ while (itemsToCalculate.length > 0 && iterations < MAX_ITERATIONS) {
     iterations++;
 }
 
+const itemIconMap: Record<string, LucideIcon> = {
+    'Mbao': Hammer, 'Matofali': ToyBrick, 'Nondo': Milestone, 'Zege': Building, 'Mabati': Warehouse,
+    'Saruji': Building2, 'Mchanga': Mountain, 'Mawe': Mountain, 'Kokoto': Mountain,
+    'Miti': TreeDeciduous, 'Madini ya chuma': Pickaxe, 'Chuma': ShieldBan,
+    'Almasi': Diamond, 'Dhahabu': Coins, 'Silver': CircleDollarSign, 'Ruby': Gem, 'Tanzanite': Gem, 'Shaba': Drill,
+    'Mafuta Ghafi': Fuel, 'Disel': Fuel, 'Petrol': Fuel,
+    'Mbegu': Sprout, 'Maharage': Bean, 'Mchele': Wheat, 'Unga wa ngano': Wheat,
+    'Unga wa sembe': Wheat, 'Ndizi': Apple, 'Viazi mbatata': Carrot, 'Mboga mboga': Leaf,
+    'Embe': Apple, 'Nanasi': Palmtree, 'Parachichi': Apple, 'Miwa': Shrub,
+    'Nyasi': Leaf, 'Mbolea': Recycle, 'Zabibu': Grape, 'Apple': Apple,
+    'Chungwa': Citrus, 'Korosho': Shell, 'Karafuu': Sun, 'Pamba': Feather,
+    'Katani': Sprout,
+    'Yai': Egg, 'Kuku': Beef, 'Ngombe': Beef, 'Nyama': Beef,
+    'Sukari': Package, 'Bwawa': ShipWheel, 'Boat': Boat,
+    'Samaki': Fish, 'Chumvi': Package,
+    'Wali wa Samaki': CookingPot, 'Maharage na Ndizi': CookingPot, 'Chipsi Nyama': CookingPot,
+    'Pilau ya Nyama': CookingPot, 'Ugali Maharage': CookingPot, 'Ugali Samaki': CookingPot,
+    'Chipsi Mayai': CookingPot, 'Saladi ya Matunda': Utensils, 'Kachumbari': Utensils,
+    'Juisi Mchanganyiko': GlassWater, 'Githeri': CookingPot, 'Burger ya Kuku': Utensils,
+    'Sandwich ya Mayai': Utensils,
+    'Umeme': Zap, 'Maji': Droplets,
+    'Karatasi': FileText, 'Cheti cha Madini': ScrollText,
+    'Gundi': FlaskConical, 'Chokaa': Mountain, 'Kioo': Glasses, 'Kitamba': Shirt,
+    'Ngozi': Footprints, 'Soli': Footprints, 'Saa': Watch, 'Viatu': Footprints,
+    'Pochi': Package, 'T-Shirt': Shirt, 'Jeans': Shirt, 'Skirt': Shirt, 'Kijora': Shirt,
+    'Mkufu wa Dhahabu': Medal, 'Saa ya Dhahabu': Watch, 'Pete ya Dhahabu': Gem,
+    'Mkufu wa Almasi': Crown, 'Saa ya Almasi': Watch, 'Pete ya Almasi': Gem,
+    'TV': Tv, 'Tablet': Tablet, 'Smartphone': Smartphone, 'Laptop': Laptop,
+    'Processor': Cpu, 'Betri': Battery, 'Display': Monitor, 'Motherboard': CircuitBoard,
+    'Vifaa vya ndani': Component, 'Housing': Square, 'Nyaya': Wrench, 'LCD': Monitor,
+    'Cathode': Component, 'Anode': Component, 'Ram': MemoryStick, 'Rom': HardDrive, 'PCB': CircuitBoard,
+    'Car Body': Car, 'Bike Body': Bike, 'Interior': Car, 'Luxury Interior': Car,
+    'Motor': Wrench, 'Engine': Wrench, 'Dashboard': Tablet, 'Bull dozer body': Tractor,
+    'Truck body': Tractor, 'Bodi ya Ndege': Plane, 'Bodi ya Meli': Ship,
+    'Bull Dozer': Tractor, 'Lori': Tractor, 'Gari ya kifahari': Car, 'Gari': Car,
+    'Pikipiki ya Kifahari': Bike, 'Pikipiki': Bike, 'Ndege': Plane, 'Ndege ya kifahari': Plane,
+    'Meli': Ship, 'Meli ya kifahari': Ship,
+    'Roketi': Rocket, 'Fuselage': Rocket, 'Wings': Rocket, 'Tarakilishi': Cpu,
+    'Cockpit': Rocket, 'Attitude Control': Rocket, 'Rocket Engine': Rocket, 'Heat Shield': ShieldCheck,
+    'Utafiti wa Kilimo': Award, 'Utafiti wa Ujenzi': Award, 'Utafiti wa Nguo': Award,
+    'Utafiti wa Electroniki': Award, 'Utafiti wa Usafiri': Award, 'Utafiti wa Anga': Award,
+    'Default': Package
+};
 
 // --- Generate Encyclopedia Entries using the final calculated prices ---
 const finalEntries: EncyclopediaEntry[] = [];
@@ -177,10 +219,9 @@ allItems.forEach(itemName => {
     finalEntries.push({
         id: itemName.toLowerCase().replace(/'/g, '').replace(/\s+/g, '_'),
         name: itemName,
+        icon: itemIconMap[itemName] || Package,
         category: "Product", // Default, will be overridden
         description: `Description for ${itemName}.`,
-        imageUrl: getImageUrl(itemName),
-        imageHint: getImageHint(itemName),
         properties: properties,
         recipe: recipe ? recipe : undefined,
     });

@@ -1,7 +1,7 @@
 
 
+
 import * as React from 'react';
-import Image from 'next/image';
 import {
   Table,
   TableBody,
@@ -264,7 +264,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                             className="p-3 rounded-lg border-2 text-center flex flex-col items-center justify-center gap-2 bg-gray-700/50 border-gray-600 hover:bg-blue-600/30 hover:border-blue-500 transition-colors"
                             title={product.name}
                             >
-                            <Image src={product.imageUrl} alt={product.name} data-ai-hint={product.imageHint} width={40} height={40} className="rounded-md" />
+                            {React.createElement(product.icon, { className: 'h-8 w-8' })}
                             <span className="text-xs font-semibold block truncate w-full">{product.name}</span>
                             </button>
                         )
@@ -287,7 +287,9 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         Rudi kwenye Bidhaa Zote
                     </Button>
                     <div className="text-center flex items-center justify-center gap-4">
-                        <Image src={selectedProduct.imageUrl} alt={selectedProduct.name} data-ai-hint={selectedProduct.imageHint} width={48} height={48} className="rounded-lg" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-700/60">
+                           {React.createElement(selectedProduct.icon, { className: 'h-7 w-7' })}
+                        </div>
                         <div>
                             <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
                             <p className="text-sm text-gray-400">{selectedProduct.category}</p>

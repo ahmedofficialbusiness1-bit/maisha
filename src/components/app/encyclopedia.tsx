@@ -1,8 +1,8 @@
 
+
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import {
   Card,
   CardContent,
@@ -103,14 +103,9 @@ export function Encyclopedia() {
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <div className="flex items-center gap-4">
-                    <Image
-                        src={selectedEntry.imageUrl}
-                        alt={selectedEntry.name}
-                        data-ai-hint={selectedEntry.imageHint}
-                        width={64}
-                        height={64}
-                        className="rounded-lg"
-                    />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-700/60">
+                        <selectedEntry.icon className="h-8 w-8" />
+                    </div>
                     <div>
                         <CardTitle className="text-3xl">{selectedEntry.name}</CardTitle>
                         <CardDescription className="text-gray-400">{selectedEntry.category}</CardDescription>
@@ -140,7 +135,7 @@ export function Encyclopedia() {
                                         <React.Fragment key={input.name}>
                                             <div className="text-center">
                                                 {inputProductInfo && (
-                                                    <Image src={inputProductInfo.imageUrl} alt={inputProductInfo.name} data-ai-hint={inputProductInfo.imageHint} width={32} height={32} className="rounded-md mx-auto" />
+                                                    React.createElement(inputProductInfo.icon, { className: 'h-6 w-6 mx-auto' })
                                                 )}
                                                 <p className="text-xs mt-1">{input.quantity}x {input.name}</p>
                                             </div>
@@ -150,7 +145,7 @@ export function Encyclopedia() {
                                 </div>
                                 <p className="text-2xl font-bold mx-2">→</p>
                                 <div className="text-center">
-                                    <Image src={selectedEntry.imageUrl} alt={selectedEntry.name} data-ai-hint={selectedEntry.imageHint} width={40} height={40} className="rounded-md mx-auto" />
+                                    {React.createElement(selectedEntry.icon, { className: 'h-8 w-8 mx-auto' })}
                                     <p className="text-xs mt-1">{selectedEntry.recipe.output?.quantity || 1}x {selectedEntry.name}</p>
                                 </div>
                             </div>
