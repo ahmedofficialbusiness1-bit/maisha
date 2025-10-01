@@ -6,6 +6,7 @@ import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 import type { Database } from 'firebase/database';
+import { Loader2 } from 'lucide-react';
 
 
 export function FirebaseClientProvider({ children }: { children: React.ReactNode }) {
@@ -22,8 +23,11 @@ export function FirebaseClientProvider({ children }: { children: React.ReactNode
   }, []);
 
   if (!services || !services.app || !services.auth || !services.database || !services.firestore) {
-    // You can return a loading spinner here
-    return <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">Inapakia Firebase...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (

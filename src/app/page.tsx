@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Factory, CandlestickChart, Wheat, Briefcase, Award } from 'lucide-react';
+import { Factory, CandlestickChart, Wheat, Briefcase, Award, Loader2 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
@@ -28,7 +28,11 @@ function LandingComponent() {
     }
 
     if (loading) {
-        return <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">Inapakia...</div>;
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
     }
 
 
