@@ -66,8 +66,8 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
   const [priceCeiling, setPriceCeiling] = React.useState(0);
 
   // State for Contract
-  const [contractQtyPerDelivery, setContractQtyPerDelivery] = React.useState(1);
-  const [contractTotalQty, setContractTotalQty] = React.useState(1);
+  const [contractQtyPerDelivery, setContractQtyPerDelivery] = React.useState(10);
+  const [contractTotalQty, setContractTotalQty] = React.useState(100);
   const [contractPrice, setContractPrice] = React.useState(0);
   const [contractInterval, setContractInterval] = React.useState(1);
 
