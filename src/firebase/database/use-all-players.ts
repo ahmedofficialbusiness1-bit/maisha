@@ -28,63 +28,50 @@ export function useAllPlayers() {
     }
 
     setLoading(true);
-    const playersRef = ref(database, 'players');
-    const q = query(playersRef, orderByChild('username'));
+    // Reference to the public player data
+    const playersRef = query(ref(database, 'players'), orderByChild('username'));
 
-    const unsubscribe = onValue(
-      q,
-      (snapshot) => {
-        setLoading(false);
-        const result: PlayerPublicData[] = [];
-        snapshot.forEach((childSnapshot) => {
-          // The public data does not contain lastSeen by default, so we query the private user data for it
-          const userRef = ref(database, `users/${childSnapshot.key}`);
-          onValue(userRef, (userSnap) => {
-              const userData = userSnap.val();
-              const playerData = childSnapshot.val();
-              // Find if player already exists in result and update, otherwise push
-              const existingPlayerIndex = result.findIndex(p => p.uid === childSnapshot.key);
-              const playerWithStatus = { ...playerData, uid: childSnapshot.key, lastSeen: userData?.lastSeen };
+    // We will merge data from '/users' for the 'lastSeen' timestamp
+    const usersRef = ref(database, 'users');
 
-              if (existingPlayerIndex > -1) {
-                  result[existingPlayerIndex] = playerWithStatus;
-              } else {
-                  result.push(playerWithStatus);
-              }
-               // This is inefficient as it creates a new array on every user update, but it's simple
-              setPlayers([...result]);
-          }, { onlyOnce: true });
+    let playersData: Record<string, PlayerPublicData> = {};
+    let usersData: Record<string, { lastSeen?: number }> = {};
+    
+    const combineData = () => {
+        const combined = Object.keys(playersData).map(uid => ({
+            ...playersData[uid],
+            lastSeen: usersData[uid]?.lastSeen,
+        }));
+        setPlayers(combined);
+    };
+
+    const playersUnsubscribe = onValue(playersRef, (snapshot) => {
+        playersData = snapshot.val() || {};
+        Object.keys(playersData).forEach(uid => {
+            playersData[uid].uid = uid; // Ensure UID is part of the object
         });
-        setError(null);
-      },
-      (err) => {
+        combineData();
         setLoading(false);
+    }, (err) => {
         setError(err);
-        console.error(`Error listening to players collection:`, err);
-      }
-    );
+        setLoading(false);
+        console.error("Error fetching players:", err);
+    });
 
-    return () => unsubscribe();
-  }, [database]);
-  
-  // This effect is needed because the onValue for users is async and we need to update players state
-  // This is not the most efficient way but it works for this scenario
-  React.useEffect(() => {
-      if (!database) return;
-      const usersRef = ref(database, 'users');
-      const unsubscribe = onValue(usersRef, (snapshot) => {
-          setPlayers(prevPlayers => {
-              if (!prevPlayers) return null;
-              const updatedPlayers = prevPlayers.map(p => {
-                  const userData = snapshot.child(p.uid).val();
-                  return { ...p, lastSeen: userData?.lastSeen };
-              })
-              return updatedPlayers;
-          });
-      });
-      return () => unsubscribe();
-  }, [database]);
+    const usersUnsubscribe = onValue(usersRef, (snapshot) => {
+        usersData = snapshot.val() || {};
+        combineData();
+    }, (err) => {
+        // Errors from this listener can be noisy if rules restrict access,
+        // so we might choose to log them quietly.
+        console.warn("Could not fetch all user details for status:", err.message);
+    });
 
+    return () => {
+        playersUnsubscribe();
+        usersUnsubscribe();
+    };
+  }, [database]);
 
   return { players, loading, error };
 }

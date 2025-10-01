@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -143,6 +142,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     }
   };
 
+  const isOnline = currentProfile.lastSeen && (Date.now() - new Date(currentProfile.lastSeen).getTime() < 5 * 60 * 1000);
   const lastSeenText = currentProfile.lastSeen 
     ? `was ${formatDistanceToNow(currentProfile.lastSeen, { addSuffix: true })}`
     : 'recently';
@@ -168,16 +168,16 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         </Avatar>
                         <div className={cn(
                             "absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-gray-800",
-                            currentProfile.status === 'online' ? 'bg-green-500' : 'bg-gray-500'
+                            isOnline ? 'bg-green-500' : 'bg-gray-500'
                         )} />
                     </div>
 
                     <div className='flex-grow space-y-1'>
                          <span className={cn(
                                 'text-sm font-semibold',
-                                currentProfile.status === 'online' ? 'text-green-400' : 'text-gray-400'
+                                isOnline ? 'text-green-400' : 'text-gray-400'
                             )}>
-                                {currentProfile.status === 'online' ? 'Online' : `Offline (${lastSeenText})`}
+                                {isOnline ? 'Online' : `Offline (was ${lastSeenText})`}
                             </span>
                         <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
                         <p className="text-muted-foreground">{currentProfile.role === 'admin' ? 'Administrator' : 'Sole trader'}</p>
@@ -317,3 +317,4 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     
 
     
+
