@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Bot, Users, User, ArrowLeft } from 'lucide-react';
+import { Send, Bot, Users, User, ArrowLeft, Loader2 } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -36,10 +36,18 @@ type ChatMessage = {
     timestamp: number;
 };
 
+export type ChatParticipantInfo = {
+    uid: string;
+    username: string;
+    avatar: string;
+    lastReadTimestamp: number;
+};
+
 export type ChatMetadata = {
+    chatId: string;
     lastMessageText: string;
     lastMessageTimestamp: number;
-    participants?: Record<string, boolean>; // For private chats
+    participants: Record<string, ChatParticipantInfo>; // For private chats
 };
 
 
@@ -52,7 +60,7 @@ const publicRooms: { id: PublicChatRoom, name: string }[] = [
 
 type UserChat = {
     chatId: string;
-    otherPlayer: PlayerPublicData;
+    otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'>;
     lastMessage: string;
     timestamp: number;
     isUnread: boolean;
@@ -82,7 +90,11 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
           const chatId = [user.uid, otherPlayer.uid].sort().join('-');
           setSelectedPrivateChat({
               chatId,
-              otherPlayer,
+              otherPlayer: {
+                uid: otherPlayer.uid,
+                username: otherPlayer.username,
+                avatar: otherPlayer.avatar
+              },
               lastMessage: '',
               timestamp: 0,
               isUnread: false
@@ -127,7 +139,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
           {selectedPrivateChat ? (
              <PrivateChatWindow user={user} chat={selectedPrivateChat} />
           ) : (
-             <PrivateChatListView user={user} onSelectChat={handleSelectPrivateChat} chatMetadata={chatMetadata} />
+             <PrivateChatListView user={user} onSelectChat={handleSelectPrivateChat} />
           )}
         </TabsContent>
       </Tabs>
@@ -138,29 +150,38 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
 
 // --- PRIVATE CHATS ---
 
-function PrivateChatListView({ user, onSelectChat, chatMetadata }: { user: AuthenticatedUser, onSelectChat: (chat: UserChat) => void, chatMetadata: Record<string, ChatMetadata>}) {
+function PrivateChatListView({ user, onSelectChat }: { user: AuthenticatedUser, onSelectChat: (chat: UserChat) => void}) {
     const database = useDatabase();
     const [userChats, setUserChats] = React.useState<UserChat[]>([]);
     const [loading, setLoading] = React.useState(true);
-    const { players } = useAllPlayers();
+    const chatMetadataRef = React.useMemo(() => database ? ref(database, 'chat-metadata') : null, [database]);
 
     React.useEffect(() => {
-        if (!database || !players || !chatMetadata) return;
+        if (!chatMetadataRef) return;
 
-        const chats: UserChat[] = [];
-        for (const chatId in chatMetadata) {
-            const metadata = chatMetadata[chatId];
-            if (metadata.participants && metadata.participants[user.uid]) {
-                const otherPlayerId = Object.keys(metadata.participants).find(pId => pId !== user.uid);
-                if (otherPlayerId) {
-                    const otherPlayer = players.find(p => p.uid === otherPlayerId);
-                    if (otherPlayer) {
-                        const lastReadTimestamp = (metadata as any).participants[user.uid]?.lastReadTimestamp || 0;
-                        const isUnread = metadata.lastMessageTimestamp > lastReadTimestamp;
+        const unsubscribe = onValue(chatMetadataRef, (snapshot) => {
+            const allMetadata: Record<string, ChatMetadata> = snapshot.val() || {};
+            const chats: UserChat[] = [];
+
+            for (const chatId in allMetadata) {
+                const metadata = allMetadata[chatId];
+                // Check if it's a private chat involving the current user
+                if (metadata.participants && metadata.participants[user.uid]) {
+                    const otherPlayerId = Object.keys(metadata.participants).find(pId => pId !== user.uid);
+                    
+                    if (otherPlayerId && metadata.participants[otherPlayerId]) {
+                        const selfParticipant = metadata.participants[user.uid];
+                        const otherParticipant = metadata.participants[otherPlayerId];
+                        
+                        const isUnread = metadata.lastMessageTimestamp > selfParticipant.lastReadTimestamp;
 
                         chats.push({
                             chatId,
-                            otherPlayer,
+                            otherPlayer: {
+                                uid: otherParticipant.uid,
+                                username: otherParticipant.username,
+                                avatar: otherParticipant.avatar,
+                            },
                             lastMessage: metadata.lastMessageText || '',
                             timestamp: metadata.lastMessageTimestamp || 0,
                             isUnread,
@@ -168,14 +189,14 @@ function PrivateChatListView({ user, onSelectChat, chatMetadata }: { user: Authe
                     }
                 }
             }
-        }
+            setUserChats(chats.sort((a, b) => b.timestamp - a.timestamp));
+            setLoading(false);
+        });
         
-        setUserChats(chats.sort((a, b) => b.timestamp - a.timestamp));
-        setLoading(false);
-
-    }, [database, user.uid, players, chatMetadata]);
+        return () => unsubscribe();
+    }, [chatMetadataRef, user.uid]);
     
-    if (loading) return <div className="flex items-center justify-center h-full"><Bot className="h-12 w-12 text-gray-500 animate-pulse" /></div>
+    if (loading) return <div className="flex items-center justify-center h-full"><Loader2 className="h-12 w-12 text-gray-500 animate-spin" /></div>;
 
     if (userChats.length === 0) {
          return (
@@ -215,7 +236,7 @@ function PrivateChatListView({ user, onSelectChat, chatMetadata }: { user: Authe
     );
 }
 
-function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: UserChat }) {
+function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: { chatId: string, otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'> } }) {
     const database = useDatabase();
     const [messages, setMessages] = React.useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = React.useState('');
@@ -259,6 +280,8 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
         const textToSend = newMessage;
         setNewMessage('');
 
+        // 1. Push the message to the shared chat room
+        const chatRoomRef = ref(database, `chat/${chat.chatId}`);
         const message = {
             uid: user.uid,
             username: user.username,
@@ -266,19 +289,33 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
             text: textToSend,
             timestamp: timestamp,
         };
-        
-        // 1. Push the message to the shared chat room
-        const chatRoomRef = ref(database, `chat/${chat.chatId}`);
         await push(chatRoomRef, message);
         
         // 2. Update the shared metadata for this chat
         const metadataRef = ref(database, `chat-metadata/${chat.chatId}`);
-        const newMetadata = {
+        const currentMetadataSnap = await get(metadataRef);
+        const currentMetadata = currentMetadataSnap.val();
+        
+        const selfParticipant: ChatParticipantInfo = {
+            uid: user.uid,
+            username: user.username,
+            avatar: user.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
+            lastReadTimestamp: currentMetadata?.participants?.[user.uid]?.lastReadTimestamp || 0
+        };
+        
+        const otherParticipant: ChatParticipantInfo = {
+             uid: chat.otherPlayer.uid,
+             username: chat.otherPlayer.username,
+             avatar: chat.otherPlayer.avatar,
+             lastReadTimestamp: currentMetadata?.participants?.[chat.otherPlayer.uid]?.lastReadTimestamp || 0
+        };
+
+        const newMetadata: Omit<ChatMetadata, 'chatId'> = {
             lastMessageText: textToSend,
             lastMessageTimestamp: timestamp,
             participants: {
-                [user.uid]: true,
-                [chat.otherPlayer.uid]: true
+                [user.uid]: selfParticipant,
+                [chat.otherPlayer.uid]: otherParticipant,
             }
         };
         await set(metadataRef, newMetadata);

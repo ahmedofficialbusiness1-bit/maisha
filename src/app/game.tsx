@@ -146,9 +146,10 @@ export function Game() {
         }
         setGameState(data);
       } else {
-        const initialData = getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email);
-        saveUserData(userRef, initialData).then(() => {
-          setGameState(initialData);
+        getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email).then(initialData => {
+            saveUserData(userRef, initialData).then(() => {
+              setGameState(initialData);
+            });
         });
       }
     }, (error) => {
@@ -797,14 +798,14 @@ export function Game() {
             const metadata = chatMetadata[chatId];
             // Check if it's a private chat involving the current user
             if (metadata.participants && metadata.participants[user.uid]) {
-                const lastReadTimestamp = (metadata as any).participants[user.uid]?.lastReadTimestamp || 0;
-                if (metadata.lastMessageTimestamp > lastReadTimestamp) {
+                const selfParticipant = metadata.participants[user.uid];
+                if (metadata.lastMessageTimestamp > selfParticipant.lastReadTimestamp) {
                     count++;
                 }
             }
         }
         return count;
-    }, [gameState, chatMetadata, user]);
+    }, [chatMetadata, user, gameState]);
   
   const unreadPublicChats = React.useMemo(() => {
     if (!gameState || !gameState.lastPublicRead || !chatMetadata) return {};
