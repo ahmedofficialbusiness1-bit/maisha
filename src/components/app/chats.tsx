@@ -70,14 +70,13 @@ interface ChatsProps {
     user: AuthenticatedUser;
     initialPrivateChatUid?: string | null;
     onChatOpened: () => void;
-    chatMetadata: Record<string, ChatMetadata>;
     unreadPublicChats: Record<string, boolean>;
     onPublicRoomRead: (roomId: string) => void;
 }
 
 
 // Main Chat Component
-export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata, unreadPublicChats, onPublicRoomRead }: ChatsProps) {
+export function Chats({ user, initialPrivateChatUid, onChatOpened, unreadPublicChats, onPublicRoomRead }: ChatsProps) {
   const [activeTab, setActiveTab] = React.useState(initialPrivateChatUid ? 'private' : 'public');
   const [selectedPublicRoom, setSelectedPublicRoom] = React.useState<PublicChatRoom>('general');
   const [selectedPrivateChat, setSelectedPrivateChat] = React.useState<UserChat | null>(null);
@@ -133,7 +132,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
           <TabsTrigger value="private"><User className="mr-2 h-4 w-4"/> Meseji za Faragha</TabsTrigger>
         </TabsList>
         <TabsContent value="public" className="flex-grow mt-0">
-           <PublicChatsView user={user} selectedRoom={selectedPublicRoom} onSelectRoom={setSelectedPublicRoom} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={onPublicRoomRead} />
+           <PublicChatsView user={user} selectedRoom={selectedPublicRoom} onSelectRoom={setSelectedPublicRoom} unreadPublicChats={unreadPublicChats} onPublicRoomRead={onPublicRoomRead} />
         </TabsContent>
         <TabsContent value="private" className="flex-grow mt-0">
           {selectedPrivateChat ? (
@@ -173,7 +172,7 @@ function PrivateChatListView({ user, onSelectChat }: { user: AuthenticatedUser, 
                         const selfParticipant = metadata.participants[user.uid];
                         const otherParticipant = metadata.participants[otherPlayerId];
                         
-                        const isUnread = metadata.lastMessageTimestamp > selfParticipant.lastReadTimestamp;
+                        const isUnread = metadata.lastMessageTimestamp > (selfParticipant?.lastReadTimestamp || 0);
 
                         chats.push({
                             chatId,
@@ -215,11 +214,11 @@ function PrivateChatListView({ user, onSelectChat }: { user: AuthenticatedUser, 
                     <button key={chat.chatId} onClick={() => onSelectChat(chat)} className='w-full text-left p-2 rounded-lg hover:bg-gray-700/50 flex items-center gap-3'>
                         <Avatar className="h-10 w-10">
                             <AvatarImage src={chat.otherPlayer.avatar} data-ai-hint="player avatar" />
-                            <AvatarFallback>{chat.otherPlayer.username.charAt(0)}</AvatarFallback>
+                            <AvatarFallback>{chat.otherPlayer.username?.charAt(0) || '?'}</AvatarFallback>
                         </Avatar>
                         <div className='flex-grow overflow-hidden'>
                             <div className='flex justify-between items-center'>
-                                <p className='font-semibold truncate'>{chat.otherPlayer.username}</p>
+                                <p className='font-semibold truncate'>{chat.otherPlayer.username || 'Mchezaji'}</p>
                                 { chat.timestamp > 0 && <p className='text-xs text-gray-400'>{formatDistanceToNow(new Date(chat.timestamp), { addSuffix: true })}</p> }
                             </div>
                             <div className='flex justify-between items-center'>
@@ -331,13 +330,12 @@ interface PublicChatsViewProps {
     user: AuthenticatedUser;
     selectedRoom: PublicChatRoom;
     onSelectRoom: (room: PublicChatRoom) => void;
-    chatMetadata: Record<string, ChatMetadata>;
     unreadPublicChats: Record<string, boolean>;
     onPublicRoomRead: (roomId: string) => void;
 }
 
 
-function PublicChatsView({ user, selectedRoom, onSelectRoom, chatMetadata, unreadPublicChats, onPublicRoomRead }: PublicChatsViewProps) {
+function PublicChatsView({ user, selectedRoom, onSelectRoom, unreadPublicChats, onPublicRoomRead }: PublicChatsViewProps) {
     const [mobileView, setMobileView] = React.useState<'list' | 'chat'>('list');
 
     const handleSelectRoom = (room: PublicChatRoom) => {
