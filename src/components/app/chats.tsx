@@ -105,7 +105,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened }: { user: Aut
           <TabsTrigger value="private"><User className="mr-2 h-4 w-4"/> Meseji za Faragha</TabsTrigger>
         </TabsList>
         <TabsContent value="public" className="flex-grow mt-0">
-          <PublicChatsView user={user} selectedRoom={selectedPublicRoom} onSelectRoom={setSelectedPublicRoom} />
+           <PublicChatsView user={user} selectedRoom={selectedPublicRoom} onSelectRoom={setSelectedPublicRoom} />
         </TabsContent>
         <TabsContent value="private" className="flex-grow mt-0">
           {selectedPrivateChat ? (
@@ -261,23 +261,20 @@ function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: User
             unreadCount: 0 // Sender has 0 unread
         });
         
-        // 3. Update receiver's user-chat list using a transaction
+        // 3. Update receiver's user-chat list 
         const receiverChatRef = ref(database, `user-chats/${chat.otherPlayer.uid}/${user.uid}`);
-         runTransaction(receiverChatRef, (currentData) => {
-            if (currentData) {
-                // The chat already exists, update it.
-                currentData.lastMessage = textToSend;
-                currentData.timestamp = timestamp;
-                currentData.unreadCount = (currentData.unreadCount || 0) + 1;
-            } else {
-                // The chat does not exist, create it.
-                return {
-                    lastMessage: textToSend,
-                    timestamp: timestamp,
-                    unreadCount: 1,
-                };
-            }
-            return currentData;
+        const receiverSnapshot = await get(receiverChatRef);
+        const currentData = receiverSnapshot.val();
+
+        let newUnreadCount = 1;
+        if (currentData && typeof currentData.unreadCount === 'number') {
+            newUnreadCount = currentData.unreadCount + 1;
+        }
+
+        await set(receiverChatRef, {
+            lastMessage: textToSend,
+            timestamp: timestamp,
+            unreadCount: newUnreadCount
         });
     };
 
@@ -436,3 +433,5 @@ function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSen
         </div>
     )
 }
+
+    
