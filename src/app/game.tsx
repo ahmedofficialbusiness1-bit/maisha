@@ -21,7 +21,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser, useDatabase } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getDatabase, ref, onValue, set, runTransaction, get, push } from 'firebase/database';
+import { getDatabase, ref, onValue, set, runTransaction, get, push, update } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAllPlayers } from '@/firebase/database/use-all-players';
 
@@ -699,6 +699,27 @@ export function Game() {
     });
   }
 
+  const handleAcceptContract = (contract: ContractListing) => {
+    if (!database || !user || !gameState) return;
+
+    const contractRef = ref(database, `contracts/${contract.id}`);
+
+    const updates: Partial<ContractListing> = {
+        status: 'active',
+        buyerUid: user.uid,
+        buyerName: gameState.username,
+        nextDeliveryTimestamp: Date.now() + contract.deliveryInterval,
+    };
+
+    update(contractRef, updates).then(() => {
+        toast({ title: 'Mkataba Umekubaliwa', description: `Umeingia mkataba wa kununua ${contract.commodity} kutoka kwa ${contract.sellerName}.`});
+        addNotification(`Umekubali mkataba wa ${contract.commodity} kutoka kwa ${contract.sellerName}.`, 'purchase');
+    }).catch(error => {
+        console.error("Failed to accept contract:", error);
+        toast({ variant: 'destructive', title: 'Failed to Accept Contract' });
+    });
+  };
+
   // Game loop for processing finished activities
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -948,7 +969,7 @@ export function Game() {
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} contractListings={contractListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} contractListings={contractListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} onAcceptContract={handleAcceptContract} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':

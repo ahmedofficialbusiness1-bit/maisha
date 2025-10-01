@@ -151,9 +151,10 @@ interface TradeMarketProps {
   onBuyStock: (stock: StockListing, quantity: number) => void;
   onBuyFromMarket: (listing: PlayerListing, quantity: number) => void;
   playerName: string;
+  onAcceptContract: (contract: ContractListing) => void;
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, contractListings, inventory, onBuyStock, onBuyFromMarket, playerName }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, contractListings, inventory, onBuyStock, onBuyFromMarket, playerName, onAcceptContract }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -554,105 +555,6 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
             </Card>
         </div>
     );
-
-    const renderBondsMarket = () => (
-        <div className="p-1 sm:p-2 md:p-4 lg:p-6">
-            <Card className="bg-gray-800/60 border-gray-700">
-                <CardHeader>
-                    <CardTitle>Soko la Hatifungani</CardTitle>
-                    <CardDescription>Wekeza kwenye hatifungani za serikali na makampuni kwa mapato ya kudumu.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {/* Mobile View */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
-                        {bondListings.map((bond) => (
-                             <Card key={bond.id} className="bg-gray-900/50">
-                                 <CardHeader>
-                                     <div className="flex items-center gap-3">
-                                         <Avatar className="h-10 w-10">
-                                             <AvatarImage src={bond.issuerLogo} alt={bond.issuer} data-ai-hint={bond.imageHint} />
-                                             <AvatarFallback>{bond.issuer.charAt(0)}</AvatarFallback>
-                                         </Avatar>
-                                         <div>
-                                             <CardTitle className="text-base">{bond.issuer}</CardTitle>
-                                         </div>
-                                     </div>
-                                 </CardHeader>
-                                 <CardContent className="space-y-4">
-                                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                         <div className="text-gray-400">Bei</div>
-                                         <div className="font-mono text-right">${bond.price.toLocaleString()}</div>
-                                         <div className="text-gray-400">Kuponi</div>
-                                         <div className="font-mono text-right text-green-400">{bond.couponRate.toFixed(2)}%</div>
-                                         <div className="text-gray-400">Ukomavu</div>
-                                         <div className="font-mono text-right">{new Date(bond.maturityDate).toLocaleDateString()}</div>
-                                         <div className="text-gray-400">Rating</div>
-                                         <div className={cn("flex items-center justify-end font-bold", 
-                                             bond.creditRating.startsWith('A') ? 'text-green-400' : 
-                                             bond.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
-                                         )}>
-                                             {bond.creditRating}
-                                             <ShieldCheck className="ml-1 h-4 w-4" />
-                                         </div>
-                                     </div>
-                                      <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
-                                         Nunua
-                                     </Button>
-                                 </CardContent>
-                             </Card>
-                        ))}
-                    </div>
-                    {/* Desktop View */}
-                    <div className="hidden md:block overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="border-gray-700 hover:bg-gray-700/50">
-                                    <TableHead className="text-white">Mtoaji</TableHead>
-                                    <TableHead className="text-right text-white">Rating</TableHead>
-                                    <TableHead className="text-right text-white">Kuponi</TableHead>
-                                    <TableHead className="text-right text-white">Ukomavu</TableHead>
-                                    <TableHead className="text-right text-white">Bei</TableHead>
-                                    <TableHead className="text-right text-white">Vitendo</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {bondListings.map((bond) => (
-                                    <TableRow key={bond.id} className="border-gray-700">
-                                        <TableCell className="p-2 sm:p-4">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                                                    <AvatarImage src={bond.issuerLogo} alt={bond.issuer} data-ai-hint={bond.imageHint} />
-                                                    <AvatarFallback>{bond.issuer.charAt(0)}</AvatarFallback>
-                                                </Avatar>
-                                                 <div>
-                                                    <p className="font-bold text-sm sm:text-base">{bond.issuer}</p>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right p-2 sm:p-4">
-                                            <div className={cn("flex items-center justify-end font-bold text-sm", 
-                                                bond.creditRating.startsWith('A') ? 'text-green-400' : 
-                                                bond.creditRating.startsWith('B') ? 'text-yellow-400' : 'text-orange-400'
-                                            )}>
-                                                {bond.creditRating}
-                                                <ShieldCheck className="ml-1 h-4 w-4" />
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right font-mono text-green-400 p-2 sm:p-4">{bond.couponRate.toFixed(2)}%</TableCell>
-                                        <TableCell className="text-right font-mono p-2 sm:p-4">{new Date(bond.maturityDate).toLocaleDateString()}</TableCell>
-                                        <TableCell className="text-right font-mono p-2 sm:p-4">${bond.price.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right p-2 sm:p-4">
-                                            <Button size="sm" variant="secondary" className="bg-blue-600 hover:bg-blue-700 text-xs h-8">Nunua</Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    );
     
     const renderContractsMarket = () => (
         <div className="p-1 sm:p-2 md:p-4 lg:p-6">
@@ -663,7 +565,19 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {contractListings.filter(c => c.status === 'open').map(contract => (
+                        {contractListings.map(contract => {
+                            const isOwner = contract.sellerName === playerName;
+                            let statusText = contract.status.charAt(0).toUpperCase() + contract.status.slice(1);
+                            let statusColor = "text-yellow-400";
+                            if (contract.status === 'active') {
+                                statusText = `Active (with ${contract.buyerName})`;
+                                statusColor = "text-green-400";
+                            } else if (contract.status === 'completed') {
+                                statusColor = "text-blue-400";
+                            }
+
+
+                            return (
                              <Card key={contract.id} className="bg-gray-900/50">
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
@@ -674,10 +588,13 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
                                             </Avatar>
                                             <div>
                                                 <CardTitle className="text-base">{contract.sellerName}</CardTitle>
-                                                <CardDescription>Anauza {contract.commodity}</CardDescription>
+                                                <CardDescription className={cn("font-semibold", statusColor)}>{statusText}</CardDescription>
                                             </div>
                                         </div>
-                                        <Image src={encyclopediaData.find(e => e.name === contract.commodity)?.imageUrl || ''} alt={contract.commodity} data-ai-hint={contract.imageHint} width={32} height={32} className="rounded-md" />
+                                        <div className="text-right">
+                                            <Image src={encyclopediaData.find(e => e.name === contract.commodity)?.imageUrl || ''} alt={contract.commodity} data-ai-hint={contract.imageHint} width={32} height={32} className="rounded-md ml-auto" />
+                                             <p className="text-xs text-gray-400 mt-1">{contract.commodity}</p>
+                                        </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -691,12 +608,17 @@ export function TradeMarket({ playerListings, stockListings, bondListings, contr
                                         <div className="text-gray-400">Muda wa Usafirishaji</div>
                                         <div className="font-mono text-right">Kila Siku {contract.deliveryInterval / (1000*60*60*24)}</div>
                                     </div>
-                                    <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700" disabled={contract.sellerUid === playerName}>
-                                        Kubali Mkataba
+                                    <Button 
+                                        size="sm" 
+                                        className="w-full bg-blue-600 hover:bg-blue-700" 
+                                        disabled={isOwner || contract.status !== 'open'}
+                                        onClick={() => onAcceptContract(contract)}
+                                    >
+                                        {isOwner ? 'Mkataba Wako' : contract.status === 'open' ? 'Kubali Mkataba' : 'Umekubaliwa'}
                                     </Button>
                                 </CardContent>
                              </Card>
-                        ))}
+                        )})}
                          {contractListings.filter(c => c.status === 'open').length === 0 && (
                             <div className="col-span-full flex items-center justify-center h-48 text-gray-400">
                                 <p>Hakuna mikataba mipya kwa sasa.</p>
