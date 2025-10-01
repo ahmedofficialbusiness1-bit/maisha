@@ -265,16 +265,17 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
       
       {/* Create Contract Dialog */}
        <Dialog open={isContractDialogOpen} onOpenChange={setIsContractDialogOpen}>
-        <DialogContent className="bg-gray-900 border-gray-700 text-white">
+        <DialogContent className="bg-gray-900 border-gray-700 text-white max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Create a Contract for {selectedItem?.item}</DialogTitle>
             <DialogDescription>
                 Weka masharti ya mkataba wako. Itakuwa wazi kwa wachezaji wengine kuukubali.
             </DialogDescription>
           </DialogHeader>
+          <ScrollArea className="flex-grow -mr-6 pr-6">
           {selectedItem && (
              <div className="space-y-4 py-4">
-                <div>
+                <div className="grid gap-2">
                   <Label htmlFor="c-price">Bei kwa Kipande (Price/Unit)</Label>
                   <Input 
                       id="c-price" 
@@ -286,7 +287,7 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
                   />
                   <p className="text-xs text-gray-400 mt-1">Bei elekezi sokoni ni ${selectedItem.marketPrice.toFixed(2)}. Weka bei ya kuvutia.</p>
                 </div>
-                 <div>
+                 <div className="grid gap-2">
                   <Label htmlFor="c-qty-delivery">Kiasi kwa Usafirishaji (Qty per Delivery)</Label>
                   <Input 
                       id="c-qty-delivery" 
@@ -297,7 +298,7 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
                       className="bg-gray-800 border-gray-600"
                   />
                 </div>
-                 <div>
+                 <div className="grid gap-2">
                   <Label htmlFor="c-qty-total">Jumla ya Kiasi (Total Quantity)</Label>
                   <Input 
                       id="c-qty-total" 
@@ -308,7 +309,7 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
                       className="bg-gray-800 border-gray-600"
                   />
                 </div>
-                 <div>
+                 <div className="grid gap-2">
                   <Label htmlFor="c-interval">Muda kati ya Usafirishaji (kwa Siku)</Label>
                   <Input 
                       id="c-interval" 
@@ -328,7 +329,8 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
 
              </div>
           )}
-          <DialogFooter>
+          </ScrollArea>
+          <DialogFooter className="mt-auto pt-4">
             <Button variant="outline" onClick={() => setIsContractDialogOpen(false)}>Ghairi</Button>
             <Button 
               className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -343,4 +345,3 @@ export function Inventory({ inventoryItems, onPostToMarket, onCreateContract }: 
     </>
   );
 }
-
