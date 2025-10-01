@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -12,13 +13,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { simulateCommodityPrice, type SimulateCommodityPriceInput } from '@/ai/flows/commodity-price-simulation';
-import { Loader2, Users, Wifi, WifiOff } from 'lucide-react';
+import { Check, ChevronsUpDown, Gift, Loader2, Users, Wifi, WifiOff } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
+import { encyclopediaData } from '@/lib/encyclopedia-data';
 
 
 const simulationFormSchema = z.object({
@@ -29,8 +33,16 @@ const simulationFormSchema = z.object({
   adminAdjustment: z.coerce.number().optional(),
 });
 
+const itemSenderFormSchema = z.object({
+    itemName: z.string({ required_error: 'Please select an item.' }),
+    quantity: z.coerce.number().min(1, 'Quantity must be at least 1.'),
+    targetUid: z.string().min(1, 'Target UID is required.'),
+});
+
+
 interface AdminPanelProps {
     onViewProfile: (playerId: string) => void;
+    onAdminSendItem: (itemName: string, quantity: number, targetUid: string) => void;
 }
 
 function CommoditySimulator() {
@@ -193,7 +205,7 @@ function CommoditySimulator() {
   );
 }
 
-function PlayerManager({ onViewProfile }: AdminPanelProps) {
+function PlayerManager({ onViewProfile }: Pick<AdminPanelProps, 'onViewProfile'>) {
     const { players, loading } = useAllPlayers();
 
     const { onlinePlayers, offlinePlayers } = React.useMemo(() => {
@@ -287,8 +299,156 @@ function PlayerManager({ onViewProfile }: AdminPanelProps) {
     )
 }
 
+function GameTools({ onAdminSendItem }: Pick<AdminPanelProps, 'onAdminSendItem'>) {
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = React.useState(false);
+    const [open, setOpen] = React.useState(false)
 
-export function AdminPanel({ onViewProfile }: AdminPanelProps) {
+    const form = useForm<z.infer<typeof itemSenderFormSchema>>({
+        resolver: zodResolver(itemSenderFormSchema),
+    });
+
+    const onSubmit = (values: z.infer<typeof itemSenderFormSchema>) => {
+        setIsLoading(true);
+        try {
+            onAdminSendItem(values.itemName, values.quantity, values.targetUid);
+            toast({
+                title: "Items Sent!",
+                description: `Sent ${values.quantity}x ${values.itemName} to player ${values.targetUid}.`,
+            });
+            form.reset({ quantity: 0, targetUid: '' });
+        } catch (error) {
+            console.error("Failed to send item:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Failed to Send Item',
+                description: 'An error occurred while sending the item contract.',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const items = encyclopediaData;
+
+    return (
+        <div className="mt-6">
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Gift /> Admin Item Sender
+                    </CardTitle>
+                    <CardDescription>
+                        Send any item in any quantity to a player as a free contract.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-lg mx-auto">
+                            <FormField
+                                control={form.control}
+                                name="itemName"
+                                render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Item</FormLabel>
+                                    <Popover open={open} onOpenChange={setOpen}>
+                                    <PopoverTrigger asChild>
+                                        <FormControl>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className={cn(
+                                            "w-full justify-between",
+                                            !field.value && "text-muted-foreground"
+                                            )}
+                                        >
+                                            {field.value
+                                            ? items.find(
+                                                (item) => item.name === field.value
+                                                )?.name
+                                            : "Select item"}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                        </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[--radix-popover-content-available-height] p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Search item..." />
+                                            <CommandList>
+                                                <CommandEmpty>No item found.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {items.map((item) => (
+                                                    <CommandItem
+                                                        value={item.name}
+                                                        key={item.id}
+                                                        onSelect={() => {
+                                                            form.setValue("itemName", item.name)
+                                                            setOpen(false)
+                                                        }}
+                                                    >
+                                                        <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            item.name === field.value
+                                                            ? "opacity-100"
+                                                            : "opacity-0"
+                                                        )}
+                                                        />
+                                                        {item.name}
+                                                    </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+
+                             <FormField
+                                control={form.control}
+                                name="quantity"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Quantity</FormLabel>
+                                    <FormControl>
+                                    <Input type="number" placeholder="100" {...field} className="bg-gray-700 border-gray-600" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="targetUid"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Target Player UID</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="Enter player UID" {...field} className="bg-gray-700 border-gray-600" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            
+                            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Send Item Contract
+                            </Button>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
+
+export function AdminPanel({ onViewProfile, onAdminSendItem }: AdminPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -298,9 +458,10 @@ export function AdminPanel({ onViewProfile }: AdminPanelProps) {
       </div>
 
        <Tabs defaultValue="players" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-gray-900/50">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-900/50">
             <TabsTrigger value="players">Player Management</TabsTrigger>
             <TabsTrigger value="economy">Economy Tools</TabsTrigger>
+            <TabsTrigger value="tools">Game Tools</TabsTrigger>
           </TabsList>
           <TabsContent value="players">
             <PlayerManager onViewProfile={onViewProfile} />
@@ -308,15 +469,11 @@ export function AdminPanel({ onViewProfile }: AdminPanelProps) {
           <TabsContent value="economy">
              <CommoditySimulator />
           </TabsContent>
+          <TabsContent value="tools">
+             <GameTools onAdminSendItem={onAdminSendItem} />
+          </TabsContent>
         </Tabs>
 
     </div>
   );
 }
-
-
-    
-
-    
-
-    

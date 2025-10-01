@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -736,6 +737,32 @@ export function Game() {
     });
   }
 
+  const handleAdminSendItem = (itemName: string, quantity: number, targetUid: string) => {
+    if (!database || !user || !gameState || gameState.role !== 'admin') return;
+
+    const newContractRef = push(ref(database, 'contracts'));
+    const productInfo = encyclopediaData.find(e => e.name === itemName);
+
+    const newContract: Omit<ContractListing, 'id'> = {
+        commodity: itemName,
+        quantity,
+        pricePerUnit: 0, // It's free
+        sellerUid: 'admin-system',
+        sellerName: 'System Admin',
+        sellerAvatar: `https://picsum.photos/seed/admin/40/40`,
+        status: 'open',
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 5 * 24 * 60 * 60 * 1000, // 5 days expiry
+        buyerIdentifier: targetUid,
+        imageHint: productInfo?.imageHint || 'product photo'
+    };
+
+    set(newContractRef, newContract).catch(error => {
+        console.error("Failed to create admin contract:", error);
+        toast({ variant: 'destructive', title: 'Failed to Create Admin Contract' });
+    });
+  };
+
   const handleAcceptContract = async (contract: ContractListing) => {
     if (!database || !user || !gameState) return;
 
@@ -781,18 +808,20 @@ export function Game() {
             };
         });
 
-        // Seller gets money and notification
-        const sellerUserRef = ref(database, `users/${contract.sellerUid}`);
-        await runTransaction(sellerUserRef, (sellerData) => {
-            if (sellerData) {
-                sellerData.money += totalCost;
-                const newTransaction: Transaction = { id: `${Date.now()}-contract-sale`, type: 'income', amount: totalCost, description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`, timestamp: Date.now() };
-                sellerData.transactions = [newTransaction, ...(sellerData.transactions || [])];
-                const newNotification: Notification = { id: `${Date.now()}-contract-notify`, message: `Your contract for ${contract.quantity}x ${contract.commodity} was accepted by ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
-                sellerData.notifications = [newNotification, ...(sellerData.notifications || [])];
-            }
-            return sellerData;
-        });
+        // Seller gets money and notification (unless it's an admin)
+        if (contract.sellerUid !== 'admin-system') {
+            const sellerUserRef = ref(database, `users/${contract.sellerUid}`);
+            await runTransaction(sellerUserRef, (sellerData) => {
+                if (sellerData) {
+                    sellerData.money += totalCost;
+                    const newTransaction: Transaction = { id: `${Date.now()}-contract-sale`, type: 'income', amount: totalCost, description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`, timestamp: Date.now() };
+                    sellerData.transactions = [newTransaction, ...(sellerData.transactions || [])];
+                    const newNotification: Notification = { id: `${Date.now()}-contract-notify`, message: `Your contract for ${contract.quantity}x ${contract.commodity} was accepted by ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
+                    sellerData.notifications = [newNotification, ...(sellerData.notifications || [])];
+                }
+                return sellerData;
+            });
+        }
 
         toast({ title: 'Contract Accepted!', description: `You purchased ${contract.quantity}x ${contract.commodity}.` });
 
@@ -806,25 +835,26 @@ export function Game() {
     if (!database || !user) return;
     if (contract.sellerUid === user.uid) return;
 
-    // Just remove the contract, items are already deducted from seller.
-    // The seller needs to get their items back.
+    // Just remove the contract. If seller is not admin, return items.
     const contractRef = ref(database, `contracts/${contract.id}`);
     await remove(contractRef);
 
-    const sellerUserRef = ref(database, `users/${contract.sellerUid}`);
-    await runTransaction(sellerUserRef, (sellerData) => {
-        if (sellerData) {
-            const itemIndex = sellerData.inventory.findIndex((i: InventoryItem) => i.item === contract.commodity);
-            if (itemIndex > -1) {
-                sellerData.inventory[itemIndex].quantity += contract.quantity;
-            } else {
-                sellerData.inventory.push({ item: contract.commodity, quantity: contract.quantity, marketPrice: contract.pricePerUnit });
+    if (contract.sellerUid !== 'admin-system') {
+        const sellerUserRef = ref(database, `users/${contract.sellerUid}`);
+        await runTransaction(sellerUserRef, (sellerData) => {
+            if (sellerData) {
+                const itemIndex = sellerData.inventory.findIndex((i: InventoryItem) => i.item === contract.commodity);
+                if (itemIndex > -1) {
+                    sellerData.inventory[itemIndex].quantity += contract.quantity;
+                } else {
+                    sellerData.inventory.push({ item: contract.commodity, quantity: contract.quantity, marketPrice: contract.pricePerUnit });
+                }
+                const newNotification: Notification = { id: `${Date.now()}-contract-reject`, message: `Your contract for ${contract.quantity}x ${contract.commodity} was rejected. Items have been returned.`, timestamp: Date.now(), read: false, icon: 'purchase' };
+                sellerData.notifications = [newNotification, ...(sellerData.notifications || [])];
             }
-            const newNotification: Notification = { id: `${Date.now()}-contract-reject`, message: `Your contract for ${contract.quantity}x ${contract.commodity} was rejected. Items have been returned.`, timestamp: Date.now(), read: false, icon: 'purchase' };
-            sellerData.notifications = [newNotification, ...(sellerData.notifications || [])];
-        }
-        return sellerData;
-    });
+            return sellerData;
+        });
+    }
 
     toast({ title: 'Mkataba umekataliwa.' });
   };
@@ -1132,7 +1162,7 @@ export function Game() {
         }
         return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} />;
       case 'admin':
-          return <AdminPanel onViewProfile={handleViewProfile} />;
+          return <AdminPanel onViewProfile={handleViewProfile} onAdminSendItem={handleAdminSendItem} />;
       default:
         return null;
     }
