@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, FileSignature, Archive, Handshake, Inbox, Check, X, Hourglass, History, LineChart, Banknote } from 'lucide-react';
+import { MoreHorizontal, FileSignature, Archive, Handshake, Inbox, Check, X, Hourglass, History, LineChart, Banknote, Building, Info } from 'lucide-react';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -43,6 +43,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import type { PlayerStock } from '@/app/game';
+import type { CompanyProfile, UserData } from '@/services/game-service';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+
 
 export type InventoryItem = {
   item: string;
@@ -55,6 +58,8 @@ interface InventoryProps {
   playerStocks: PlayerStock[];
   stockListings: StockListing[];
   contractListings: ContractListing[];
+  companyProfile: CompanyProfile;
+  netWorth: number;
   onPostToMarket: (item: InventoryItem, quantity: number, price: number) => void;
   onCreateContract: (item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => void;
   onAcceptContract: (contract: ContractListing) => void;
@@ -493,13 +498,15 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
     );
 }
 
-function StocksInventoryView({ playerStocks, stockListings, onSellStock }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock'>) {
+function StocksInventoryView({ playerStocks, stockListings, onSellStock, companyProfile, netWorth }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock' | 'companyProfile' | 'netWorth'>) {
   const [selectedStock, setSelectedStock] = React.useState<{ stock: PlayerStock, details: StockListing } | null>(null);
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
   const [sellQuantity, setSellQuantity] = React.useState(1);
+  const IPO_QUALIFICATION_NET_WORTH = 50000;
+  const isQualifiedForIPO = netWorth >= IPO_QUALIFICATION_NET_WORTH;
 
   const ownedStocksWithDetails = React.useMemo(() => {
-    return playerStocks
+    return (playerStocks || [])
       .map(ps => {
         const details = stockListings.find(sl => sl.ticker === ps.ticker);
         return details ? { stock: ps, details } : null;
@@ -522,58 +529,100 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock }: Pick<
 
   return (
     <>
-      <Card className="bg-gray-800/60 border-gray-700 text-white">
-        <CardHeader>
-          <CardTitle>Hisa Zangu</CardTitle>
-          <CardDescription className="text-gray-400">
-            Tazama na uuze hisa unazomiliki kutoka hapa.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[calc(100vh-20rem)]">
-            <div className="space-y-4 pr-4">
-              {ownedStocksWithDetails.map(({ stock, details }) => {
-                const totalValue = stock.shares * details.stockPrice;
-                return (
-                  <Card key={stock.ticker} className="bg-gray-900/50">
-                    <CardHeader className="p-4">
-                       <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
-                                    <AvatarImage src={details.logo} alt={details.companyName} data-ai-hint={details.imageHint} />
-                                    <AvatarFallback>{details.ticker.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <CardTitle className="text-base">{details.companyName}</CardTitle>
-                                    <CardDescription>{details.ticker}</CardDescription>
-                                </div>
-                            </div>
-                            <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => handleOpenSellDialog({ stock, details })}>Uza</Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                            <div className="text-gray-400">Shares Owned</div>
-                            <div className="font-mono text-right">{stock.shares.toLocaleString()}</div>
-                            <div className="text-gray-400">Current Price</div>
-                            <div className="font-mono text-right">${details.stockPrice.toFixed(2)}</div>
-                            <Separator className="col-span-2 bg-gray-700 my-1"/>
-                            <div className="text-gray-300 font-bold">Total Value</div>
-                            <div className="font-mono text-right font-bold text-green-300">${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
-                         </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-             {ownedStocksWithDetails.length === 0 && (
-                <div className="flex items-center justify-center h-48 text-gray-400">
-                    <p>Huna hisa zozote kwa sasa.</p>
+      <div className="space-y-4">
+        {/* My Company Shares Card */}
+        <Card className="bg-gray-800/60 border-gray-700">
+            <CardHeader>
+                <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border-2 border-blue-400">
+                        <Building />
+                    </Avatar>
+                     <div>
+                        <CardTitle className="text-base">{companyProfile.companyName}</CardTitle>
+                        <CardDescription>Hisa za Kampuni Yako</CardDescription>
+                    </div>
                 </div>
-              )}
-          </ScrollArea>
-        </CardContent>
-      </Card>
+            </CardHeader>
+            <CardContent>
+                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-4">
+                    <div className="text-gray-400">Jumla ya Hisa</div>
+                    <div className="font-mono text-right">{companyProfile.totalShares.toLocaleString()}</div>
+                    <div className="text-gray-400">Bei ya Hisa (Kadirio)</div>
+                    <div className="font-mono text-right">${companyProfile.sharePrice.toFixed(2)}</div>
+                    <Separator className="col-span-2 bg-gray-700 my-1"/>
+                    <div className="text-gray-300 font-bold">Thamani ya Soko</div>
+                    <div className="font-mono text-right font-bold text-blue-300">${companyProfile.marketCap.toLocaleString()}</div>
+                 </div>
+                 {isQualifiedForIPO ? (
+                    <Button className="w-full" disabled>Toa Hisa Sokoni (Inakuja Hivi Karibuni)</Button>
+                 ) : (
+                    <Alert variant="default" className="bg-yellow-600/10 border-yellow-500/30">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle className="text-yellow-300">Vigezo Havijatimizwa</AlertTitle>
+                        <AlertDescription className="text-yellow-400">
+                            Kampuni yako inahitaji kufikia thamani ya ${IPO_QUALIFICATION_NET_WORTH.toLocaleString()} ili uweze kuuza hisa. Endelea kukuza biashara yako!
+                        </AlertDescription>
+                    </Alert>
+                 )}
+            </CardContent>
+        </Card>
+
+        <Separator />
+
+        {/* Owned Stocks Card */}
+        <Card className="bg-gray-800/60 border-gray-700 text-white">
+            <CardHeader>
+            <CardTitle>Hisa Zangu Nilizonunua</CardTitle>
+            <CardDescription className="text-gray-400">
+                Tazama na uuze hisa unazomiliki kutoka hapa.
+            </CardDescription>
+            </CardHeader>
+            <CardContent>
+            <ScrollArea className="h-[calc(100vh-20rem)]">
+                <div className="space-y-4 pr-4">
+                {ownedStocksWithDetails.map(({ stock, details }) => {
+                    const totalValue = stock.shares * details.stockPrice;
+                    return (
+                    <Card key={stock.ticker} className="bg-gray-900/50">
+                        <CardHeader className="p-4">
+                        <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="h-10 w-10">
+                                        <AvatarImage src={details.logo} alt={details.companyName} data-ai-hint={details.imageHint} />
+                                        <AvatarFallback>{details.ticker.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <CardTitle className="text-base">{details.companyName}</CardTitle>
+                                        <CardDescription>{details.ticker}</CardDescription>
+                                    </div>
+                                </div>
+                                <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => handleOpenSellDialog({ stock, details })}>Uza</Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                <div className="text-gray-400">Shares Owned</div>
+                                <div className="font-mono text-right">{stock.shares.toLocaleString()}</div>
+                                <div className="text-gray-400">Current Price</div>
+                                <div className="font-mono text-right">${details.stockPrice.toFixed(2)}</div>
+                                <Separator className="col-span-2 bg-gray-700 my-1"/>
+                                <div className="text-gray-300 font-bold">Total Value</div>
+                                <div className="font-mono text-right font-bold text-green-300">${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    );
+                })}
+                </div>
+                {ownedStocksWithDetails.length === 0 && (
+                    <div className="flex items-center justify-center h-48 text-gray-400">
+                        <p>Huna hisa zozote kwa sasa.</p>
+                    </div>
+                )}
+            </ScrollArea>
+            </CardContent>
+        </Card>
+      </div>
 
       <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
         <DialogContent className="bg-gray-900 border-gray-700 text-white">
@@ -641,7 +690,7 @@ export function Inventory(props: InventoryProps) {
     }).length;
   }, [props.contractListings, props.currentUserId, props.currentUsername]);
 
-  const newStocksCount = props.playerStocks.length;
+  const newStocksCount = (props.playerStocks || []).length;
 
   return (
     <div className="flex flex-col gap-4 text-white">
