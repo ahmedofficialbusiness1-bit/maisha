@@ -59,6 +59,7 @@ export type ProfileData = ProfileDataForForm & {
 
 export type PlayerMetrics = {
     netWorth: number;
+    inventoryValue: number;
     ranking: string;
     rating: string;
     buildingValue: number;
@@ -321,6 +322,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         <ValuationItem label="Company value" value={`$${metrics.netWorth.toLocaleString()}`} />
                         <ValuationItem label="Buildings value" value={`$${metrics.buildingValue.toLocaleString()}`} />
                         <ValuationItem label="Stock value" value={`$${metrics.stockValue.toLocaleString()}`} />
+                        <ValuationItem label="Inventory value" value={`$${metrics.inventoryValue.toLocaleString()}`} />
                         <ValuationItem label="Patents value" value="$0" />
                     </div>
                     

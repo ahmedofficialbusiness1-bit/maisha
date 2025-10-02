@@ -1172,8 +1172,8 @@ export function Game() {
     };
   }, [userRef, handleDailyDividends]);
 
-  const { buildingValue, stockValue } = React.useMemo(() => {
-    if (!gameState) return { buildingValue: 0, stockValue: 0 };
+  const { buildingValue, stockValue, inventoryValue } = React.useMemo(() => {
+    if (!gameState) return { buildingValue: 0, stockValue: 0, inventoryValue: 0 };
 
     const currentStockValue = (gameState.playerStocks || []).reduce((total, stock) => {
         const stockInfo = companyData.find(s => s.ticker === stock.ticker);
@@ -1200,7 +1200,12 @@ export function Game() {
         return total + cost * 0.5; // Buildings depreciate to 50% of build cost
     }, 0);
 
-    return { buildingValue: currentBuildingValue, stockValue: currentStockValue };
+    const currentInventoryValue = (gameState.inventory || []).reduce((total, item) => {
+        const price = calculatedPrices[item.item] || item.marketPrice || 0;
+        return total + (item.quantity * price);
+    }, 0);
+
+    return { buildingValue: currentBuildingValue, stockValue: currentStockValue, inventoryValue: currentInventoryValue };
   }, [gameState, companyData]);
 
 
@@ -1208,13 +1213,12 @@ export function Game() {
   React.useEffect(() => {
     if (!gameState || !userRef) return;
     
-    const inventoryValue = (gameState.inventory || []).reduce((total, item) => total + (item.quantity * (item.marketPrice || 0)), 0);
     const netWorth = gameState.money + stockValue + buildingValue + inventoryValue;
 
     if (netWorth !== gameState.netWorth) {
         update(userRef, { netWorth });
     }
-  }, [gameState, buildingValue, stockValue, userRef]);
+  }, [gameState, buildingValue, stockValue, inventoryValue, userRef]);
 
 
   const getPlayerRating = (netWorth: number) => {
@@ -1311,7 +1315,7 @@ export function Game() {
   } : null;
 
   const getMetricsForProfile = (profileData: UserData | null): PlayerMetrics => {
-    if (!profileData || !allPlayers) return { netWorth: 0, buildingValue: 0, stockValue: 0, ranking: 'N/A', rating: 'D' };
+    if (!profileData || !allPlayers) return { netWorth: 0, inventoryValue: 0, buildingValue: 0, stockValue: 0, ranking: 'N/A', rating: 'D' };
     
     const publicData = allPlayers.find(p => p.uid === profileData.uid);
     const netWorth = publicData?.netWorth || profileData.netWorth;
@@ -1323,6 +1327,7 @@ export function Game() {
     if (profileData.uid === user.uid) {
         return {
             netWorth: netWorth,
+            inventoryValue: inventoryValue,
             buildingValue: buildingValue,
             stockValue: stockValue,
             ranking: rank !== -1 ? `#${rank + 1}` : '100+',
@@ -1331,9 +1336,11 @@ export function Game() {
     }
     
     // For other players, this is a simplification and only shows Net Worth correctly.
+    // We would need to fetch their full user data to calculate other values.
     return {
         netWorth: netWorth,
-        buildingValue: 0, // Not calculated for other players to save performance
+        inventoryValue: 0, // Not calculated for other players to save performance
+        buildingValue: 0, // Not calculated for other players
         stockValue: 0, // Not calculated for other players
         ranking: rank !== -1 ? `#${rank + 1}` : '100+',
         rating: getPlayerRating(netWorth),
