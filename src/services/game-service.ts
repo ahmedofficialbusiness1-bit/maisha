@@ -32,8 +32,8 @@ export type UserData = {
   buildingSlots: any[]; 
   inventory: any[]; 
   playerStocks: PlayerStock[];
-  transactions: any[];
-  notifications: any[];
+  transactions: Record<string, any>;
+  notifications: Record<string, any>;
   playerLevel: number;
   playerXP: number;
   privateNotes: string;
@@ -80,8 +80,8 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
       { item: 'Saruji', quantity: 1000, marketPrice: 10 },
     ],
     playerStocks: [],
-    transactions: [],
-    notifications: [],
+    transactions: {},
+    notifications: {},
     playerLevel: 1,
     playerXP: 0,
     privateNotes: `Karibu kwenye wasifu wangu! Mimi ni mchezaji mpya kwenye Uchumi wa Afrika na nina matumaini ya kujenga himaya kubwa.`,
