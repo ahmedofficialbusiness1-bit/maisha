@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, FileSignature, Archive, Handshake, Inbox, Check, X, Hourglass, History, LineChart, Banknote, Building, Info } from 'lucide-react';
+import { MoreHorizontal, FileSignature, Archive, Handshake, Inbox, Check, X, Hourglass, History, LineChart, Banknote, Building, Info, TrendingUp } from 'lucide-react';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -45,6 +45,16 @@ import { formatDistanceToNow } from 'date-fns';
 import type { PlayerStock } from '@/app/game';
 import type { CompanyProfile, UserData } from '@/services/game-service';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/alert-dialog';
 
 
 export type InventoryItem = {
@@ -66,6 +76,7 @@ interface InventoryProps {
   onRejectContract: (contract: ContractListing) => void;
   onCancelContract: (contract: ContractListing) => void;
   onSellStock: (ticker: string, shares: number) => void;
+  onGoPublic: () => void;
   currentUserId: string;
   currentUsername: string;
 }
@@ -498,9 +509,10 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
     );
 }
 
-function StocksInventoryView({ playerStocks, stockListings, onSellStock, companyProfile, netWorth }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock' | 'companyProfile' | 'netWorth'>) {
+function StocksInventoryView({ playerStocks, stockListings, onSellStock, companyProfile, netWorth, onGoPublic }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock' | 'companyProfile' | 'netWorth' | 'onGoPublic'>) {
   const [selectedStock, setSelectedStock] = React.useState<{ stock: PlayerStock, details: StockListing } | null>(null);
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
+  const [isPublicDialogOpen, setIsPublicDialogOpen] = React.useState(false);
   const [sellQuantity, setSellQuantity] = React.useState(1);
   const IPO_QUALIFICATION_NET_WORTH = 50000;
   const isQualifiedForIPO = netWorth >= IPO_QUALIFICATION_NET_WORTH;
@@ -527,6 +539,11 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
     }
   };
 
+  const handleConfirmGoPublic = () => {
+    onGoPublic();
+    setIsPublicDialogOpen(false);
+  }
+
   return (
     <>
       <div className="space-y-4">
@@ -535,8 +552,9 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border-2 border-blue-400">
-                            <Building />
+                         <Avatar className="h-10 w-10 border-2 border-blue-400">
+                           <AvatarImage src={companyProfile.logo} alt={companyProfile.companyName} data-ai-hint="company logo" />
+                           <AvatarFallback><Building /></AvatarFallback>
                         </Avatar>
                         <div>
                             <CardTitle className="text-base">{companyProfile.companyName}</CardTitle>
@@ -554,11 +572,22 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
                         <div className="text-gray-300 font-bold">Thamani ya Soko</div>
                         <div className="font-mono text-right font-bold text-blue-300">${companyProfile.marketCap.toLocaleString()}</div>
                     </div>
-                    {isQualifiedForIPO ? (
-                        <Button className="w-full" disabled>Toa Hisa Sokoni (Inakuja Hivi Karibuni)</Button>
+
+                    {companyProfile.isPublic ? (
+                        <Alert variant="default" className="bg-green-600/10 border-green-500/30">
+                            <Info className="h-4 w-4 text-green-300" />
+                            <AlertTitle className="text-green-300">Kampuni ya Umma</AlertTitle>
+                            <AlertDescription className="text-green-400">
+                                Hongera! Kampuni yako sasa inauza hisa zake kwenye soko la umma.
+                            </AlertDescription>
+                        </Alert>
+                    ) : isQualifiedForIPO ? (
+                        <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setIsPublicDialogOpen(true)}>
+                            <TrendingUp className="mr-2 h-4 w-4" /> Toa Hisa Sokoni (Go Public)
+                        </Button>
                     ) : (
                         <Alert variant="default" className="bg-yellow-600/10 border-yellow-500/30">
-                            <Info className="h-4 w-4" />
+                            <Info className="h-4 w-4 text-yellow-300" />
                             <AlertTitle className="text-yellow-300">Vigezo Havijatimizwa</AlertTitle>
                             <AlertDescription className="text-yellow-400">
                                 Kampuni yako inahitaji kufikia thamani ya ${IPO_QUALIFICATION_NET_WORTH.toLocaleString()} ili uweze kuuza hisa. Endelea kukuza biashara yako!
@@ -626,6 +655,25 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
             </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={isPublicDialogOpen} onOpenChange={setIsPublicDialogOpen}>
+            <AlertDialogContent className="bg-gray-900 border-gray-700 text-white">
+                <AlertDialogHeader>
+                <AlertDialogTitle>Thibitisha Kuuza Hisa (IPO)</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Je, una uhakika unataka kuuza hisa za kampuni yako kwa umma?
+                    <br/><br/>
+                    Hiki ni kitendo kisichoweza kutenduliwa. Utapokea pesa taslimu kwa kuuza 20% ya hisa zako, na kampuni yako itaorodheshwa kwenye soko la hisa kwa wachezaji wengine kununua.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Ghairi</AlertDialogCancel>
+                    <AlertDialogAction className="bg-green-600 hover:bg-green-700" onClick={handleConfirmGoPublic}>
+                       Ndiyo, Toa Hisa Sokoni
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
 
       <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
         <DialogContent className="bg-gray-900 border-gray-700 text-white">

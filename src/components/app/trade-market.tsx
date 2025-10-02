@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark, FileSignature } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark, FileSignature, Building } from 'lucide-react';
 import type { InventoryItem } from './inventory';
 import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
 import { cn } from '@/lib/utils';
@@ -63,7 +63,7 @@ export type ContractListing = {
 
 
 export type StockListing = {
-    id: string;
+    id: string; // Ticker or a unique ID from database
     ticker: string;
     companyName: string;
     stockPrice: number;
@@ -72,8 +72,9 @@ export type StockListing = {
     logo: string;
     imageHint: string;
     creditRating: string;
-    dailyRevenue: number;
-    dividendYield: number; // e.g., 0.015 for 1.5%
+    dailyRevenue?: number;
+    dividendYield?: number; // e.g., 0.015 for 1.5%
+    isPlayerCompany?: boolean;
 };
 
 export type BondListing = {
@@ -469,9 +470,9 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                  <CardHeader>
                                      <div className="flex items-center gap-3">
                                          <Avatar className="h-10 w-10">
-                                             <AvatarImage src={stock.logo} alt={stock.companyName} data-ai-hint={stock.imageHint} />
-                                             <AvatarFallback>{stock.ticker.charAt(0)}</AvatarFallback>
-                                         </Avatar>
+                                            <AvatarImage src={stock.logo} alt={stock.companyName} data-ai-hint={stock.imageHint} />
+                                            <AvatarFallback>{stock.isPlayerCompany ? <Building/> : stock.ticker.charAt(0)}</AvatarFallback>
+                                        </Avatar>
                                          <div>
                                              <CardTitle className="text-base">{stock.companyName}</CardTitle>
                                              <CardDescription>{stock.ticker}</CardDescription>
@@ -522,7 +523,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                             <div className="flex items-center gap-2 sm:gap-3">
                                                 <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                                                     <AvatarImage src={stock.logo} alt={stock.companyName} data-ai-hint={stock.imageHint} />
-                                                    <AvatarFallback>{stock.ticker.charAt(0)}</AvatarFallback>
+                                                    <AvatarFallback>{stock.isPlayerCompany ? <Building/> : stock.ticker.charAt(0)}</AvatarFallback>
                                                 </Avatar>
                                                 <div>
                                                     <p className="font-bold text-sm sm:text-base">{stock.companyName}</p>
@@ -592,7 +593,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                      <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700" disabled>
                                          Nunua
                                      </Button>
-                                </CardContent>
+                                 </CardContent>
                              </Card>
                         ))}
                     </div>

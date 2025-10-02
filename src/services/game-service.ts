@@ -10,10 +10,14 @@ export type UserChatData = {
 
 export type CompanyProfile = {
   companyName: string;
+  ticker: string;
+  logo: string;
   totalShares: number;
   availableShares: number;
   sharePrice: number;
   marketCap: number;
+  isPublic: boolean;
+  ownerUid: string;
 };
 
 // This is the private user data, stored under /users/{uid}
@@ -59,6 +63,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
   const initialMoney = isAdmin ? 1000000 : 10000;
   const initialSharePrice = 10;
   const initialTotalShares = 1000000;
+  const initialTicker = initialUsername.slice(0, 5).toUpperCase();
   
   return {
     uid,
@@ -86,10 +91,14 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     lastPublicRead: { general: 0, trade: 0, help: 0 },
     companyProfile: {
       companyName: `${initialUsername} Inc.`,
+      ticker: initialTicker,
+      logo: `https://picsum.photos/seed/${initialTicker}/40/40`,
       totalShares: initialTotalShares,
-      availableShares: initialTotalShares,
+      availableShares: initialTotalShares, // Initially all shares are private
       sharePrice: initialSharePrice,
       marketCap: initialTotalShares * initialSharePrice,
+      isPublic: false,
+      ownerUid: uid,
     },
   };
 }
