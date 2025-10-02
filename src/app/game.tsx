@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -96,8 +97,6 @@ export function Game() {
   
   const updateState = React.useCallback((updates: Partial<UserData>) => {
     if (!userRef) return;
-
-    setGameState(prev => prev ? { ...prev, ...updates } : null);
     update(userRef, updates);
   }, [userRef]);
   
@@ -263,46 +262,17 @@ export function Game() {
 
 
  const addTransaction = React.useCallback((type: 'income' | 'expense', amount: number, description: string) => {
-    if (!userRef || !gameState) return;
-
-    const newTransaction: Transaction = {
-        id: `${Date.now()}-${Math.random()}`,
+    if (!userRef) return;
+    const newTransaction: Omit<Transaction, 'id'> = {
         type,
         amount,
         description,
         timestamp: Date.now(),
     };
-
-    const xpFromTransaction = type === 'income' ? Math.floor(amount * 0.01) : 0;
-    
-    runTransaction(userRef, (currentData: UserData | null) => {
-        if (currentData) {
-            let newXP = currentData.playerXP + xpFromTransaction;
-            let newLevel = currentData.playerLevel;
-            let xpForNextLevel = getXpForNextLevel(newLevel);
-            const newNotifications = [...(currentData.notifications || [])];
-
-            while (newXP >= xpForNextLevel) {
-                newXP -= xpForNextLevel;
-                newLevel++;
-                newNotifications.unshift({
-                    id: `${Date.now()}-levelup-${newLevel}`,
-                    message: `Hongera! Umefikia Level ${newLevel}!`,
-                    timestamp: Date.now(),
-                    read: false,
-                    icon: 'level-up',
-                });
-                xpForNextLevel = getXpForNextLevel(newLevel);
-            }
-
-            currentData.transactions = [newTransaction, ...(currentData.transactions || [])];
-            currentData.playerXP = newXP;
-            currentData.playerLevel = newLevel;
-            currentData.notifications = newNotifications;
-        }
-        return currentData;
-    });
-}, [userRef, gameState]);
+    const transactionsRef = ref(userRef, 'transactions');
+    const newTransRef = push(transactionsRef);
+    set(newTransRef, newTransaction);
+}, [userRef]);
 
 
   const handleMarkNotificationsRead = () => {
@@ -672,25 +642,24 @@ export function Game() {
         return;
     }
 
-    update(userRef, {
+    const newPlayerStocks = [...(gameState.playerStocks || [])];
+    const existingStockIndex = newPlayerStocks.findIndex(s => s.ticker === stock.ticker);
+    if (existingStockIndex > -1) {
+        newPlayerStocks[existingStockIndex].shares += quantity;
+    } else {
+        newPlayerStocks.push({ ticker: stock.ticker, shares: quantity });
+    }
+
+    const newTransaction: Transaction = { id: `${Date.now()}-buy-stock`, type: 'expense', amount: totalCost, description: `Nunua hisa ${quantity}x ${stock.ticker}`, timestamp: Date.now() };
+    const newNotification: Notification = { id: `${Date.now()}-buy-stock-notify`, message: `Umenunua hisa ${quantity}x ${stock.ticker}.`, timestamp: Date.now(), read: false, icon: 'purchase' };
+
+    updateState({
         money: gameState.money - totalCost,
-        playerStocks: [
-            ...(gameState.playerStocks || []).filter(s => s.ticker !== stock.ticker),
-            { 
-                ticker: stock.ticker, 
-                shares: ((gameState.playerStocks || []).find(s => s.ticker === stock.ticker)?.shares || 0) + quantity 
-            }
-        ],
-        transactions: [
-            { id: `${Date.now()}-buy-stock`, type: 'expense', amount: totalCost, description: `Nunua hisa ${quantity}x ${stock.ticker}`, timestamp: Date.now() },
-            ...(gameState.transactions || [])
-        ],
-        notifications: [
-            { id: `${Date.now()}-buy-stock-notify`, message: `Umenunua hisa ${quantity}x ${stock.ticker}.`, timestamp: Date.now(), read: false, icon: 'purchase' },
-            ...(gameState.notifications || [])
-        ],
+        playerStocks: newPlayerStocks,
+        transactions: [newTransaction, ...(gameState.transactions || [])],
+        notifications: [newNotification, ...(gameState.notifications || [])],
     });
-  }, [gameState, userRef, toast]);
+  }, [gameState, userRef, toast, updateState]);
 
   const handleSellStock = React.useCallback((ticker: string, shares: number) => {
     if (!gameState || !userRef || shares <= 0) return;
@@ -710,19 +679,16 @@ export function Game() {
         return s;
     }).filter(s => s.shares > 0);
 
-    update(userRef, {
+    const newTransaction: Transaction = { id: `${Date.now()}-sell-stock`, type: 'income', amount: totalSale, description: `Uza hisa ${shares}x ${ticker}`, timestamp: Date.now() };
+    const newNotification: Notification = { id: `${Date.now()}-sell-stock-notify`, message: `Umeuza hisa ${shares}x ${ticker}.`, timestamp: Date.now(), read: false, icon: 'sale' };
+
+    updateState({
         money: gameState.money + totalSale,
         playerStocks: newPlayerStocks,
-        transactions: [
-            { id: `${Date.now()}-sell-stock`, type: 'income', amount: totalSale, description: `Uza hisa ${shares}x ${ticker}`, timestamp: Date.now() },
-            ...(gameState.transactions || [])
-        ],
-        notifications: [
-            { id: `${Date.now()}-sell-stock-notify`, message: `Umeuza hisa ${shares}x ${ticker}.`, timestamp: Date.now(), read: false, icon: 'sale' },
-            ...(gameState.notifications || [])
-        ],
+        transactions: [newTransaction, ...(gameState.transactions || [])],
+        notifications: [newNotification, ...(gameState.notifications || [])],
     });
-  }, [gameState, userRef, companyData]);
+  }, [gameState, userRef, companyData, updateState]);
 
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
