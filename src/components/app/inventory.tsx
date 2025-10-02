@@ -121,6 +121,12 @@ function ItemInventoryView({ inventoryItems, onPostToMarket, onCreateContract }:
     }
   };
 
+  const handleMarketPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value) || 0;
+    const clampedValue = Math.max(priceFloor, Math.min(value, priceCeiling));
+    setMarketPrice(clampedValue);
+  };
+
   return (
     <>
       <Card className="bg-gray-800/60 border-gray-700 text-white">
@@ -222,9 +228,7 @@ function ItemInventoryView({ inventoryItems, onPostToMarket, onCreateContract }:
                         id="price" 
                         type="number"
                         value={marketPrice}
-                        onChange={(e) => setMarketPrice(Math.max(priceFloor, Math.min(Number(e.target.value), priceCeiling)))}
-                        min={priceFloor}
-                        max={priceCeiling}
+                        onChange={handleMarketPriceChange}
                         step="0.01"
                         className="sm:col-span-3 bg-gray-800 border-gray-600"
                     />
@@ -332,12 +336,18 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
     const { incoming, outgoing, history } = React.useMemo(() => {
         const myContracts = contractListings.filter(c => {
             const isSeller = c.sellerUid === currentUserId;
-            const isTargetedBuyer = c.buyerIdentifier === currentUserId || c.buyerIdentifier === currentUsername;
-            const isPublicAndOpen = !c.buyerIdentifier && c.status === 'open';
-            return isSeller || isTargetedBuyer || isPublicAndOpen;
+            const isBuyer = c.buyerUid === currentUserId;
+            const isTargetedBuyer = c.status === 'open' && (c.buyerIdentifier === currentUserId || c.buyerIdentifier === currentUsername);
+            const isPublicOpen = c.status === 'open' && !c.buyerIdentifier;
+            
+            return isSeller || isBuyer || isTargetedBuyer || isPublicOpen;
         });
 
-        const incoming = myContracts.filter(c => c.status === 'open' && c.sellerUid !== currentUserId);
+        const incoming = myContracts.filter(c => 
+            c.status === 'open' && 
+            c.sellerUid !== currentUserId &&
+            (!c.buyerIdentifier || c.buyerIdentifier === currentUserId || c.buyerIdentifier === currentUsername)
+        );
         const outgoing = myContracts.filter(c => c.status === 'open' && c.sellerUid === currentUserId);
         const history = myContracts.filter(c => c.status !== 'open');
 

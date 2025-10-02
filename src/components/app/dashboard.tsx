@@ -896,23 +896,22 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   }
 
   const calculateSaleTime = (quantity: number): number => {
-      if (!selectedSlot || !selectedInventoryItem || !selectedSlot.building) return 0;
-      
-      const recipe = recipes.find(r => r.output.name === selectedInventoryItem.item);
-      const buildingId = recipe ? recipe.buildingId : 'shamba'; // Fallback for base items
-      const itemBuildingInfo = buildingData[buildingId];
-      if (!itemBuildingInfo) return 5000 * quantity;
+    if (!selectedSlot || !selectedInventoryItem || !selectedSlot.building) return 0;
 
-      const shopInfo = buildingData[selectedSlot.building.id];
-      const saleMultiplier = shopInfo.saleRateMultiplier || 1;
+    const shopInfo = buildingData[selectedSlot.building.id];
+    const saleMultiplier = shopInfo.saleRateMultiplier || 1;
+    
+    // We need the base production rate of the item being sold to calculate sale time
+    const itemRecipe = recipes.find(r => r.output.name === selectedInventoryItem.item);
+    const itemBuildingInfo = itemRecipe ? buildingData[itemRecipe.buildingId] : null;
+    const baseProductionRate = itemBuildingInfo ? itemBuildingInfo.productionRate : 100; // Fallback rate
 
-      // Time in seconds for one batch, adjusted by shop level and sale multiplier
-      const ratePerHr = (itemBuildingInfo.productionRate * saleMultiplier) * (1 + (selectedSlot.level - 1) * 0.4);
-      if (ratePerHr <= 0) return 5000 * quantity; // Avoid division by zero
-      
-      const totalBatches = quantity;
-      const totalSeconds = (totalBatches / ratePerHr) * 3600;
-      return totalSeconds * 1000; // time in ms
+    // Time in seconds for one item, adjusted by shop level and sale multiplier
+    const saleRatePerHr = (baseProductionRate * saleMultiplier) * (1 + (selectedSlot.level - 1) * 0.4);
+    if (saleRatePerHr <= 0) return 5000 * quantity; // Avoid division by zero, provide a fallback time
+
+    const totalSeconds = (quantity / saleRatePerHr) * 3600;
+    return totalSeconds * 1000; // time in ms
   }
   
   const calculateProductionCost = (recipe: Recipe, quantity: number): number => {
@@ -962,6 +961,12 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         }
         return filtered;
     }, [buildingSearch]);
+
+  const handleSellingPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value) || 0;
+    const clampedValue = Math.max(priceFloor, Math.min(value, priceCeiling));
+    setSellingPrice(clampedValue);
+  };
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -1354,10 +1359,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                     <Input 
                                         id="price-sell" type="number"
                                         value={sellingPrice}
-                                        onChange={(e) => setSellingPrice(parseFloat(e.target.value) || 0)}
-                                        onBlur={(e) => setSellingPrice(Math.max(priceFloor, Math.min(parseFloat(e.target.value) || 0, priceCeiling)))}
-                                        min={priceFloor}
-                                        max={priceCeiling}
+                                        onChange={handleSellingPriceChange}
                                         step="0.01"
                                         className='bg-gray-700 border-gray-600'
                                     />
