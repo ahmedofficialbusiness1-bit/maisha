@@ -1193,12 +1193,21 @@ export function Game() {
     }, 0);
 
     const currentBuildingValue = gameState.buildingSlots.reduce((total, slot) => {
-        if (!slot?.building) return total;
-        const buildCost = buildingData[slot.building.id].buildCost;
-        let cost = buildCost.reduce((sum, material) => sum + ((calculatedPrices[material.name] || 0) * material.quantity), 0);
+        if (!slot?.building || slot.level === 0) return total;
+        const buildConfig = buildingData[slot.building.id];
+        if (!buildConfig) return total;
+
+        let cost = (buildConfig.buildCost || []).reduce((sum, material) => {
+            const price = calculatedPrices[material.name] || 0;
+            return sum + (price * material.quantity);
+        }, 0);
+        
         for (let i = 2; i <= slot.level; i++) {
-            const upgradeCosts = buildingData[slot.building.id].upgradeCost(i);
-            cost += upgradeCosts.reduce((sum, material) => sum + ((calculatedPrices[material.name] || 0) * material.quantity), 0);
+            const upgradeCosts = buildConfig.upgradeCost(i);
+            cost += upgradeCosts.reduce((sum, material) => {
+                const price = calculatedPrices[material.name] || 0;
+                return sum + (price * material.quantity);
+            }, 0);
         }
         return total + cost * 0.5; // Buildings depreciate to 50% of build cost
     }, 0);
@@ -1322,12 +1331,22 @@ export function Game() {
     const sortedPlayers = [...allPlayers].sort((a, b) => b.netWorth - a.netWorth);
     const rank = sortedPlayers.findIndex(p => p.uid === profileData.uid);
     
-    // Note: buildingValue and stockValue would need to be calculated for the other user. 
-    // This is a simplification and only shows Net Worth correctly.
+    // For the current player, use the detailed, memoized values
+    if (profileData.uid === user.uid) {
+        return {
+            netWorth: netWorth,
+            buildingValue: buildingValue,
+            stockValue: stockValue,
+            ranking: rank !== -1 ? `#${rank + 1}` : '100+',
+            rating: getPlayerRating(netWorth),
+        }
+    }
+    
+    // For other players, this is a simplification and only shows Net Worth correctly.
     return {
         netWorth: netWorth,
-        buildingValue: 0, // Simplified for now
-        stockValue: 0, // Simplified for now
+        buildingValue: 0, // Not calculated for other players to save performance
+        stockValue: 0, // Not calculated for other players
         ranking: rank !== -1 ? `#${rank + 1}` : '100+',
         rating: getPlayerRating(netWorth),
     }
@@ -1389,5 +1408,7 @@ export function Game() {
     </div>
   );
 }
+
+    
 
     

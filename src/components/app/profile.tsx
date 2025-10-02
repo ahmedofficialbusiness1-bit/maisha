@@ -320,6 +320,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                     <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 pl-4">
                         <ValuationItem label="Company value" value={`$${metrics.netWorth.toLocaleString()}`} />
                         <ValuationItem label="Buildings value" value={`$${metrics.buildingValue.toLocaleString()}`} />
+                        <ValuationItem label="Stock value" value={`$${metrics.stockValue.toLocaleString()}`} />
                         <ValuationItem label="Patents value" value="$0" />
                     </div>
                     
@@ -343,3 +344,5 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     </div>
   );
 }
+
+    
