@@ -144,7 +144,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                 <DropdownMenuSeparator className='bg-gray-600'/>
                 <ScrollArea className="h-96">
                     {(notifications || []).length > 0 ? (
-                        notifications.map(n => (
+                        notifications.sort((a, b) => b.timestamp - a.timestamp).map(n => (
                             <DropdownMenuItem key={n.id} className="gap-3 items-start focus:bg-gray-700/80">
                                 <div className="flex-shrink-0 mt-1">
                                     {n.icon === 'construction' && <Hammer className="h-4 w-4 text-orange-400" />}
@@ -212,3 +212,5 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
     </header>
   );
 }
+
+    

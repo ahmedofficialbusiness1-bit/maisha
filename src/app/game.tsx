@@ -249,36 +249,45 @@ export function Game() {
   
   const addNotification = React.useCallback((message: string, icon: Notification['icon']) => {
     if (!userRef) return;
-    const newNotification: Omit<Notification, 'id'> = {
+    const notificationsRef = ref(userRef, 'notifications');
+    const newNotifRef = push(notificationsRef);
+    const newNotification: Notification = {
+        id: newNotifRef.key!,
         message,
         timestamp: Date.now(),
         read: false,
         icon,
     };
-    const notificationsRef = ref(userRef, 'notifications');
-    const newNotifRef = push(notificationsRef);
     set(newNotifRef, newNotification);
   }, [userRef]);
 
 
  const addTransaction = React.useCallback((type: 'income' | 'expense', amount: number, description: string) => {
     if (!userRef) return;
-    const newTransaction: Omit<Transaction, 'id'> = {
+    const transactionsRef = ref(userRef, 'transactions');
+    const newTransRef = push(transactionsRef);
+    const newTransaction: Transaction = {
+        id: newTransRef.key!,
         type,
         amount,
         description,
         timestamp: Date.now(),
     };
-    const transactionsRef = ref(userRef, 'transactions');
-    const newTransRef = push(transactionsRef);
     set(newTransRef, newTransaction);
 }, [userRef]);
 
 
   const handleMarkNotificationsRead = () => {
     if (!gameState || !userRef) return;
-    const updates = (gameState.notifications || []).map(n => ({ ...n, read: true }));
-    updateState({ notifications: updates });
+    const updates = (gameState.notifications || []).reduce((acc, n) => {
+        if (!n.read) {
+            acc[`notifications/${n.id}/read`] = true;
+        }
+        return acc;
+    }, {} as any);
+    if (Object.keys(updates).length > 0) {
+        update(userRef, updates);
+    }
   }
 
   const handleUpdateProfile = (data: ProfileData) => {
@@ -365,15 +374,16 @@ export function Game() {
       construction: { startTime: now, endTime: now + constructionTimeMs, targetLevel: 1 },
     };
     
-    const newNotifications = [
-      { id: `${Date.now()}-build-start`, message: `Ujenzi wa ${building.name} umeanza.`, timestamp: now, read: false, icon: 'construction' },
-      ...(gameState.notifications || [])
-    ];
+    const notificationsRef = ref(userRef, 'notifications');
+    const newNotifRef = push(notificationsRef);
+    const newNotifications = {
+        [newNotifRef.key!]: { id: newNotifRef.key, message: `Ujenzi wa ${building.name} umeanza.`, timestamp: now, read: false, icon: 'construction' }
+    };
 
-    updateState({ 
+    update(userRef, { 
       inventory: newInventory.filter(item => item.quantity > 0), 
       buildingSlots: newSlots, 
-      notifications: newNotifications 
+      ...Object.keys(newNotifications).reduce((acc, key) => ({ ...acc, [`notifications/${key}`]: newNotifications[key] }), {})
     });
   };
   
@@ -409,15 +419,11 @@ export function Game() {
       construction: { startTime: now, endTime: now + constructionTimeMs, targetLevel: slot.level + 1 },
     };
     
-    const newNotifications = [
-      { id: `${Date.now()}-upgrade-start`, message: `Uboreshaji wa ${slot.building.name} hadi Lvl ${slot.level + 1} umeanza.`, timestamp: now, read: false, icon: 'construction' },
-      ...(gameState.notifications || [])
-    ];
+    addNotification(`Uboreshaji wa ${slot.building.name} hadi Lvl ${slot.level + 1} umeanza.`, 'construction');
 
     updateState({ 
       inventory: newInventory.filter(item => item.quantity > 0), 
-      buildingSlots: newSlots, 
-      notifications: newNotifications 
+      buildingSlots: newSlots,
     });
   };
 
@@ -453,15 +459,11 @@ export function Game() {
          };
      }
      
-     const newNotifications = [
-         { id: `${Date.now()}-prod-start`, message: `Umeanza kuzalisha ${recipe.output.quantity * quantity}x ${recipe.output.name}.`, timestamp: Date.now(), read: false, icon: 'production' },
-         ...(gameState.notifications || [])
-     ];
+     addNotification(`Umeanza kuzalisha ${recipe.output.quantity * quantity}x ${recipe.output.name}.`, 'production');
 
      updateState({
          inventory: newInventory.filter(item => item.quantity > 0),
          buildingSlots: newSlots,
-         notifications: newNotifications
      });
   };
 
@@ -488,15 +490,11 @@ export function Game() {
         };
     }
     
-    const newNotifications = [
-         { id: `${Date.now()}-sell-start`, message: `Umeanza kuuza ${quantity}x ${item.item}.`, timestamp: Date.now(), read: false, icon: 'sale' },
-        ...(gameState.notifications || [])
-    ];
+    addNotification(`Umeanza kuuza ${quantity}x ${item.item}.`, 'sale');
 
     updateState({
         inventory: newInventory.filter(i => i.quantity > 0),
         buildingSlots: newSlots,
-        notifications: newNotifications
     });
   };
 
@@ -530,12 +528,18 @@ export function Game() {
             } else {
                 newInventory.push({ item: materialName, quantity, marketPrice: costPerUnit });
             }
+            
+            const transactionsRef = ref(userRef, 'transactions');
+            const newTransRef = push(transactionsRef);
             const newTransaction: Transaction = {
-              id: `${Date.now()}-buy-mat`, type: 'expense', amount: totalCost, 
+              id: newTransRef.key!, type: 'expense', amount: totalCost, 
               description: `Nunua ${quantity}x ${materialName}`, timestamp: Date.now()
             };
+            
+            const notificationsRef = ref(userRef, 'notifications');
+            const newNotifRef = push(notificationsRef);
             const newNotification: Notification = {
-              id: `${Date.now()}-buy-notify`, message: `Umenunua ${quantity}x ${materialName} kwa $${totalCost.toFixed(2)}.`, 
+              id: newNotifRef.key!, message: `Umenunua ${quantity}x ${materialName} kwa $${totalCost.toFixed(2)}.`, 
               timestamp: Date.now(), read: false, icon: 'purchase'
             };
 
@@ -598,8 +602,13 @@ export function Game() {
                         newInventory.push({ item: listing.commodity, quantity: quantityToBuy, marketPrice: listing.price });
                     }
                     
-                    const newTransaction: Transaction = { id: `${Date.now()}-market-buy`, type: 'expense', amount: totalCost, description: `Bought ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, timestamp: Date.now() };
-                    const newNotification: Notification = { id: `${Date.now()}-buy-notify`, message: `Umenunua ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, timestamp: Date.now(), read: false, icon: 'purchase' };
+                    const transactionsRef = ref(userRef, 'transactions');
+                    const newTransRef = push(transactionsRef);
+                    const newTransaction: Transaction = { id: newTransRef.key!, type: 'expense', amount: totalCost, description: `Bought ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, timestamp: Date.now() };
+
+                    const notificationsRef = ref(userRef, 'notifications');
+                    const newNotifRef = push(notificationsRef);
+                    const newNotification: Notification = { id: newNotifRef.key!, message: `Umenunua ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, timestamp: Date.now(), read: false, icon: 'purchase' };
 
                     currentData.money -= totalCost;
                     currentData.inventory = newInventory;
@@ -617,10 +626,12 @@ export function Game() {
             if (sellerData) {
                 sellerData.money += totalCost;
                 
-                const newTransaction: Transaction = { id: `${Date.now()}-sale`, type: 'income', amount: totalCost, description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`, timestamp: Date.now() };
+                const sellerTransRef = push(ref(database, `users/${listing.sellerUid}/transactions`));
+                const newTransaction: Transaction = { id: sellerTransRef.key!, type: 'income', amount: totalCost, description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`, timestamp: Date.now() };
                 sellerData.transactions = [newTransaction, ...(sellerData.transactions || [])];
 
-                const newNotification: Notification = { id: `${Date.now()}-sale-notify`, message: `You sold ${quantityToBuy}x ${listing.commodity} for $${totalCost.toFixed(2)} to ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
+                const sellerNotifRef = push(ref(database, `users/${listing.sellerUid}/notifications`));
+                const newNotification: Notification = { id: sellerNotifRef.key!, message: `You sold ${quantityToBuy}x ${listing.commodity} for $${totalCost.toFixed(2)} to ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
                 sellerData.notifications = [newNotification, ...(sellerData.notifications || [])];
             }
             return sellerData;
@@ -634,7 +645,7 @@ export function Game() {
     }
   };
   
-  const handleBuyStock = React.useCallback((stock: StockListing, quantity: number) => {
+ const handleBuyStock = React.useCallback((stock: StockListing, quantity: number) => {
     if (!gameState || !userRef || quantity <= 0) return;
     const totalCost = stock.stockPrice * quantity;
     if (gameState.money < totalCost) {
@@ -642,32 +653,39 @@ export function Game() {
         return;
     }
 
-    const newPlayerStocks = [...(gameState.playerStocks || [])];
-    const existingStockIndex = newPlayerStocks.findIndex(s => s.ticker === stock.ticker);
-    if (existingStockIndex > -1) {
-        newPlayerStocks[existingStockIndex].shares += quantity;
-    } else {
-        newPlayerStocks.push({ ticker: stock.ticker, shares: quantity });
-    }
-    
-    const newTransactions = [
-        { id: `${Date.now()}-buy-stock`, type: 'expense', amount: totalCost, description: `Nunua hisa ${quantity}x ${stock.ticker}`, timestamp: Date.now() },
-        ...(gameState.transactions || [])
-    ];
-    const newNotifications = [
-        { id: `${Date.now()}-buy-stock-notify`, message: `Umenunua hisa ${quantity}x ${stock.ticker}.`, timestamp: Date.now(), read: false, icon: 'purchase' },
-        ...(gameState.notifications || [])
-    ];
+    runTransaction(userRef, currentData => {
+        if (currentData) {
+            const newPlayerStocks = [...(currentData.playerStocks || [])];
+            const existingStockIndex = newPlayerStocks.findIndex(s => s.ticker === stock.ticker);
+            if (existingStockIndex > -1) {
+                newPlayerStocks[existingStockIndex].shares += quantity;
+            } else {
+                newPlayerStocks.push({ ticker: stock.ticker, shares: quantity });
+            }
+            
+            const transRef = push(ref(userRef, 'transactions'));
+            const newTransactions = [
+                { id: transRef.key!, type: 'expense', amount: totalCost, description: `Nunua hisa ${quantity}x ${stock.ticker}`, timestamp: Date.now() },
+                ...(currentData.transactions || [])
+            ];
+            
+            const notifRef = push(ref(userRef, 'notifications'));
+            const newNotifications = [
+                { id: notifRef.key!, message: `Umenunua hisa ${quantity}x ${stock.ticker}.`, timestamp: Date.now(), read: false, icon: 'purchase' },
+                ...(currentData.notifications || [])
+            ];
 
-    updateState({
-        money: gameState.money - totalCost,
-        playerStocks: newPlayerStocks,
-        transactions: newTransactions,
-        notifications: newNotifications,
+            currentData.money -= totalCost;
+            currentData.playerStocks = newPlayerStocks;
+            currentData.transactions = newTransactions;
+            currentData.notifications = newNotifications;
+        }
+        return currentData;
     });
-  }, [gameState, userRef, toast, updateState]);
+  }, [gameState, userRef, toast]);
 
-  const handleSellStock = React.useCallback((ticker: string, shares: number) => {
+
+ const handleSellStock = React.useCallback((ticker: string, shares: number) => {
     if (!gameState || !userRef || shares <= 0) return;
     
     const stockInfo = companyData.find(s => s.ticker === ticker);
@@ -678,29 +696,35 @@ export function Game() {
 
     const totalSale = stockInfo.stockPrice * shares;
 
-    const newPlayerStocks = (gameState.playerStocks || []).map(s => {
-        if (s.ticker === ticker) {
-            return { ...s, shares: s.shares - shares };
+    runTransaction(userRef, currentData => {
+        if (currentData) {
+            const newPlayerStocks = (currentData.playerStocks || []).map(s => {
+                if (s.ticker === ticker) {
+                    return { ...s, shares: s.shares - shares };
+                }
+                return s;
+            }).filter(s => s.shares > 0);
+
+            const transRef = push(ref(userRef, 'transactions'));
+            const newTransactions = [
+                { id: transRef.key!, type: 'income', amount: totalSale, description: `Uza hisa ${shares}x ${ticker}`, timestamp: Date.now() },
+                ...(currentData.transactions || [])
+            ];
+
+            const notifRef = push(ref(userRef, 'notifications'));
+            const newNotifications = [
+                { id: notifRef.key!, message: `Umeuza hisa ${shares}x ${ticker}.`, timestamp: Date.now(), read: false, icon: 'sale' },
+                ...(currentData.notifications || [])
+            ];
+
+            currentData.money += totalSale;
+            currentData.playerStocks = newPlayerStocks;
+            currentData.transactions = newTransactions;
+            currentData.notifications = newNotifications;
         }
-        return s;
-    }).filter(s => s.shares > 0);
-
-     const newTransactions = [
-        { id: `${Date.now()}-sell-stock`, type: 'income', amount: totalSale, description: `Uza hisa ${shares}x ${ticker}`, timestamp: Date.now() },
-        ...(gameState.transactions || [])
-    ];
-    const newNotifications = [
-        { id: `${Date.now()}-sell-stock-notify`, message: `Umeuza hisa ${shares}x ${ticker}.`, timestamp: Date.now(), read: false, icon: 'sale' },
-        ...(gameState.notifications || [])
-    ];
-
-    updateState({
-        money: gameState.money + totalSale,
-        playerStocks: newPlayerStocks,
-        transactions: newTransactions,
-        notifications: newNotifications,
+        return currentData;
     });
-  }, [gameState, userRef, companyData, updateState]);
+  }, [gameState, userRef, companyData]);
 
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
@@ -834,9 +858,13 @@ export function Game() {
     runTransaction(targetUserRef, (userData) => {
         if (userData) {
             userData.money += amount;
-            const newTransaction: Transaction = { id: `${Date.now()}-admin-gift`, type: 'income', amount: amount, description: `Admin Gift: Money`, timestamp: Date.now() };
+
+            const transRef = push(ref(targetUserRef, 'transactions'));
+            const newTransaction: Transaction = { id: transRef.key!, type: 'income', amount: amount, description: `Admin Gift: Money`, timestamp: Date.now() };
             userData.transactions = [newTransaction, ...(userData.transactions || [])];
-            const newNotification: Notification = { id: `${Date.now()}-admin-money`, message: `You received $${amount.toLocaleString()} from an Admin.`, timestamp: Date.now(), read: false, icon: 'purchase' };
+            
+            const notifRef = push(ref(targetUserRef, 'notifications'));
+            const newNotification: Notification = { id: notifRef.key!, message: `You received $${amount.toLocaleString()} from an Admin.`, timestamp: Date.now(), read: false, icon: 'purchase' };
             userData.notifications = [newNotification, ...(userData.notifications || [])];
         }
         return userData;
@@ -855,7 +883,9 @@ export function Game() {
     runTransaction(targetUserRef, (userData) => {
         if (userData) {
             userData.stars += amount;
-            const newNotification: Notification = { id: `${Date.now()}-admin-stars`, message: `You received ${amount.toLocaleString()} Stars from an Admin.`, timestamp: Date.now(), read: false, icon: 'purchase' };
+
+            const notifRef = push(ref(targetUserRef, 'notifications'));
+            const newNotification: Notification = { id: notifRef.key!, message: `You received ${amount.toLocaleString()} Stars from an Admin.`, timestamp: Date.now(), read: false, icon: 'purchase' };
             userData.notifications = [newNotification, ...(userData.notifications || [])];
         }
         return userData;
@@ -906,7 +936,8 @@ export function Game() {
                     newInventory.push({ item: contract.commodity, quantity: contract.quantity, marketPrice: contract.pricePerUnit });
                 }
                 
-                const newTransaction: Transaction = { id: `${Date.now()}-contract-buy`, type: 'expense', amount: totalCost, description: `Contract purchase: ${contract.quantity}x ${contract.commodity}`, timestamp: Date.now() };
+                const transRef = push(ref(userRef, 'transactions'));
+                const newTransaction: Transaction = { id: transRef.key!, type: 'expense', amount: totalCost, description: `Contract purchase: ${contract.quantity}x ${contract.commodity}`, timestamp: Date.now() };
                 
                 currentData.money -= totalCost;
                 currentData.inventory = newInventory;
@@ -922,9 +953,13 @@ export function Game() {
             await runTransaction(sellerUserRef, (sellerData) => {
                 if (sellerData) {
                     sellerData.money += totalCost;
-                    const newTransaction: Transaction = { id: `${Date.now()}-contract-sale`, type: 'income', amount: totalCost, description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`, timestamp: Date.now() };
+
+                    const transRef = push(ref(sellerUserRef, 'transactions'));
+                    const newTransaction: Transaction = { id: transRef.key!, type: 'income', amount: totalCost, description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`, timestamp: Date.now() };
                     sellerData.transactions = [newTransaction, ...(sellerData.transactions || [])];
-                    const newNotification: Notification = { id: `${Date.now()}-contract-notify`, message: `Your contract for ${contract.quantity}x ${contract.commodity} was accepted by ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
+                    
+                    const notifRef = push(ref(sellerUserRef, 'notifications'));
+                    const newNotification: Notification = { id: notifRef.key!, message: `Your contract for ${contract.quantity}x ${contract.commodity} was accepted by ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
                     sellerData.notifications = [newNotification, ...(sellerData.notifications || [])];
                 }
                 return sellerData;
@@ -957,7 +992,9 @@ export function Game() {
                 } else {
                     sellerData.inventory.push({ item: contract.commodity, quantity: contract.quantity, marketPrice: contract.pricePerUnit });
                 }
-                const newNotification: Notification = { id: `${Date.now()}-contract-reject`, message: `Your contract for ${contract.quantity}x ${contract.commodity} was rejected. Items have been returned.`, timestamp: Date.now(), read: false, icon: 'purchase' };
+
+                const notifRef = push(ref(sellerUserRef, 'notifications'));
+                const newNotification: Notification = { id: notifRef.key!, message: `Your contract for ${contract.quantity}x ${contract.commodity} was rejected. Items have been returned.`, timestamp: Date.now(), read: false, icon: 'purchase' };
                 sellerData.notifications = [newNotification, ...(sellerData.notifications || [])];
             }
             return sellerData;
@@ -997,8 +1034,8 @@ export function Game() {
         if (!currentGameState || !currentGameState.playerStocks || currentGameState.playerStocks.length === 0) return currentGameState;
         
         let totalDividend = 0;
-        const newNotifications = [...(currentGameState.notifications || [])];
-        const newTransactions = [...(currentGameState.transactions || [])];
+        const newNotifications: Notification[] = [];
+        const newTransactions: Transaction[] = [];
 
         for (const playerStock of currentGameState.playerStocks) {
             const stockInfo = companyData.find(s => s.ticker === playerStock.ticker);
@@ -1007,8 +1044,9 @@ export function Game() {
                 const dividendEarned = dividendPerShare * playerStock.shares;
                 totalDividend += dividendEarned;
                 
+                const notifRef = push(ref(userRef, 'notifications'));
                 newNotifications.unshift({
-                    id: `${Date.now()}-dividend-${playerStock.ticker}`,
+                    id: notifRef.key!,
                     message: `Umelipwa gawio la $${dividendEarned.toFixed(2)} kutoka kwa hisa za ${playerStock.ticker}.`,
                     timestamp: Date.now(),
                     read: false,
@@ -1018,8 +1056,9 @@ export function Game() {
         }
 
         if (totalDividend > 0) {
+            const transRef = push(ref(userRef, 'transactions'));
             newTransactions.unshift({
-                id: `${Date.now()}-dividend-total`,
+                id: transRef.key!,
                 type: 'income',
                 amount: totalDividend,
                 description: 'Jumla ya gawio la hisa',
@@ -1027,8 +1066,8 @@ export function Game() {
             });
 
             currentGameState.money += totalDividend;
-            currentGameState.notifications = newNotifications;
-            currentGameState.transactions = newTransactions;
+            currentGameState.notifications = [...newNotifications, ...(currentGameState.notifications || [])];
+            currentGameState.transactions = [...newTransactions, ...(currentGameState.transactions || [])];
         }
         return currentGameState;
     });
@@ -1070,10 +1109,12 @@ export function Game() {
             currentData.money += cashInfusion;
             currentData.companyProfile = newCompanyProfile;
             
-            const newTransaction: Transaction = { id: `${Date.now()}-ipo`, type: 'income', amount: cashInfusion, description: `Initial Public Offering (IPO)`, timestamp: Date.now() };
+            const transRef = push(ref(userRef, 'transactions'));
+            const newTransaction: Transaction = { id: transRef.key!, type: 'income', amount: cashInfusion, description: `Initial Public Offering (IPO)`, timestamp: Date.now() };
             currentData.transactions = [newTransaction, ...(currentData.transactions || [])];
             
-            const newNotification: Notification = { id: `${Date.now()}-ipo-notify`, message: `Hongera! Kampuni yako sasa inauzwa sokoni! Umepata $${cashInfusion.toLocaleString()}.`, timestamp: Date.now(), read: false, icon: 'sale' };
+            const notifRef = push(ref(userRef, 'notifications'));
+            const newNotification: Notification = { id: notifRef.key!, message: `Hongera! Kampuni yako sasa inauzwa sokoni! Umepata $${cashInfusion.toLocaleString()}.`, timestamp: Date.now(), read: false, icon: 'sale' };
             currentData.notifications = [newNotification, ...(currentData.notifications || [])];
         }
         return currentData;
@@ -1122,12 +1163,13 @@ export function Game() {
                 let newXP = currentGameState.playerXP;
                 let newLevel = currentGameState.playerLevel;
                 const newInventory = [...(currentGameState.inventory || []).map(i => ({...i}))];
-                let newTransactions = [...(currentGameState.transactions || [])];
-                let newNotifications = [...(currentGameState.notifications || [])];
+                let newTransactions: Transaction[] = [...(currentGameState.transactions || [])];
+                let newNotifications: Notification[] = [...(currentGameState.notifications || [])];
 
                 for (const activity of finishedActivities) {
+                    const notifRef = push(ref(userRef, 'notifications'));
                     if (activity.type === 'construction') {
-                        newNotifications.unshift({ id: `${now}-construction-${Math.random()}`, message: `Ujenzi wa ${activity.details.buildingName} Lvl ${activity.details.targetLevel} umekamilika!`, timestamp: now, read: false, icon: 'construction' });
+                        newNotifications.unshift({ id: notifRef.key!, message: `Ujenzi wa ${activity.details.buildingName} Lvl ${activity.details.targetLevel} umekamilika!`, timestamp: now, read: false, icon: 'construction' });
                         newXP += 100 * activity.details.targetLevel;
                     } else if (activity.type === 'production') {
                         const { quantity, recipeId: itemName } = activity.details;
@@ -1137,14 +1179,15 @@ export function Game() {
                         } else {
                             newInventory.push({ item: itemName, quantity, marketPrice: calculatedPrices[itemName] || 0 });
                         }
-                        newNotifications.unshift({ id: `${now}-production-${Math.random()}`, message: `Uzalishaji wa ${quantity}x ${itemName} umekamilika.`, timestamp: now, read: false, icon: 'production' });
+                        newNotifications.unshift({ id: notifRef.key!, message: `Uzalishaji wa ${quantity}x ${itemName} umekamilika.`, timestamp: now, read: false, icon: 'production' });
                         newXP += quantity * 2;
                     } else if (activity.type === 'sale') {
                         const { saleValue, quantity, recipeId: itemName } = activity.details;
                         const profit = saleValue * 0.95; // 5% tax
-                        newTransactions.unshift({ id: `${now}-sale-${Math.random()}`, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${itemName}`, timestamp: now });
+                        const transRef = push(ref(userRef, 'transactions'));
+                        newTransactions.unshift({ id: transRef.key!, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${itemName}`, timestamp: now });
                         newMoney += profit;
-                        newNotifications.unshift({ id: `${now}-sale-notify-${Math.random()}`, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, timestamp: now, read: false, icon: 'sale' });
+                        newNotifications.unshift({ id: notifRef.key!, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, timestamp: now, read: false, icon: 'sale' });
                         newXP += Math.floor(profit * 0.01);
                     }
                 }
@@ -1154,7 +1197,8 @@ export function Game() {
                 while (newXP >= xpForNextLevel) {
                     newXP -= xpForNextLevel;
                     newLevel++;
-                    newNotifications.unshift({ id: `${now}-levelup-${newLevel}`, message: `Hongera! Umefikia Level ${newLevel}!`, timestamp: now, read: false, icon: 'level-up' });
+                    const levelUpNotifRef = push(ref(userRef, 'notifications'));
+                    newNotifications.unshift({ id: levelUpNotifRef.key!, message: `Hongera! Umefikia Level ${newLevel}!`, timestamp: now, read: false, icon: 'level-up' });
                     xpForNextLevel = getXpForNextLevel(newLevel);
                 }
                 
@@ -1409,7 +1453,7 @@ export function Game() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
-      <AppHeader money={gameState.money} stars={gameState.stars} setView={handleSetView} playerName={gameState.username} playerAvatar={gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={gameState.notifications || []} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin'} />
+      <AppHeader money={gameState.money} stars={gameState.stars} setView={handleSetView} playerName={gameState.username} playerAvatar={gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={Object.values(gameState.notifications || {})} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin'} />
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
       </main>
@@ -1417,3 +1461,5 @@ export function Game() {
     </div>
   );
 }
+
+    
