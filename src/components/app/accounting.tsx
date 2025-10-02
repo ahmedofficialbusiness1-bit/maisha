@@ -10,12 +10,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUpRight, ArrowDownLeft, Banknote, Warehouse, LineChart, Building, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Banknote, Warehouse, Building, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { startOfDay, startOfWeek, startOfMonth, isAfter, subDays, subWeeks, subMonths } from 'date-fns';
-import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line } from 'recharts';
 
 export type Transaction = {
   id: string;
@@ -171,7 +171,7 @@ const NetWorthView = ({ netWorth, inventoryValue, stockValue, buildingValue, cas
              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <MetricCard title="Pesa Taslimu" value={cash} icon={Banknote} />
                 <MetricCard title="Thamani ya Bidhaa" value={inventoryValue} icon={Warehouse} />
-                <MetricCard title="Thamani ya Hisa" value={stockValue} icon={LineChart} />
+                <MetricCard title="Thamani ya Hisa" value={stockValue} icon={TrendingUp} />
                 <MetricCard title="Thamani ya Majengo" value={buildingValue} icon={Building} />
              </div>
         </div>
@@ -183,21 +183,10 @@ const AnalyticsView = ({ transactions, netWorth }: Pick<AccountingProps, 'transa
     const chartData = React.useMemo(() => {
         if (!transactions || transactions.length === 0) return [];
 
-        const sortedTransactions = [...transactions].sort((a, b) => a.timestamp - b.timestamp);
-        let currentBalance = 0;
-        const dataPoints = sortedTransactions.map(t => {
-            const change = t.type === 'income' ? t.amount : -t.amount;
-            currentBalance += change;
-            return {
-                date: new Date(t.timestamp).toLocaleDateString(),
-                netWorth: currentBalance, // This is simplified, real net worth is more complex
-            };
-        });
-
         // For this example, let's just create some dummy historical net worth data
         // A real implementation would process transactions to build this history
         const data = [];
-        let runningWorth = netWorth / 2; // Start from half of current net worth for demo
+        let runningWorth = netWorth > 0 ? netWorth / 2 : 5000; // Start from half of current net worth for demo
         for (let i = 30; i >= 0; i--) {
             runningWorth += (Math.random() - 0.45) * (runningWorth / 20);
              data.push({
@@ -223,7 +212,7 @@ const AnalyticsView = ({ transactions, netWorth }: Pick<AccountingProps, 'transa
             );
 
         const lastPoint = chartData[chartData.length - 1];
-        if (!lastPoint) return { dailyChange: 0, weeklyChange: 0, monthlyChange: 0, returnOnSales: 0 };
+        if (!lastPoint || chartData.length < 2) return { dailyChange: 0, weeklyChange: 0, monthlyChange: 0, returnOnSales: 0 };
 
         const dayAgoPoint = findClosestPoint(dayAgo);
         const weekAgoPoint = findClosestPoint(weekAgo);
@@ -327,7 +316,7 @@ export function Accounting({ transactions, netWorth, inventoryValue, stockValue,
             <TabsTrigger value="weekly">Wiki Hii</TabsTrigger>
             <TabsTrigger value="monthly">Mwezi Huu</TabsTrigger>
             <TabsTrigger value="net_worth"><Wallet className="mr-2 h-4 w-4"/> Thamani Halisi</TabsTrigger>
-            <TabsTrigger value="analytics"><LineChart className="mr-2 h-4 w-4"/> Uchambuzi</TabsTrigger>
+            <TabsTrigger value="analytics"><TrendingUp className="mr-2 h-4 w-4"/> Uchambuzi</TabsTrigger>
         </TabsList>
         <TabsContent value="daily" className="mt-4">
             <ReportPeriodView transactions={dailyTransactions} />
