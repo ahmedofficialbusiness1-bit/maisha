@@ -45,7 +45,7 @@ const BUILDING_SLOTS = 20;
 
 const initialCompanyData: StockListing[] = [
     { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, totalShares: 250000, marketCap: 450.75 * 250000, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 100000, dividendYield: 0.015 },
-    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, totalShares: 1000000, marketCap: 120.50 * 1000000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 150000, dividendYield: 0.015 },
+    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, totalShares: 1000000, marketCap: 120.50 * 1000000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 150000, dividendYield: 0.022 },
 ];
 
 const initialBondListings: BondListing[] = [
@@ -961,10 +961,56 @@ export function Game() {
     toast({ title: 'Mkataba umeghairiwa.' });
   };
 
+  const handleDailyDividends = React.useCallback(() => {
+    updateState(currentGameState => {
+        if (!currentGameState || !currentGameState.playerStocks || currentGameState.playerStocks.length === 0) return {};
+        
+        let totalDividend = 0;
+        const newNotifications = [...(currentGameState.notifications || [])];
+        const newTransactions = [...(currentGameState.transactions || [])];
+
+        for (const playerStock of currentGameState.playerStocks) {
+            const stockInfo = companyData.find(s => s.ticker === playerStock.ticker);
+            if (stockInfo && stockInfo.dividendYield > 0) {
+                const dividendPerShare = stockInfo.stockPrice * stockInfo.dividendYield;
+                const dividendEarned = dividendPerShare * playerStock.shares;
+                totalDividend += dividendEarned;
+                
+                newNotifications.unshift({
+                    id: `${Date.now()}-dividend-${playerStock.ticker}`,
+                    message: `Umelipwa gawio la $${dividendEarned.toFixed(2)} kutoka kwa hisa za ${playerStock.ticker}.`,
+                    timestamp: Date.now(),
+                    read: false,
+                    icon: 'dividend',
+                });
+            }
+        }
+
+        if (totalDividend > 0) {
+            newTransactions.unshift({
+                id: `${Date.now()}-dividend-total`,
+                type: 'income',
+                amount: totalDividend,
+                description: 'Jumla ya gawio la hisa',
+                timestamp: Date.now(),
+            });
+
+            return {
+                money: currentGameState.money + totalDividend,
+                notifications: newNotifications,
+                transactions: newTransactions
+            };
+        }
+
+        return {};
+    });
+  }, [companyData, updateState]);
+
+
 
   // Game loop for processing finished activities
   React.useEffect(() => {
-    const interval = setInterval(() => {
+    const activityInterval = setInterval(() => {
         // Use a functional update for setGameState to get the latest state
         setGameState(currentGameState => {
             if (!currentGameState) return null;
@@ -1061,8 +1107,15 @@ export function Game() {
         });
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [userRef]);
+    const dividendInterval = setInterval(() => {
+        handleDailyDividends();
+    }, 24 * 60 * 60 * 1000); // Once every 24 hours
+
+    return () => {
+        clearInterval(activityInterval);
+        clearInterval(dividendInterval);
+    };
+  }, [userRef, handleDailyDividends]);
 
   const { buildingValue, stockValue } = React.useMemo(() => {
     if (!gameState) return { buildingValue: 0, stockValue: 0 };
