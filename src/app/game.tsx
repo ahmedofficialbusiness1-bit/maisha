@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -1184,20 +1185,23 @@ export function Game() {
         if (!slot?.building || slot.level === 0) return total;
         const buildConfig = buildingData[slot.building.id];
         if (!buildConfig) return total;
-
-        let cost = (buildConfig.buildCost || []).reduce((sum, material) => {
+    
+        // Calculate the total cost to build and upgrade to the current level
+        let totalCostToLevel = (buildConfig.buildCost || []).reduce((sum, material) => {
             const price = calculatedPrices[material.name] || 0;
             return sum + (price * material.quantity);
         }, 0);
-        
+    
         for (let i = 2; i <= slot.level; i++) {
             const upgradeCosts = buildConfig.upgradeCost(i);
-            cost += upgradeCosts.reduce((sum, material) => {
+            totalCostToLevel += upgradeCosts.reduce((sum, material) => {
                 const price = calculatedPrices[material.name] || 0;
                 return sum + (price * material.quantity);
             }, 0);
         }
-        return total + cost * 0.5; // Buildings depreciate to 50% of build cost
+    
+        // Buildings depreciate to 50% of their total construction cost
+        return total + totalCostToLevel * 0.5;
     }, 0);
 
     const currentInventoryValue = (gameState.inventory || []).reduce((total, item) => {
@@ -1410,5 +1414,7 @@ export function Game() {
     </div>
   );
 }
+
+    
 
     
