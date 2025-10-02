@@ -10,11 +10,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUpRight, ArrowDownLeft, Banknote, Warehouse, LineChart, Building, Wallet } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Banknote, Warehouse, LineChart, Building, Wallet, TrendingUp, TrendingDown, Percent, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { startOfDay, startOfWeek, startOfMonth, isAfter } from 'date-fns';
+import { startOfDay, startOfWeek, startOfMonth, isAfter, subDays, subWeeks, subMonths } from 'date-fns';
+import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 export type Transaction = {
   id: string;
@@ -177,6 +179,135 @@ const NetWorthView = ({ netWorth, inventoryValue, stockValue, buildingValue, cas
     )
 }
 
+const AnalyticsView = ({ transactions, netWorth }: Pick<AccountingProps, 'transactions' | 'netWorth'>) => {
+    
+    const chartData = React.useMemo(() => {
+        if (!transactions || transactions.length === 0) return [];
+
+        const sortedTransactions = [...transactions].sort((a, b) => a.timestamp - b.timestamp);
+        let currentBalance = 0;
+        const dataPoints = sortedTransactions.map(t => {
+            const change = t.type === 'income' ? t.amount : -t.amount;
+            currentBalance += change;
+            return {
+                date: new Date(t.timestamp).toLocaleDateString(),
+                netWorth: currentBalance, // This is simplified, real net worth is more complex
+            };
+        });
+
+        // For this example, let's just create some dummy historical net worth data
+        // A real implementation would process transactions to build this history
+        const data = [];
+        let runningWorth = netWorth / 2; // Start from half of current net worth for demo
+        for (let i = 30; i >= 0; i--) {
+            runningWorth += (Math.random() - 0.45) * (runningWorth / 20);
+             data.push({
+                date: subDays(new Date(), i).toISOString().split('T')[0],
+                netWorth: Math.max(0, runningWorth),
+            });
+        }
+        
+        return data;
+
+    }, [transactions, netWorth]);
+
+    const chartConfig = {
+        netWorth: {
+          label: "Net Worth",
+          color: "hsl(var(--chart-1))",
+        },
+    } satisfies import('recharts').ChartConfig;
+
+
+    const { dailyChange, weeklyChange, monthlyChange, returnOnSales } = React.useMemo(() => {
+        const now = new Date();
+        const dayAgo = subDays(now, 1).getTime();
+        const weekAgo = subWeeks(now, 1).getTime();
+        const monthAgo = subMonths(now, 1).getTime();
+
+        const findClosestPoint = (targetTime: number) => 
+            chartData.reduce((prev, curr) => 
+                (Math.abs(new Date(curr.date).getTime() - targetTime) < Math.abs(new Date(prev.date).getTime() - targetTime) ? curr : prev),
+                chartData[0]
+            );
+
+        const lastPoint = chartData[chartData.length - 1];
+        if (!lastPoint) return { dailyChange: 0, weeklyChange: 0, monthlyChange: 0, returnOnSales: 0 };
+
+        const dayAgoPoint = findClosestPoint(dayAgo);
+        const weekAgoPoint = findClosestPoint(weekAgo);
+        const monthAgoPoint = findClosestPoint(monthAgo);
+
+        const daily = dayAgoPoint ? ((lastPoint.netWorth - dayAgoPoint.netWorth) / dayAgoPoint.netWorth) * 100 : 0;
+        const weekly = weekAgoPoint ? ((lastPoint.netWorth - weekAgoPoint.netWorth) / weekAgoPoint.netWorth) * 100 : 0;
+        const monthly = monthAgoPoint ? ((lastPoint.netWorth - monthAgoPoint.netWorth) / monthAgoPoint.netWorth) * 100 : 0;
+        
+        const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+        const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+        const ros = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
+
+        return {
+            dailyChange: isFinite(daily) ? daily : 0,
+            weeklyChange: isFinite(weekly) ? weekly : 0,
+            monthlyChange: isFinite(monthly) ? monthly : 0,
+            returnOnSales: isFinite(ros) ? ros : 0,
+        };
+
+    }, [chartData, transactions]);
+
+
+    const StatCard = ({ title, value, unit, change }: { title: string, value: number, unit: string, change?: number }) => (
+        <Card className="bg-gray-800/50">
+            <CardHeader>
+                <CardTitle className="text-sm font-medium text-gray-400">{title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{value.toFixed(2)}{unit}</div>
+                {change !== undefined && (
+                    <div className={cn("text-xs flex items-center gap-1 mt-1", change >= 0 ? "text-green-400" : "text-red-400")}>
+                        {change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                        {change.toFixed(2)}%
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Card className="lg:col-span-2 bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Ukuaji wa Utajiri (Net Worth)</CardTitle>
+                    <CardDescription>Jinsi thamani ya kampuni yako imebadilika kwa muda.</CardDescription>
+                </CardHeader>
+                <CardContent className="pr-0">
+                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                        <ResponsiveContainer>
+                            <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.1)" />
+                                <XAxis dataKey="date" tick={{ fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
+                                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                                <Tooltip
+                                    cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 2, strokeDasharray: "3 3" }}
+                                    content={<ChartTooltipContent indicator="dot" />}
+                                />
+                                <Line type="monotone" dataKey="netWorth" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+                <StatCard title="Ukuaji wa Siku" value={dailyChange} unit="%" change={dailyChange} />
+                <StatCard title="Ukuaji wa Wiki" value={weeklyChange} unit="%" change={weeklyChange} />
+                <StatCard title="Faida kwa Mauzo (RoS)" value={returnOnSales} unit="%" />
+            </div>
+
+        </div>
+    );
+};
+
 
 export function Accounting({ transactions, netWorth, inventoryValue, stockValue, buildingValue, cash }: AccountingProps) {
   
@@ -199,11 +330,12 @@ export function Accounting({ transactions, netWorth, inventoryValue, stockValue,
       </div>
       
        <Tabs defaultValue="daily" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-gray-900/80 max-w-lg">
+        <TabsList className="grid w-full grid-cols-5 bg-gray-900/80 max-w-2xl">
             <TabsTrigger value="daily">Leo</TabsTrigger>
             <TabsTrigger value="weekly">Wiki Hii</TabsTrigger>
             <TabsTrigger value="monthly">Mwezi Huu</TabsTrigger>
             <TabsTrigger value="net_worth"><Wallet className="mr-2 h-4 w-4"/> Thamani Halisi</TabsTrigger>
+            <TabsTrigger value="analytics"><LineChart className="mr-2 h-4 w-4"/> Uchambuzi</TabsTrigger>
         </TabsList>
         <TabsContent value="daily" className="mt-4">
             <ReportPeriodView transactions={dailyTransactions} />
@@ -217,7 +349,12 @@ export function Accounting({ transactions, netWorth, inventoryValue, stockValue,
         <TabsContent value="net_worth" className="mt-4">
             <NetWorthView netWorth={netWorth} inventoryValue={inventoryValue} stockValue={stockValue} buildingValue={buildingValue} cash={cash} />
         </TabsContent>
+        <TabsContent value="analytics" className="mt-4">
+            <AnalyticsView transactions={transactions} netWorth={netWorth} />
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
+
+    

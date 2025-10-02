@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award, Shield, BookOpen } from 'lucide-react';
+import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award, Shield, BookOpen, LineChart } from 'lucide-react';
 import { useMemo } from 'react';
 import type { View } from '@/app/game';
 import {
@@ -193,7 +193,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                     </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onSelect={() => setView('accounting')}>
-                    <Scale className="mr-2 h-4 w-4" />
+                    <LineChart className="mr-2 h-4 w-4" />
                     <span>Ripoti ya Kifedha</span>
                 </DropdownMenuItem>
                  <DropdownMenuItem onSelect={() => setView('profile')}>
@@ -212,3 +212,5 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
     </header>
   );
 }
+
+    
