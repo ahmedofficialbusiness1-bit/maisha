@@ -1172,8 +1172,8 @@ export function Game() {
     };
   }, [userRef, handleDailyDividends]);
 
-  const { buildingValue, stockValue, inventoryValue } = React.useMemo(() => {
-    if (!gameState) return { buildingValue: 0, stockValue: 0, inventoryValue: 0 };
+  const { netWorth, buildingValue, stockValue, inventoryValue } = React.useMemo(() => {
+    if (!gameState) return { netWorth: 0, buildingValue: 0, stockValue: 0, inventoryValue: 0 };
 
     const currentStockValue = (gameState.playerStocks || []).reduce((total, stock) => {
         const stockInfo = companyData.find(s => s.ticker === stock.ticker);
@@ -1205,20 +1205,27 @@ export function Game() {
         return total + (item.quantity * price);
     }, 0);
 
-    return { buildingValue: currentBuildingValue, stockValue: currentStockValue, inventoryValue: currentInventoryValue };
+    const currentNetWorth = gameState.money + currentStockValue + currentBuildingValue + currentInventoryValue;
+
+    return { 
+        netWorth: currentNetWorth, 
+        buildingValue: currentBuildingValue, 
+        stockValue: currentStockValue, 
+        inventoryValue: currentInventoryValue 
+    };
   }, [gameState, companyData]);
 
 
-  // Recalculate net worth 
+  // Sync net worth to Firebase if it changes
   React.useEffect(() => {
     if (!gameState || !userRef) return;
     
-    const netWorth = gameState.money + stockValue + buildingValue + inventoryValue;
-
+    // Check if the calculated net worth is different from the one in the state
     if (netWorth !== gameState.netWorth) {
+        // Update only the netWorth field in Firebase
         update(userRef, { netWorth });
     }
-  }, [gameState, buildingValue, stockValue, inventoryValue, userRef]);
+  }, [gameState, netWorth, userRef]);
 
 
   const getPlayerRating = (netWorth: number) => {
@@ -1318,7 +1325,7 @@ export function Game() {
     if (!profileData || !allPlayers) return { netWorth: 0, inventoryValue: 0, buildingValue: 0, stockValue: 0, ranking: 'N/A', rating: 'D' };
     
     const publicData = allPlayers.find(p => p.uid === profileData.uid);
-    const netWorth = publicData?.netWorth || profileData.netWorth;
+    const currentNetWorth = publicData?.netWorth || profileData.netWorth;
 
     const sortedPlayers = [...allPlayers].sort((a, b) => b.netWorth - a.netWorth);
     const rank = sortedPlayers.findIndex(p => p.uid === profileData.uid);
@@ -1338,12 +1345,12 @@ export function Game() {
     // For other players, this is a simplification and only shows Net Worth correctly.
     // We would need to fetch their full user data to calculate other values.
     return {
-        netWorth: netWorth,
+        netWorth: currentNetWorth,
         inventoryValue: 0, // Not calculated for other players to save performance
         buildingValue: 0, // Not calculated for other players
         stockValue: 0, // Not calculated for other players
         ranking: rank !== -1 ? `#${rank + 1}` : '100+',
-        rating: getPlayerRating(netWorth),
+        rating: getPlayerRating(currentNetWorth),
     }
   }
   
@@ -1361,7 +1368,7 @@ export function Game() {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={gameState.netWorth} onGoPublic={handleGoPublic} />;
+        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} onGoPublic={handleGoPublic} />;
       case 'market':
         return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
       case 'encyclopedia':
