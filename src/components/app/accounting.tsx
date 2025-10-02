@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUpRight, ArrowDownLeft, Banknote, Warehouse, LineChart, Building, Wallet, TrendingUp, TrendingDown, Percent, MoreHorizontal } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Banknote, Warehouse, LineChart, Building, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
