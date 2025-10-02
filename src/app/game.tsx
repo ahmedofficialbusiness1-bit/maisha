@@ -237,10 +237,10 @@ export function Game() {
     
     // Update local game state if role or email changed
     if (gameState.role !== currentRole) {
-        update(userRef!, { role: currentRole });
+        updateState({ role: currentRole });
     }
 
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, userRef]);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, updateState]);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -649,15 +649,21 @@ export function Game() {
     } else {
         newPlayerStocks.push({ ticker: stock.ticker, shares: quantity });
     }
-
-    const newTransaction: Transaction = { id: `${Date.now()}-buy-stock`, type: 'expense', amount: totalCost, description: `Nunua hisa ${quantity}x ${stock.ticker}`, timestamp: Date.now() };
-    const newNotification: Notification = { id: `${Date.now()}-buy-stock-notify`, message: `Umenunua hisa ${quantity}x ${stock.ticker}.`, timestamp: Date.now(), read: false, icon: 'purchase' };
+    
+    const newTransactions = [
+        { id: `${Date.now()}-buy-stock`, type: 'expense', amount: totalCost, description: `Nunua hisa ${quantity}x ${stock.ticker}`, timestamp: Date.now() },
+        ...(gameState.transactions || [])
+    ];
+    const newNotifications = [
+        { id: `${Date.now()}-buy-stock-notify`, message: `Umenunua hisa ${quantity}x ${stock.ticker}.`, timestamp: Date.now(), read: false, icon: 'purchase' },
+        ...(gameState.notifications || [])
+    ];
 
     updateState({
         money: gameState.money - totalCost,
         playerStocks: newPlayerStocks,
-        transactions: [newTransaction, ...(gameState.transactions || [])],
-        notifications: [newNotification, ...(gameState.notifications || [])],
+        transactions: newTransactions,
+        notifications: newNotifications,
     });
   }, [gameState, userRef, toast, updateState]);
 
@@ -679,14 +685,20 @@ export function Game() {
         return s;
     }).filter(s => s.shares > 0);
 
-    const newTransaction: Transaction = { id: `${Date.now()}-sell-stock`, type: 'income', amount: totalSale, description: `Uza hisa ${shares}x ${ticker}`, timestamp: Date.now() };
-    const newNotification: Notification = { id: `${Date.now()}-sell-stock-notify`, message: `Umeuza hisa ${shares}x ${ticker}.`, timestamp: Date.now(), read: false, icon: 'sale' };
+     const newTransactions = [
+        { id: `${Date.now()}-sell-stock`, type: 'income', amount: totalSale, description: `Uza hisa ${shares}x ${ticker}`, timestamp: Date.now() },
+        ...(gameState.transactions || [])
+    ];
+    const newNotifications = [
+        { id: `${Date.now()}-sell-stock-notify`, message: `Umeuza hisa ${shares}x ${ticker}.`, timestamp: Date.now(), read: false, icon: 'sale' },
+        ...(gameState.notifications || [])
+    ];
 
     updateState({
         money: gameState.money + totalSale,
         playerStocks: newPlayerStocks,
-        transactions: [newTransaction, ...(gameState.transactions || [])],
-        notifications: [newNotification, ...(gameState.notifications || [])],
+        transactions: newTransactions,
+        notifications: newNotifications,
     });
   }, [gameState, userRef, companyData, updateState]);
 
