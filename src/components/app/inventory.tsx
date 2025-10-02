@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -35,14 +34,15 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, FileSignature, Archive, Handshake, Inbox, Check, X, Hourglass, History } from 'lucide-react';
+import { MoreHorizontal, FileSignature, Archive, Handshake, Inbox, Check, X, Hourglass, History, LineChart, Banknote } from 'lucide-react';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import type { ContractListing } from './trade-market';
+import type { ContractListing, StockListing } from './trade-market';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import type { PlayerStock } from '@/app/game';
 
 export type InventoryItem = {
   item: string;
@@ -52,12 +52,15 @@ export type InventoryItem = {
 
 interface InventoryProps {
   inventoryItems: InventoryItem[];
+  playerStocks: PlayerStock[];
+  stockListings: StockListing[];
   contractListings: ContractListing[];
   onPostToMarket: (item: InventoryItem, quantity: number, price: number) => void;
   onCreateContract: (item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => void;
   onAcceptContract: (contract: ContractListing) => void;
   onRejectContract: (contract: ContractListing) => void;
   onCancelContract: (contract: ContractListing) => void;
+  onSellStock: (ticker: string, shares: number) => void;
   currentUserId: string;
   currentUsername: string;
 }
@@ -490,6 +493,145 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
     );
 }
 
+function StocksInventoryView({ playerStocks, stockListings, onSellStock }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock'>) {
+  const [selectedStock, setSelectedStock] = React.useState<{ stock: PlayerStock, details: StockListing } | null>(null);
+  const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
+  const [sellQuantity, setSellQuantity] = React.useState(1);
+
+  const ownedStocksWithDetails = React.useMemo(() => {
+    return playerStocks
+      .map(ps => {
+        const details = stockListings.find(sl => sl.ticker === ps.ticker);
+        return details ? { stock: ps, details } : null;
+      })
+      .filter((s): s is { stock: PlayerStock, details: StockListing } => s !== null);
+  }, [playerStocks, stockListings]);
+
+  const handleOpenSellDialog = (stock: { stock: PlayerStock, details: StockListing }) => {
+    setSelectedStock(stock);
+    setSellQuantity(1);
+    setIsSellDialogOpen(true);
+  };
+
+  const handleConfirmSell = () => {
+    if (selectedStock) {
+      onSellStock(selectedStock.stock.ticker, sellQuantity);
+      setIsSellDialogOpen(false);
+    }
+  };
+
+  return (
+    <>
+      <Card className="bg-gray-800/60 border-gray-700 text-white">
+        <CardHeader>
+          <CardTitle>Hisa Zangu</CardTitle>
+          <CardDescription className="text-gray-400">
+            Tazama na uuze hisa unazomiliki kutoka hapa.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[calc(100vh-20rem)]">
+            <div className="space-y-4 pr-4">
+              {ownedStocksWithDetails.map(({ stock, details }) => {
+                const totalValue = stock.shares * details.stockPrice;
+                return (
+                  <Card key={stock.ticker} className="bg-gray-900/50">
+                    <CardHeader className="p-4">
+                       <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10">
+                                    <AvatarImage src={details.logo} alt={details.companyName} data-ai-hint={details.imageHint} />
+                                    <AvatarFallback>{details.ticker.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <CardTitle className="text-base">{details.companyName}</CardTitle>
+                                    <CardDescription>{details.ticker}</CardDescription>
+                                </div>
+                            </div>
+                            <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => handleOpenSellDialog({ stock, details })}>Uza</Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                            <div className="text-gray-400">Shares Owned</div>
+                            <div className="font-mono text-right">{stock.shares.toLocaleString()}</div>
+                            <div className="text-gray-400">Current Price</div>
+                            <div className="font-mono text-right">${details.stockPrice.toFixed(2)}</div>
+                            <Separator className="col-span-2 bg-gray-700 my-1"/>
+                            <div className="text-gray-300 font-bold">Total Value</div>
+                            <div className="font-mono text-right font-bold text-green-300">${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                         </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+             {ownedStocksWithDetails.length === 0 && (
+                <div className="flex items-center justify-center h-48 text-gray-400">
+                    <p>Huna hisa zozote kwa sasa.</p>
+                </div>
+              )}
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Uza Hisa za {selectedStock?.details.ticker}</DialogTitle>
+            <DialogDescription>
+              Chagua kiasi cha hisa unachotaka kuuza kwa bei ya sasa ya soko.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedStock && (
+            <div className="py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                 <div className="p-3 bg-gray-800 rounded-lg">
+                    <p className='text-sm text-gray-400'>Hisa Unazomiliki</p>
+                    <p className='font-bold font-mono text-lg'>{selectedStock.stock.shares.toLocaleString()}</p>
+                 </div>
+                  <div className="p-3 bg-gray-800 rounded-lg">
+                    <p className='text-sm text-gray-400'>Bei ya Sasa</p>
+                    <p className='font-bold font-mono text-lg'>${selectedStock.details.stockPrice.toFixed(2)}</p>
+                 </div>
+              </div>
+              <div>
+                <Label htmlFor="sell-quantity">Kiasi cha Kuuza</Label>
+                <Input
+                  id="sell-quantity"
+                  type="number"
+                  min="1"
+                  max={selectedStock.stock.shares}
+                  value={sellQuantity}
+                  onChange={(e) => setSellQuantity(Math.max(1, Math.min(Number(e.target.value), selectedStock.stock.shares)))}
+                  className="bg-gray-800 border-gray-600 mt-1"
+                />
+              </div>
+              <Separator className="bg-gray-700"/>
+              <div className="text-center">
+                <p className="text-lg font-bold">Jumla ya Mapato</p>
+                <p className="text-2xl font-mono text-green-400">${(sellQuantity * selectedStock.details.stockPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="text-xs text-gray-500 mt-1">Utauza hisa zako moja kwa moja sokoni.</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+             <Button variant="outline" onClick={() => setIsSellDialogOpen(false)}>Ghairi</Button>
+            <Button 
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleConfirmSell}
+              disabled={!selectedStock || sellQuantity <= 0 || sellQuantity > selectedStock.stock.shares}
+            >
+              Thibitisha Mauzo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+
 export function Inventory(props: InventoryProps) {
   const newContractsCount = React.useMemo(() => {
     return props.contractListings.filter(c => {
@@ -499,17 +641,27 @@ export function Inventory(props: InventoryProps) {
     }).length;
   }, [props.contractListings, props.currentUserId, props.currentUsername]);
 
+  const newStocksCount = props.playerStocks.length;
+
   return (
     <div className="flex flex-col gap-4 text-white">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Ghala (Inventory)</h1>
         <p className="text-muted-foreground">
-          Tazama bidhaa zako na simamia mikataba yako.
+          Tazama bidhaa zako, hisa na simamia mikataba yako.
         </p>
       </div>
       <Tabs defaultValue="items" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-900/80 max-w-sm">
+        <TabsList className="grid w-full grid-cols-3 bg-gray-900/80 max-w-lg">
             <TabsTrigger value="items"><Archive className='mr-2 h-4 w-4'/> Bidhaa</TabsTrigger>
+            <TabsTrigger value="stocks" className="relative">
+                <LineChart className='mr-2 h-4 w-4'/> Hisa
+                 {newStocksCount > 0 && (
+                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold text-white">
+                        {newStocksCount}
+                    </span>
+                )}
+            </TabsTrigger>
             <TabsTrigger value="contracts" className="relative">
                 <FileSignature className='mr-2 h-4 w-4'/> Mikataba
                 {newContractsCount > 0 && (
@@ -521,6 +673,9 @@ export function Inventory(props: InventoryProps) {
         </TabsList>
         <TabsContent value="items" className="mt-4">
           <ItemInventoryView {...props} />
+        </TabsContent>
+        <TabsContent value="stocks" className="mt-4">
+            <StocksInventoryView {...props} />
         </TabsContent>
         <TabsContent value="contracts" className="mt-4">
           <ContractInventoryView {...props} />

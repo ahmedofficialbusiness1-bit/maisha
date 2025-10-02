@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -680,6 +678,35 @@ export function Game() {
     });
   };
 
+  const handleSellStock = (ticker: string, shares: number) => {
+    if (!gameState || shares <= 0) return;
+    
+    const stockInfo = companyData.find(s => s.ticker === ticker);
+    if (!stockInfo) return;
+
+    const playerStock = gameState.playerStocks.find(s => s.ticker === ticker);
+    if (!playerStock || playerStock.shares < shares) return;
+
+    const totalSale = stockInfo.stockPrice * shares;
+
+    updateState(prev => {
+        const newPlayerStocks = prev.playerStocks.map(s => {
+            if (s.ticker === ticker) {
+                return { ...s, shares: s.shares - shares };
+            }
+            return s;
+        }).filter(s => s.shares > 0);
+
+        addTransaction('income', totalSale, `Uza hisa ${shares}x ${ticker}`);
+        addNotification(`Umeuza hisa ${shares}x ${ticker}.`, 'sale');
+
+        return {
+            money: prev.money + totalSale,
+            playerStocks: newPlayerStocks
+        };
+    });
+  };
+
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
      if (!database || !user || !gameState || quantity <= 0 || quantity > item.quantity) return;
 
@@ -1280,7 +1307,7 @@ export function Game() {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} contractListings={contractListings} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} currentUserId={user.uid} currentUsername={gameState.username} />;
+        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} currentUserId={user.uid} currentUsername={gameState.username} />;
       case 'market':
         return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
       case 'encyclopedia':
