@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark, FileSignature, Building } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark, FileSignature, Building, Crown } from 'lucide-react';
 import type { InventoryItem } from './inventory';
 import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
 import { cn } from '@/lib/utils';
@@ -601,6 +601,67 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             </Card>
         </div>
     );
+    
+    const renderPresidencyMarket = () => (
+    <div className="p-1 sm:p-2 md:p-4 lg:p-6 space-y-6">
+        <Card className="bg-gray-800/60 border-gray-700">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3"><Crown className="text-yellow-400" /> Uongozi wa Sasa</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center gap-4">
+                <Avatar className="h-16 w-16 border-4 border-yellow-400">
+                    <AvatarImage src="https://picsum.photos/seed/president/100/100" alt="President" />
+                    <AvatarFallback>P</AvatarFallback>
+                </Avatar>
+                <div>
+                    <h3 className="text-xl font-bold">Rais Mchezaji Mfano</h3>
+                    <p className="text-sm text-gray-400">Muda wa uongozi umebaki: Siku 25</p>
+                    <p className="text-sm text-gray-300 mt-1">Sera: Kodi ya 5% kwenye mauzo, Ruzuku kwa wakulima wa mahindi.</p>
+                </div>
+            </CardContent>
+        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-1 bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Hazina ya Taifa</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-3xl font-bold text-green-400">$1,234,567.89</p>
+                    <p className="text-sm text-gray-400 mt-2">Kiwango cha kodi cha sasa: <span className="font-bold">5%</span></p>
+                </CardContent>
+            </Card>
+            <Card className="lg:col-span-2 bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Uchaguzi Ujao</CardTitle>
+                    <CardDescription>Uchaguzi unafanyika kila baada ya siku 30. Usajili unafunguliwa siku 7 kabla.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <div className="space-y-3">
+                        <h4 className="font-semibold">Wagombea Waliojitokeza:</h4>
+                        <div className="space-y-2">
+                             {['Mgombea A', 'Mgombea B', 'Mgombea C'].map((candidate, index) => (
+                                <div key={index} className="flex items-center justify-between p-2 bg-gray-900/50 rounded-md">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={`https://picsum.photos/seed/${candidate}/40/40`} alt={candidate} />
+                                            <AvatarFallback>{candidate.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <span>{candidate}</span>
+                                    </div>
+                                    <Button size="sm" variant="outline">Piga Kura</Button>
+                                </div>
+                            ))}
+                        </div>
+                        <Separator className="bg-gray-600 my-3"/>
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                            Gombea Urais
+                        </Button>
+                     </div>
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+    );
 
 
   return (
@@ -610,10 +671,11 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
       
         <Tabs defaultValue="commodities" className="w-full pt-4">
             <div className="px-4 sm:px-6">
-                <TabsList className="grid w-full grid-cols-3 bg-gray-800/80">
+                <TabsList className="grid w-full grid-cols-4 bg-gray-800/80">
                     <TabsTrigger value="commodities"><LandPlot className='mr-2 h-4 w-4'/>Bidhaa</TabsTrigger>
                     <TabsTrigger value="stocks"><Landmark className='mr-2 h-4 w'/>Hisa</TabsTrigger>
                     <TabsTrigger value="bonds"><FileText className='mr-2 h-4 w-4'/>Hatifungani</TabsTrigger>
+                    <TabsTrigger value="presidency"><Crown className='mr-2 h-4 w-4'/>Urais</TabsTrigger>
                 </TabsList>
             </div>
             <TabsContent value="commodities" className="mt-4">
@@ -624,6 +686,9 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             </TabsContent>
             <TabsContent value="bonds" className="mt-4">
                 {renderBondsMarket()}
+            </TabsContent>
+             <TabsContent value="presidency" className="mt-4">
+                {renderPresidencyMarket()}
             </TabsContent>
         </Tabs>
     </div>
