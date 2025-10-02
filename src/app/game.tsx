@@ -278,7 +278,7 @@ export function Game() {
   const handleMarkNotificationsRead = () => {
     if (!gameState || !userRef) return;
     const updates = (gameState.notifications || []).map(n => ({ ...n, read: true }));
-    update(userRef, { notifications: updates });
+    updateState({ notifications: updates });
   }
 
   const handleUpdateProfile = (data: ProfileData) => {
@@ -304,7 +304,7 @@ export function Game() {
         privateNotes: data.privateNotes || ''
     };
     
-    update(userRef, updates);
+    updateState(updates);
 
     toast({ title: 'Wasifu Umehifadhiwa', description: 'Mabadiliko yako yamehifadhiwa.' });
     handleSetView('dashboard');
@@ -370,7 +370,7 @@ export function Game() {
       ...(gameState.notifications || [])
     ];
 
-    update(userRef, { 
+    updateState({ 
       inventory: newInventory.filter(item => item.quantity > 0), 
       buildingSlots: newSlots, 
       notifications: newNotifications 
@@ -414,7 +414,7 @@ export function Game() {
       ...(gameState.notifications || [])
     ];
 
-    update(userRef, { 
+    updateState({ 
       inventory: newInventory.filter(item => item.quantity > 0), 
       buildingSlots: newSlots, 
       notifications: newNotifications 
@@ -425,7 +425,7 @@ export function Game() {
     if (!userRef || !gameState) return;
     const newSlots = [...gameState.buildingSlots];
     newSlots[slotIndex] = { building: null, level: 0 };
-    update(userRef, { buildingSlots: newSlots });
+    updateState({ buildingSlots: newSlots });
   };
 
   const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
@@ -458,7 +458,7 @@ export function Game() {
          ...(gameState.notifications || [])
      ];
 
-     update(userRef, {
+     updateState({
          inventory: newInventory.filter(item => item.quantity > 0),
          buildingSlots: newSlots,
          notifications: newNotifications
@@ -493,7 +493,7 @@ export function Game() {
         ...(gameState.notifications || [])
     ];
 
-    update(userRef, {
+    updateState({
         inventory: newInventory.filter(i => i.quantity > 0),
         buildingSlots: newSlots,
         notifications: newNotifications
@@ -510,7 +510,7 @@ export function Game() {
         slot.construction.endTime -= timeReduction;
     }
 
-    update(userRef, { stars: gameState.stars - starsToUse, buildingSlots: newSlots });
+    updateState({ stars: gameState.stars - starsToUse, buildingSlots: newSlots });
   };
   
   const handleBuyMaterial = (materialName: string, quantity: number): boolean => {
@@ -700,7 +700,7 @@ export function Game() {
      if (itemIndex > -1) {
          newInventory[itemIndex].quantity -= quantity;
      }
-     update(userRef, { inventory: newInventory.filter(i => i.quantity > 0) });
+     updateState({ inventory: newInventory.filter(i => i.quantity > 0) });
      
      const listingId = `${user.uid}-${Date.now()}`;
      const listingRef = ref(database, `market/${listingId}`);
@@ -718,7 +718,7 @@ export function Game() {
          imageHint: productInfo?.imageHint || 'product photo'
      };
 
-     set(listingRef, newListing).then(() => {
+     set(listingRef).then(() => {
         toast({ title: 'Item Posted', description: `${quantity}x ${item.item} has been listed on the market.` });
      }).catch(error => {
         console.error("Failed to post to market:", error);
@@ -731,7 +731,7 @@ export function Game() {
           } else {
             revertedInventory.push({ ...item, quantity });
           }
-          update(userRef, { inventory: revertedInventory });
+          updateState({ inventory: revertedInventory });
         }
         toast({ variant: 'destructive', title: 'Failed to List Item' });
      });
@@ -767,7 +767,7 @@ export function Game() {
     if (itemIndex > -1) {
         newInventory[itemIndex].quantity -= quantity;
     }
-    update(userRef, { inventory: newInventory.filter(i => i.quantity > 0) });
+    updateState({ inventory: newInventory.filter(i => i.quantity > 0) });
 
 
     set(newContractRef, newContract).then(() => {
@@ -784,7 +784,7 @@ export function Game() {
           } else {
               revertedInventory.push({ ...item, quantity });
           }
-          update(userRef, { inventory: revertedInventory });
+          updateState({ inventory: revertedInventory });
         }
     });
   }
@@ -1218,9 +1218,9 @@ export function Game() {
   React.useEffect(() => {
     if (!gameState || !userRef) return;
     if (Math.abs(netWorth - gameState.netWorth) > 1) { // Use a small threshold to avoid float precision issues
-        update(userRef, { netWorth });
+        updateState({ netWorth });
     }
-  }, [gameState, netWorth, userRef]);
+  }, [gameState, netWorth, userRef, updateState]);
 
 
   const getPlayerRating = (netWorth: number) => {
