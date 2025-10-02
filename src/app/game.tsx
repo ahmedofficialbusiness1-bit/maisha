@@ -21,7 +21,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser, useDatabase } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getDatabase, ref, onValue, set, runTransaction, get, push, update, remove } from 'firebase/database';
+import { getDatabase, ref, onValue, set, runTransaction, get, push, remove } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 
@@ -97,6 +97,7 @@ export function Game() {
   
   const updateState = React.useCallback((updates: Partial<UserData>) => {
     if (!userRef) return;
+    const { update } = require("firebase/database");
     update(userRef, updates);
   }, [userRef]);
   
@@ -113,6 +114,7 @@ export function Game() {
   // Periodically update lastSeen to keep user online
   React.useEffect(() => {
       if (!userRef) return;
+      const { update } = require("firebase/database");
       const interval = setInterval(() => {
           if(document.hasFocus() && userRef) {
             update(userRef, { lastSeen: Date.now() });
@@ -248,18 +250,23 @@ export function Game() {
     return level * 1000;
   };
   
-  const addNotification = React.useCallback((message: string, icon: Notification['icon']) => {
+ const addNotification = React.useCallback((message: string, icon: Notification['icon']) => {
     if (!userRef) return;
     const notificationsRef = ref(userRef, 'notifications');
     const newNotifRef = push(notificationsRef);
-    const newNotification: Notification = {
-        id: newNotifRef.key!,
+    const newNotification: Omit<Notification, 'id'> = {
         message,
         timestamp: Date.now(),
         read: false,
         icon,
     };
-    set(newNotifRef, newNotification);
+    const notifWithId = { ...newNotification, id: newNotifRef.key! };
+    runTransaction(userRef, (currentData) => {
+        if (currentData) {
+            currentData.notifications = {...currentData.notifications, [newNotifRef.key!]: notifWithId};
+        }
+        return currentData;
+    });
   }, [userRef]);
 
 
@@ -267,14 +274,19 @@ export function Game() {
     if (!userRef) return;
     const transactionsRef = ref(userRef, 'transactions');
     const newTransRef = push(transactionsRef);
-    const newTransaction: Transaction = {
-        id: newTransRef.key!,
+    const newTransaction: Omit<Transaction, 'id'> = {
         type,
         amount,
         description,
         timestamp: Date.now(),
     };
-    set(newTransRef, newTransaction);
+    const transWithId = { ...newTransaction, id: newTransRef.key! };
+     runTransaction(userRef, (currentData) => {
+        if (currentData) {
+            currentData.transactions = {...currentData.transactions, [newTransRef.key!]: transWithId};
+        }
+        return currentData;
+    });
 }, [userRef]);
 
 
@@ -288,7 +300,7 @@ export function Game() {
     });
 
     if (Object.keys(updates).length > 0) {
-        update(userRef, updates);
+        updateState(updates);
     }
   }
 
@@ -382,7 +394,7 @@ export function Game() {
         [newNotifRef.key!]: { id: newNotifRef.key, message: `Ujenzi wa ${building.name} umeanza.`, timestamp: now, read: false, icon: 'construction' }
     };
 
-    update(userRef, { 
+    updateState({ 
       inventory: newInventory.filter(item => item.quantity > 0), 
       buildingSlots: newSlots, 
       ...Object.keys(newNotifications).reduce((acc, key) => ({ ...acc, [`notifications/${key}`]: newNotifications[key] }), {})
@@ -1448,5 +1460,7 @@ export function Game() {
     </div>
   );
 }
+
+    
 
     
