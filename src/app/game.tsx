@@ -99,11 +99,11 @@ export function Game() {
   const updateState = React.useCallback((updater: (prevState: UserData) => Partial<UserData>) => {
     if (!userRef) return;
   
-    // Update local state first for immediate UI feedback
+    // Use the functional form of setGameState to ensure we have the latest state
     setGameState(prev => {
         if (!prev) return null;
         const updates = updater(prev);
-        // Persist the updates to Firebase
+        // Persist only the updates to Firebase
         update(userRef, updates);
         // Return the new state for React
         return { ...prev, ...updates };
@@ -140,11 +140,11 @@ export function Game() {
     }
     if (!userRef) return;
 
-    const unsubscribe = onValue(userRef, (snapshot) => {
-      setGameStateLoading(false);
+    // Fetch initial data once
+    get(userRef).then(snapshot => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-         // Force admin check on load
+        // Force admin check on load
         const isAdmin = data.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
         if (isAdmin && data.role !== 'admin') {
             data.role = 'admin';
@@ -160,12 +160,25 @@ export function Game() {
             });
         });
       }
-    }, (error) => {
-        console.error("Firebase onValue error:", error);
+      setGameStateLoading(false);
+    }).catch(error => {
+        console.error("Firebase get error:", error);
         setGameStateLoading(false);
     });
+    
+    // Set up targeted listeners for critical real-time updates
+    const listeners = [
+        'money', 'stars', 'buildingSlots', 'inventory', 'notifications',
+        'playerStocks', 'playerLevel', 'playerXP', 'netWorth', 'lastPublicRead'
+    ].map(key => {
+        const pathRef = ref(database, `users/${user.uid}/${key}`);
+        const unsubscribe = onValue(pathRef, snapshot => {
+            setGameState(prev => prev ? ({ ...prev, [key]: snapshot.val() }) : null);
+        });
+        return unsubscribe;
+    });
 
-    return () => unsubscribe();
+    return () => listeners.forEach(unsubscribe => unsubscribe());
   }, [user, userLoading, router, userRef, database]);
   
   // Listen for chat metadata changes
@@ -268,22 +281,6 @@ export function Game() {
         notifications: [newNotification, ...(prev.notifications || [])].slice(0, 50)
     }));
   }, [updateState]);
-
-  const addXP = React.useCallback((amount: number) => {
-    updateState(prev => {
-        let newXP = prev.playerXP + amount;
-        let newLevel = prev.playerLevel;
-        let xpForNextLevel = getXpForNextLevel(newLevel);
-        
-        while (newXP >= xpForNextLevel) {
-            newXP -= xpForNextLevel;
-            newLevel++;
-            addNotification(`Hongera! Umefikia Level ${newLevel}!`, 'level-up');
-            xpForNextLevel = getXpForNextLevel(newLevel);
-        }
-        return { playerXP: newXP, playerLevel: newLevel };
-    });
-  }, [updateState, addNotification]);
 
   const addTransaction = React.useCallback((type: 'income' | 'expense', amount: number, description: string) => {
     const newTransaction: Transaction = {
