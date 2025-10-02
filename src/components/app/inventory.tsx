@@ -531,41 +531,44 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
     <>
       <div className="space-y-4">
         {/* My Company Shares Card */}
-        <Card className="bg-gray-800/60 border-gray-700">
-            <CardHeader>
-                <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border-2 border-blue-400">
-                        <Building />
-                    </Avatar>
-                     <div>
-                        <CardTitle className="text-base">{companyProfile.companyName}</CardTitle>
-                        <CardDescription>Hisa za Kampuni Yako</CardDescription>
+        {companyProfile && (
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 border-2 border-blue-400">
+                            <Building />
+                        </Avatar>
+                        <div>
+                            <CardTitle className="text-base">{companyProfile.companyName}</CardTitle>
+                            <CardDescription>Hisa za Kampuni Yako</CardDescription>
+                        </div>
                     </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-4">
-                    <div className="text-gray-400">Jumla ya Hisa</div>
-                    <div className="font-mono text-right">{companyProfile.totalShares.toLocaleString()}</div>
-                    <div className="text-gray-400">Bei ya Hisa (Kadirio)</div>
-                    <div className="font-mono text-right">${companyProfile.sharePrice.toFixed(2)}</div>
-                    <Separator className="col-span-2 bg-gray-700 my-1"/>
-                    <div className="text-gray-300 font-bold">Thamani ya Soko</div>
-                    <div className="font-mono text-right font-bold text-blue-300">${companyProfile.marketCap.toLocaleString()}</div>
-                 </div>
-                 {isQualifiedForIPO ? (
-                    <Button className="w-full" disabled>Toa Hisa Sokoni (Inakuja Hivi Karibuni)</Button>
-                 ) : (
-                    <Alert variant="default" className="bg-yellow-600/10 border-yellow-500/30">
-                        <Info className="h-4 w-4" />
-                        <AlertTitle className="text-yellow-300">Vigezo Havijatimizwa</AlertTitle>
-                        <AlertDescription className="text-yellow-400">
-                            Kampuni yako inahitaji kufikia thamani ya ${IPO_QUALIFICATION_NET_WORTH.toLocaleString()} ili uweze kuuza hisa. Endelea kukuza biashara yako!
-                        </AlertDescription>
-                    </Alert>
-                 )}
-            </CardContent>
-        </Card>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-4">
+                        <div className="text-gray-400">Jumla ya Hisa</div>
+                        <div className="font-mono text-right">{companyProfile.totalShares.toLocaleString()}</div>
+                        <div className="text-gray-400">Bei ya Hisa (Kadirio)</div>
+                        <div className="font-mono text-right">${companyProfile.sharePrice.toFixed(2)}</div>
+                        <Separator className="col-span-2 bg-gray-700 my-1"/>
+                        <div className="text-gray-300 font-bold">Thamani ya Soko</div>
+                        <div className="font-mono text-right font-bold text-blue-300">${companyProfile.marketCap.toLocaleString()}</div>
+                    </div>
+                    {isQualifiedForIPO ? (
+                        <Button className="w-full" disabled>Toa Hisa Sokoni (Inakuja Hivi Karibuni)</Button>
+                    ) : (
+                        <Alert variant="default" className="bg-yellow-600/10 border-yellow-500/30">
+                            <Info className="h-4 w-4" />
+                            <AlertTitle className="text-yellow-300">Vigezo Havijatimizwa</AlertTitle>
+                            <AlertDescription className="text-yellow-400">
+                                Kampuni yako inahitaji kufikia thamani ya ${IPO_QUALIFICATION_NET_WORTH.toLocaleString()} ili uweze kuuza hisa. Endelea kukuza biashara yako!
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                </CardContent>
+            </Card>
+        )}
+
 
         <Separator />
 
