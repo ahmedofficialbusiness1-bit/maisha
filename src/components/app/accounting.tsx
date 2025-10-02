@@ -282,7 +282,7 @@ const AnalyticsView = ({ transactions, netWorth }: Pick<AccountingProps, 'transa
                 </CardHeader>
                 <CardContent className="pr-0">
                     <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                        <ResponsiveContainer>
+                       <ResponsiveContainer>
                             <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.1)" />
                                 <XAxis dataKey="date" tick={{ fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
