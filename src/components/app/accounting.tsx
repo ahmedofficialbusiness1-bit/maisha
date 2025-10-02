@@ -16,7 +16,6 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { startOfDay, startOfWeek, startOfMonth, isAfter, subDays, subWeeks, subMonths } from 'date-fns';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 export type Transaction = {
   id: string;
@@ -211,14 +210,6 @@ const AnalyticsView = ({ transactions, netWorth }: Pick<AccountingProps, 'transa
 
     }, [transactions, netWorth]);
 
-    const chartConfig = {
-        netWorth: {
-          label: "Net Worth",
-          color: "hsl(var(--chart-1))",
-        },
-    } satisfies any;
-
-
     const { dailyChange, weeklyChange, monthlyChange, returnOnSales } = React.useMemo(() => {
         const now = new Date();
         const dayAgo = subDays(now, 1).getTime();
@@ -280,21 +271,22 @@ const AnalyticsView = ({ transactions, netWorth }: Pick<AccountingProps, 'transa
                     <CardTitle>Ukuaji wa Utajiri (Net Worth)</CardTitle>
                     <CardDescription>Jinsi thamani ya kampuni yako imebadilika kwa muda.</CardDescription>
                 </CardHeader>
-                <CardContent className="pr-0">
-                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                       <ResponsiveContainer>
-                            <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.1)" />
-                                <XAxis dataKey="date" tick={{ fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
-                                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
-                                <Tooltip
-                                    cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 2, strokeDasharray: "3 3" }}
-                                    content={<ChartTooltipContent indicator="dot" />}
-                                />
-                                <Line type="monotone" dataKey="netWorth" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </ChartContainer>
+                <CardContent className="pr-0 h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.1)" />
+                            <XAxis dataKey="date" tick={{ fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
+                            <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                            <Tooltip
+                                cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 2, strokeDasharray: "3 3" }}
+                                contentStyle={{
+                                    backgroundColor: 'hsl(var(--background))',
+                                    borderColor: 'hsl(var(--border))',
+                                }}
+                            />
+                            <Line type="monotone" dataKey="netWorth" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
+                        </LineChart>
+                    </ResponsiveContainer>
                 </CardContent>
             </Card>
 
