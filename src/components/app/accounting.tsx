@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Banknote, Warehouse, LineChart, Building, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -26,6 +26,11 @@ export type Transaction = {
 
 interface AccountingProps {
   transactions: Transaction[];
+  netWorth: number;
+  inventoryValue: number;
+  stockValue: number;
+  buildingValue: number;
+  cash: number;
 }
 
 const ReportCard = ({ title, value, type }: { title: string, value: number, type: 'income' | 'expense' | 'profit' }) => {
@@ -137,8 +142,43 @@ const ReportPeriodView = ({ transactions }: { transactions: Transaction[] }) => 
     );
 };
 
+const NetWorthView = ({ netWorth, inventoryValue, stockValue, buildingValue, cash }: Omit<AccountingProps, 'transactions'>) => {
+    
+    const MetricCard = ({ title, value, icon }: { title: string, value: number, icon: React.ElementType }) => (
+        <Card className="bg-gray-800/50 border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-300">{title}</CardTitle>
+                {React.createElement(icon, { className: "h-5 w-5 text-gray-400" })}
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold text-white">${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            </CardContent>
+        </Card>
+    );
 
-export function Accounting({ transactions }: AccountingProps) {
+    return (
+        <div className="space-y-4">
+            <Card className="bg-blue-900/30 border-blue-500/50">
+                 <CardHeader className="pb-4">
+                    <CardTitle className="text-blue-300">Utajiri Wako Wote (Net Worth)</CardTitle>
+                    <CardDescription className="text-blue-400">Jumla ya thamani ya mali zako zote.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-5xl font-bold text-white">${netWorth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </CardContent>
+            </Card>
+             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <MetricCard title="Pesa Taslimu" value={cash} icon={Banknote} />
+                <MetricCard title="Thamani ya Bidhaa" value={inventoryValue} icon={Warehouse} />
+                <MetricCard title="Thamani ya Hisa" value={stockValue} icon={LineChart} />
+                <MetricCard title="Thamani ya Majengo" value={buildingValue} icon={Building} />
+             </div>
+        </div>
+    )
+}
+
+
+export function Accounting({ transactions, netWorth, inventoryValue, stockValue, buildingValue, cash }: AccountingProps) {
   
   const now = new Date();
   const todayStart = startOfDay(now);
@@ -159,10 +199,11 @@ export function Accounting({ transactions }: AccountingProps) {
       </div>
       
        <Tabs defaultValue="daily" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-gray-900/80 max-w-md">
+        <TabsList className="grid w-full grid-cols-4 bg-gray-900/80 max-w-lg">
             <TabsTrigger value="daily">Leo</TabsTrigger>
             <TabsTrigger value="weekly">Wiki Hii</TabsTrigger>
             <TabsTrigger value="monthly">Mwezi Huu</TabsTrigger>
+            <TabsTrigger value="net_worth"><Wallet className="mr-2 h-4 w-4"/> Thamani Halisi</TabsTrigger>
         </TabsList>
         <TabsContent value="daily" className="mt-4">
             <ReportPeriodView transactions={dailyTransactions} />
@@ -172,6 +213,9 @@ export function Accounting({ transactions }: AccountingProps) {
         </TabsContent>
          <TabsContent value="monthly" className="mt-4">
             <ReportPeriodView transactions={monthlyTransactions} />
+        </TabsContent>
+        <TabsContent value="net_worth" className="mt-4">
+            <NetWorthView netWorth={netWorth} inventoryValue={inventoryValue} stockValue={stockValue} buildingValue={buildingValue} cash={cash} />
         </TabsContent>
       </Tabs>
     </div>

@@ -110,7 +110,12 @@ export function Game() {
       
       const interval = setInterval(() => {
           if(document.hasFocus() && userRef) {
-            update(userRef, { lastSeen: Date.now() });
+            runTransaction(userRef, (currentData) => {
+                if (currentData) {
+                    currentData.lastSeen = Date.now();
+                }
+                return currentData;
+            });
           }
       }, 60 * 1000); // every minute
 
@@ -1463,7 +1468,14 @@ export function Game() {
       case 'chats':
           return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} players={allPlayers || []} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={handlePublicRoomRead} />;
       case 'accounting':
-          return <Accounting transactions={Object.values(gameState.transactions || {}).sort((a,b) => b.timestamp - a.timestamp)} />;
+          return <Accounting 
+                    transactions={Object.values(gameState.transactions || {}).sort((a,b) => b.timestamp - a.timestamp)} 
+                    netWorth={netWorth}
+                    inventoryValue={inventoryValue}
+                    stockValue={stockValue}
+                    buildingValue={buildingValue}
+                    cash={gameState.money}
+                 />;
       case 'leaderboard':
           return <Leaderboard onViewProfile={handleViewProfile} />;
       case 'profile':
