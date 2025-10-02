@@ -79,6 +79,6 @@
   }
 
   .animate-ticker {
-    animation: ticker 300s linear infinite;
+    animation: ticker 600s linear infinite;
   }
 }
