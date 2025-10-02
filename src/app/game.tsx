@@ -281,8 +281,8 @@ export function Game() {
   const handleMarkNotificationsRead = () => {
     if (!gameState || !userRef) return;
     const updates: { [key: string]: boolean } = {};
-    (gameState.notifications || []).forEach(n => {
-        if (!n.read) {
+    Object.values(gameState.notifications || {}).forEach((n: any) => {
+        if (n && n.id && !n.read) {
             updates[`notifications/${n.id}/read`] = true;
         }
     });
