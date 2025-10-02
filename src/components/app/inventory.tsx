@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, FileSignature, Archive, Handshake, Inbox, Check, X, Hourglass, History, LineChart, Banknote, Building, Info, TrendingUp } from 'lucide-react';
+import { MoreHorizontal, FileSignature, Archive, Handshake, Inbox, Check, X, Hourglass, History, LineChart, Banknote, Building, Info, TrendingUp, Loader2 } from 'lucide-react';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -55,6 +55,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../ui/alert-dialog';
+import { Skeleton } from '../ui/skeleton';
 
 
 export type InventoryItem = {
@@ -512,6 +513,25 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
 function CompanyInventoryView({ companyProfile, netWorth, onGoPublic }: Pick<InventoryProps, 'companyProfile' | 'netWorth' | 'onGoPublic'>) {
   const [isPublicDialogOpen, setIsPublicDialogOpen] = React.useState(false);
   const IPO_QUALIFICATION_NET_WORTH = 50000;
+  
+  if (!companyProfile) {
+    return (
+      <Card className="bg-gray-800/60 border-gray-700">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[250px]" />
+              <Skeleton className="h-4 w-[200px]" />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-40">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </CardContent>
+      </Card>
+    );
+  }
   
   const isQualifiedForIPO = netWorth >= IPO_QUALIFICATION_NET_WORTH;
 
