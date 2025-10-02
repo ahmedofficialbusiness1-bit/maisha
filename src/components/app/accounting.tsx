@@ -14,7 +14,7 @@ import { ArrowUpRight, ArrowDownLeft, Banknote, Warehouse, Building, Wallet, Tre
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { startOfDay, startOfWeek, startOfMonth, isAfter, subDays, subWeeks, subMonths } from 'date-fns';
+import { startOfDay, startOfWeek, startOfMonth, isAfter, subDays, subWeeks, subMonths, eachDayOfInterval, endOfDay } from 'date-fns';
 import { LineChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line } from 'recharts';
 
 export type Transaction = {
@@ -178,26 +178,61 @@ const NetWorthView = ({ netWorth, inventoryValue, stockValue, buildingValue, cas
     )
 }
 
-const AnalyticsView = ({ transactions, netWorth }: Pick<AccountingProps, 'transactions' | 'netWorth'>) => {
+const AnalyticsView = ({ transactions, netWorth, cash }: Pick<AccountingProps, 'transactions' | 'netWorth' | 'cash'>) => {
     
     const chartData = React.useMemo(() => {
-        if (!transactions || transactions.length === 0) return [];
+        if (!transactions || transactions.length === 0) {
+            // If no transactions, show current net worth for today.
+            return [{
+                date: new Date().toISOString().split('T')[0],
+                netWorth: netWorth,
+            }];
+        };
 
-        // For this example, let's just create some dummy historical net worth data
-        // A real implementation would process transactions to build this history
-        const data = [];
-        let runningWorth = netWorth > 0 ? netWorth / 2 : 5000; // Start from half of current net worth for demo
-        for (let i = 30; i >= 0; i--) {
-            runningWorth += (Math.random() - 0.45) * (runningWorth / 20);
-             data.push({
-                date: subDays(new Date(), i).toISOString().split('T')[0],
-                netWorth: Math.max(0, runningWorth),
-            });
-        }
+        const sortedTransactions = [...transactions].sort((a, b) => a.timestamp - b.timestamp);
+        const oldestTransactionDate = new Date(sortedTransactions[0].timestamp);
+        const today = new Date();
         
-        return data;
+        const dateInterval = eachDayOfInterval({
+            start: startOfDay(oldestTransactionDate),
+            end: endOfDay(today)
+        });
 
-    }, [transactions, netWorth]);
+        // Calculate the initial net worth before the first transaction
+        const firstTransaction = sortedTransactions[0];
+        const changeFromFirstTransaction = firstTransaction.type === 'income' ? firstTransaction.amount : -firstTransaction.amount;
+        // This is an approximation. The "real" starting net worth isn't tracked.
+        // We work backwards from the current cash.
+        const totalChange = sortedTransactions.reduce((acc, t) => acc + (t.type === 'income' ? t.amount : -t.amount), 0);
+        let runningWorth = cash - totalChange;
+
+        const dailyNetWorth: Record<string, number> = {};
+
+        let transactionIndex = 0;
+        for (const day of dateInterval) {
+            const dayKey = day.toISOString().split('T')[0];
+            
+            while(transactionIndex < sortedTransactions.length && startOfDay(new Date(sortedTransactions[transactionIndex].timestamp)).getTime() <= day.getTime()) {
+                const t = sortedTransactions[transactionIndex];
+                runningWorth += t.type === 'income' ? t.amount : -t.amount;
+                transactionIndex++;
+            }
+            // For simplicity, we are charting the cash value over time, not the full net worth.
+            // A full net worth calculation would require historical prices for all assets.
+            dailyNetWorth[dayKey] = runningWorth;
+        }
+
+        // Ensure the last point is the current net worth (or cash for simplicity)
+        dailyNetWorth[today.toISOString().split('T')[0]] = cash;
+
+
+        return Object.keys(dailyNetWorth).map(date => ({
+            date,
+            netWorth: dailyNetWorth[date]
+        }));
+
+    }, [transactions, netWorth, cash]);
+
 
     const { dailyChange, weeklyChange, monthlyChange, returnOnSales } = React.useMemo(() => {
         const now = new Date();
@@ -218,9 +253,9 @@ const AnalyticsView = ({ transactions, netWorth }: Pick<AccountingProps, 'transa
         const weekAgoPoint = findClosestPoint(weekAgo);
         const monthAgoPoint = findClosestPoint(monthAgo);
 
-        const daily = dayAgoPoint ? ((lastPoint.netWorth - dayAgoPoint.netWorth) / dayAgoPoint.netWorth) * 100 : 0;
-        const weekly = weekAgoPoint ? ((lastPoint.netWorth - weekAgoPoint.netWorth) / weekAgoPoint.netWorth) * 100 : 0;
-        const monthly = monthAgoPoint ? ((lastPoint.netWorth - monthAgoPoint.netWorth) / monthAgoPoint.netWorth) * 100 : 0;
+        const daily = dayAgoPoint?.netWorth > 0 ? ((lastPoint.netWorth - dayAgoPoint.netWorth) / dayAgoPoint.netWorth) * 100 : 0;
+        const weekly = weekAgoPoint?.netWorth > 0 ? ((lastPoint.netWorth - weekAgoPoint.netWorth) / weekAgoPoint.netWorth) * 100 : 0;
+        const monthly = monthAgoPoint?.netWorth > 0 ? ((lastPoint.netWorth - monthAgoPoint.netWorth) / monthAgoPoint.netWorth) * 100 : 0;
         
         const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
         const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
@@ -257,8 +292,8 @@ const AnalyticsView = ({ transactions, netWorth }: Pick<AccountingProps, 'transa
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <Card className="lg:col-span-2 bg-gray-800/60 border-gray-700">
                 <CardHeader>
-                    <CardTitle>Ukuaji wa Utajiri (Net Worth)</CardTitle>
-                    <CardDescription>Jinsi thamani ya kampuni yako imebadilika kwa muda.</CardDescription>
+                    <CardTitle>Ukuaji wa Pesa Taslimu (Cash Growth)</CardTitle>
+                    <CardDescription>Jinsi thamani ya pesa yako imebadilika kwa muda.</CardDescription>
                 </CardHeader>
                 <CardContent className="pr-0 h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -273,7 +308,7 @@ const AnalyticsView = ({ transactions, netWorth }: Pick<AccountingProps, 'transa
                                     borderColor: 'hsl(var(--border))',
                                 }}
                             />
-                            <Line type="monotone" dataKey="netWorth" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
+                            <Line type="monotone" dataKey="netWorth" name="Cash" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
                         </LineChart>
                     </ResponsiveContainer>
                 </CardContent>
@@ -331,7 +366,7 @@ export function Accounting({ transactions, netWorth, inventoryValue, stockValue,
             <NetWorthView netWorth={netWorth} inventoryValue={inventoryValue} stockValue={stockValue} buildingValue={buildingValue} cash={cash} />
         </TabsContent>
         <TabsContent value="analytics" className="mt-4">
-            <AnalyticsView transactions={transactions} netWorth={netWorth} />
+            <AnalyticsView transactions={transactions} netWorth={netWorth} cash={cash} />
         </TabsContent>
       </Tabs>
     </div>
