@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Bot, Users, User, ArrowLeft, Loader2, Hash } from 'lucide-react';
+import { Send, Bot, Users, User, ArrowLeft, Loader2, Hash, CandlestickChart, LifeBuoy } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -46,11 +46,11 @@ export type ChatMetadata = {
     participants: Record<string, ChatParticipantInfo>; // For private chats
 };
 
-type PublicChatRoom = 'general' | 'trade' | 'help';
-const publicRooms: { id: PublicChatRoom, name: string }[] = [
-    { id: 'general', name: 'Soga ya Kawaida' },
-    { id: 'trade', name: 'Biashara' },
-    { id: 'help', name: 'Msaada' },
+type PublicChatRoomId = 'general' | 'trade' | 'help';
+const publicRooms: { id: PublicChatRoomId, name: string, icon: React.ReactNode }[] = [
+    { id: 'general', name: 'Soga ya Kawaida', icon: <Users className="h-5 w-5 text-gray-400"/> },
+    { id: 'trade', name: 'Biashara', icon: <CandlestickChart className="h-5 w-5 text-gray-400"/> },
+    { id: 'help', name: 'Msaada', icon: <LifeBuoy className="h-5 w-5 text-gray-400"/> },
 ];
 
 type UserChat = {
@@ -63,7 +63,7 @@ type UserChat = {
 
 type SelectedChat = {
     type: 'public';
-    id: PublicChatRoom;
+    id: PublicChatRoomId;
     name: string;
 } | {
     type: 'private';
@@ -159,11 +159,11 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
                                 {publicRooms.map(room => (
                                     <ChatItem
                                         key={room.id}
-                                        name={`# ${room.name}`}
+                                        name={room.name}
                                         isActive={selectedChat?.type === 'public' && selectedChat.id === room.id}
                                         isUnread={unreadPublicChats[room.id]}
                                         onClick={() => handleSelectChat({ type: 'public', id: room.id, name: room.name })}
-                                        avatar={<Hash className="h-5 w-5 text-gray-400"/>}
+                                        avatar={room.icon}
                                     />
                                 ))}
                             </div>
@@ -205,7 +205,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
                     />
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
-                        <MessageSquare className="h-16 w-16 mb-4" />
+                        <Bot className="h-16 w-16 mb-4" />
                         <h3 className="text-xl font-semibold">Select a conversation</h3>
                         <p>Choose a channel or a direct message to start chatting.</p>
                     </div>
