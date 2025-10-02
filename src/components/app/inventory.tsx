@@ -74,6 +74,7 @@ interface InventoryProps {
   onRejectContract: (contract: ContractListing) => void;
   onCancelContract: (contract: ContractListing) => void;
   onSellStock: (ticker: string, shares: number) => void;
+  onGoPublic: () => void;
   currentUserId: string;
   currentUsername: string;
   companyProfile?: CompanyProfile;
@@ -508,7 +509,7 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
     );
 }
 
-function StocksInventoryView({ playerStocks, stockListings, onSellStock, companyProfile, netWorth, onGoPublic }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock' | 'companyProfile' | 'netWorth'> & { onGoPublic: () => void }) {
+function StocksInventoryView({ playerStocks, stockListings, onSellStock, companyProfile, netWorth, onGoPublic }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock' | 'companyProfile' | 'netWorth' | 'onGoPublic'>) {
   const [selectedStock, setSelectedStock] = React.useState<{ stock: PlayerStock, details: StockListing } | null>(null);
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
   const [isPublicDialogOpen, setIsPublicDialogOpen] = React.useState(false);
@@ -728,7 +729,7 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
 }
 
 
-export function Inventory(props: InventoryProps & {onGoPublic: () => void}) {
+export function Inventory(props: InventoryProps) {
   const newContractsCount = React.useMemo(() => {
     return props.contractListings.filter(c => {
         const isTargetedBuyer = c.buyerIdentifier === props.currentUserId || c.buyerIdentifier === props.currentUsername;

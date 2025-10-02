@@ -1034,7 +1034,7 @@ export function Game() {
   }, [companyData, updateState]);
   
   const handleGoPublic = () => {
-    if (!gameState || !userRef) return;
+    if (!gameState || !userRef || !database) return;
     
     // Sell 20% of shares for cash
     const sharesToSell = gameState.companyProfile.totalShares * 0.20;
