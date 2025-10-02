@@ -1032,6 +1032,46 @@ export function Game() {
         return {};
     });
   }, [companyData, updateState]);
+  
+  const handleGoPublic = () => {
+    if (!gameState || !userRef) return;
+    
+    // Sell 20% of shares for cash
+    const sharesToSell = gameState.companyProfile.totalShares * 0.20;
+    const cashInfusion = sharesToSell * gameState.companyProfile.sharePrice;
+
+    // Update company data
+    const newCompanyProfile = {
+      ...gameState.companyProfile,
+      isPublic: true,
+      availableShares: gameState.companyProfile.availableShares - sharesToSell,
+    };
+    
+    // Add the company to the public market listings
+    const newPublicListing: StockListing = {
+        id: newCompanyProfile.ticker,
+        ticker: newCompanyProfile.ticker,
+        companyName: newCompanyProfile.companyName,
+        stockPrice: newCompanyProfile.sharePrice,
+        totalShares: newCompanyProfile.totalShares,
+        marketCap: newCompanyProfile.marketCap,
+        logo: newCompanyProfile.logo,
+        imageHint: 'company logo',
+        creditRating: getPlayerRating(gameState.netWorth),
+        isPlayerCompany: true,
+    };
+    
+    const companyRef = ref(database, `companies/${newCompanyProfile.ticker}`);
+    set(companyRef, newPublicListing);
+
+    updateState(prev => ({
+      money: prev.money + cashInfusion,
+      companyProfile: newCompanyProfile,
+    }));
+
+    addTransaction('income', cashInfusion, `Initial Public Offering (IPO)`);
+    addNotification(`Hongera! Kampuni yako sasa inauzwa sokoni! Umepata $${cashInfusion.toLocaleString()}.`, 'sale');
+  };
 
 
 
@@ -1307,7 +1347,7 @@ export function Game() {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={gameState.netWorth} />;
+        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={gameState.netWorth} onGoPublic={handleGoPublic} />;
       case 'market':
         return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
       case 'encyclopedia':

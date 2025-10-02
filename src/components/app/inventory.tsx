@@ -68,17 +68,16 @@ interface InventoryProps {
   playerStocks: PlayerStock[];
   stockListings: StockListing[];
   contractListings: ContractListing[];
-  companyProfile: CompanyProfile;
-  netWorth: number;
   onPostToMarket: (item: InventoryItem, quantity: number, price: number) => void;
   onCreateContract: (item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => void;
   onAcceptContract: (contract: ContractListing) => void;
   onRejectContract: (contract: ContractListing) => void;
   onCancelContract: (contract: ContractListing) => void;
   onSellStock: (ticker: string, shares: number) => void;
-  onGoPublic: () => void;
   currentUserId: string;
   currentUsername: string;
+  companyProfile?: CompanyProfile;
+  netWorth: number;
 }
 
 function ItemInventoryView({ inventoryItems, onPostToMarket, onCreateContract }: Pick<InventoryProps, 'inventoryItems' | 'onPostToMarket' | 'onCreateContract'>) {
@@ -509,7 +508,7 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
     );
 }
 
-function StocksInventoryView({ playerStocks, stockListings, onSellStock, companyProfile, netWorth, onGoPublic }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock' | 'companyProfile' | 'netWorth' | 'onGoPublic'>) {
+function StocksInventoryView({ playerStocks, stockListings, onSellStock, companyProfile, netWorth, onGoPublic }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock' | 'companyProfile' | 'netWorth'> & { onGoPublic: () => void }) {
   const [selectedStock, setSelectedStock] = React.useState<{ stock: PlayerStock, details: StockListing } | null>(null);
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
   const [isPublicDialogOpen, setIsPublicDialogOpen] = React.useState(false);
@@ -538,7 +537,7 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
       setIsSellDialogOpen(false);
     }
   };
-
+  
   const handleConfirmGoPublic = () => {
     onGoPublic();
     setIsPublicDialogOpen(false);
@@ -547,7 +546,6 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
   return (
     <>
       <div className="space-y-4">
-        {/* My Company Shares Card */}
         {companyProfile && (
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
@@ -598,10 +596,8 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
             </Card>
         )}
 
-
         <Separator />
 
-        {/* Owned Stocks Card */}
         <Card className="bg-gray-800/60 border-gray-700 text-white">
             <CardHeader>
             <CardTitle>Hisa Zangu Nilizonunua</CardTitle>
@@ -732,7 +728,7 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
 }
 
 
-export function Inventory(props: InventoryProps) {
+export function Inventory(props: InventoryProps & {onGoPublic: () => void}) {
   const newContractsCount = React.useMemo(() => {
     return props.contractListings.filter(c => {
         const isTargetedBuyer = c.buyerIdentifier === props.currentUserId || c.buyerIdentifier === props.currentUsername;
