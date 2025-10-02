@@ -684,13 +684,13 @@ export function Game() {
     const stockInfo = companyData.find(s => s.ticker === ticker);
     if (!stockInfo) return;
 
-    const playerStock = gameState.playerStocks.find(s => s.ticker === ticker);
+    const playerStock = (gameState.playerStocks || []).find(s => s.ticker === ticker);
     if (!playerStock || playerStock.shares < shares) return;
 
     const totalSale = stockInfo.stockPrice * shares;
 
     updateState(prev => {
-        const newPlayerStocks = prev.playerStocks.map(s => {
+        const newPlayerStocks = (prev.playerStocks || []).map(s => {
             if (s.ticker === ticker) {
                 return { ...s, shares: s.shares - shares };
             }
