@@ -167,7 +167,7 @@ export function Game() {
     // Set up targeted listeners for critical real-time updates
     const listeners = [
         'money', 'stars', 'buildingSlots', 'inventory', 'notifications',
-        'playerStocks', 'playerLevel', 'playerXP', 'netWorth', 'lastPublicRead'
+        'playerStocks', 'playerLevel', 'playerXP', 'netWorth', 'lastPublicRead', 'companyProfile'
     ].map(key => {
         const pathRef = ref(database, `users/${user.uid}/${key}`);
         const unsubscribe = onValue(pathRef, snapshot => {
@@ -1347,7 +1347,7 @@ export function Game() {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={gameState.netWorth} onGoPublic={handleGoPublic} />;
+        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={gameState.netWorth} onGoPublic={handleGoPublic} />;
       case 'market':
         return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
       case 'encyclopedia':
@@ -1389,3 +1389,5 @@ export function Game() {
     </div>
   );
 }
+
+    

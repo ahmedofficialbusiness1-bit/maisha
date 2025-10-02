@@ -77,7 +77,7 @@ interface InventoryProps {
   onGoPublic: () => void;
   currentUserId: string;
   currentUsername: string;
-  companyProfile?: CompanyProfile;
+  companyProfile: CompanyProfile;
   netWorth: number;
 }
 
@@ -731,6 +731,7 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
 
 export function Inventory(props: InventoryProps) {
   const newContractsCount = React.useMemo(() => {
+    if (!props.contractListings) return 0;
     return props.contractListings.filter(c => {
         const isTargetedBuyer = c.buyerIdentifier === props.currentUserId || c.buyerIdentifier === props.currentUsername;
         const isPublicAndOpen = !c.buyerIdentifier && c.status === 'open';
@@ -781,3 +782,5 @@ export function Inventory(props: InventoryProps) {
     </div>
   );
 }
+
+    
