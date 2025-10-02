@@ -782,5 +782,3 @@ export function Inventory(props: InventoryProps) {
     </div>
   );
 }
-
-    
