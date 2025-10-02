@@ -194,7 +194,7 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                 )}
                 <DropdownMenuItem onSelect={() => setView('accounting')}>
                     <Scale className="mr-2 h-4 w-4" />
-                    <span>Uhasibu</span>
+                    <span>Ripoti ya Kifedha</span>
                 </DropdownMenuItem>
                  <DropdownMenuItem onSelect={() => setView('profile')}>
                     <User className="mr-2 h-4 w-4" />
@@ -212,5 +212,3 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
     </header>
   );
 }
-
-    
