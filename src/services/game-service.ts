@@ -8,6 +8,14 @@ export type UserChatData = {
   unreadCount: number;
 };
 
+export type CompanyProfile = {
+  companyName: string;
+  totalShares: number;
+  availableShares: number;
+  sharePrice: number;
+  marketCap: number;
+};
+
 // This is the private user data, stored under /users/{uid}
 export type UserData = {
   uid: string;
@@ -29,6 +37,7 @@ export type UserData = {
   role: 'player' | 'admin';
   lastSeen: number;
   lastPublicRead: Record<string, number>;
+  companyProfile: CompanyProfile;
 };
 
 // This is public-facing player data, stored under /players/{uid}
@@ -47,15 +56,18 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
   // For email sign-up, displayName is null. Create a default username.
   const initialUsername = displayName || (email ? email.split('@')[0] : 'Mchezaji');
   const isAdmin = uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
+  const initialMoney = isAdmin ? 1000000 : 10000;
+  const initialSharePrice = 10;
+  const initialTotalShares = 1000000;
   
   return {
     uid,
     username: initialUsername,
     lastLogin: Date.now(),
     avatarUrl: `https://picsum.photos/seed/${uid}/100/100`,
-    money: isAdmin ? 1000000 : 10000,
+    money: initialMoney,
     stars: isAdmin ? 1000 : 20,
-    netWorth: isAdmin ? 1000000 : 10000,
+    netWorth: initialMoney,
     buildingSlots: Array(20).fill({ building: null, level: 0 }),
     inventory: [
       { item: 'Mbao', quantity: 2000, marketPrice: 2.5 },
@@ -72,6 +84,13 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     role: isAdmin ? 'admin' : 'player',
     lastSeen: Date.now(),
     lastPublicRead: { general: 0, trade: 0, help: 0 },
+    companyProfile: {
+      companyName: `${initialUsername} Inc.`,
+      totalShares: initialTotalShares,
+      availableShares: initialTotalShares,
+      sharePrice: initialSharePrice,
+      marketCap: initialTotalShares * initialSharePrice,
+    },
   };
 }
 
@@ -79,6 +98,3 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
 export const saveUserData = async (userRef: DatabaseReference, gameState: UserData): Promise<void> => {
   await set(userRef, gameState);
 };
-
-    
-    
