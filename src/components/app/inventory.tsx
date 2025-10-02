@@ -512,13 +512,7 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
 function CompanyInventoryView({ companyProfile, netWorth, onGoPublic }: Pick<InventoryProps, 'companyProfile' | 'netWorth' | 'onGoPublic'>) {
   const [isPublicDialogOpen, setIsPublicDialogOpen] = React.useState(false);
   const IPO_QUALIFICATION_NET_WORTH = 50000;
-  const isQualifiedForIPO = netWorth >= IPO_QUALIFICATION_NET_WORTH;
-
-  const handleConfirmGoPublic = () => {
-    onGoPublic();
-    setIsPublicDialogOpen(false);
-  }
-
+  
   if (!companyProfile) {
     return (
         <Card className="bg-gray-800/60 border-gray-700 text-white">
@@ -527,6 +521,13 @@ function CompanyInventoryView({ companyProfile, netWorth, onGoPublic }: Pick<Inv
             </CardContent>
         </Card>
     );
+  }
+
+  const isQualifiedForIPO = netWorth >= IPO_QUALIFICATION_NET_WORTH;
+
+  const handleConfirmGoPublic = () => {
+    onGoPublic();
+    setIsPublicDialogOpen(false);
   }
   
   return (
@@ -552,7 +553,7 @@ function CompanyInventoryView({ companyProfile, netWorth, onGoPublic }: Pick<Inv
                   <div className="font-mono text-right">${companyProfile.sharePrice.toFixed(2)}</div>
                   <Separator className="col-span-2 bg-gray-700 my-1"/>
                   <div className="text-gray-300 font-bold">Thamani ya Soko</div>
-                  <div className="font-mono text-right font-bold text-blue-300">${companyProfile.marketCap.toLocaleString()}</div>
+                  <div className="font-mono text-right font-bold text-blue-300">${netWorth.toLocaleString()}</div>
               </div>
 
               {companyProfile.isPublic ? (
