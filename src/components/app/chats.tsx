@@ -4,13 +4,10 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Bot, Users, User, ArrowLeft, Loader2 } from 'lucide-react';
+import { Send, Bot, Users, User, ArrowLeft, Loader2, Hash } from 'lucide-react';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { useDatabase } from '@/firebase';
 import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, get } from 'firebase/database';
@@ -18,7 +15,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 
 type AuthenticatedUser = {
@@ -50,7 +46,6 @@ export type ChatMetadata = {
     participants: Record<string, ChatParticipantInfo>; // For private chats
 };
 
-
 type PublicChatRoom = 'general' | 'trade' | 'help';
 const publicRooms: { id: PublicChatRoom, name: string }[] = [
     { id: 'general', name: 'Soga ya Kawaida' },
@@ -66,6 +61,16 @@ type UserChat = {
     isUnread: boolean;
 };
 
+type SelectedChat = {
+    type: 'public';
+    id: PublicChatRoom;
+    name: string;
+} | {
+    type: 'private';
+    id: string; // Chat ID
+    otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'>
+};
+
 interface ChatsProps {
     user: AuthenticatedUser;
     initialPrivateChatUid?: string | null;
@@ -76,106 +81,25 @@ interface ChatsProps {
     players: PlayerPublicData[] | null;
 }
 
-
-// Main Chat Component
 export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata, unreadPublicChats, onPublicRoomRead, players }: ChatsProps) {
-  const [activeTab, setActiveTab] = React.useState(initialPrivateChatUid ? 'private' : 'public');
-  const [selectedPublicRoom, setSelectedPublicRoom] = React.useState<PublicChatRoom>('general');
-  const [selectedPrivateChat, setSelectedPrivateChat] = React.useState<UserChat | null>(null);
+    const [selectedChat, setSelectedChat] = React.useState<SelectedChat | null>(() => ({ type: 'public', id: 'general', name: 'Soga ya Kawaida' }));
+    const [mobileView, setMobileView] = React.useState<'sidebar' | 'chat_window'>('sidebar');
 
-  React.useEffect(() => {
-    if (initialPrivateChatUid && players) {
-      const otherPlayer = players.find(p => p.uid === initialPrivateChatUid);
-      if (otherPlayer) {
-          const chatId = [user.uid, otherPlayer.uid].sort().join('-');
-          setSelectedPrivateChat({
-              chatId,
-              otherPlayer: {
-                uid: otherPlayer.uid,
-                username: otherPlayer.username,
-                avatar: otherPlayer.avatar
-              },
-              lastMessage: '',
-              timestamp: 0,
-              isUnread: false
-          });
-          setActiveTab('private');
-          onChatOpened();
-      }
-    }
-  }, [initialPrivateChatUid, players, user.uid, onChatOpened]);
-
-
-  const handleSelectPrivateChat = (chat: UserChat) => {
-    setSelectedPrivateChat(chat);
-  }
-  
-  const handleBackToList = () => {
-    setSelectedPrivateChat(null);
-  }
-
-  return (
-    <Card className="bg-gray-800/60 border-gray-700 text-white w-full h-full flex flex-col">
-      <CardHeader className="flex-row items-center justify-between">
-        <div>
-            <CardTitle>Mawasiliano</CardTitle>
-            <CardDescription className="text-gray-400">
-                Wasiliana na wachezaji wengine.
-            </CardDescription>
-        </div>
-        {activeTab === 'private' && selectedPrivateChat && (
-            <Button variant="ghost" onClick={handleBackToList}><ArrowLeft className="mr-2 h-4 w-4" />Rudi kwenye Soga</Button>
-        )}
-      </CardHeader>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-grow flex flex-col">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-900/50 mx-auto px-6 max-w-lg">
-          <TabsTrigger value="public"><Users className="mr-2 h-4 w-4"/> Magrupu ya Umma</TabsTrigger>
-          <TabsTrigger value="private"><User className="mr-2 h-4 w-4"/> Meseji za Faragha</TabsTrigger>
-        </TabsList>
-        <TabsContent value="public" className="flex-grow mt-0">
-           <PublicChatsView user={user} selectedRoom={selectedPublicRoom} onSelectRoom={setSelectedPublicRoom} unreadPublicChats={unreadPublicChats} onPublicRoomRead={onPublicRoomRead} />
-        </TabsContent>
-        <TabsContent value="private" className="flex-grow mt-0">
-          {selectedPrivateChat ? (
-             <PrivateChatWindow user={user} chat={selectedPrivateChat} />
-          ) : (
-             <PrivateChatListView user={user} onSelectChat={handleSelectPrivateChat} chatMetadata={chatMetadata} players={players}/>
-          )}
-        </TabsContent>
-      </Tabs>
-    </Card>
-  );
-}
-
-
-// --- PRIVATE CHATS ---
-
-function PrivateChatListView({ user, onSelectChat, chatMetadata, players }: { user: AuthenticatedUser, onSelectChat: (chat: UserChat) => void, chatMetadata: Record<string, ChatMetadata>, players: PlayerPublicData[] | null }) {
     const userChats = React.useMemo(() => {
-        if (!chatMetadata || !players) {
-            return [];
-        }
-
+        if (!chatMetadata || !players) return [];
         const chats: UserChat[] = [];
         const playerMap = new Map(players.map(p => [p.uid, p]));
-
         for (const chatId in chatMetadata) {
             const metadata = chatMetadata[chatId];
             if (metadata.participants && metadata.participants[user.uid]) {
                 const otherPlayerId = Object.keys(metadata.participants).find(pId => pId !== user.uid);
                 const otherPlayerInfo = otherPlayerId ? playerMap.get(otherPlayerId) : null;
-                
                 if (otherPlayerInfo) {
                     const selfParticipant = metadata.participants[user.uid];
                     const isUnread = metadata.lastMessageTimestamp > (selfParticipant?.lastReadTimestamp || 0);
-
                     chats.push({
                         chatId,
-                        otherPlayer: {
-                            uid: otherPlayerInfo.uid,
-                            username: otherPlayerInfo.username,
-                            avatar: otherPlayerInfo.avatar,
-                        },
+                        otherPlayer: { uid: otherPlayerInfo.uid, username: otherPlayerInfo.username, avatar: otherPlayerInfo.avatar },
                         lastMessage: metadata.lastMessageText || '',
                         timestamp: metadata.lastMessageTimestamp || 0,
                         isUnread,
@@ -185,290 +109,247 @@ function PrivateChatListView({ user, onSelectChat, chatMetadata, players }: { us
         }
         return chats.sort((a, b) => b.timestamp - a.timestamp);
     }, [chatMetadata, user.uid, players]);
-    
-    if (!players) return <div className="flex items-center justify-center h-full"><Loader2 className="h-12 w-12 text-gray-500 animate-spin" /></div>;
 
-    if (userChats.length === 0) {
-         return (
-            <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4">
-                <User className="h-12 w-12 mb-4" />
-                <h3 className="text-lg font-semibold">Hakuna soga za faragha.</h3>
-                <p className="text-sm">Bofya kwenye wasifu wa mchezaji na uchague "Chat" ili kuanzisha mazungumzo.</p>
-            </div>
+    React.useEffect(() => {
+        if (initialPrivateChatUid && players) {
+            const otherPlayer = players.find(p => p.uid === initialPrivateChatUid);
+            if (otherPlayer) {
+                const chatId = [user.uid, otherPlayer.uid].sort().join('-');
+                setSelectedChat({
+                    type: 'private',
+                    id: chatId,
+                    otherPlayer: { uid: otherPlayer.uid, username: otherPlayer.username, avatar: otherPlayer.avatar }
+                });
+                setMobileView('chat_window');
+                onChatOpened();
+            }
+        }
+    }, [initialPrivateChatUid, players, user.uid, onChatOpened]);
+
+    const handleSelectChat = (chat: SelectedChat) => {
+        setSelectedChat(chat);
+        setMobileView('chat_window');
+        if (chat.type === 'public' && unreadPublicChats[chat.id]) {
+            onPublicRoomRead(chat.id);
+        }
+    };
+    
+    if (!players) {
+        return (
+            <Card className="bg-gray-800/60 border-gray-700 text-white w-full h-full flex items-center justify-center">
+                <Loader2 className="h-12 w-12 text-gray-500 animate-spin" />
+            </Card>
         );
     }
 
     return (
-        <ScrollArea className="h-full">
-            <div className='p-2 space-y-1'>
-                {userChats.map(chat => (
-                    <button key={chat.chatId} onClick={() => onSelectChat(chat)} className='w-full text-left p-2 rounded-lg hover:bg-gray-700/50 flex items-center gap-3'>
-                        <Avatar className="h-10 w-10">
-                            <AvatarImage src={chat.otherPlayer.avatar} data-ai-hint="player avatar" />
-                            <AvatarFallback>{chat.otherPlayer.username?.charAt(0) || '?'}</AvatarFallback>
-                        </Avatar>
-                        <div className='flex-grow overflow-hidden'>
-                            <div className='flex justify-between items-center'>
-                                <p className='font-semibold truncate'>{chat.otherPlayer.username || 'Mchezaji'}</p>
-                                { chat.timestamp > 0 && <p className='text-xs text-gray-400'>{formatDistanceToNow(new Date(chat.timestamp), { addSuffix: true })}</p> }
-                            </div>
-                            <div className='flex justify-between items-center'>
-                                <p className={cn('text-sm text-gray-300 truncate', chat.isUnread && 'font-bold text-white')}>{chat.lastMessage}</p>
-                                {chat.isUnread && (
-                                    <div className='bg-blue-500 rounded-full h-2.5 w-2.5 flex-shrink-0' />
-                                )}
+        <Card className="bg-gray-800/60 border-gray-700 text-white w-full h-[calc(100vh-14rem)] flex overflow-hidden">
+            <aside className={cn(
+                "w-full md:w-1/3 lg:w-1/4 border-r border-gray-700 flex-col",
+                mobileView === 'sidebar' ? 'flex' : 'hidden md:flex'
+            )}>
+                <div className="p-4 border-b border-gray-700">
+                    <h2 className="text-xl font-bold">Mawasiliano</h2>
+                </div>
+                <ScrollArea className="flex-1">
+                    <div className="p-2 space-y-4">
+                        <div>
+                            <h3 className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Public Channels</h3>
+                            <div className="mt-1 space-y-1">
+                                {publicRooms.map(room => (
+                                    <ChatItem
+                                        key={room.id}
+                                        name={`# ${room.name}`}
+                                        isActive={selectedChat?.type === 'public' && selectedChat.id === room.id}
+                                        isUnread={unreadPublicChats[room.id]}
+                                        onClick={() => handleSelectChat({ type: 'public', id: room.id, name: room.name })}
+                                        avatar={<Hash className="h-5 w-5 text-gray-400"/>}
+                                    />
+                                ))}
                             </div>
                         </div>
-                    </button>
-                ))}
-            </div>
-        </ScrollArea>
+                         <div>
+                            <h3 className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Direct Messages</h3>
+                            <div className="mt-1 space-y-1">
+                                {userChats.map(chat => (
+                                    <ChatItem
+                                        key={chat.chatId}
+                                        name={chat.otherPlayer.username}
+                                        lastMessage={chat.lastMessage}
+                                        isActive={selectedChat?.type === 'private' && selectedChat.id === chat.chatId}
+                                        isUnread={chat.isUnread}
+                                        onClick={() => handleSelectChat({ type: 'private', id: chat.chatId, otherPlayer: chat.otherPlayer })}
+                                        avatar={
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src={chat.otherPlayer.avatar} data-ai-hint="player avatar"/>
+                                                <AvatarFallback>{chat.otherPlayer.username.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </ScrollArea>
+            </aside>
+            <main className={cn(
+                "w-full md:w-2/3 lg:w-3/4 flex-col",
+                mobileView === 'chat_window' ? 'flex' : 'hidden md:flex'
+            )}>
+                {selectedChat ? (
+                    <ChatWindow
+                        key={selectedChat.id}
+                        user={user}
+                        chat={selectedChat}
+                        onBack={() => setMobileView('sidebar')}
+                    />
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                        <MessageSquare className="h-16 w-16 mb-4" />
+                        <h3 className="text-xl font-semibold">Select a conversation</h3>
+                        <p>Choose a channel or a direct message to start chatting.</p>
+                    </div>
+                )}
+            </main>
+        </Card>
     );
 }
 
-function PrivateChatWindow({ user, chat }: { user: AuthenticatedUser, chat: { chatId: string, otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'> } }) {
+function ChatItem({ name, lastMessage, isActive, isUnread, onClick, avatar }: { name: string, lastMessage?: string, isActive: boolean, isUnread: boolean, onClick: () => void, avatar: React.ReactNode }) {
+    return (
+        <button
+            onClick={onClick}
+            className={cn(
+                'w-full text-left p-2 rounded-lg flex items-center gap-3 transition-colors',
+                isActive ? 'bg-blue-500/20 text-white' : 'hover:bg-gray-700/50',
+                isUnread && !isActive && 'bg-gray-700'
+            )}
+        >
+            <div className="flex-shrink-0">{avatar}</div>
+            <div className="flex-grow overflow-hidden">
+                <p className={cn('font-semibold truncate', isUnread && !isActive ? 'text-white' : 'text-gray-200')}>{name}</p>
+                {lastMessage && <p className="text-xs text-gray-400 truncate">{lastMessage}</p>}
+            </div>
+            {isUnread && <div className="bg-blue-500 rounded-full h-2.5 w-2.5 flex-shrink-0" />}
+        </button>
+    );
+}
+
+function ChatWindow({ user, chat, onBack }: { user: AuthenticatedUser, chat: SelectedChat, onBack: () => void }) {
     const database = useDatabase();
     const [messages, setMessages] = React.useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = React.useState('');
     const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
-    const messagesRef = React.useMemo(() => 
-        database ? query(ref(database, `chat/${chat.chatId}`), orderByChild('timestamp'), limitToLast(100)) : null
-    , [database, chat.chatId]);
+    const messagesRef = React.useMemo(() =>
+        database ? query(ref(database, `chat/${chat.id}`), orderByChild('timestamp'), limitToLast(100)) : null
+    , [database, chat.id]);
 
-    // Effect to fetch messages and mark as read
     React.useEffect(() => {
-      if (!messagesRef || !database) return;
-      
-      const unsubscribe = onValue(messagesRef, (snapshot) => {
-          const messageData: ChatMessage[] = [];
-          snapshot.forEach((child) => {
-              messageData.push({ id: child.key!, ...child.val() });
-          });
-          setMessages(messageData);
+        if (!messagesRef || !database) return;
+        
+        const unsubscribe = onValue(messagesRef, (snapshot) => {
+            const messageData: ChatMessage[] = [];
+            snapshot.forEach((child) => {
+                messageData.push({ id: child.key!, ...child.val() });
+            });
+            setMessages(messageData);
 
-          // Mark messages as read for the current user
-          const userLastReadRef = ref(database, `chat-metadata/${chat.chatId}/participants/${user.uid}/lastReadTimestamp`);
-          set(userLastReadRef, serverTimestamp());
-      });
+            if (chat.type === 'private') {
+                const userLastReadRef = ref(database, `chat-metadata/${chat.id}/participants/${user.uid}/lastReadTimestamp`);
+                set(userLastReadRef, serverTimestamp());
+            }
+        });
 
-      return () => unsubscribe();
-    }, [messagesRef, database, user.uid, chat.chatId]);
+        return () => unsubscribe();
+    }, [messagesRef, database, user.uid, chat]);
 
-    // Auto-scroll
     React.useEffect(() => {
-        if(scrollAreaRef.current) {
+        if (scrollAreaRef.current) {
             scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
         }
     }, [messages]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Add guard clauses
-        if (!newMessage.trim() || !database || !chat.otherPlayer.uid || !chat.otherPlayer.username || !chat.otherPlayer.avatar) {
-            console.error("Cannot send message, other player data is incomplete", chat.otherPlayer);
-            return;
-        }
+        if (!newMessage.trim() || !database) return;
 
-        const timestamp = serverTimestamp();
         const textToSend = newMessage;
         setNewMessage('');
+        const timestamp = serverTimestamp();
 
-        // 1. Push the message to the shared chat room
-        const chatRoomRef = ref(database, `chat/${chat.chatId}`);
         const message = {
             uid: user.uid,
             username: user.username,
             avatar: user.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
             text: textToSend,
-            timestamp: timestamp,
+            timestamp,
         };
+
+        const chatRoomRef = ref(database, `chat/${chat.id}`);
         await push(chatRoomRef, message);
         
-        // 2. Update the shared metadata for this chat
-        const metadataRef = ref(database, `chat-metadata/${chat.chatId}`);
-        const currentMetadataSnap = await get(metadataRef);
-        const currentMetadata = currentMetadataSnap.val();
-        
-        const selfParticipant: ChatParticipantInfo = {
-            uid: user.uid,
-            username: user.username,
-            avatar: user.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-            lastReadTimestamp: currentMetadata?.participants?.[user.uid]?.lastReadTimestamp || 0
-        };
-        
-        const otherParticipant: ChatParticipantInfo = {
-             uid: chat.otherPlayer.uid,
-             username: chat.otherPlayer.username,
-             avatar: chat.otherPlayer.avatar,
-             lastReadTimestamp: currentMetadata?.participants?.[chat.otherPlayer.uid]?.lastReadTimestamp || 0
-        };
+        const metadataRef = ref(database, `chat-metadata/${chat.id}`);
+        if (chat.type === 'public') {
+            await set(metadataRef, { lastMessageText: textToSend, lastMessageTimestamp: timestamp });
+        } else if (chat.type === 'private') {
+            const currentMetadataSnap = await get(metadataRef);
+            const currentMetadata = currentMetadataSnap.val();
+            
+            const selfParticipant: ChatParticipantInfo = {
+                uid: user.uid,
+                username: user.username,
+                avatar: user.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
+                lastReadTimestamp: currentMetadata?.participants?.[user.uid]?.lastReadTimestamp || 0
+            };
+            
+            const otherParticipant: ChatParticipantInfo = {
+                 uid: chat.otherPlayer.uid,
+                 username: chat.otherPlayer.username,
+                 avatar: chat.otherPlayer.avatar,
+                 lastReadTimestamp: currentMetadata?.participants?.[chat.otherPlayer.uid]?.lastReadTimestamp || 0
+            };
 
-        const newMetadata: Omit<ChatMetadata, 'chatId'> = {
-            lastMessageText: textToSend,
-            lastMessageTimestamp: timestamp,
-            participants: {
-                [user.uid]: selfParticipant,
-                [chat.otherPlayer.uid]: otherParticipant,
-            }
-        };
-        await set(metadataRef, newMetadata);
-    };
-
-    return <ChatWindowLayout user={user} messages={messages} newMessage={newMessage} setNewMessage={setNewMessage} handleSendMessage={handleSendMessage} scrollAreaRef={scrollAreaRef} />;
-}
-
-
-// --- PUBLIC CHATS ---
-
-interface PublicChatsViewProps {
-    user: AuthenticatedUser;
-    selectedRoom: PublicChatRoom;
-    onSelectRoom: (room: PublicChatRoom) => void;
-    unreadPublicChats: Record<string, boolean>;
-    onPublicRoomRead: (roomId: string) => void;
-}
-
-
-function PublicChatsView({ user, selectedRoom, onSelectRoom, unreadPublicChats, onPublicRoomRead }: PublicChatsViewProps) {
-    const [mobileView, setMobileView] = React.useState<'list' | 'chat'>('list');
-
-    const handleSelectRoom = (room: PublicChatRoom) => {
-        onSelectRoom(room);
-        setMobileView('chat');
-        if (unreadPublicChats[room]) {
-            onPublicRoomRead(room);
+            const newMetadata: Omit<ChatMetadata, 'chatId'> = {
+                lastMessageText: textToSend,
+                lastMessageTimestamp: timestamp,
+                participants: { [user.uid]: selfParticipant, [chat.otherPlayer.uid]: otherParticipant }
+            };
+            await set(metadataRef, newMetadata);
         }
     };
-
-    const handleBackToList = () => {
-        setMobileView('list');
-    };
+    
+    const chatName = chat.type === 'public' ? `# ${chat.name}` : chat.otherPlayer.username;
 
     return (
-        <div className="flex h-full">
-            {/* Room List */}
-            <div className={cn("w-full md:w-1/3 border-r border-gray-700", mobileView === 'chat' && 'hidden md:block')}>
-                 <h3 className="text-lg font-semibold p-4 border-b border-gray-700">Vyumba vya Soga</h3>
-                <ScrollArea className="h-full">
-                    <div className="p-2 space-y-1">
-                        {publicRooms.map(room => (
-                             <Button
-                                key={room.id}
-                                variant={selectedRoom === room.id && mobileView === 'chat' ? 'secondary' : 'ghost'}
-                                className="w-full justify-between"
-                                onClick={() => handleSelectRoom(room.id)}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <span># {room.name}</span>
-                                </div>
-                                {unreadPublicChats[room.id] && (
-                                    <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
-                                )}
-                            </Button>
-                        ))}
-                    </div>
-                </ScrollArea>
+        <>
+            <div className="p-4 border-b border-gray-700 flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="md:hidden" onClick={onBack}>
+                    <ArrowLeft />
+                </Button>
+                <h3 className="text-lg font-semibold">{chatName}</h3>
             </div>
-            {/* Chat Window */}
-            <div className={cn("w-full md:w-2/3 flex flex-col", mobileView === 'list' && 'hidden md:flex')}>
-                 <div className="p-4 border-b border-gray-700 flex items-center gap-2">
-                    <Button variant="ghost" size="icon" className="md:hidden" onClick={handleBackToList}>
-                        <ArrowLeft />
-                    </Button>
-                    <h3 className="text-lg font-semibold"># {publicRooms.find(r => r.id === selectedRoom)?.name}</h3>
-                </div>
-                <PublicChatWindow user={user} room={selectedRoom} />
-            </div>
-        </div>
-    )
-}
-
-function PublicChatWindow({ user, room }: { user: AuthenticatedUser, room: PublicChatRoom }) {
-  const database = useDatabase();
-  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = React.useState('');
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
-
-  const messagesRef = React.useMemo(() => 
-      database ? query(ref(database, `chat/${room}`), orderByChild('timestamp'), limitToLast(100)) : null
-  , [database, room]);
-  
-  React.useEffect(() => {
-    if (!messagesRef) return;
-    const unsubscribe = onValue(messagesRef, (snapshot) => {
-        const messageData: ChatMessage[] = [];
-        snapshot.forEach((child) => {
-            messageData.push({ id: child.key!, ...child.val() });
-        });
-        setMessages(messageData);
-    });
-    return () => unsubscribe();
-  }, [messagesRef]);
-
-  React.useEffect(() => {
-      if(scrollAreaRef.current) {
-          scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-      }
-  }, [messages]);
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !database) return;
-    
-    const textToSend = newMessage;
-    setNewMessage('');
-
-    const chatRef = ref(database, `chat/${room}`);
-    const message = {
-        uid: user.uid,
-        username: user.username,
-        avatar: user.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-        text: textToSend,
-        timestamp: serverTimestamp(),
-    };
-    
-    push(chatRef, message);
-    
-    // Update chat metadata
-    const metadataRef = ref(database, `chat-metadata/${room}`);
-    set(metadataRef, {
-        lastMessageText: textToSend,
-        lastMessageTimestamp: serverTimestamp(),
-    });
-  };
-  
-  return <ChatWindowLayout user={user} messages={messages} newMessage={newMessage} setNewMessage={setNewMessage} handleSendMessage={handleSendMessage} scrollAreaRef={scrollAreaRef} roomName={room} />
-}
-
-
-// --- COMMON CHAT UI ---
-
-function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSendMessage, scrollAreaRef, roomName }: { user: AuthenticatedUser, messages: ChatMessage[], newMessage: string, setNewMessage: (val: string) => void, handleSendMessage: (e: React.FormEvent) => void, scrollAreaRef: React.RefObject<HTMLDivElement>, roomName?: string }) {
-    return (
-        <div className="flex flex-col h-full">
             <ScrollArea className="flex-grow p-4" viewportRef={scrollAreaRef}>
                 <div className='space-y-4'>
                     {messages.map(msg => (
-                        <div key={msg.id} className={cn("flex items-end gap-3", msg.uid === user.uid && "justify-end")}>
-                            {msg.uid !== user.uid && (
+                        <div key={msg.id} className={cn("flex items-end gap-3", msg.uid === user.uid && "flex-row-reverse")}>
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src={msg.avatar} data-ai-hint="player avatar" />
                                 <AvatarFallback>{msg.username.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            )}
-                            <div className={cn(
-                                "max-w-xs md:max-w-md p-3 rounded-lg", 
-                                msg.uid === user.uid ? "bg-blue-600 text-white rounded-br-none" : "bg-gray-700 text-gray-200 rounded-bl-none"
-                            )}>
-                                {msg.uid !== user.uid && <p className='text-xs font-bold text-blue-300 mb-1'>{msg.username}</p>}
-                                <p className='text-sm'>{msg.text}</p>
-                                <p className={cn(
-                                    "text-[10px] mt-2 opacity-70",
-                                    msg.uid === user.uid ? "text-right" : "text-left"
+                            <div className="flex flex-col gap-1 w-full max-w-[320px]">
+                                <div className={cn("flex items-center gap-2", msg.uid === user.uid ? "justify-end flex-row-reverse" : "justify-start")}>
+                                     <span className="text-sm font-semibold">{msg.username}</span>
+                                      <span className="text-xs text-gray-400">
+                                          {msg.timestamp ? formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true }) : 'sending...'}
+                                      </span>
+                                </div>
+                                <div className={cn(
+                                    "p-3 rounded-lg text-sm",
+                                    msg.uid === user.uid ? "bg-blue-600 text-white rounded-br-none" : "bg-gray-700 text-gray-200 rounded-bl-none"
                                 )}>
-                                    {msg.timestamp ? formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true }) : 'sending...'}
-                                </p>
+                                    <p>{msg.text}</p>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -477,24 +358,22 @@ function ChatWindowLayout({ user, messages, newMessage, setNewMessage, handleSen
                     <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
                         <Bot className="h-12 w-12 mb-4" />
                         <h3 className="text-lg font-semibold">Welcome to the chat!</h3>
-                        {roomName ? <p className="text-sm">Be the first to send a message in the #{roomName} channel.</p> : <p className="text-sm">Start the conversation.</p>}
+                        <p className="text-sm">Be the first to send a message in {chatName}.</p>
                     </div>
                 )}
             </ScrollArea>
-        <form onSubmit={handleSendMessage} className="flex items-center gap-2 border-t border-gray-700 p-4">
-            <Input
-            placeholder="Andika ujumbe wako..."
-            className="flex-grow bg-gray-700 border-gray-600"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            />
-            <Button type="submit" size="icon" className="bg-blue-600 hover:bg-blue-700" disabled={!newMessage.trim()}>
-            <Send className="h-4 w-4" />
-            <span className="sr-only">Tuma</span>
-            </Button>
-        </form>
-        </div>
-    )
+            <form onSubmit={handleSendMessage} className="flex items-center gap-2 border-t border-gray-700 p-4 bg-gray-800">
+                <Input
+                    placeholder={`Message ${chatName}`}
+                    className="flex-grow bg-gray-700 border-gray-600"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                />
+                <Button type="submit" size="icon" className="bg-blue-600 hover:bg-blue-700" disabled={!newMessage.trim()}>
+                    <Send className="h-4 w-4" />
+                    <span className="sr-only">Tuma</span>
+                </Button>
+            </form>
+        </>
+    );
 }
-
-    
