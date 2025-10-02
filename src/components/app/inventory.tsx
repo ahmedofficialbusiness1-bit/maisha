@@ -509,13 +509,10 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
     );
 }
 
-function StocksInventoryView({ playerStocks, stockListings, onSellStock, companyProfile, netWorth, onGoPublic }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock' | 'companyProfile' | 'netWorth' | 'onGoPublic'>) {
+function StocksInventoryView({ playerStocks, stockListings, onSellStock }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock'>) {
   const [selectedStock, setSelectedStock] = React.useState<{ stock: PlayerStock, details: StockListing } | null>(null);
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
-  const [isPublicDialogOpen, setIsPublicDialogOpen] = React.useState(false);
   const [sellQuantity, setSellQuantity] = React.useState(1);
-  const IPO_QUALIFICATION_NET_WORTH = 50000;
-  const isQualifiedForIPO = netWorth >= IPO_QUALIFICATION_NET_WORTH;
 
   const ownedStocksWithDetails = React.useMemo(() => {
     return (playerStocks || [])
@@ -538,140 +535,62 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
       setIsSellDialogOpen(false);
     }
   };
-  
-  const handleConfirmGoPublic = () => {
-    onGoPublic();
-    setIsPublicDialogOpen(false);
-  }
 
   return (
     <>
-      <div className="space-y-4">
-        {companyProfile && (
-            <Card className="bg-gray-800/60 border-gray-700">
-                <CardHeader>
-                    <div className="flex items-center gap-3">
-                         <Avatar className="h-10 w-10 border-2 border-blue-400">
-                           <AvatarImage src={companyProfile.logo} alt={companyProfile.companyName} data-ai-hint="company logo" />
-                           <AvatarFallback><Building /></AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <CardTitle className="text-base">{companyProfile.companyName}</CardTitle>
-                            <CardDescription>Hisa za Kampuni Yako</CardDescription>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-4">
-                        <div className="text-gray-400">Jumla ya Hisa</div>
-                        <div className="font-mono text-right">{companyProfile.totalShares.toLocaleString()}</div>
-                        <div className="text-gray-400">Bei ya Hisa (Kadirio)</div>
-                        <div className="font-mono text-right">${companyProfile.sharePrice.toFixed(2)}</div>
-                        <Separator className="col-span-2 bg-gray-700 my-1"/>
-                        <div className="text-gray-300 font-bold">Thamani ya Soko</div>
-                        <div className="font-mono text-right font-bold text-blue-300">${companyProfile.marketCap.toLocaleString()}</div>
-                    </div>
-
-                    {companyProfile.isPublic ? (
-                        <Alert variant="default" className="bg-green-600/10 border-green-500/30">
-                            <Info className="h-4 w-4 text-green-300" />
-                            <AlertTitle className="text-green-300">Kampuni ya Umma</AlertTitle>
-                            <AlertDescription className="text-green-400">
-                                Hongera! Kampuni yako sasa inauza hisa zake kwenye soko la umma.
-                            </AlertDescription>
-                        </Alert>
-                    ) : isQualifiedForIPO ? (
-                        <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setIsPublicDialogOpen(true)}>
-                            <TrendingUp className="mr-2 h-4 w-4" /> Toa Hisa Sokoni (Go Public)
-                        </Button>
-                    ) : (
-                        <Alert variant="default" className="bg-yellow-600/10 border-yellow-500/30">
-                            <Info className="h-4 w-4 text-yellow-300" />
-                            <AlertTitle className="text-yellow-300">Vigezo Havijatimizwa</AlertTitle>
-                            <AlertDescription className="text-yellow-400">
-                                Kampuni yako inahitaji kufikia thamani ya ${IPO_QUALIFICATION_NET_WORTH.toLocaleString()} ili uweze kuuza hisa. Endelea kukuza biashara yako!
-                            </AlertDescription>
-                        </Alert>
-                    )}
-                </CardContent>
-            </Card>
-        )}
-
-        <Separator />
-
-        <Card className="bg-gray-800/60 border-gray-700 text-white">
-            <CardHeader>
-            <CardTitle>Hisa Zangu Nilizonunua</CardTitle>
-            <CardDescription className="text-gray-400">
-                Tazama na uuze hisa unazomiliki kutoka hapa.
-            </CardDescription>
-            </CardHeader>
-            <CardContent>
-            <ScrollArea className="h-[calc(100vh-20rem)]">
-                <div className="space-y-4 pr-4">
-                {ownedStocksWithDetails.map(({ stock, details }) => {
-                    const totalValue = stock.shares * details.stockPrice;
-                    return (
-                    <Card key={stock.ticker} className="bg-gray-900/50">
-                        <CardHeader className="p-4">
-                        <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="h-10 w-10">
-                                        <AvatarImage src={details.logo} alt={details.companyName} data-ai-hint={details.imageHint} />
-                                        <AvatarFallback>{details.ticker.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <CardTitle className="text-base">{details.companyName}</CardTitle>
-                                        <CardDescription>{details.ticker}</CardDescription>
-                                    </div>
-                                </div>
-                                <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => handleOpenSellDialog({ stock, details })}>Uza</Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                <div className="text-gray-400">Shares Owned</div>
-                                <div className="font-mono text-right">{stock.shares.toLocaleString()}</div>
-                                <div className="text-gray-400">Current Price</div>
-                                <div className="font-mono text-right">${details.stockPrice.toFixed(2)}</div>
-                                <Separator className="col-span-2 bg-gray-700 my-1"/>
-                                <div className="text-gray-300 font-bold">Total Value</div>
-                                <div className="font-mono text-right font-bold text-green-300">${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    );
-                })}
-                </div>
-                {ownedStocksWithDetails.length === 0 && (
-                    <div className="flex items-center justify-center h-48 text-gray-400">
-                        <p>Huna hisa zozote kwa sasa.</p>
-                    </div>
-                )}
-            </ScrollArea>
-            </CardContent>
-        </Card>
-      </div>
-
-      <AlertDialog open={isPublicDialogOpen} onOpenChange={setIsPublicDialogOpen}>
-            <AlertDialogContent className="bg-gray-900 border-gray-700 text-white">
-                <AlertDialogHeader>
-                <AlertDialogTitle>Thibitisha Kuuza Hisa (IPO)</AlertDialogTitle>
-                <AlertDialogDescription>
-                    Je, una uhakika unataka kuuza hisa za kampuni yako kwa umma?
-                    <br/><br/>
-                    Hiki ni kitendo kisichoweza kutenduliwa. Utapokea pesa taslimu kwa kuuza 20% ya hisa zako, na kampuni yako itaorodheshwa kwenye soko la hisa kwa wachezaji wengine kununua.
-                </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Ghairi</AlertDialogCancel>
-                    <AlertDialogAction className="bg-green-600 hover:bg-green-700" onClick={handleConfirmGoPublic}>
-                       Ndiyo, Toa Hisa Sokoni
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-
+      <Card className="bg-gray-800/60 border-gray-700 text-white">
+          <CardHeader>
+          <CardTitle>Hisa Zangu Nilizonunua</CardTitle>
+          <CardDescription className="text-gray-400">
+              Tazama na uuze hisa unazomiliki kutoka hapa.
+          </CardDescription>
+          </CardHeader>
+          <CardContent>
+          <ScrollArea className="h-[calc(100vh-20rem)]">
+              <div className="space-y-4 pr-4">
+              {ownedStocksWithDetails.map(({ stock, details }) => {
+                  const totalValue = stock.shares * details.stockPrice;
+                  return (
+                  <Card key={stock.ticker} className="bg-gray-900/50">
+                      <CardHeader className="p-4">
+                      <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                  <Avatar className="h-10 w-10">
+                                      <AvatarImage src={details.logo} alt={details.companyName} data-ai-hint={details.imageHint} />
+                                      <AvatarFallback>{details.isPlayerCompany ? <Building/> : details.ticker.charAt(0)}</AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                      <CardTitle className="text-base">{details.companyName}</CardTitle>
+                                      <CardDescription>{details.ticker}</CardDescription>
+                                  </div>
+                              </div>
+                              <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => handleOpenSellDialog({ stock, details })}>Uza</Button>
+                          </div>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                              <div className="text-gray-400">Shares Owned</div>
+                              <div className="font-mono text-right">{stock.shares.toLocaleString()}</div>
+                              <div className="text-gray-400">Current Price</div>
+                              <div className="font-mono text-right">${details.stockPrice.toFixed(2)}</div>
+                              <Separator className="col-span-2 bg-gray-700 my-1"/>
+                              <div className="text-gray-300 font-bold">Total Value</div>
+                              <div className="font-mono text-right font-bold text-green-300">${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                          </div>
+                      </CardContent>
+                  </Card>
+                  );
+              })}
+              </div>
+              {ownedStocksWithDetails.length === 0 && (
+                  <div className="flex items-center justify-center h-48 text-gray-400">
+                      <p>Huna hisa zozote kwa sasa.</p>
+                  </div>
+              )}
+          </ScrollArea>
+          </CardContent>
+      </Card>
+      
       <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
         <DialogContent className="bg-gray-900 border-gray-700 text-white">
           <DialogHeader>
@@ -728,6 +647,98 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock, company
   );
 }
 
+function CompanyInventoryView({ companyProfile, netWorth, onGoPublic }: Pick<InventoryProps, 'companyProfile' | 'netWorth' | 'onGoPublic'>) {
+  const [isPublicDialogOpen, setIsPublicDialogOpen] = React.useState(false);
+  const IPO_QUALIFICATION_NET_WORTH = 50000;
+  const isQualifiedForIPO = netWorth >= IPO_QUALIFICATION_NET_WORTH;
+
+  const handleConfirmGoPublic = () => {
+    onGoPublic();
+    setIsPublicDialogOpen(false);
+  }
+
+  if (!companyProfile) {
+    return (
+        <Card className="bg-gray-800/60 border-gray-700 text-white">
+            <CardContent className="p-6 flex items-center justify-center h-48 text-gray-500">
+              <p>Inapakia maelezo ya kampuni...</p>
+            </CardContent>
+        </Card>
+    );
+  }
+  
+  return (
+    <>
+      <Card className="bg-gray-800/60 border-gray-700">
+          <CardHeader>
+              <div className="flex items-center gap-3">
+                   <Avatar className="h-10 w-10 border-2 border-blue-400">
+                     <AvatarImage src={companyProfile.logo} alt={companyProfile.companyName} data-ai-hint="company logo" />
+                     <AvatarFallback><Building /></AvatarFallback>
+                  </Avatar>
+                  <div>
+                      <CardTitle className="text-base">{companyProfile.companyName}</CardTitle>
+                      <CardDescription>Hisa za Kampuni Yako</CardDescription>
+                  </div>
+              </div>
+          </CardHeader>
+          <CardContent>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-4">
+                  <div className="text-gray-400">Jumla ya Hisa</div>
+                  <div className="font-mono text-right">{companyProfile.totalShares.toLocaleString()}</div>
+                  <div className="text-gray-400">Bei ya Hisa (Kadirio)</div>
+                  <div className="font-mono text-right">${companyProfile.sharePrice.toFixed(2)}</div>
+                  <Separator className="col-span-2 bg-gray-700 my-1"/>
+                  <div className="text-gray-300 font-bold">Thamani ya Soko</div>
+                  <div className="font-mono text-right font-bold text-blue-300">${companyProfile.marketCap.toLocaleString()}</div>
+              </div>
+
+              {companyProfile.isPublic ? (
+                  <Alert variant="default" className="bg-green-600/10 border-green-500/30">
+                      <Info className="h-4 w-4 text-green-300" />
+                      <AlertTitle className="text-green-300">Kampuni ya Umma</AlertTitle>
+                      <AlertDescription className="text-green-400">
+                          Hongera! Kampuni yako sasa inauza hisa zake kwenye soko la umma.
+                      </AlertDescription>
+                  </Alert>
+              ) : isQualifiedForIPO ? (
+                  <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setIsPublicDialogOpen(true)}>
+                      <TrendingUp className="mr-2 h-4 w-4" /> Toa Hisa Sokoni (Go Public)
+                  </Button>
+              ) : (
+                  <Alert variant="default" className="bg-yellow-600/10 border-yellow-500/30">
+                      <Info className="h-4 w-4 text-yellow-300" />
+                      <AlertTitle className="text-yellow-300">Vigezo Havijatimizwa</AlertTitle>
+                      <AlertDescription className="text-yellow-400">
+                          Kampuni yako inahitaji kufikia thamani ya ${IPO_QUALIFICATION_NET_WORTH.toLocaleString()} ili uweze kuuza hisa. Endelea kukuza biashara yako!
+                      </AlertDescription>
+                  </Alert>
+              )}
+          </CardContent>
+      </Card>
+      
+      <AlertDialog open={isPublicDialogOpen} onOpenChange={setIsPublicDialogOpen}>
+          <AlertDialogContent className="bg-gray-900 border-gray-700 text-white">
+              <AlertDialogHeader>
+              <AlertDialogTitle>Thibitisha Kuuza Hisa (IPO)</AlertDialogTitle>
+              <AlertDialogDescription>
+                  Je, una uhakika unataka kuuza hisa za kampuni yako kwa umma?
+                  <br/><br/>
+                  Hiki ni kitendo kisichoweza kutenduliwa. Utapokea pesa taslimu kwa kuuza 20% ya hisa zako, na kampuni yako itaorodheshwa kwenye soko la hisa kwa wachezaji wengine kununua.
+              </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Ghairi</AlertDialogCancel>
+                  <AlertDialogAction className="bg-green-600 hover:bg-green-700" onClick={handleConfirmGoPublic}>
+                     Ndiyo, Toa Hisa Sokoni
+                  </AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
 
 export function Inventory(props: InventoryProps) {
   const newContractsCount = React.useMemo(() => {
@@ -750,8 +761,9 @@ export function Inventory(props: InventoryProps) {
         </p>
       </div>
       <Tabs defaultValue="items" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-gray-900/80 max-w-lg">
+        <TabsList className="grid w-full grid-cols-4 bg-gray-900/80 max-w-xl">
             <TabsTrigger value="items"><Archive className='mr-2 h-4 w-4'/> Bidhaa</TabsTrigger>
+            <TabsTrigger value="company"><Building className='mr-2 h-4 w-4' /> Kampuni</TabsTrigger>
             <TabsTrigger value="stocks" className="relative">
                 <LineChart className='mr-2 h-4 w-4'/> Hisa
                  {newStocksCount > 0 && (
@@ -772,6 +784,9 @@ export function Inventory(props: InventoryProps) {
         <TabsContent value="items" className="mt-4">
           <ItemInventoryView {...props} />
         </TabsContent>
+        <TabsContent value="company" className="mt-4">
+            <CompanyInventoryView {...props} />
+        </TabsContent>
         <TabsContent value="stocks" className="mt-4">
             <StocksInventoryView {...props} />
         </TabsContent>
@@ -782,3 +797,5 @@ export function Inventory(props: InventoryProps) {
     </div>
   );
 }
+
+    
