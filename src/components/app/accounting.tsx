@@ -216,7 +216,7 @@ const AnalyticsView = ({ transactions, netWorth }: Pick<AccountingProps, 'transa
           label: "Net Worth",
           color: "hsl(var(--chart-1))",
         },
-    } satisfies import('recharts').ChartConfig;
+    } satisfies any;
 
 
     const { dailyChange, weeklyChange, monthlyChange, returnOnSales } = React.useMemo(() => {
