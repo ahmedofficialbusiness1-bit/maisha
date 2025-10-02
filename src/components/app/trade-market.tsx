@@ -471,7 +471,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                      <div className="flex items-center gap-3">
                                          <Avatar className="h-10 w-10">
                                             <AvatarImage src={stock.logo} alt={stock.companyName} data-ai-hint={stock.imageHint} />
-                                            <AvatarFallback>{stock.isPlayerCompany ? <Building/> : stock.ticker.charAt(0)}</AvatarFallback>
+                                            <AvatarFallback>{stock.isPlayerCompany ? <Crown className="text-yellow-400" /> : stock.ticker.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                          <div>
                                              <CardTitle className="text-base">{stock.companyName}</CardTitle>
@@ -523,7 +523,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                             <div className="flex items-center gap-2 sm:gap-3">
                                                 <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                                                     <AvatarImage src={stock.logo} alt={stock.companyName} data-ai-hint={stock.imageHint} />
-                                                    <AvatarFallback>{stock.isPlayerCompany ? <Building/> : stock.ticker.charAt(0)}</AvatarFallback>
+                                                    <AvatarFallback>{stock.isPlayerCompany ? <Crown className="text-yellow-400" /> : stock.ticker.charAt(0)}</AvatarFallback>
                                                 </Avatar>
                                                 <div>
                                                     <p className="font-bold text-sm sm:text-base">{stock.companyName}</p>
