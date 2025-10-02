@@ -356,5 +356,3 @@ export function Accounting({ transactions, netWorth, inventoryValue, stockValue,
     </div>
   );
 }
-
-    
