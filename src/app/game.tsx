@@ -21,7 +21,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser, useDatabase } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getDatabase, ref, onValue, set, runTransaction, get, push, remove } from 'firebase/database';
+import { getDatabase, ref, onValue, set, runTransaction, get, push, remove, update } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 
@@ -97,7 +97,6 @@ export function Game() {
   
   const updateState = React.useCallback((updates: Partial<UserData>) => {
     if (!userRef) return;
-    const { update } = require("firebase/database");
     update(userRef, updates);
   }, [userRef]);
   
@@ -114,7 +113,7 @@ export function Game() {
   // Periodically update lastSeen to keep user online
   React.useEffect(() => {
       if (!userRef) return;
-      const { update } = require("firebase/database");
+      
       const interval = setInterval(() => {
           if(document.hasFocus() && userRef) {
             update(userRef, { lastSeen: Date.now() });
@@ -686,7 +685,7 @@ export function Game() {
         }
         return currentData;
     });
-  }, [gameState, userRef, toast]);
+  }, [gameState, userRef, toast, database]);
 
 
  const handleSellStock = React.useCallback((ticker: string, shares: number) => {
@@ -722,7 +721,7 @@ export function Game() {
         }
         return currentData;
     });
-  }, [gameState, userRef, companyData]);
+  }, [gameState, userRef, companyData, database]);
 
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
@@ -1069,7 +1068,7 @@ export function Game() {
         }
         return currentGameState;
     });
-  }, [companyData, userRef, gameState]);
+  }, [companyData, userRef, gameState, database]);
   
   const handleGoPublic = () => {
     if (!gameState || !userRef || !database) return;
@@ -1222,7 +1221,7 @@ export function Game() {
         clearInterval(activityInterval);
         clearInterval(dividendInterval);
     };
-  }, [userRef, gameState, handleDailyDividends]);
+  }, [userRef, gameState, handleDailyDividends, database]);
 
   const { netWorth, buildingValue, stockValue, inventoryValue } = React.useMemo(() => {
     if (!gameState) return { netWorth: 0, buildingValue: 0, stockValue: 0, inventoryValue: 0 };
