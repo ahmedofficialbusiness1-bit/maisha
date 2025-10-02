@@ -198,13 +198,10 @@ const AnalyticsView = ({ transactions, netWorth, cash }: Pick<AccountingProps, '
             end: endOfDay(today)
         });
 
-        // Calculate the initial net worth before the first transaction
-        const firstTransaction = sortedTransactions[0];
-        const changeFromFirstTransaction = firstTransaction.type === 'income' ? firstTransaction.amount : -firstTransaction.amount;
-        // This is an approximation. The "real" starting net worth isn't tracked.
-        // We work backwards from the current cash.
-        const totalChange = sortedTransactions.reduce((acc, t) => acc + (t.type === 'income' ? t.amount : -t.amount), 0);
-        let runningWorth = cash - totalChange;
+        // This is an approximation of historical net worth. It only accounts for cash changes.
+        // A true historical net worth would require saving snapshots of inventory/stock/building values.
+        const totalCashChange = sortedTransactions.reduce((acc, t) => acc + (t.type === 'income' ? t.amount : -t.amount), 0);
+        let runningWorth = netWorth - totalCashChange;
 
         const dailyNetWorth: Record<string, number> = {};
 
@@ -217,13 +214,11 @@ const AnalyticsView = ({ transactions, netWorth, cash }: Pick<AccountingProps, '
                 runningWorth += t.type === 'income' ? t.amount : -t.amount;
                 transactionIndex++;
             }
-            // For simplicity, we are charting the cash value over time, not the full net worth.
-            // A full net worth calculation would require historical prices for all assets.
             dailyNetWorth[dayKey] = runningWorth;
         }
 
-        // Ensure the last point is the current net worth (or cash for simplicity)
-        dailyNetWorth[today.toISOString().split('T')[0]] = cash;
+        // Ensure the last point is the current net worth.
+        dailyNetWorth[today.toISOString().split('T')[0]] = netWorth;
 
 
         return Object.keys(dailyNetWorth).map(date => ({
@@ -292,10 +287,10 @@ const AnalyticsView = ({ transactions, netWorth, cash }: Pick<AccountingProps, '
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <Card className="lg:col-span-2 bg-gray-800/60 border-gray-700">
                 <CardHeader>
-                    <CardTitle>Ukuaji wa Pesa Taslimu (Cash Growth)</CardTitle>
-                    <CardDescription>Jinsi thamani ya pesa yako imebadilika kwa muda.</CardDescription>
+                    <CardTitle>Ukuaji wa Thamani ya Kampuni (Company Value)</CardTitle>
+                    <CardDescription>Jinsi thamani halisi ya kampuni yako imebadilika kwa muda.</CardDescription>
                 </CardHeader>
-                <CardContent className="pr-0 h-[300px]">
+                <CardContent className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.1)" />
@@ -308,7 +303,7 @@ const AnalyticsView = ({ transactions, netWorth, cash }: Pick<AccountingProps, '
                                     borderColor: 'hsl(var(--border))',
                                 }}
                             />
-                            <Line type="monotone" dataKey="netWorth" name="Cash" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
+                            <Line type="monotone" dataKey="netWorth" name="Company Value" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
                         </LineChart>
                     </ResponsiveContainer>
                 </CardContent>
