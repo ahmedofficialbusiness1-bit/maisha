@@ -20,7 +20,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser, useDatabase } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getDatabase, ref, onValue, set, runTransaction, get, push, remove, update } from 'firebase/database';
+import { getDatabase, ref, onValue, set, get, push, remove } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 
@@ -108,6 +108,7 @@ export function Game() {
   React.useEffect(() => {
       if (!userRef) return;
       
+      const { runTransaction } = require("firebase/database");
       const interval = setInterval(() => {
           if(document.hasFocus() && userRef) {
             runTransaction(userRef, (currentData) => {
@@ -131,6 +132,7 @@ export function Game() {
     }
     if (!userRef) return;
 
+    const { runTransaction } = require("firebase/database");
     const unsubscribe = onValue(userRef, (snapshot) => {
         if (snapshot.exists()) {
             const data = snapshot.val() as UserData;
@@ -221,6 +223,7 @@ export function Game() {
   React.useEffect(() => {
     if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef) return;
     
+    const { runTransaction } = require("firebase/database");
     const isAdmin = gameState.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
     const currentRole = isAdmin ? 'admin' : 'player';
 
@@ -254,6 +257,7 @@ export function Game() {
   
  const addNotification = React.useCallback((message: string, icon: Notification['icon']) => {
     if (!userRef) return;
+    const { runTransaction } = require("firebase/database");
     runTransaction(userRef, (currentData) => {
         if (currentData) {
             const notificationsRef = ref(userRef, 'notifications');
@@ -274,6 +278,7 @@ export function Game() {
 
  const addTransaction = React.useCallback((type: 'income' | 'expense', amount: number, description: string) => {
     if (!userRef) return;
+    const { runTransaction } = require("firebase/database");
     runTransaction(userRef, (currentData) => {
         if (currentData) {
             const transactionsRef = ref(userRef, 'transactions');
@@ -294,6 +299,7 @@ export function Game() {
 
   const handleMarkNotificationsRead = () => {
     if (!gameState || !userRef) return;
+    const { runTransaction } = require("firebase/database");
     runTransaction(userRef, (currentData) => {
         if (currentData && currentData.notifications) {
             for (const key in currentData.notifications) {
@@ -307,6 +313,7 @@ export function Game() {
   const handleUpdateProfile = (data: ProfileData) => {
     if (!allPlayers || !gameState || !userRef) return;
 
+    const { runTransaction } = require("firebase/database");
     const newName = data.playerName;
     const isNameTaken = allPlayers.some(player => 
         player.username.toLowerCase() === newName.toLowerCase() && player.uid !== gameState.uid
@@ -360,6 +367,7 @@ export function Game() {
   
   const handleBuild = (slotIndex: number, building: BuildingType) => {
     if (!userRef) return;
+    const { runTransaction } = require("firebase/database");
 
     runTransaction(userRef, (currentData) => {
         if (!currentData) return currentData;
@@ -412,6 +420,7 @@ export function Game() {
   
   const handleUpgradeBuilding = (slotIndex: number) => {
     if (!userRef) return;
+    const { runTransaction } = require("firebase/database");
 
     runTransaction(userRef, (currentData) => {
         if (!currentData) return currentData;
@@ -464,6 +473,7 @@ export function Game() {
 
   const handleDemolishBuilding = (slotIndex: number) => {
     if (!userRef) return;
+    const { runTransaction } = require("firebase/database");
     runTransaction(userRef, (currentData) => {
         if (currentData) {
             currentData.buildingSlots[slotIndex] = { building: null, level: 0 };
@@ -474,6 +484,7 @@ export function Game() {
 
   const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
      if (!userRef) return;
+     const { runTransaction } = require("firebase/database");
      runTransaction(userRef, (currentData) => {
          if (!currentData) return;
 
@@ -515,6 +526,7 @@ export function Game() {
 
   const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => {
     if (!userRef) return;
+    const { runTransaction } = require("firebase/database");
     runTransaction(userRef, (currentData) => {
         if (!currentData) return;
 
@@ -553,6 +565,7 @@ export function Game() {
 
   const handleBoostConstruction = (slotIndex: number, starsToUse: number) => {
     if (!userRef || starsToUse <= 0) return;
+    const { runTransaction } = require("firebase/database");
     runTransaction(userRef, (currentData) => {
         if (!currentData || currentData.stars < starsToUse) return; // Abort
 
@@ -568,6 +581,7 @@ export function Game() {
   
   const handleBuyMaterial = (materialName: string, quantity: number): boolean => {
     if (!userRef) return false;
+    const { runTransaction } = require("firebase/database");
     const costPerUnit = calculatedPrices[materialName] || 0;
     if (costPerUnit === 0) return false;
 
@@ -610,6 +624,7 @@ export function Game() {
 
   const handleBuyFromMarket = async (listing: PlayerListing, quantityToBuy: number) => {
     if (!database || !user || !gameState) return;
+    const { runTransaction } = require("firebase/database");
     if (listing.sellerUid === user.uid) {
         toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot buy your own items.' });
         return;
@@ -699,6 +714,7 @@ export function Game() {
   
  const handleBuyStock = React.useCallback((stock: StockListing, quantity: number) => {
     if (!userRef || quantity <= 0) return;
+    const { runTransaction } = require("firebase/database");
     
     runTransaction(userRef, currentData => {
         if (!currentData) return;
@@ -732,6 +748,7 @@ export function Game() {
 
  const handleSellStock = React.useCallback((ticker: string, shares: number) => {
     if (!userRef || shares <= 0) return;
+    const { runTransaction } = require("firebase/database");
     
     const stockInfo = companyData.find(s => s.ticker === ticker);
     if (!stockInfo) return;
@@ -769,6 +786,7 @@ export function Game() {
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
      if (!database || !user || !gameState || !userRef || quantity <= 0 || quantity > item.quantity) return;
+     const { runTransaction } = require("firebase/database");
 
      // Optimistically update inventory via transaction to be safe
      runTransaction(userRef, (currentData) => {
@@ -824,6 +842,7 @@ export function Game() {
 
   const handleCreateContract = (item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => {
     if (!database || !user || !gameState || !userRef || quantity <= 0 || pricePerUnit <= 0) return;
+    const { runTransaction } = require("firebase/database");
 
     // Optimistically deduct items via transaction
     runTransaction(userRef, (currentData) => {
@@ -907,6 +926,7 @@ export function Game() {
 
   const handleAdminSendMoney = (amount: number, targetUid: string) => {
     if (!database || !user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+    const { runTransaction } = require("firebase/database");
 
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -932,6 +952,7 @@ export function Game() {
 
   const handleAdminSendStars = (amount: number, targetUid: string) => {
     if (!database || !user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+    const { runTransaction } = require("firebase/database");
     
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -953,6 +974,7 @@ export function Game() {
 
   const handleAcceptContract = async (contract: ContractListing) => {
     if (!database || !user || !gameState || !userRef) return;
+    const { runTransaction } = require("firebase/database");
 
     if (contract.sellerUid === user.uid) {
         toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot accept your own contract.' });
@@ -1030,6 +1052,7 @@ export function Game() {
   
   const handleRejectContract = async (contract: ContractListing) => {
     if (!database || !user || !gameState) return;
+    const { runTransaction } = require("firebase/database");
     if (contract.buyerIdentifier && contract.buyerIdentifier !== user.uid && contract.buyerIdentifier !== gameState?.username) return;
 
     // Just remove the contract. If seller is not admin, return items.
@@ -1060,6 +1083,7 @@ export function Game() {
 
   const handleCancelContract = async (contract: ContractListing) => {
     if (!database || !user || !userRef || user.uid !== contract.sellerUid) return;
+    const { runTransaction } = require("firebase/database");
 
     const contractRef = ref(database, `contracts/${contract.id}`);
     await remove(contractRef);
@@ -1084,6 +1108,7 @@ export function Game() {
 
   const handleDailyDividends = React.useCallback(() => {
     if (!userRef || !gameState) return;
+    const { runTransaction } = require("firebase/database");
     runTransaction(userRef, (currentGameState) => {
         if (!currentGameState || !currentGameState.playerStocks || currentGameState.playerStocks.length === 0) return currentGameState;
         
@@ -1127,6 +1152,7 @@ export function Game() {
   
   const handleGoPublic = () => {
     if (!userRef) return;
+    const { runTransaction } = require("firebase/database");
     
     runTransaction(userRef, (currentData) => {
         if(!currentData) return;
@@ -1173,6 +1199,7 @@ export function Game() {
   React.useEffect(() => {
     const activityInterval = setInterval(() => {
         if (!userRef || !gameState) return;
+        const { runTransaction } = require("firebase/database");
         runTransaction(userRef, (currentGameState: UserData | null) => {
             if (!currentGameState) return null;
 
@@ -1309,6 +1336,7 @@ export function Game() {
   // Sync net worth to Firebase if it changes
   React.useEffect(() => {
     if (!userRef || !gameState) return;
+    const { runTransaction } = require("firebase/database");
     if (Math.abs(netWorth - gameState.netWorth) > 1) { // Use a small threshold to avoid float precision issues
       runTransaction(userRef, (currentData) => {
         if (currentData) {
