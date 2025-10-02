@@ -129,55 +129,43 @@ export function Game() {
       return () => clearInterval(interval);
   }, [userRef]);
 
-  // Load user data or initialize if new
+  // Unified listener for all user data
   React.useEffect(() => {
     if (userLoading || !database) return;
     if (!user) {
-      router.replace('/');
-      return;
+        router.replace('/');
+        return;
     }
     if (!userRef) return;
 
-    // Fetch initial data once
-    get(userRef).then(snapshot => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        // Force admin check on load
-        const isAdmin = data.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
-        if (isAdmin && data.role !== 'admin') {
-            data.role = 'admin';
-        }
-        if (!data.lastPublicRead) {
-            data.lastPublicRead = { general: 0, trade: 0, help: 0 };
-        }
-        setGameState(data);
-      } else {
-        getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email).then(initialData => {
-            saveUserData(userRef, initialData).then(() => {
-              setGameState(initialData);
+    const unsubscribe = onValue(userRef, (snapshot) => {
+        if (snapshot.exists()) {
+            const data = snapshot.val() as UserData;
+            // Force admin check on load
+            const isAdmin = data.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
+            if (isAdmin && data.role !== 'admin') {
+                data.role = 'admin';
+            }
+            if (!data.lastPublicRead) {
+                data.lastPublicRead = { general: 0, trade: 0, help: 0 };
+            }
+            setGameState(data);
+        } else {
+            // New user, create initial data
+            getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email).then(initialData => {
+                saveUserData(userRef, initialData).then(() => {
+                  setGameState(initialData);
+                });
             });
-        });
-      }
-      setGameStateLoading(false);
-    }).catch(error => {
-        console.error("Firebase get error:", error);
+        }
+        setGameStateLoading(false);
+    }, (error) => {
+        console.error("Firebase user data listener error:", error);
         setGameStateLoading(false);
     });
-    
-    // Set up targeted listeners for critical real-time updates
-    const listeners = [
-        'money', 'stars', 'buildingSlots', 'inventory', 'notifications',
-        'playerStocks', 'playerLevel', 'playerXP', 'netWorth', 'lastPublicRead', 'companyProfile'
-    ].map(key => {
-        const pathRef = ref(database, `users/${user.uid}/${key}`);
-        const unsubscribe = onValue(pathRef, snapshot => {
-            setGameState(prev => prev ? ({ ...prev, [key]: snapshot.val() }) : null);
-        });
-        return unsubscribe;
-    });
 
-    return () => listeners.forEach(unsubscribe => unsubscribe());
-  }, [user, userLoading, router, userRef, database]);
+    return () => unsubscribe();
+  }, [user, userLoading, database, userRef, router]);
   
   // Listen for chat metadata changes
     React.useEffect(() => {
@@ -1408,7 +1396,5 @@ export function Game() {
     </div>
   );
 }
-
-    
 
     
