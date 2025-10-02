@@ -513,16 +513,6 @@ function CompanyInventoryView({ companyProfile, netWorth, onGoPublic }: Pick<Inv
   const [isPublicDialogOpen, setIsPublicDialogOpen] = React.useState(false);
   const IPO_QUALIFICATION_NET_WORTH = 50000;
   
-  if (!companyProfile) {
-    return (
-        <Card className="bg-gray-800/60 border-gray-700 text-white">
-            <CardContent className="p-6 flex items-center justify-center h-48 text-gray-500">
-              <p>Inapakia maelezo ya kampuni...</p>
-            </CardContent>
-        </Card>
-    );
-  }
-
   const isQualifiedForIPO = netWorth >= IPO_QUALIFICATION_NET_WORTH;
 
   const handleConfirmGoPublic = () => {
