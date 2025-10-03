@@ -1007,105 +1007,105 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {buildingSlots.map((slot, index) => {
-            const currentActivityName = slot.activity ? slot.activity!.recipeId : null;
-            const style = slot.building ? (buildingStyles[slot.building.id] || buildingStyles.default) : buildingStyles.default;
-            
-            if (slot.building) {
-                return (
-                    <Card
-                      key={index}
-                      onClick={() => handleCardClick(slot, index)}
-                      className={cn(
-                        "flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2"
-                      )}
-                    >
-                        <div className="w-full h-4/6 relative flex items-center justify-center">
-                            <div className={cn("w-4/5 h-full rounded-t-md flex items-center justify-center", style.body)}>
-                                <p className="text-3xl font-bold">🏢</p>
-                            </div>
-                            <div 
-                                className={cn("absolute top-0 w-full h-0 border-b-[30px]", style.roof)}
-                                style={{
-                                    borderLeft: '20px solid transparent',
-                                    borderRight: '20px solid transparent',
-                                }}
-                            />
-                        </div>
-
-                        {slot.activity?.type === 'sell' && (
-                           <div className="absolute top-2 left-2 p-1 bg-green-500/80 rounded-full animate-pulse">
-                              <CircleDollarSign className="h-4 w-4 text-white" />
-                           </div>
-                        )}
-                        {slot.activity?.type === 'produce' && (
-                            <div className="absolute top-2 left-2 p-1 bg-blue-500/80 rounded-full animate-pulse">
-                                <Tractor className="h-4 w-4 text-white" />
-                            </div>
-                        )}
-                        {slot.construction && (
-                           <div className="absolute top-2 left-2 p-1 bg-orange-500/80 rounded-full animate-pulse">
-                              <Hammer className="h-4 w-4 text-white" />
-                           </div>
-                        )}
-                        {!slot.activity && !slot.construction && (
-                           <div className="absolute top-2 right-2 p-1 bg-gray-900/80 rounded-full">
-                               <Settings className="h-4 w-4 text-white" />
-                           </div>
-                        )}
-                        <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
-                            <p className="text-xs font-bold truncate">{slot.building.name} (Lvl {slot.level || 0})</p>
-                            {slot.activity && currentActivityName ? (
-                                <div className='text-xs font-mono text-green-300 flex items-center justify-center gap-2'>
-                                   <span>{formatTime(slot.activity.endTime - now)}</span>
-                                   <span>| {currentActivityName}</span>
-                                </div>
-                            ) : slot.construction ? (
-                                <div className='text-xs font-mono text-orange-300 flex items-center justify-center gap-2'>
-                                   <span>{formatTime(slot.construction.endTime - now)}</span>
-                                   <span>| Inaboreshwa</span>
-                                </div>
-                            ) : (
-                                <p className='text-xs text-green-400 font-semibold'>Available</p>
-                            )}
-                        </div>
-                    </Card>
-                )
-            }
-            
-            // This will render for both locked and unlocked empty slots
-            const cost = calculateUnlockCost(index);
-            return (
-                <Card
+          const currentActivityName = slot.activity ? slot.activity!.recipeId : null;
+          const style = slot.building ? (buildingStyles[slot.building.id] || buildingStyles.default) : buildingStyles.default;
+          
+          if (slot.building) {
+              return (
+                  <Card
                     key={index}
                     onClick={() => handleCardClick(slot, index)}
-                    className="flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2 hover:bg-gray-700/80 transition-colors"
-                >
-                    <div className="w-full h-4/6 relative flex items-center justify-center">
-                        <div className={cn("w-4/5 h-full rounded-t-md flex items-center justify-center bg-gray-700/50")}>
-                             {!slot.locked && <PlusCircle className="h-8 w-8 text-gray-500 group-hover:text-blue-400 transition-colors" />}
-                        </div>
-                        <div 
-                            className={cn("absolute top-0 w-full h-0 border-b-[30px] border-b-gray-600/50")}
-                            style={{
-                                borderLeft: '20px solid transparent',
-                                borderRight: '20px solid transparent',
-                            }}
-                        />
-                    </div>
-                     <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
-                         {!slot.locked && <p className="text-xs font-bold truncate text-gray-400 group-hover:text-blue-300 transition-colors">Build</p>}
-                    </div>
-
-                    {slot.locked && (
-                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 cursor-pointer" onClick={() => handleOpenUnlockDialog(index)}>
-                            <Lock className="h-10 w-10 text-yellow-400/80 mb-2" />
-                             <p className="text-xs font-bold text-yellow-300 flex items-center justify-center gap-1">
-                                {cost.toLocaleString()} <Star className="h-3 w-3" />
-                            </p>
-                        </div>
+                    className={cn(
+                      "flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2"
                     )}
-                </Card>
-            )
+                  >
+                      <div className="w-full h-4/6 relative flex items-center justify-center">
+                          <div className={cn("w-4/5 h-full rounded-t-md flex items-center justify-center", style.body)}>
+                              <p className="text-3xl font-bold">🏢</p>
+                          </div>
+                          <div 
+                              className={cn("absolute top-0 w-full h-0 border-b-[30px]", style.roof)}
+                              style={{
+                                  borderLeft: '20px solid transparent',
+                                  borderRight: '20px solid transparent',
+                              }}
+                          />
+                      </div>
+
+                      {slot.activity?.type === 'sell' && (
+                         <div className="absolute top-2 left-2 p-1 bg-green-500/80 rounded-full animate-pulse">
+                            <CircleDollarSign className="h-4 w-4 text-white" />
+                         </div>
+                      )}
+                      {slot.activity?.type === 'produce' && (
+                          <div className="absolute top-2 left-2 p-1 bg-blue-500/80 rounded-full animate-pulse">
+                              <Tractor className="h-4 w-4 text-white" />
+                          </div>
+                      )}
+                      {slot.construction && (
+                         <div className="absolute top-2 left-2 p-1 bg-orange-500/80 rounded-full animate-pulse">
+                            <Hammer className="h-4 w-4 text-white" />
+                         </div>
+                      )}
+                      {!slot.activity && !slot.construction && (
+                         <div className="absolute top-2 right-2 p-1 bg-gray-900/80 rounded-full">
+                             <Settings className="h-4 w-4 text-white" />
+                         </div>
+                      )}
+                      <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
+                          <p className="text-xs font-bold truncate">{slot.building.name} (Lvl {slot.level || 0})</p>
+                          {slot.activity && currentActivityName ? (
+                              <div className='text-xs font-mono text-green-300 flex items-center justify-center gap-2'>
+                                 <span>{formatTime(slot.activity.endTime - now)}</span>
+                                 <span>| {currentActivityName}</span>
+                              </div>
+                          ) : slot.construction ? (
+                              <div className='text-xs font-mono text-orange-300 flex items-center justify-center gap-2'>
+                                 <span>{formatTime(slot.construction.endTime - now)}</span>
+                                 <span>| Inaboreshwa</span>
+                              </div>
+                          ) : (
+                              <p className='text-xs text-green-400 font-semibold'>Available</p>
+                          )}
+                      </div>
+                  </Card>
+              )
+          }
+          
+          // This will render for both locked and unlocked empty slots
+          const cost = calculateUnlockCost(index);
+          return (
+              <Card
+                  key={index}
+                  onClick={() => handleCardClick(slot, index)}
+                  className="flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2 hover:bg-gray-700/80 transition-colors"
+              >
+                  <div className="w-full h-4/6 relative flex items-center justify-center">
+                      <div className="w-4/5 h-full rounded-t-md flex items-center justify-center bg-gray-700/50">
+                          {!slot.locked && <PlusCircle className="h-8 w-8 text-gray-500 group-hover:text-blue-400 transition-colors" />}
+                      </div>
+                      <div
+                          className="absolute top-0 w-full h-0 border-b-[30px] border-b-gray-600/50"
+                          style={{
+                              borderLeft: '20px solid transparent',
+                              borderRight: '20px solid transparent',
+                          }}
+                      />
+                  </div>
+                  <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
+                      {!slot.locked && <p className="text-xs font-bold truncate text-gray-400 group-hover:text-blue-300 transition-colors">Build</p>}
+                  </div>
+
+                  {slot.locked && (
+                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 cursor-pointer">
+                          <Lock className="h-10 w-10 text-yellow-400/80 mb-2" />
+                           <p className="text-xs font-bold text-yellow-300 flex items-center justify-center gap-1">
+                              {cost.toLocaleString()} <Star className="h-3 w-3" />
+                          </p>
+                      </div>
+                  )}
+              </Card>
+          )
         })}
       </div>
 
