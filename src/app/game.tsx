@@ -138,7 +138,7 @@ export function Game() {
                 data.lastPublicRead = { general: 0, trade: 0, help: 0 };
             }
              // Retroactively add company profile if it's missing
-            if (!data.companyProfile) {
+            if (!data.companyProfile || !('securityFund' in data.companyProfile)) {
                 const initialData = getInitialUserData(user.uid, data.username, null);
                 data.companyProfile = initialData.companyProfile;
                  // Save the updated data back to Firebase
@@ -544,7 +544,7 @@ export function Game() {
             read: false, 
             icon: 'production' 
          };
-         currentData.notifications = { ...(currentData.notifications || {}), [newNotifRef.key!]: newNotification };
+         currentData.notifications = { ...(currentData.notifications || {}), [notifRef.key!]: newNotification };
          
          return currentData;
      });

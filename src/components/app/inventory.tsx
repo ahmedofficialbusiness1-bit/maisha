@@ -574,7 +574,7 @@ function CompanyInventoryView({ companyProfile, netWorth, playerMoney, onIssueSh
                   <div className="font-mono text-right">${companyProfile.sharePrice.toFixed(2)}</div>
                   <Separator className="col-span-2 bg-gray-700 my-1"/>
                   <div className="text-gray-300 font-bold">Mfuko wa Hakiba</div>
-                  <div className="font-mono text-right font-bold text-cyan-300">${companyProfile.securityFund.toLocaleString()}</div>
+                  <div className="font-mono text-right font-bold text-cyan-300">${(companyProfile.securityFund || 0).toLocaleString()}</div>
                   <div className="text-gray-300 font-bold">Thamani ya Soko</div>
                   <div className="font-mono text-right font-bold text-blue-300">${netWorth.toLocaleString()}</div>
               </div>
