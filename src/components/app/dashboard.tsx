@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -709,6 +710,27 @@ export function Dashboard({
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  React.useEffect(() => {
+    if (selectedInventoryItem) {
+      const entry = encyclopediaData.find(e => e.name === selectedInventoryItem.item);
+      const officialMarketPrice = entry 
+        ? parseFloat(entry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') 
+        : selectedInventoryItem.marketPrice;
+      
+      const floor = officialMarketPrice * 0.85;
+      const ceiling = officialMarketPrice * 1.15;
+
+      setSellingPrice(officialMarketPrice);
+      setPriceFloor(floor);
+      setPriceCeiling(ceiling);
+    } else {
+      setSellingPrice(0);
+      setPriceFloor(0);
+      setPriceCeiling(0);
+    }
+  }, [selectedInventoryItem]);
+
 
   const handleSelectBuildingToShowDetails = (building: BuildingType) => {
     setSelectedBuildingForBuild(building);
@@ -1608,3 +1630,4 @@ const formatTime = (ms: number) => {
     
 
     
+
