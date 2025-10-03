@@ -22,7 +22,7 @@ export function FirebaseClientProvider({ children }: { children: React.ReactNode
     setServices(firebaseServices);
   }, []);
 
-  if (!services || !services.app || !services.auth || !services.database || !services.firestore) {
+  if (!services || !services.app || !services.auth || !services.database) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
         <Loader2 className="h-8 w-8 animate-spin" />

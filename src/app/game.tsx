@@ -19,9 +19,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
-import { useUser } from '@/firebase';
+import { useUser, useDatabase } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getDatabase, ref, onValue, set, get, push, remove, runTransaction } from 'firebase/database';
+import { ref, onValue, set, get, push, remove, runTransaction } from 'firebase/database';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 
 export type PlayerStock = {
@@ -62,7 +62,7 @@ const calculatedPrices = encyclopediaData.reduce((acc, item) => {
 
 export function Game() {
   const { user, loading: userLoading } = useUser();
-  const database = getDatabase();
+  const database = useDatabase();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
@@ -1125,7 +1125,7 @@ export function Game() {
   }, [companyData, userRef, gameState]);
   
   const handleGoPublic = () => {
-    if (!userRef) return;
+    if (!userRef || !database) return;
     
     runTransaction(userRef, (currentData) => {
         if(!currentData) return;

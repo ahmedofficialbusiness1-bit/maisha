@@ -56,7 +56,7 @@ export function useAuth() {
 
 export function useFirestore() {
   const firestore = React.useContext(FirestoreContext);
-  if (!firestore) {
+  if (firestore === undefined) {
     throw new Error('useFirestore must be used within a FirebaseProvider');
   }
   return firestore;
