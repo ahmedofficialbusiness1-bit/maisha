@@ -145,10 +145,9 @@ export function Game() {
             setGameState(data);
         } else {
             // New user, create initial data
-            getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email).then(initialData => {
-                saveUserData(userRef, initialData).then(() => {
-                  setGameState(initialData);
-                });
+            const initialData = getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email);
+            saveUserData(userRef, initialData).then(() => {
+                setGameState(initialData);
             });
         }
         setGameStateLoading(false);
