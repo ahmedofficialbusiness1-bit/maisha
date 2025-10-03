@@ -20,7 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
-import { useUser } from '@/firebase';
+import { useUser, useDatabase } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, update } from 'firebase/database';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
@@ -63,7 +63,7 @@ const calculatedPrices = encyclopediaData.reduce((acc, item) => {
 
 export function Game() {
   const { user, loading: userLoading } = useUser();
-  const database = getDatabase();
+  const database = useDatabase();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
@@ -106,7 +106,7 @@ export function Game() {
 
   // Periodically update lastSeen to keep user online
   React.useEffect(() => {
-      if (!userRef) return;
+      if (!userRef || !database) return;
       
       const interval = setInterval(() => {
           if(document.hasFocus() && userRef) {
@@ -120,7 +120,7 @@ export function Game() {
       }, 60 * 1000); // every minute
 
       return () => clearInterval(interval);
-  }, [userRef]);
+  }, [userRef, database]);
 
   // Unified listener for all user data
   React.useEffect(() => {
@@ -134,11 +134,6 @@ export function Game() {
     const unsubscribe = onValue(userRef, (snapshot) => {
         if (snapshot.exists()) {
             const data = snapshot.val() as UserData;
-            // Force admin check on load
-            const isAdmin = data.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
-            if (isAdmin && data.role !== 'admin') {
-                data.role = 'admin';
-            }
             if (!data.lastPublicRead) {
                 data.lastPublicRead = { general: 0, trade: 0, help: 0 };
             }
@@ -217,7 +212,7 @@ export function Game() {
 
   // Update public player data (RTDB) whenever critical info changes
   React.useEffect(() => {
-    if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef) return;
+    if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef || !database) return;
     
     const isAdmin = gameState.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
     const currentRole = isAdmin ? 'admin' : 'player';
@@ -243,7 +238,7 @@ export function Game() {
         });
     }
 
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, userRef]);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, userRef, database]);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -251,7 +246,7 @@ export function Game() {
   };
   
  const addNotification = React.useCallback((message: string, icon: Notification['icon']) => {
-    if (!userRef || !user) return;
+    if (!userRef || !user || !database) return;
     runTransaction(userRef, (currentData) => {
         if (currentData) {
             const newNotifRef = push(ref(database, `users/${user.uid}/notifications`));
@@ -270,7 +265,7 @@ export function Game() {
 
 
  const addTransaction = React.useCallback((type: 'income' | 'expense', amount: number, description: string) => {
-    if (!userRef || !user) return;
+    if (!userRef || !user || !database) return;
     runTransaction(userRef, (currentData) => {
         if (currentData) {
             const newTransRef = push(ref(database, `users/${user.uid}/transactions`));
@@ -301,7 +296,7 @@ export function Game() {
   }
 
   const handleUpdateProfile = (data: ProfileData) => {
-    if (!allPlayers || !gameState || !userRef || !marketRef || !user) return;
+    if (!allPlayers || !gameState || !userRef || !marketRef || !user || !database) return;
   
     const newName = data.playerName;
     const newAvatar = data.avatarUrl;
@@ -375,7 +370,7 @@ export function Game() {
   }
   
   const handleBuild = (slotIndex: number, building: BuildingType) => {
-    if (!userRef || !user) return;
+    if (!userRef || !user || !database) return;
 
     runTransaction(userRef, (currentData) => {
         if (!currentData) return currentData;
@@ -427,7 +422,7 @@ export function Game() {
   };
   
   const handleUpgradeBuilding = (slotIndex: number) => {
-    if (!userRef || !user) return;
+    if (!userRef || !user || !database) return;
 
     runTransaction(userRef, (currentData) => {
         if (!currentData) return currentData;
@@ -489,7 +484,7 @@ export function Game() {
   };
 
   const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
-     if (!userRef || !user) return;
+     if (!userRef || !user || !database) return;
      runTransaction(userRef, (currentData) => {
          if (!currentData) return;
 
@@ -530,7 +525,7 @@ export function Game() {
   };
 
   const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => {
-    if (!userRef || !user) return;
+    if (!userRef || !user || !database) return;
     runTransaction(userRef, (currentData) => {
         if (!currentData) return;
 
@@ -561,7 +556,7 @@ export function Game() {
             timestamp: Date.now(), read: false, 
             icon: 'sale' 
         };
-        currentData.notifications = { ...(currentData.notifications || {}), [newNotifRef.key!]: newNotification };
+        currentData.notifications = { ...(currentData.notifications || {}), [newNotification.id]: newNotification };
 
         return currentData;
     });
@@ -583,7 +578,7 @@ export function Game() {
   };
   
     const handleBuyMaterial = async (materialName: string, quantity: number): Promise<boolean> => {
-        if (!userRef || !user || !gameState) return false;
+        if (!userRef || !user || !gameState || !database) return false;
 
         // 1. Check market first
         const marketListing = playerListings
@@ -613,7 +608,7 @@ export function Game() {
     };
 
     const buyFromSystem = (materialName: string, quantity: number): boolean => {
-        if (!userRef || !user) return false;
+        if (!userRef || !user || !database) return false;
         const costPerUnit = calculatedPrices[materialName] || 0;
         if (costPerUnit === 0) return false;
 
@@ -753,7 +748,7 @@ export function Game() {
   };
   
  const handleBuyStock = React.useCallback((stock: StockListing, quantity: number) => {
-    if (!userRef || quantity <= 0 || !user) return;
+    if (!userRef || quantity <= 0 || !user || !database) return;
     
     runTransaction(userRef, currentData => {
         if (!currentData) return;
@@ -786,7 +781,7 @@ export function Game() {
 
 
  const handleSellStock = React.useCallback((ticker: string, shares: number) => {
-    if (!userRef || shares <= 0 || !user) return;
+    if (!userRef || shares <= 0 || !user || !database) return;
     
     const stockInfo = companyData.find(s => s.ticker === ticker);
     if (!stockInfo) return;
@@ -1139,7 +1134,7 @@ export function Game() {
   };
 
   const handleDailyDividends = React.useCallback(() => {
-    if (!userRef || !gameState || !user) return;
+    if (!userRef || !gameState || !user || !database) return;
     runTransaction(userRef, (currentGameState) => {
         if (!currentGameState || !currentGameState.playerStocks || currentGameState.playerStocks.length === 0) return currentGameState;
         
@@ -1185,7 +1180,7 @@ export function Game() {
 
   // Game loop for processing finished activities
   React.useEffect(() => {
-    if (!userRef || !gameState || !user) return;
+    if (!userRef || !gameState || !user || !database) return;
     const activityInterval = setInterval(() => {
         runTransaction(userRef, (currentGameState: UserData | null) => {
             if (!currentGameState) return null;
@@ -1532,3 +1527,4 @@ export function Game() {
     
 
     
+
