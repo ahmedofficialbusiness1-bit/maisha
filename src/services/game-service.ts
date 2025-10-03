@@ -59,7 +59,7 @@ export type PlayerPublicData = {
 export const getInitialUserData = (uid: string, displayName: string | null, email: string | null): UserData => {
   // For email sign-up, displayName is null. Create a default username.
   const initialUsername = displayName || (email ? email.split('@')[0] : 'Mchezaji');
-  const isAdmin = uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
+  const isAdmin = uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2'; // This can be used for debugging, but should be handled server-side for production
   const initialMoney = isAdmin ? 1000000 : 10000;
   const initialSharePrice = 10;
   const initialTotalShares = 1000000;

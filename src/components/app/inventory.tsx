@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -511,25 +512,18 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
 }
 
 function CompanyInventoryView({ companyProfile, netWorth }: Pick<InventoryProps, 'companyProfile' | 'netWorth'>) {
-  
-  if (!companyProfile) {
-    return (
-      <Card className="bg-gray-800/60 border-gray-700">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-[250px]" />
-              <Skeleton className="h-4 w-[200px]" />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center h-40">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </CardContent>
-      </Card>
-    );
-  }
+    if (!companyProfile) {
+        return (
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Maelezo ya Kampuni</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p>Subiri, taarifa za kampuni zinapakiwa...</p>
+                </CardContent>
+            </Card>
+        );
+    }
 
   return (
     <>
