@@ -1010,27 +1010,20 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
             if (slot.locked) {
                 const cost = calculateUnlockCost(index);
                 return (
-                    <div
+                    <Card
                       key={index}
                       onClick={() => handleCardClick(slot, index)}
-                      className="relative aspect-square rounded-lg overflow-hidden cursor-pointer group bg-gray-800/60 border-2 border-dashed border-gray-700 hover:border-yellow-500 transition-colors"
+                      className="flex flex-col items-center justify-between h-32 bg-gray-800/80 border-2 border-dashed border-gray-700 hover:border-yellow-500 transition-colors overflow-hidden group relative cursor-pointer aspect-square p-2"
                     >
-                      <Image 
-                        src={`https://picsum.photos/seed/locked-${index}/200/200`} 
-                        alt="Locked Slot" 
-                        fill 
-                        className="object-cover opacity-30 group-hover:opacity-40 transition-opacity"
-                        data-ai-hint="isometric house"
-                      />
-                       <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
-                            <Lock className="h-10 w-10 text-yellow-400/80" />
-                        </div>
-                      <div className="absolute bottom-2 left-2 right-2 p-2 bg-black/60 rounded-md flex items-center justify-center gap-2">
-                        <span className="text-sm font-bold text-white tracking-wider">UNLOCK</span>
-                        <span className="font-bold text-white">{cost.toLocaleString()}</span>
-                        <Star className="h-4 w-4 text-yellow-400" />
+                      <div className="w-full h-full flex items-center justify-center">
+                          <Lock className="h-10 w-10 text-yellow-400/80" />
                       </div>
-                    </div>
+                      <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
+                          <p className="text-xs font-bold truncate text-yellow-300 flex items-center justify-center gap-1">
+                            {cost.toLocaleString()} <Star className="h-3 w-3" />
+                          </p>
+                      </div>
+                    </Card>
                 );
             }
             
