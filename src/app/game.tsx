@@ -346,6 +346,7 @@ export function Game() {
                 currentData.companyProfile = initial.companyProfile;
             }
             currentData.companyProfile.companyName = newName;
+            currentData.companyProfile.logo = newAvatar || '';
         }
         return currentData;
     }).then(() => {

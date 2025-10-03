@@ -62,12 +62,13 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
   const initialSharePrice = 10;
   const initialTotalShares = 1000000;
   const initialTicker = initialUsername.slice(0, 5).toUpperCase();
+  const avatarUrl = `https://picsum.photos/seed/${uid}/100/100`;
   
   return {
     uid,
     username: initialUsername,
     lastLogin: Date.now(),
-    avatarUrl: `https://picsum.photos/seed/${uid}/100/100`,
+    avatarUrl: avatarUrl,
     money: initialMoney,
     stars: 20,
     netWorth: initialMoney,
@@ -90,7 +91,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     companyProfile: {
       companyName: `${initialUsername} Inc.`,
       ticker: initialTicker,
-      logo: `https://picsum.photos/seed/${initialTicker}/40/40`,
+      logo: avatarUrl,
       totalShares: initialTotalShares,
       availableShares: initialTotalShares, // Initially all shares are private
       sharePrice: initialSharePrice,
