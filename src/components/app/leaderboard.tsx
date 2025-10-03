@@ -4,9 +4,12 @@ import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Loader2, Trophy } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Button } from '../ui/button';
+import { getPlayerTier } from '@/lib/player-tiers';
+import { Badge } from '../ui/badge';
+import { cn } from '@/lib/utils';
 
 export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: string) => void }) {
   const { players, loading } = useAllPlayers();
@@ -55,71 +58,80 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {sortedPlayers.map((player, index) => (
-                            <TableRow 
-                              key={player.uid} 
-                              className="border-gray-700 hover:bg-gray-700/50"
-                            >
-                                <TableCell className="font-bold text-lg flex items-center gap-2 p-2 sm:p-4">
-                                    {index + 1}
-                                    {index === 0 && <Trophy className="h-5 w-5 text-yellow-400" />}
-                                    {index === 1 && <Trophy className="h-5 w-5 text-gray-400" />}
-                                    {index === 2 && <Trophy className="h-5 w-5 text-orange-400" />}
-                                </TableCell>
-                                <TableCell className="p-2 sm:p-4">
-                                    <Button variant="ghost" className="flex items-center gap-3 p-0 h-auto hover:bg-transparent" onClick={() => onViewProfile(player.uid)}>
-                                        <Avatar>
-                                            <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
-                                            <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <span className="font-semibold text-white">{player.username}</span>
-                                    </Button>
-                                </TableCell>
-                                <TableCell className="text-right font-mono text-lg text-green-400 p-2 sm:p-4">
-                                    ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {sortedPlayers.map((player, index) => {
+                            const tier = getPlayerTier(player.netWorth);
+                            return (
+                                <TableRow 
+                                  key={player.uid} 
+                                  className="border-gray-700 hover:bg-gray-700/50"
+                                >
+                                    <TableCell className="font-bold text-lg flex items-center gap-2 p-2 sm:p-4">
+                                        {index + 1}
+                                    </TableCell>
+                                    <TableCell className="p-2 sm:p-4">
+                                        <Button variant="ghost" className="flex items-center gap-3 p-0 h-auto hover:bg-transparent" onClick={() => onViewProfile(player.uid)}>
+                                            <Avatar>
+                                                <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
+                                                <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div className='flex flex-col items-start'>
+                                                <span className="font-semibold text-white">{player.username}</span>
+                                                <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
+                                                    <tier.icon className="h-2.5 w-2.5 mr-1" />
+                                                    {tier.name}
+                                                </Badge>
+                                            </div>
+                                        </Button>
+                                    </TableCell>
+                                    <TableCell className="text-right font-mono text-lg text-green-400 p-2 sm:p-4">
+                                        ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
                     </TableBody>
                  </Table>
               </div>
 
               {/* Mobile Card List */}
               <div className="md:hidden space-y-3">
-                  {sortedPlayers.map((player, index) => (
-                      <Card 
-                        key={player.uid} 
-                        className="bg-gray-700/50 border-gray-600 cursor-pointer"
-                        onClick={() => onViewProfile(player.uid)}
-                      >
-                          <CardContent className="p-3 flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                  <div className="flex items-center gap-2 font-bold text-lg">
-                                      <span>{index + 1}</span>
-                                      {index === 0 && <Trophy className="h-5 w-5 text-yellow-400" />}
-                                      {index === 1 && <Trophy className="h-5 w-5 text-gray-400" />}
-                                      {index === 2 && <Trophy className="h-5 w-5 text-orange-400" />}
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                      <Avatar className="h-10 w-10">
-                                          <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
-                                          <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                          <p className="font-semibold text-white">{player.username}</p>
-                                          <p className="text-xs text-gray-400">Level {player.level}</p>
+                  {sortedPlayers.map((player, index) => {
+                      const tier = getPlayerTier(player.netWorth);
+                      return (
+                          <Card 
+                            key={player.uid} 
+                            className="bg-gray-700/50 border-gray-600 cursor-pointer"
+                            onClick={() => onViewProfile(player.uid)}
+                          >
+                              <CardContent className="p-3 flex items-center justify-between">
+                                  <div className="flex items-center gap-4">
+                                      <div className="flex items-center gap-2 font-bold text-lg">
+                                          <span>{index + 1}</span>
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                          <Avatar className="h-10 w-10">
+                                              <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
+                                              <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
+                                          </Avatar>
+                                          <div>
+                                              <p className="font-semibold text-white">{player.username}</p>
+                                               <Badge className={cn("text-[10px] py-0 px-1.5 h-auto mt-1", tier.color)}>
+                                                    <tier.icon className="h-2.5 w-2.5 mr-1" />
+                                                    {tier.name}
+                                                </Badge>
+                                          </div>
                                       </div>
                                   </div>
-                              </div>
-                               <div className="text-right">
-                                  <p className="font-mono text-base text-green-400">
-                                      ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                  </p>
-                                   <p className="text-xs text-gray-400">Net Worth</p>
-                              </div>
-                          </CardContent>
-                      </Card>
-                  ))}
+                                   <div className="text-right">
+                                      <p className="font-mono text-base text-green-400">
+                                          ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                      </p>
+                                       <p className="text-xs text-gray-400">Net Worth</p>
+                                  </div>
+                              </CardContent>
+                          </Card>
+                      )
+                  })}
               </div>
             </>
            ) : (

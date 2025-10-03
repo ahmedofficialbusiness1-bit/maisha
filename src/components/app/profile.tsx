@@ -32,6 +32,8 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { View } from '@/app/game';
+import { getPlayerTier } from '@/lib/player-tiers';
+import { Badge } from '../ui/badge';
 
 const profileFormSchema = z.object({
   playerName: z
@@ -156,6 +158,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     ? `was ${formatDistanceToNow(new Date(currentProfile.lastSeen), { addSuffix: true })}`
     : 'recently';
 
+  const playerTier = getPlayerTier(metrics.netWorth);
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -206,7 +209,15 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             )}>
                                 {isOnline ? 'Online' : `Offline (${lastSeenText})`}
                             </span>
-                        <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
+                            {playerTier && (
+                                <Badge className={cn("text-xs py-0.5 px-2.5", playerTier.color)}>
+                                    <playerTier.icon className="h-3 w-3 mr-1" />
+                                    {playerTier.name}
+                                </Badge>
+                            )}
+                        </div>
                         <p className="text-muted-foreground">{currentProfile.role === 'admin' ? 'Administrator' : 'Sole trader'}</p>
                          <div className='text-xs text-gray-500 font-mono flex items-center gap-2'>
                             <span>UID: {currentProfile.uid}</span>
