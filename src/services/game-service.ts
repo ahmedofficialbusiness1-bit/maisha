@@ -64,10 +64,12 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
   const initialTicker = initialUsername.slice(0, 5).toUpperCase();
   const avatarUrl = `https://picsum.photos/seed/${uid}/100/100`;
 
-  // Slots K-T (indices 10-19) are locked.
+  const emptySlot = { building: null, level: 0, quality: 0, locked: false };
+  const lockedSlot = { building: null, level: 0, quality: 0, locked: true };
+
   const buildingSlots = [
-      ...Array(10).fill({ building: null, level: 0, locked: false }), // Slots A-J
-      ...Array(10).fill({ building: null, level: 0, locked: true })  // Slots K-T
+      ...Array(10).fill(emptySlot),
+      ...Array(10).fill(lockedSlot)
     ];
   
   return {
