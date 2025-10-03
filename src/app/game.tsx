@@ -86,6 +86,18 @@ export function Game() {
   const [chatMetadata, setChatMetadata] = React.useState<Record<string, ChatMetadata>>({});
   const { players: allPlayers } = useAllPlayers();
 
+  // Dialog states
+  const [dialogState, setDialogState] = React.useState({
+      build: false,
+      manage: false,
+      production: false,
+      boost: false,
+      demolish: false,
+      unlock: false,
+  });
+  const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
+
+
   // Refs for Firebase paths
   const userRef = React.useMemo(() => user ? ref(database, `users/${user.uid}`) : null, [database, user]);
   const playerPublicRef = React.useMemo(() => user ? ref(database, `players/${user.uid}`) : null, [database, user]);
@@ -1590,22 +1602,38 @@ export function Game() {
   };
   
     const handleCardClick = (slot: BuildingSlot, index: number) => {
-    if (slot.locked) {
-        // Here you will open the new unlock dialog
-        // This will be implemented in the Dashboard component
-    } else if (slot.construction) {
-        // handleOpenBoostDialog(index);
-    } else if (slot.building && !slot.activity) {
-        // handleOpenManagementDialog(index);
-    } else if (!slot.building) {
-        // handleOpenBuildDialog(index);
+        setSelectedSlotIndex(index);
+        if (slot.locked) {
+            setDialogState(prev => ({ ...prev, unlock: true }));
+        } else if (slot.construction) {
+            setDialogState(prev => ({ ...prev, boost: true }));
+        } else if (slot.building && !slot.activity) {
+            setDialogState(prev => ({ ...prev, manage: true }));
+        } else if (!slot.building) {
+            setDialogState(prev => ({ ...prev, build: true }));
+        }
     }
-  }
 
   const renderView = () => {
     switch (view) {
       case 'dashboard':
-        return <Dashboard buildingSlots={gameState.buildingSlots || []} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} onUnlockSlot={handleUnlockSlot} handleCardClick={handleCardClick} />;
+        return <Dashboard 
+                    buildingSlots={gameState.buildingSlots || []} 
+                    inventory={gameState.inventory || []} 
+                    stars={gameState.stars} 
+                    onBuild={handleBuild} 
+                    onStartProduction={handleStartProduction} 
+                    onStartSelling={handleStartSelling} 
+                    onBoostConstruction={handleBoostConstruction} 
+                    onUpgradeBuilding={handleUpgradeBuilding} 
+                    onDemolishBuilding={handleDemolishBuilding} 
+                    onBuyMaterial={handleBuyMaterial} 
+                    onUnlockSlot={handleUnlockSlot} 
+                    onCardClick={handleCardClick} 
+                    dialogState={dialogState}
+                    setDialogState={setDialogState}
+                    selectedSlotIndex={selectedSlotIndex}
+                 />;
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':

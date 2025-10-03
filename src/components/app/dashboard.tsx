@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -649,7 +648,17 @@ interface DashboardProps {
     onDemolishBuilding: (slotIndex: number) => void;
     onBuyMaterial: (materialName: string, quantity: number) => Promise<boolean>;
     onUnlockSlot: (slotIndex: number) => void;
-    handleCardClick: (slot: BuildingSlot, index: number) => void;
+    onCardClick: (slot: BuildingSlot, index: number) => void;
+    dialogState: {
+        build: boolean;
+        manage: boolean;
+        production: boolean;
+        boost: boolean;
+        demolish: boolean;
+        unlock: boolean;
+    };
+    setDialogState: React.Dispatch<React.SetStateAction<DashboardProps['dialogState']>>;
+    selectedSlotIndex: number | null;
 }
 
 const formatTime = (ms: number) => {
@@ -694,20 +703,15 @@ export function Dashboard({
     onDemolishBuilding, 
     onBuyMaterial, 
     onUnlockSlot,
-    handleCardClick
+    onCardClick,
+    dialogState,
+    setDialogState,
+    selectedSlotIndex
 }: DashboardProps) {
   
-  const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
   const [selectedBuildingForBuild, setSelectedBuildingForBuild] = React.useState<BuildingType | null>(null);
   const [buildingSearch, setBuildingSearch] = React.useState('');
-
-  const [isProductionDialogOpen, setIsProductionDialogOpen] = React.useState(false);
-  const [isManagementDialogOpen, setIsManagementDialogOpen] = React.useState(false);
-  const [isDemolishDialogOpen, setIsDemolishDialogOpen] = React.useState(false);
-  const [isBoostDialogOpen, setIsBoostDialogOpen] = React.useState(false);
-  const [isUnlockDialogOpen, setIsUnlockDialogOpen] = React.useState(false);
-  const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
   const [now, setNow] = React.useState(Date.now());
   
   // State for production/selling dialog
@@ -725,12 +729,11 @@ export function Dashboard({
     return () => clearInterval(interval);
   }, []);
 
-  const handleOpenBuildDialog = (index: number) => {
-    setSelectedSlotIndex(index);
+  const handleOpenBuildDialog = () => {
     setBuildDialogStep('list');
     setSelectedBuildingForBuild(null);
     setBuildingSearch('');
-    setIsBuildDialogOpen(true);
+    setDialogState(prev => ({...prev, build: true}));
   };
   
   const handleSelectBuildingToShowDetails = (building: BuildingType) => {
@@ -758,55 +761,17 @@ export function Dashboard({
             return;
         }
         onBuild(selectedSlotIndex, selectedBuildingForBuild);
-        setIsBuildDialogOpen(false);
+        setDialogState(prev => ({...prev, build: false}));
     }
   };
 
 
   const handleOpenProductionDialog = () => {
-    if (selectedSlotIndex === null) return;
-    setIsManagementDialogOpen(false);
+    setDialogState(prev => ({...prev, manage: false, production: true}));
     setSelectedRecipe(null);
     setSelectedInventoryItem(null);
     setProductionQuantity(1);
-    setIsProductionDialogOpen(true);
   };
-  
-  const handleOpenManagementDialog = (index: number) => {
-    setSelectedSlotIndex(index);
-    setIsManagementDialogOpen(true);
-  }
-
-  const handleOpenBoostDialog = (index: number) => {
-    setSelectedSlotIndex(index);
-    setBoostAmount(0);
-    setIsBoostDialogOpen(true);
-  };
-
-  const handleOpenUnlockDialog = (index: number) => {
-    setSelectedSlotIndex(index);
-    setIsUnlockDialogOpen(true);
-  };
-  
-  const handleSelectRecipe = (recipe: Recipe) => {
-    setSelectedRecipe(recipe);
-    setSelectedInventoryItem(null);
-    setProductionQuantity(1);
-  }
-  
-  const handleSelectInventoryItem = (item: InventoryItem) => {
-    const entry = encyclopediaData.find(e => e.name === item.item);
-    const officialMarketPrice = entry ? parseFloat(entry.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '') || '0') : item.marketPrice;
-
-    const floor = officialMarketPrice * 0.85;
-    const ceiling = officialMarketPrice * 1.15;
-      
-    setSelectedInventoryItem(item);
-    setSelectedRecipe(null);
-    setSellingPrice(officialMarketPrice);
-    setPriceFloor(floor);
-    setPriceCeiling(ceiling);
-  }
 
   const handleConfirmProductionOrSale = () => {
     if (selectedSlotIndex === null) return;
@@ -838,7 +803,7 @@ export function Dashboard({
       onStartSelling(selectedSlotIndex, selectedInventoryItem, productionQuantity, sellingPrice, totalDurationMs);
     }
     
-    setIsProductionDialogOpen(false);
+    setDialogState(prev => ({...prev, production: false}));
     setSelectedRecipe(null);
     setSelectedInventoryItem(null);
   }
@@ -847,22 +812,21 @@ export function Dashboard({
       if (selectedSlotIndex !== null && boostAmount > 0) {
           onBoostConstruction(selectedSlotIndex, boostAmount);
       }
-      setIsBoostDialogOpen(false);
+      setDialogState(prev => ({...prev, boost: false}));
   }
 
   const handleConfirmUnlock = () => {
     if (selectedSlotIndex !== null) {
       onUnlockSlot(selectedSlotIndex);
     }
-    setIsUnlockDialogOpen(false);
+    setDialogState(prev => ({...prev, unlock: false}));
   };
 
   const handleConfirmDemolish = () => {
       if(selectedSlotIndex !== null) {
           onDemolishBuilding(selectedSlotIndex);
       }
-      setIsDemolishDialogOpen(false);
-      setIsManagementDialogOpen(false);
+      setDialogState(prev => ({...prev, demolish: false, manage: false}));
   }
   
   const handleTriggerUpgrade = () => {
@@ -875,7 +839,7 @@ export function Dashboard({
             return;
         }
         onUpgradeBuilding(selectedSlotIndex);
-        setIsManagementDialogOpen(false);
+        setDialogState(prev => ({...prev, manage: false}));
     }
   }
 
@@ -1016,7 +980,7 @@ export function Dashboard({
               return (
                   <Card
                     key={index}
-                    onClick={() => handleCardClick(slot, index)}
+                    onClick={() => onCardClick(slot, index)}
                     className={cn(
                       "flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2"
                     )}
@@ -1077,37 +1041,32 @@ export function Dashboard({
               )
           }
           
-          // Empty or Locked Slot
+          // Empty Slot (locked or unlocked)
           return (
               <Card
                   key={index}
-                  onClick={() => handleCardClick(slot, index)}
-                  className="flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2 hover:bg-gray-700/80 transition-colors"
+                  onClick={() => onCardClick(slot, index)}
+                  className="flex flex-col items-center justify-center h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2 hover:bg-gray-700/80 transition-colors"
               >
-                  <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
+                 <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
                     {slotName}
                   </div>
-                  <div className="w-full h-4/6 relative flex items-center justify-center">
-                      <div className="w-4/5 h-full rounded-t-md flex items-center justify-center bg-gray-700/50">
-                          {!slot.locked && <PlusCircle className="h-8 w-8 text-gray-500 group-hover:text-blue-400 transition-colors" />}
-                      </div>
-                      <div
-                          className="absolute top-0 w-full h-0 border-b-[30px] border-b-gray-600/50"
-                          style={{
-                              borderLeft: '20px solid transparent',
-                              borderRight: '20px solid transparent',
-                          }}
-                      />
-                  </div>
-                  <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
-                      {!slot.locked && <p className="text-xs font-bold truncate text-gray-400 group-hover:text-blue-300 transition-colors">Build</p>}
+                  <div className="w-full h-full relative flex flex-col items-center justify-center">
+                    <div className="w-4/5 h-4/5 rounded-md flex flex-col items-center justify-center bg-gray-700/50 border-2 border-dashed border-gray-500 group-hover:border-yellow-400 transition-colors">
+                      {!slot.locked && (
+                        <>
+                          <PlusCircle className="h-8 w-8 text-gray-400 group-hover:text-yellow-300 transition-colors" />
+                          <p className="text-xs font-bold truncate text-gray-400 group-hover:text-yellow-200 transition-colors mt-2">Build</p>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   {slot.locked && (
                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 cursor-pointer">
                           <Lock className="h-8 w-8 text-yellow-400/80 mb-2" />
-                           <p className="text-xs font-bold text-yellow-300 flex items-center justify-center gap-1">
-                              {calculateUnlockCost(index).toLocaleString()} <Star className="h-3 w-3" />
+                           <p className="text-sm font-bold text-yellow-300 flex items-center justify-center gap-1">
+                              {calculateUnlockCost(index).toLocaleString()} <Star className="h-4 w-4" />
                           </p>
                       </div>
                   )}
@@ -1117,7 +1076,7 @@ export function Dashboard({
       </div>
 
       {/* Build Dialog */}
-      <Dialog open={isBuildDialogOpen} onOpenChange={setIsBuildDialogOpen}>
+      <Dialog open={dialogState.build} onOpenChange={(open) => setDialogState(prev => ({ ...prev, build: open }))}>
           <DialogContent className="bg-gray-900 border-gray-700 text-white flex flex-col max-h-[90vh]">
             <DialogHeader>
               {buildDialogStep === 'details' && selectedBuildingForBuild && (
@@ -1216,7 +1175,7 @@ export function Dashboard({
       </Dialog>
         
         {/* Management Dialog */}
-        <Dialog open={isManagementDialogOpen} onOpenChange={setIsManagementDialogOpen}>
+        <Dialog open={dialogState.manage} onOpenChange={(open) => setDialogState(prev => ({ ...prev, manage: open }))}>
             <DialogContent className="bg-gray-900 border-gray-700 text-white">
                 <DialogHeader>
                     <DialogTitle>Simamia {selectedSlot?.building?.name}</DialogTitle>
@@ -1263,7 +1222,7 @@ export function Dashboard({
                             </div>
                         </div>
                     </div>
-                    <Button className='w-full justify-start' variant="destructive" onClick={() => setIsDemolishDialogOpen(true)}>
+                    <Button className='w-full justify-start' variant="destructive" onClick={() => setDialogState(prev => ({...prev, demolish: true}))}>
                         <Trash2 className='mr-2'/> Futa Jengo
                     </Button>
                 </div>
@@ -1271,7 +1230,7 @@ export function Dashboard({
         </Dialog>
 
         {/* Demolish Confirmation Dialog */}
-        <AlertDialog open={isDemolishDialogOpen} onOpenChange={setIsDemolishDialogOpen}>
+        <AlertDialog open={dialogState.demolish} onOpenChange={(open) => setDialogState(prev => ({ ...prev, demolish: open }))}>
             <AlertDialogContent>
                 <AlertDialogHeader>
                 <AlertDialogTitle>Una uhakika?</AlertDialogTitle>
@@ -1289,7 +1248,7 @@ export function Dashboard({
         </AlertDialog>
 
          {/* Unlock Slot Confirmation Dialog */}
-        <AlertDialog open={isUnlockDialogOpen} onOpenChange={setIsUnlockDialogOpen}>
+        <AlertDialog open={dialogState.unlock} onOpenChange={(open) => setDialogState(prev => ({ ...prev, unlock: open }))}>
             <AlertDialogContent>
                 <AlertDialogHeader>
                 <AlertDialogTitle>Fungua Nafasi ya Ujenzi</AlertDialogTitle>
@@ -1308,7 +1267,7 @@ export function Dashboard({
 
 
         {/* Production/Selling Dialog */}
-        <Dialog open={isProductionDialogOpen} onOpenChange={setIsProductionDialogOpen}>
+        <Dialog open={dialogState.production} onOpenChange={(open) => setDialogState(prev => ({...prev, production: open}))}>
             <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>{isSelectedBuildingShop ? 'Uza Bidhaa' : 'Uzalishaji'}: {selectedSlot?.building?.name} (Lvl {selectedSlot?.level})</DialogTitle>
@@ -1331,7 +1290,7 @@ export function Dashboard({
                                         "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
                                         selectedInventoryItem?.item === item.item && "bg-blue-600 border-blue-400"
                                     )}
-                                    onClick={() => handleSelectInventoryItem(item)}
+                                    onClick={() => setSelectedInventoryItem(item)}
                                     >
                                     {item.item}
                                     </Button>
@@ -1353,7 +1312,7 @@ export function Dashboard({
                                         "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
                                         selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
                                     )}
-                                    onClick={() => handleSelectRecipe(recipe)}
+                                    onClick={() => setSelectedRecipe(recipe)}
                                     >
                                     {recipe.output.name}
                                     </Button>
@@ -1480,7 +1439,7 @@ export function Dashboard({
         </Dialog>
         
         {/* Boost Dialog */}
-        <Dialog open={isBoostDialogOpen} onOpenChange={setIsBoostDialogOpen}>
+        <Dialog open={dialogState.boost} onOpenChange={(open) => setDialogState(prev => ({ ...prev, boost: open }))}>
             <DialogContent className="bg-gray-900 border-gray-700 text-white">
                 <DialogHeader>
                     <DialogTitle>Harakisha Ujenzi</DialogTitle>
@@ -1517,7 +1476,7 @@ export function Dashboard({
                     </div>
                 </div>
                 <DialogFooter className="mt-auto pt-4">
-                    <Button variant="outline" onClick={() => setIsBoostDialogOpen(false)}>Ghairi</Button>
+                    <Button variant="outline" onClick={() => setDialogState(prev => ({ ...prev, boost: false }))}>Ghairi</Button>
                     <Button 
                         className='bg-blue-600 hover:bg-blue-700' 
                         onClick={handleConfirmBoost}
