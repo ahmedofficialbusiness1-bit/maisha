@@ -20,7 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane, Rocket, ShieldCheck, Search, Store, ShoppingCart } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane, Rocket, ShieldCheck, Search, Store, ShoppingCart, Lock } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -72,6 +72,7 @@ export type BuildingSlot = {
     level: number;
     activity?: ActivityInfo;
     construction?: ConstructionInfo;
+    locked?: boolean;
 };
 
 export const availableBuildings: BuildingType[] = [
@@ -647,6 +648,7 @@ interface DashboardProps {
     onUpgradeBuilding: (slotIndex: number) => void;
     onDemolishBuilding: (slotIndex: number) => void;
     onBuyMaterial: (materialName: string, quantity: number) => boolean;
+    onUnlockSlot: (slotIndex: number) => void;
 }
 
 const formatTime = (ms: number) => {
@@ -679,7 +681,7 @@ const productCategoryToShopMap: Record<string, string> = {
     'Utafiti': 'duka_kuu' // Research items aren't typically sold, but as a fallback
 };
 
-export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onStartSelling, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding, onBuyMaterial }: DashboardProps) {
+export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onStartSelling, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding, onBuyMaterial, onUnlockSlot }: DashboardProps) {
   
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
@@ -690,6 +692,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   const [isManagementDialogOpen, setIsManagementDialogOpen] = React.useState(false);
   const [isDemolishDialogOpen, setIsDemolishDialogOpen] = React.useState(false);
   const [isBoostDialogOpen, setIsBoostDialogOpen] = React.useState(false);
+  const [isUnlockDialogOpen, setIsUnlockDialogOpen] = React.useState(false);
   const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
   const [now, setNow] = React.useState(Date.now());
   
@@ -765,6 +768,11 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     setBoostAmount(0);
     setIsBoostDialogOpen(true);
   };
+
+  const handleOpenUnlockDialog = (index: number) => {
+    setSelectedSlotIndex(index);
+    setIsUnlockDialogOpen(true);
+  };
   
   const handleSelectRecipe = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
@@ -828,6 +836,13 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       }
       setIsBoostDialogOpen(false);
   }
+
+  const handleConfirmUnlock = () => {
+    if (selectedSlotIndex !== null) {
+      onUnlockSlot(selectedSlotIndex);
+    }
+    setIsUnlockDialogOpen(false);
+  };
 
   const handleConfirmDemolish = () => {
       if(selectedSlotIndex !== null) {
@@ -926,7 +941,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
   };
 
   const handleCardClick = (slot: BuildingSlot, index: number) => {
-    if (slot.construction) {
+    if (slot.locked) {
+        handleOpenUnlockDialog(index);
+    } else if (slot.construction) {
         handleOpenBoostDialog(index);
     } else if (slot.building && !slot.activity) {
         handleOpenManagementDialog(index);
@@ -968,6 +985,16 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
     setSellingPrice(clampedValue);
   };
 
+    const calculateUnlockCost = (slotIndex: number) => {
+        if (slotIndex < 10) return 0;
+        const baseCost = 650;
+        const exponent = slotIndex - 10;
+        return Math.floor(baseCost * Math.pow(1.6, exponent));
+    };
+
+    const unlockCost = selectedSlotIndex !== null ? calculateUnlockCost(selectedSlotIndex) : 0;
+
+
   return (
     <div className="flex flex-col gap-4 text-white">
        <div>
@@ -980,6 +1007,27 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         {buildingSlots.map((slot, index) => {
             const currentActivityName = slot.activity ? slot.activity!.recipeId : null;
             const style = slot.building ? (buildingStyles[slot.building.id] || buildingStyles.default) : buildingStyles.default;
+
+            if (slot.locked) {
+                const cost = calculateUnlockCost(index);
+                return (
+                    <Card
+                      key={index}
+                      onClick={() => handleCardClick(slot, index)}
+                      className="flex flex-col items-center justify-center h-32 bg-gray-800/60 border-2 border-dashed border-gray-700 hover:border-yellow-500 hover:bg-gray-800/90 transition-all cursor-pointer group"
+                    >
+                      <div className="text-center text-gray-500 group-hover:text-yellow-400 transition-colors">
+                        <Lock className="h-8 w-8 mx-auto" />
+                        <span className="text-xs font-semibold mt-1">Fungua Nafasi</span>
+                        <div className="flex items-center justify-center gap-1 text-xs font-bold mt-1">
+                            <Star className="h-3 w-3" />
+                            <span>{cost.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </Card>
+                );
+            }
+            
             return slot.building ? (
             <Card
               key={index}
@@ -1227,6 +1275,25 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+         {/* Unlock Slot Confirmation Dialog */}
+        <AlertDialog open={isUnlockDialogOpen} onOpenChange={setIsUnlockDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Fungua Nafasi ya Ujenzi</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Una uhakika unataka kutumia <strong className='text-yellow-300 inline-flex items-center gap-1'>{unlockCost.toLocaleString()} <Star className='h-4 w-4'/></strong> kufungua nafasi hii? Kitendo hiki hakiwezi kutenduliwa.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Ghairi</AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmUnlock} className={cn(buttonVariants({ variant: "default" }), 'bg-yellow-500 hover:bg-yellow-600')} disabled={stars < unlockCost}>
+                    {stars < unlockCost ? "Nyota Hazitoshi" : "Fungua"}
+                </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
 
         {/* Production/Selling Dialog */}
         <Dialog open={isProductionDialogOpen} onOpenChange={setIsProductionDialogOpen}>

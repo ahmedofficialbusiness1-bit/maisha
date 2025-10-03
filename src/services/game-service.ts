@@ -63,6 +63,11 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
   const initialTotalShares = 1000000;
   const initialTicker = initialUsername.slice(0, 5).toUpperCase();
   const avatarUrl = `https://picsum.photos/seed/${uid}/100/100`;
+
+  const buildingSlots = [
+      ...Array(10).fill({ building: null, level: 0, locked: false }),
+      ...Array(10).fill({ building: null, level: 0, locked: true })
+    ];
   
   return {
     uid,
@@ -70,9 +75,9 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     lastLogin: Date.now(),
     avatarUrl: avatarUrl,
     money: initialMoney,
-    stars: 20,
+    stars: 650,
     netWorth: initialMoney,
-    buildingSlots: Array(20).fill({ building: null, level: 0 }),
+    buildingSlots: buildingSlots,
     inventory: [
       { item: 'Mbao', quantity: 2000, marketPrice: 2.5 },
       { item: 'Matofali', quantity: 4000, marketPrice: 1.2 },

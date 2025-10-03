@@ -141,7 +141,14 @@ export function Game() {
              // Retroactively add company profile if it's missing
             if (!data.companyProfile || !('securityFund' in data.companyProfile)) {
                 const initialData = getInitialUserData(user.uid, data.username, null);
-                data.companyProfile = initialData.companyProfile;
+                 data.companyProfile = {
+                    ...initialData.companyProfile,
+                    ...data.companyProfile // Keep existing values if any
+                };
+                if (!('securityFund' in data.companyProfile)) {
+                    data.companyProfile.securityFund = 0;
+                }
+
                  // Save the updated data back to Firebase
                 saveUserData(userRef, data);
             }
@@ -342,7 +349,7 @@ export function Game() {
             currentData.privateNotes = data.privateNotes || '';
             
             // Ensure companyProfile exists before updating it
-            if (!currentData.companyProfile) {
+             if (!currentData.companyProfile) {
                 const initial = getInitialUserData(currentData.uid, newName, null);
                 currentData.companyProfile = initial.companyProfile;
             }
@@ -396,6 +403,35 @@ export function Game() {
   const handleChatOpened = () => {
     setInitialPrivateChatUid(null);
   }
+
+  const handleUnlockSlot = (slotIndex: number) => {
+    if (!userRef || !user || !gameState) return;
+
+    const calculateUnlockCost = (index: number) => {
+        if (index < 10) return 0;
+        const baseCost = 650;
+        const exponent = index - 10;
+        return Math.floor(baseCost * Math.pow(1.6, exponent));
+    };
+
+    const cost = calculateUnlockCost(slotIndex);
+    if (gameState.stars < cost) {
+        toast({ variant: 'destructive', title: 'Nyota Hazitoshi', description: `Unahitaji nyota ${cost.toLocaleString()} kufungua nafasi hii.`});
+        return;
+    }
+
+    runTransaction(userRef, (currentData) => {
+        if (currentData && currentData.stars >= cost) {
+            currentData.stars -= cost;
+            currentData.buildingSlots[slotIndex].locked = false;
+        }
+        return currentData;
+    }).then(() => {
+        toast({ title: "Nafasi Imefunguliwa!", description: "Sasa unaweza kujenga kwenye nafasi hii mpya." });
+    }).catch(error => {
+        toast({ variant: 'destructive', title: 'Imeshindikana Kufungua', description: error.message });
+    });
+  };
   
   const handleBuild = (slotIndex: number, building: BuildingType) => {
     if (!userRef || !user) return;
@@ -407,7 +443,7 @@ export function Game() {
         if (!costs) return currentData;
 
         for (const cost of costs) {
-            const inventoryItem = currentData.inventory.find(i => i.item === cost.name);
+            const inventoryItem = currentData.inventory.find((i: InventoryItem) => i.item === cost.name);
             if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
                 // Not enough materials, abort transaction by returning undefined
                 return;
@@ -419,7 +455,7 @@ export function Game() {
 
         // Deduct costs
         for (const cost of costs) {
-            const itemIndex = currentData.inventory.findIndex(i => i.item === cost.name);
+            const itemIndex = currentData.inventory.findIndex((i: InventoryItem) => i.item === cost.name);
             if (itemIndex > -1) {
                 currentData.inventory[itemIndex].quantity -= cost.quantity;
             }
@@ -460,7 +496,7 @@ export function Game() {
 
         const costs = buildingData[slot.building.id].upgradeCost(slot.level + 1);
         for (const cost of costs) {
-            const inventoryItem = currentData.inventory.find(i => i.item === cost.name);
+            const inventoryItem = currentData.inventory.find((i: InventoryItem) => i.item === cost.name);
             if (!inventoryItem || inventoryItem.quantity < cost.quantity) {
                 // Abort
                 return;
@@ -472,7 +508,7 @@ export function Game() {
 
         // Deduct costs
         for (const cost of costs) {
-            const itemIndex = currentData.inventory.findIndex(i => i.item === cost.name);
+            const itemIndex = currentData.inventory.findIndex((i: InventoryItem) => i.item === cost.name);
             if (itemIndex > -1) {
                 currentData.inventory[itemIndex].quantity -= cost.quantity;
             }
@@ -517,7 +553,7 @@ export function Game() {
          if (!currentData) return;
 
          for (const input of (recipe.inputs || [])) {
-             const itemIndex = currentData.inventory.findIndex(i => i.item === input.name);
+             const itemIndex = currentData.inventory.findIndex((i: InventoryItem) => i.item === input.name);
              if (itemIndex === -1 || currentData.inventory[itemIndex].quantity < input.quantity * quantity) {
                  return; // Abort
              }
@@ -557,7 +593,7 @@ export function Game() {
     runTransaction(userRef, (currentData) => {
         if (!currentData) return;
 
-        const itemIndex = currentData.inventory.findIndex(i => i.item === item.item);
+        const itemIndex = currentData.inventory.findIndex((i: InventoryItem) => i.item === item.item);
         if (itemIndex === -1 || currentData.inventory[itemIndex].quantity < quantity) {
             return; // Abort
         }
@@ -652,7 +688,7 @@ export function Game() {
             currentData.money -= totalCost;
             
             let newInventory = [...(currentData.inventory || [])];
-            const itemIndex = newInventory.findIndex(i => i.item === materialName);
+            const itemIndex = newInventory.findIndex((i: InventoryItem) => i.item === materialName);
             if (itemIndex > -1) {
                 newInventory[itemIndex].quantity += quantity;
             } else {
@@ -727,7 +763,7 @@ export function Game() {
             runTransaction(userRef, (currentData) => {
                 if (currentData) {
                     const newInventory = [...(currentData.inventory || [])];
-                    const itemIndex = newInventory.findIndex(i => i.item === listing.commodity);
+                    const itemIndex = newInventory.findIndex((i: InventoryItem) => i.item === listing.commodity);
                     if (itemIndex > -1) {
                         newInventory[itemIndex].quantity += quantityToBuy;
                     } else {
@@ -817,18 +853,18 @@ export function Game() {
     runTransaction(userRef, currentData => {
         if (!currentData) return;
 
-        const playerStock = (currentData.playerStocks || []).find(s => s.ticker === ticker);
+        const playerStock = (currentData.playerStocks || []).find((s: PlayerStock) => s.ticker === ticker);
         if (!playerStock || playerStock.shares < shares) return; // Abort
 
         const totalSale = stockInfo.stockPrice * shares;
         currentData.money += totalSale;
 
-        const newPlayerStocks = (currentData.playerStocks || []).map(s => {
+        const newPlayerStocks = (currentData.playerStocks || []).map((s: PlayerStock) => {
             if (s.ticker === ticker) {
                 return { ...s, shares: s.shares - shares };
             }
             return s;
-        }).filter(s => s.shares > 0);
+        }).filter((s: PlayerStock) => s.shares > 0);
         currentData.playerStocks = newPlayerStocks;
 
         const transRefKey = push(ref(database, `users/${user.uid}/transactions`)).key!;
@@ -1108,7 +1144,7 @@ export function Game() {
         runTransaction(userRef, (currentData) => {
             if (currentData) {
                 const newInventory = [...(currentData.inventory || [])];
-                const itemIndex = newInventory.findIndex(i => i.item === contract.commodity);
+                const itemIndex = newInventory.findIndex((i: InventoryItem) => i.item === contract.commodity);
                 if (itemIndex > -1) {
                     newInventory[itemIndex].quantity += contract.quantity;
                 } else {
@@ -1195,7 +1231,7 @@ export function Game() {
     runTransaction(userRef, currentData => {
         if(currentData) {
             const newInventory = [...currentData.inventory];
-            const itemIndex = newInventory.findIndex(i => i.item === contract.commodity);
+            const itemIndex = newInventory.findIndex((i: InventoryItem) => i.item === contract.commodity);
             if (itemIndex > -1) {
                 newInventory[itemIndex].quantity += contract.quantity;
             } else {
@@ -1293,7 +1329,7 @@ export function Game() {
                 if (slot.activity && now >= slot.activity.endTime) {
                     if (slot.activity.type === 'produce') {
                         const { quantity, recipeId: itemName } = slot.activity;
-                        const itemIndex = newInventory.findIndex(i => i.item === itemName);
+                        const itemIndex = newInventory.findIndex((i: InventoryItem) => i.item === itemName);
                         if (itemIndex !== -1) {
                             newInventory[itemIndex].quantity += quantity;
                         } else {
@@ -1329,7 +1365,7 @@ export function Game() {
                 }
                 
                 currentGameState.buildingSlots = newBuildingSlots;
-                currentGameState.inventory = newInventory.filter(i => i.quantity > 0);
+                currentGameState.inventory = newInventory.filter((i: InventoryItem) => i.quantity > 0);
                 currentGameState.money = newMoney;
                 currentGameState.transactions = newTransactions;
                 currentGameState.playerXP = newXP;
@@ -1548,7 +1584,7 @@ export function Game() {
   const renderView = () => {
     switch (view) {
       case 'dashboard':
-        return <Dashboard buildingSlots={gameState.buildingSlots || []} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
+        return <Dashboard buildingSlots={gameState.buildingSlots || []} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} onUnlockSlot={handleUnlockSlot} />;
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':
