@@ -517,16 +517,7 @@ function CompanyInventoryView({ companyProfile, netWorth, playerMoney, onIssueSh
     const [pricePerShare, setPricePerShare] = React.useState(10);
     
     if (!companyProfile) {
-        return (
-            <Card className="bg-gray-800/60 border-gray-700 text-white">
-                <CardHeader>
-                    <CardTitle>Maelezo ya Kampuni</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p>Maelezo ya kampuni hayapatikani.</p>
-                </CardContent>
-            </Card>
-        );
+        return <p>Maelezo ya kampuni hayapatikani.</p>;
     }
     
     const maxSharesPlayerCanSell = companyProfile.totalShares - 200000;
