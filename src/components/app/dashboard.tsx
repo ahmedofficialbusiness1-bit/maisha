@@ -1253,7 +1253,7 @@ export function Dashboard({
                 <AlertDialogHeader>
                 <AlertDialogTitle>Fungua Nafasi ya Ujenzi</AlertDialogTitle>
                 <AlertDialogDescription>
-                    Una uhakika unataka kutumia <strong className='text-yellow-300 inline-flex items-center gap-1'>{unlockCost.toLocaleString()} <Star className='h-4 w-4'/></strong> kufungua nafasi hii? Kitendo hiki hakiwezi kutenduliwa.
+                    Sehemu hii imefungwa. Tumia star boost <strong className='text-yellow-300 inline-flex items-center gap-1'>{unlockCost.toLocaleString()} <Star className='h-4 w-4'/></strong> kufungua eneo hili.
                 </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
