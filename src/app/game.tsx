@@ -19,9 +19,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
-import { useUser, useDatabase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ref, onValue, set, get, push, remove, runTransaction } from 'firebase/database';
+import { getDatabase, ref, onValue, set, get, push, remove, runTransaction } from 'firebase/database';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 
 export type PlayerStock = {
@@ -43,7 +43,7 @@ const BUILDING_SLOTS = 20;
 
 const initialCompanyData: StockListing[] = [
     { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, totalShares: 250000, marketCap: 450.75 * 250000, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 100000, dividendYield: 0.015 },
-    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, totalShares: 1000000, marketCap: 120.50 * 1000000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 150000, dividendYield: 0.022 },
+    { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, totalShares: 1000000, marketCap: 120.50 * 1000000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 150000, dividendYield: 0.022, isPlayerCompany: false },
 ];
 
 const initialBondListings: BondListing[] = [
@@ -62,7 +62,7 @@ const calculatedPrices = encyclopediaData.reduce((acc, item) => {
 
 export function Game() {
   const { user, loading: userLoading } = useUser();
-  const database = useDatabase();
+  const database = getDatabase();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
@@ -608,7 +608,7 @@ export function Game() {
   };
 
   const handleBuyFromMarket = async (listing: PlayerListing, quantityToBuy: number) => {
-    if (!database || !user || !gameState) return;
+    if (!user || !gameState) return;
     if (listing.sellerUid === user.uid) {
         toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot buy your own items.' });
         return;
@@ -620,7 +620,8 @@ export function Game() {
         return;
     }
 
-    const listingRef = ref(database, `market/${listing.id}`);
+    const db = getDatabase();
+    const listingRef = ref(db, `market/${listing.id}`);
 
     try {
         const transactionResult = await runTransaction(listingRef, (currentListing) => {
@@ -672,7 +673,7 @@ export function Game() {
 
 
         // 3. Update seller's state (server-side transaction)
-        const sellerUserRef = ref(database, `users/${listing.sellerUid}`);
+        const sellerUserRef = ref(db, `users/${listing.sellerUid}`);
         await runTransaction(sellerUserRef, (sellerData) => {
             if (sellerData) {
                 sellerData.money += totalCost;
@@ -767,8 +768,8 @@ export function Game() {
 
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
-     if (!database || !user || !gameState || !userRef || quantity <= 0 || quantity > item.quantity) return;
-
+     if (!user || !gameState || !userRef || quantity <= 0 || quantity > item.quantity) return;
+     const db = getDatabase();
      // Optimistically update inventory via transaction to be safe
      runTransaction(userRef, (currentData) => {
          if (!currentData) return;
@@ -786,7 +787,7 @@ export function Game() {
          }
 
          const listingId = `${user.uid}-${Date.now()}`;
-         const listingRef = ref(database, `market/${listingId}`);
+         const listingRef = ref(db, `market/${listingId}`);
          const productInfo = encyclopediaData.find(e => e.name === item.item);
 
          const newListing: Omit<PlayerListing, 'id'> = {
@@ -822,7 +823,8 @@ export function Game() {
   };
 
   const handleCreateContract = (item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => {
-    if (!database || !user || !gameState || !userRef || quantity <= 0 || pricePerUnit <= 0) return;
+    if (!user || !gameState || !userRef || quantity <= 0 || pricePerUnit <= 0) return;
+    const db = getDatabase();
 
     // Optimistically deduct items via transaction
     runTransaction(userRef, (currentData) => {
@@ -840,7 +842,7 @@ export function Game() {
             return; // Aborted due to insufficient items
         }
 
-        const newContractRef = push(ref(database, 'contracts'));
+        const newContractRef = push(ref(db, 'contracts'));
         const productInfo = encyclopediaData.find(e => e.name === item.item);
 
         const newContract: Omit<ContractListing, 'id'> = {
@@ -879,9 +881,10 @@ export function Game() {
   }
 
   const handleAdminSendItem = (itemName: string, quantity: number, targetUid: string) => {
-    if (!database || !user || !gameState || gameState.role !== 'admin') return;
+    if (!user || !gameState || gameState.role !== 'admin') return;
+    const db = getDatabase();
 
-    const newContractRef = push(ref(database, 'contracts'));
+    const newContractRef = push(ref(db, 'contracts'));
     const productInfo = encyclopediaData.find(e => e.name === itemName);
 
     const newContract: Omit<ContractListing, 'id'> = {
@@ -905,9 +908,10 @@ export function Game() {
   };
 
   const handleAdminSendMoney = (amount: number, targetUid: string) => {
-    if (!database || !user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+    const db = getDatabase();
 
-    const targetUserRef = ref(database, `users/${targetUid}`);
+    const targetUserRef = ref(db, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
         if (userData) {
             userData.money += amount;
@@ -930,9 +934,10 @@ export function Game() {
   }
 
   const handleAdminSendStars = (amount: number, targetUid: string) => {
-    if (!database || !user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+    const db = getDatabase();
     
-    const targetUserRef = ref(database, `users/${targetUid}`);
+    const targetUserRef = ref(db, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
         if (userData) {
             userData.stars += amount;
@@ -951,7 +956,8 @@ export function Game() {
   }
 
   const handleAcceptContract = async (contract: ContractListing) => {
-    if (!database || !user || !gameState || !userRef) return;
+    if (!user || !gameState || !userRef) return;
+    const db = getDatabase();
 
     if (contract.sellerUid === user.uid) {
         toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot accept your own contract.' });
@@ -964,7 +970,7 @@ export function Game() {
         return;
     }
 
-    const contractRef = ref(database, `contracts/${contract.id}`);
+    const contractRef = ref(db, `contracts/${contract.id}`);
 
     try {
         const transactionResult = await runTransaction(contractRef, (currentContract) => {
@@ -1002,7 +1008,7 @@ export function Game() {
 
         // Seller gets money and notification (unless it's an admin)
         if (contract.sellerUid !== 'admin-system') {
-            const sellerUserRef = ref(database, `users/${contract.sellerUid}`);
+            const sellerUserRef = ref(db, `users/${contract.sellerUid}`);
             await runTransaction(sellerUserRef, (sellerData) => {
                 if (sellerData) {
                     sellerData.money += totalCost;
@@ -1028,15 +1034,17 @@ export function Game() {
   };
   
   const handleRejectContract = async (contract: ContractListing) => {
-    if (!database || !user || !gameState) return;
+    if (!user || !gameState) return;
+    const db = getDatabase();
+
     if (contract.buyerIdentifier && contract.buyerIdentifier !== user.uid && contract.buyerIdentifier !== gameState?.username) return;
 
     // Just remove the contract. If seller is not admin, return items.
-    const contractRef = ref(database, `contracts/${contract.id}`);
+    const contractRef = ref(db, `contracts/${contract.id}`);
     await remove(contractRef);
 
     if (contract.sellerUid !== 'admin-system') {
-        const sellerUserRef = ref(database, `users/${contract.sellerUid}`);
+        const sellerUserRef = ref(db, `users/${contract.sellerUid}`);
         await runTransaction(sellerUserRef, (sellerData) => {
             if (sellerData) {
                 const itemIndex = sellerData.inventory.findIndex((i: InventoryItem) => i.item === contract.commodity);
@@ -1058,9 +1066,11 @@ export function Game() {
   };
 
   const handleCancelContract = async (contract: ContractListing) => {
-    if (!database || !user || !userRef || user.uid !== contract.sellerUid) return;
+    if (!user || !userRef) return;
+    const db = getDatabase();
+    if (user.uid !== contract.sellerUid) return;
 
-    const contractRef = ref(database, `contracts/${contract.id}`);
+    const contractRef = ref(db, `contracts/${contract.id}`);
     await remove(contractRef);
 
     // Return items to seller
@@ -1125,7 +1135,8 @@ export function Game() {
   }, [companyData, userRef, gameState]);
   
   const handleGoPublic = () => {
-    if (!userRef || !database) return;
+    if (!userRef) return;
+    const db = getDatabase();
     
     runTransaction(userRef, (currentData) => {
         if(!currentData) return;
@@ -1150,7 +1161,7 @@ export function Game() {
             isPlayerCompany: true,
         };
         
-        const companyRef = ref(database, `companies/${currentData.companyProfile.ticker}`);
+        const companyRef = ref(db, `companies/${currentData.companyProfile.ticker}`);
         set(companyRef, newPublicListing);
 
         const transRef = push(ref(userRef, 'transactions'));
