@@ -168,8 +168,12 @@ const itemIconMap: Record<string, LucideIcon> = {
     'Meli': Ship, 'Meli ya kifahari': Ship,
     'Roketi': Rocket, 'Fuselage': Rocket, 'Wings': Rocket, 'Tarakilishi': Cpu,
     'Cockpit': Rocket, 'Attitude Control': Rocket, 'Rocket Engine': Rocket, 'Heat Shield': ShieldCheck,
-    'Utafiti wa Kilimo': Award, 'Utafiti wa Ujenzi': Award, 'Utafiti wa Nguo': Award,
-    'Utafiti wa Electroniki': Award, 'Utafiti wa Usafiri': Award, 'Utafiti wa Anga': Award,
+    'Q1 - Utafiti Kilimo': Award, 'Q2 - Utafiti Kilimo': Award, 'Q3 - Utafiti Kilimo': Award, 'Q4 - Utafiti Kilimo': Award, 'Q5 - Utafiti Kilimo': Award,
+    'Q1 - Utafiti Ujenzi': Award, 'Q2 - Utafiti Ujenzi': Award, 'Q3 - Utafiti Ujenzi': Award, 'Q4 - Utafiti Ujenzi': Award, 'Q5 - Utafiti Ujenzi': Award,
+    'Q1 - Utafiti Nguo': Award, 'Q2 - Utafiti Nguo': Award, 'Q3 - Utafiti Nguo': Award, 'Q4 - Utafiti Nguo': Award, 'Q5 - Utafiti Nguo': Award,
+    'Q1 - Utafiti Electroniki': Award, 'Q2 - Utafiti Electroniki': Award, 'Q3 - Utafiti Electroniki': Award, 'Q4 - Utafiti Electroniki': Award, 'Q5 - Utafiti Electroniki': Award,
+    'Q1 - Utafiti Usafiri': Award, 'Q2 - Utafiti Usafiri': Award, 'Q3 - Utafiti Usafiri': Award, 'Q4 - Utafiti Usafiri': Award, 'Q5 - Utafiti Usafiri': Award,
+    'Q1 - Utafiti Anga': Award, 'Q2 - Utafiti Anga': Award, 'Q3 - Utafiti Anga': Award, 'Q4 - Utafiti Anga': Award, 'Q5 - Utafiti Anga': Award,
     'Default': Package
 };
 
@@ -337,12 +341,12 @@ const itemCategorization: Record<string, string> = {
     'Heat Shield': 'Space',
 
     // Research
-    'Utafiti wa Kilimo': 'Utafiti',
-    'Utafiti wa Ujenzi': 'Utafiti',
-    'Utafiti wa Nguo': 'Utafiti',
-    'Utafiti wa Electroniki': 'Utafiti',
-    'Utafiti wa Usafiri': 'Utafiti',
-    'Utafiti wa Anga': 'Utafiti',
+    'Q1 - Utafiti Kilimo': 'Utafiti', 'Q2 - Utafiti Kilimo': 'Utafiti', 'Q3 - Utafiti Kilimo': 'Utafiti', 'Q4 - Utafiti Kilimo': 'Utafiti', 'Q5 - Utafiti Kilimo': 'Utafiti',
+    'Q1 - Utafiti Ujenzi': 'Utafiti', 'Q2 - Utafiti Ujenzi': 'Utafiti', 'Q3 - Utafiti Ujenzi': 'Utafiti', 'Q4 - Utafiti Ujenzi': 'Utafiti', 'Q5 - Utafiti Ujenzi': 'Utafiti',
+    'Q1 - Utafiti Nguo': 'Utafiti', 'Q2 - Utafiti Nguo': 'Utafiti', 'Q3 - Utafiti Nguo': 'Utafiti', 'Q4 - Utafiti Nguo': 'Utafiti', 'Q5 - Utafiti Nguo': 'Utafiti',
+    'Q1 - Utafiti Electroniki': 'Utafiti', 'Q2 - Utafiti Electroniki': 'Utafiti', 'Q3 - Utafiti Electroniki': 'Utafiti', 'Q4 - Utafiti Electroniki': 'Utafiti', 'Q5 - Utafiti Electroniki': 'Utafiti',
+    'Q1 - Utafiti Usafiri': 'Utafiti', 'Q2 - Utafiti Usafiri': 'Utafiti', 'Q3 - Utafiti Usafiri': 'Utafiti', 'Q4 - Utafiti Usafiri': 'Utafiti', 'Q5 - Utafiti Usafiri': 'Utafiti',
+    'Q1 - Utafiti Anga': 'Utafiti', 'Q2 - Utafiti Anga': 'Utafiti', 'Q3 - Utafiti Anga': 'Utafiti', 'Q4 - Utafiti Anga': 'Utafiti', 'Q5 - Utafiti Anga': 'Utafiti',
 };
 
 // Auto-categorize Machines and Licenses

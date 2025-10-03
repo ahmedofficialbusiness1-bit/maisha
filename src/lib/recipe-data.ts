@@ -243,11 +243,41 @@ export const recipes: Recipe[] = [
   { id: 'heat_shield', buildingId: 'kiwanda_cha_anga', output: { name: 'Heat Shield', quantity: 1 }, inputs: [{ name: 'K7 Mashine', quantity: 2 }, { name: 'Nondo', quantity: 2000 }] },
   { id: 'roketi', buildingId: 'kiwanda_cha_roketi', output: { name: 'Roketi', quantity: 1 }, inputs: [{ name: 'Fuselage', quantity: 2 }, { name: 'Wings', quantity: 8 }, { name: 'Tarakilishi', quantity: 2 }, { name: 'Cockpit', quantity: 2 }, { name: 'Attitude Control', quantity: 8 }, { name: 'Rocket Engine', quantity: 8 }, { name: 'Heat Shield', quantity: 2 }] },
 
-  // Research Recipes
-  { id: 'utafiti_kilimo', buildingId: 'utafiti_kilimo', output: { name: 'Utafiti wa Kilimo', quantity: 10 }, inputs: researchRecipeInputs(10000) },
-  { id: 'utafiti_ujenzi', buildingId: 'utafiti_ujenzi', output: { name: 'Utafiti wa Ujenzi', quantity: 10 }, inputs: researchRecipeInputs(15000) },
-  { id: 'utafiti_nguo', buildingId: 'utafiti_nguo', output: { name: 'Utafiti wa Nguo', quantity: 10 }, inputs: researchRecipeInputs(20000) },
-  { id: 'utafiti_electroniki', buildingId: 'utafiti_electroniki', output: { name: 'Utafiti wa Electroniki', quantity: 10 }, inputs: researchRecipeInputs(50000) },
-  { id: 'utafiti_usafiri', buildingId: 'utafiti_usafiri', output: { name: 'Utafiti wa Usafiri', quantity: 10 }, inputs: researchRecipeInputs(100000) },
-  { id: 'utafiti_anga', buildingId: 'utafiti_anga', output: { name: 'Utafiti wa Anga', quantity: 10 }, inputs: researchRecipeInputs(500000) },
+  // Research Recipes - Tiered Quality
+  // Kilimo
+  { id: 'q1_kilimo', buildingId: 'utafiti_kilimo', output: { name: 'Q1 - Utafiti Kilimo', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 100 }, { name: 'Umeme', quantity: 100 }] },
+  { id: 'q2_kilimo', buildingId: 'utafiti_kilimo', output: { name: 'Q2 - Utafiti Kilimo', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 200 }, { name: 'Umeme', quantity: 200 }, { name: 'Q1 - Utafiti Kilimo', quantity: 10 }] },
+  { id: 'q3_kilimo', buildingId: 'utafiti_kilimo', output: { name: 'Q3 - Utafiti Kilimo', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 400 }, { name: 'Umeme', quantity: 400 }, { name: 'Q2 - Utafiti Kilimo', quantity: 10 }] },
+  { id: 'q4_kilimo', buildingId: 'utafiti_kilimo', output: { name: 'Q4 - Utafiti Kilimo', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 800 }, { name: 'Umeme', quantity: 800 }, { name: 'Q3 - Utafiti Kilimo', quantity: 10 }] },
+  { id: 'q5_kilimo', buildingId: 'utafiti_kilimo', output: { name: 'Q5 - Utafiti Kilimo', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 1600 }, { name: 'Umeme', quantity: 1600 }, { name: 'Q4 - Utafiti Kilimo', quantity: 10 }] },
+  // Ujenzi
+  { id: 'q1_ujenzi', buildingId: 'utafiti_ujenzi', output: { name: 'Q1 - Utafiti Ujenzi', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 100 }, { name: 'Umeme', quantity: 100 }] },
+  { id: 'q2_ujenzi', buildingId: 'utafiti_ujenzi', output: { name: 'Q2 - Utafiti Ujenzi', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 200 }, { name: 'Umeme', quantity: 200 }, { name: 'Q1 - Utafiti Ujenzi', quantity: 10 }] },
+  { id: 'q3_ujenzi', buildingId: 'utafiti_ujenzi', output: { name: 'Q3 - Utafiti Ujenzi', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 400 }, { name: 'Umeme', quantity: 400 }, { name: 'Q2 - Utafiti Ujenzi', quantity: 10 }] },
+  { id: 'q4_ujenzi', buildingId: 'utafiti_ujenzi', output: { name: 'Q4 - Utafiti Ujenzi', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 800 }, { name: 'Umeme', quantity: 800 }, { name: 'Q3 - Utafiti Ujenzi', quantity: 10 }] },
+  { id: 'q5_ujenzi', buildingId: 'utafiti_ujenzi', output: { name: 'Q5 - Utafiti Ujenzi', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 1600 }, { name: 'Umeme', quantity: 1600 }, { name: 'Q4 - Utafiti Ujenzi', quantity: 10 }] },
+  // Nguo
+  { id: 'q1_nguo', buildingId: 'utafiti_nguo', output: { name: 'Q1 - Utafiti Nguo', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 100 }, { name: 'Umeme', quantity: 100 }] },
+  { id: 'q2_nguo', buildingId: 'utafiti_nguo', output: { name: 'Q2 - Utafiti Nguo', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 200 }, { name: 'Umeme', quantity: 200 }, { name: 'Q1 - Utafiti Nguo', quantity: 10 }] },
+  { id: 'q3_nguo', buildingId: 'utafiti_nguo', output: { name: 'Q3 - Utafiti Nguo', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 400 }, { name: 'Umeme', quantity: 400 }, { name: 'Q2 - Utafiti Nguo', quantity: 10 }] },
+  { id: 'q4_nguo', buildingId: 'utafiti_nguo', output: { name: 'Q4 - Utafiti Nguo', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 800 }, { name: 'Umeme', quantity: 800 }, { name: 'Q3 - Utafiti Nguo', quantity: 10 }] },
+  { id: 'q5_nguo', buildingId: 'utafiti_nguo', output: { name: 'Q5 - Utafiti Nguo', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 1600 }, { name: 'Umeme', quantity: 1600 }, { name: 'Q4 - Utafiti Nguo', quantity: 10 }] },
+  // Electroniki
+  { id: 'q1_electroniki', buildingId: 'utafiti_electroniki', output: { name: 'Q1 - Utafiti Electroniki', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 100 }, { name: 'Umeme', quantity: 100 }] },
+  { id: 'q2_electroniki', buildingId: 'utafiti_electroniki', output: { name: 'Q2 - Utafiti Electroniki', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 200 }, { name: 'Umeme', quantity: 200 }, { name: 'Q1 - Utafiti Electroniki', quantity: 10 }] },
+  { id: 'q3_electroniki', buildingId: 'utafiti_electroniki', output: { name: 'Q3 - Utafiti Electroniki', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 400 }, { name: 'Umeme', quantity: 400 }, { name: 'Q2 - Utafiti Electroniki', quantity: 10 }] },
+  { id: 'q4_electroniki', buildingId: 'utafiti_electroniki', output: { name: 'Q4 - Utafiti Electroniki', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 800 }, { name: 'Umeme', quantity: 800 }, { name: 'Q3 - Utafiti Electroniki', quantity: 10 }] },
+  { id: 'q5_electroniki', buildingId: 'utafiti_electroniki', output: { name: 'Q5 - Utafiti Electroniki', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 1600 }, { name: 'Umeme', quantity: 1600 }, { name: 'Q4 - Utafiti Electroniki', quantity: 10 }] },
+  // Usafiri
+  { id: 'q1_usafiri', buildingId: 'utafiti_usafiri', output: { name: 'Q1 - Utafiti Usafiri', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 100 }, { name: 'Umeme', quantity: 100 }] },
+  { id: 'q2_usafiri', buildingId: 'utafiti_usafiri', output: { name: 'Q2 - Utafiti Usafiri', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 200 }, { name: 'Umeme', quantity: 200 }, { name: 'Q1 - Utafiti Usafiri', quantity: 10 }] },
+  { id: 'q3_usafiri', buildingId: 'utafiti_usafiri', output: { name: 'Q3 - Utafiti Usafiri', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 400 }, { name: 'Umeme', quantity: 400 }, { name: 'Q2 - Utafiti Usafiri', quantity: 10 }] },
+  { id: 'q4_usafiri', buildingId: 'utafiti_usafiri', output: { name: 'Q4 - Utafiti Usafiri', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 800 }, { name: 'Umeme', quantity: 800 }, { name: 'Q3 - Utafiti Usafiri', quantity: 10 }] },
+  { id: 'q5_usafiri', buildingId: 'utafiti_usafiri', output: { name: 'Q5 - Utafiti Usafiri', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 1600 }, { name: 'Umeme', quantity: 1600 }, { name: 'Q4 - Utafiti Usafiri', quantity: 10 }] },
+  // Anga
+  { id: 'q1_anga', buildingId: 'utafiti_anga', output: { name: 'Q1 - Utafiti Anga', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 100 }, { name: 'Umeme', quantity: 100 }] },
+  { id: 'q2_anga', buildingId: 'utafiti_anga', output: { name: 'Q2 - Utafiti Anga', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 200 }, { name: 'Umeme', quantity: 200 }, { name: 'Q1 - Utafiti Anga', quantity: 10 }] },
+  { id: 'q3_anga', buildingId: 'utafiti_anga', output: { name: 'Q3 - Utafiti Anga', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 400 }, { name: 'Umeme', quantity: 400 }, { name: 'Q2 - Utafiti Anga', quantity: 10 }] },
+  { id: 'q4_anga', buildingId: 'utafiti_anga', output: { name: 'Q4 - Utafiti Anga', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 800 }, { name: 'Umeme', quantity: 800 }, { name: 'Q3 - Utafiti Anga', quantity: 10 }] },
+  { id: 'q5_anga', buildingId: 'utafiti_anga', output: { name: 'Q5 - Utafiti Anga', quantity: 10 }, inputs: [{ name: 'Maji', quantity: 1600 }, { name: 'Umeme', quantity: 1600 }, { name: 'Q4 - Utafiti Anga', quantity: 10 }] },
 ];
