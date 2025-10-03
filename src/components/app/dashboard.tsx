@@ -946,6 +946,8 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         handleOpenBoostDialog(index);
     } else if (slot.building && !slot.activity) {
         handleOpenManagementDialog(index);
+    } else if (!slot.building) {
+        handleOpenBuildDialog(index);
     }
   }
 
@@ -1010,16 +1012,14 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
             if (slot.locked) {
                 const cost = calculateUnlockCost(index);
                 return (
-                    <Card
+                     <Card
                       key={index}
                       onClick={() => handleCardClick(slot, index)}
                       className="flex flex-col items-center justify-between h-32 bg-gray-800/80 border-2 border-dashed border-gray-700 hover:border-yellow-500 transition-colors overflow-hidden group relative cursor-pointer aspect-square p-2"
                     >
-                      <div className="w-full h-full flex items-center justify-center">
-                          <Lock className="h-10 w-10 text-yellow-400/80" />
-                      </div>
-                      <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
-                          <p className="text-xs font-bold truncate text-yellow-300 flex items-center justify-center gap-1">
+                      <div className="w-full h-full flex flex-col items-center justify-center text-center">
+                          <Lock className="h-10 w-10 text-yellow-400/80 mb-2" />
+                           <p className="text-xs font-bold text-yellow-300 flex items-center justify-center gap-1">
                             {cost.toLocaleString()} <Star className="h-3 w-3" />
                           </p>
                       </div>
