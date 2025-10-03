@@ -5,7 +5,7 @@ import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
-import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type ContractListing } from '@/components/app/trade-market';
+import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type ContractListing, type MarketShareListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { buildingData } from '@/lib/building-data';
@@ -67,6 +67,7 @@ export function Game() {
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [playerListings, setPlayerListings] = React.useState<PlayerListing[]>([]);
   const [contractListings, setContractListings] = React.useState<ContractListing[]>([]);
+  const [marketShareListings, setMarketShareListings] = React.useState<MarketShareListing[]>([]);
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
@@ -89,6 +90,7 @@ export function Game() {
   const playerPublicRef = React.useMemo(() => user ? ref(database, `players/${user.uid}`) : null, [database, user]);
   const marketRef = React.useMemo(() => ref(database, 'market'), [database]);
   const contractsRef = React.useMemo(() => ref(database, 'contracts'), [database]);
+  const marketSharesRef = React.useMemo(() => ref(database, 'marketShares'), [database]);
   const chatMetadataRef = React.useMemo(() => ref(database, 'chat-metadata'), [database]);
 
   
@@ -137,9 +139,9 @@ export function Game() {
             }
              // Retroactively add company profile if it's missing
             if (!data.companyProfile) {
-                const initialDataForProfile = getInitialUserData(user.uid, data.username, null);
-                data.companyProfile = initialDataForProfile.companyProfile;
-                // Save the updated data back to Firebase
+                const initialData = getInitialUserData(user.uid, data.username, null);
+                data.companyProfile = initialData.companyProfile;
+                 // Save the updated data back to Firebase
                 saveUserData(userRef, data);
             }
             setGameState(data);
@@ -213,6 +215,19 @@ export function Game() {
     });
     return () => unsubscribe();
   }, [contractsRef]);
+
+    // Listen for market share changes
+  React.useEffect(() => {
+    if (!marketSharesRef) return;
+    const unsubscribe = onValue(marketSharesRef, (snapshot) => {
+        const listings: MarketShareListing[] = [];
+        snapshot.forEach(childSnapshot => {
+            listings.push({ orderId: childSnapshot.key!, ...childSnapshot.val() } as MarketShareListing);
+        });
+        setMarketShareListings(listings);
+    });
+    return () => unsubscribe();
+  }, [marketSharesRef]);
 
 
   // Update public player data (RTDB) whenever critical info changes
@@ -827,6 +842,65 @@ export function Game() {
     });
   }, [userRef, companyData, user, database]);
 
+   const handlePostStockOrder = (ticker: string, shares: number, pricePerShare: number) => {
+    if (!user || !userRef || !gameState) return;
+
+    runTransaction(userRef, (currentData) => {
+        if (!currentData) return;
+
+        const playerStock = (currentData.playerStocks || []).find(s => s.ticker === ticker);
+        if (!playerStock || playerStock.shares < shares) {
+            toast({ variant: 'destructive', title: 'Insufficient Shares', description: 'You do not have enough shares to place this order.'});
+            return;
+        }
+
+        playerStock.shares -= shares;
+        if (playerStock.shares === 0) {
+            currentData.playerStocks = currentData.playerStocks.filter((s: PlayerStock) => s.ticker !== ticker);
+        }
+
+        return currentData;
+    }).then(transactionResult => {
+        if (!transactionResult.committed) {
+             return;
+        }
+        const companyInfo = companyData.find(c => c.ticker === ticker) || gameState.companyProfile;
+
+        const newOrderRef = push(marketSharesRef);
+        const newOrder: Omit<MarketShareListing, 'orderId'> = {
+            sellerUid: user.uid,
+            sellerName: gameState.username,
+            sellerAvatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
+            companyId: ticker,
+            companyName: companyInfo.companyName,
+            sharesAmount: shares,
+            pricePerShare,
+            status: 'open',
+            orderType: 'sell',
+            createdAt: Date.now(),
+        };
+
+        set(newOrderRef, newOrder).then(() => {
+            toast({ title: 'Stock Order Posted', description: `Your sell order for ${shares}x ${ticker} has been placed on the market.` });
+        }).catch(error => {
+            console.error("Failed to post stock order:", error);
+            // Revert stock change on failure
+            runTransaction(userRef, (currentData) => {
+                if (currentData) {
+                    const playerStock = (currentData.playerStocks || []).find(s => s.ticker === ticker);
+                    if(playerStock) {
+                        playerStock.shares += shares;
+                    } else {
+                        currentData.playerStocks.push({ ticker, shares });
+                    }
+                }
+                return currentData;
+            });
+            toast({ variant: 'destructive', title: 'Failed to List Stock Order' });
+        });
+    });
+  };
+
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
      if (!user || !gameState || !userRef || quantity <= 0 || quantity > item.quantity) return;
@@ -857,7 +931,7 @@ export function Game() {
              seller: gameState.username,
              sellerUid: user.uid,
              avatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-             quality: 1, // Default quality
+             quality: productInfo?.properties.find(p => p.label === 'Quality')?.value ? parseInt(productInfo.properties.find(p => p.label === 'Quality')!.value) : 1,
              imageHint: productInfo?.imageHint || 'product photo'
          };
 
@@ -1485,9 +1559,9 @@ export function Game() {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots || []} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} />;
+        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onPostStockOrder={handlePostStockOrder} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':

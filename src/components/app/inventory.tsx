@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -77,6 +75,7 @@ interface InventoryProps {
   onRejectContract: (contract: ContractListing) => void;
   onCancelContract: (contract: ContractListing) => void;
   onSellStock: (ticker: string, shares: number) => void;
+  onPostStockOrder: (ticker: string, shares: number, pricePerShare: number) => void;
   currentUserId: string;
   currentUsername: string;
   companyProfile: CompanyProfile;
@@ -514,12 +513,12 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
 function CompanyInventoryView({ companyProfile, netWorth }: Pick<InventoryProps, 'companyProfile' | 'netWorth'>) {
     if (!companyProfile) {
         return (
-            <Card className="bg-gray-800/60 border-gray-700">
+            <Card className="bg-gray-800/60 border-gray-700 text-white">
                 <CardHeader>
                     <CardTitle>Maelezo ya Kampuni</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p>Subiri, taarifa za kampuni zinapakiwa...</p>
+                    <p>Maelezo ya kampuni yanapatikana.</p>
                 </CardContent>
             </Card>
         );
@@ -550,15 +549,6 @@ function CompanyInventoryView({ companyProfile, netWorth }: Pick<InventoryProps,
                   <div className="text-gray-300 font-bold">Thamani ya Soko</div>
                   <div className="font-mono text-right font-bold text-blue-300">${netWorth.toLocaleString()}</div>
               </div>
-              
-              <Alert variant="default" className="bg-blue-600/10 border-blue-500/30">
-                  <Info className="h-4 w-4 text-blue-300" />
-                  <AlertTitle className="text-blue-300">Uuzaji wa Hisa (IPO)</AlertTitle>
-                  <AlertDescription className="text-blue-400">
-                      Sheria na kanuni za jinsi ya kuuza hisa za kampuni yako kwa umma (IPO) zitakuja hivi karibuni. Endelea kufuatilia!
-                  </AlertDescription>
-              </Alert>
-
           </CardContent>
       </Card>
     </>
@@ -566,10 +556,12 @@ function CompanyInventoryView({ companyProfile, netWorth }: Pick<InventoryProps,
 }
 
 
-function StocksInventoryView({ playerStocks, stockListings, onSellStock }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock'>) {
+function StocksInventoryView({ playerStocks, stockListings, onPostStockOrder }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onPostStockOrder'>) {
   const [selectedStock, setSelectedStock] = React.useState<{ stock: PlayerStock, details: StockListing } | null>(null);
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
   const [sellQuantity, setSellQuantity] = React.useState(1);
+  const [sellPrice, setSellPrice] = React.useState(0);
+
 
   const ownedStocksWithDetails = React.useMemo(() => {
     return (playerStocks || [])
@@ -583,12 +575,13 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock }: Pick<
   const handleOpenSellDialog = (stock: { stock: PlayerStock, details: StockListing }) => {
     setSelectedStock(stock);
     setSellQuantity(1);
+    setSellPrice(stock.details.stockPrice); // Pre-fill with current market price
     setIsSellDialogOpen(true);
   };
 
   const handleConfirmSell = () => {
     if (selectedStock) {
-      onSellStock(selectedStock.stock.ticker, sellQuantity);
+      onPostStockOrder(selectedStock.stock.ticker, sellQuantity, sellPrice);
       setIsSellDialogOpen(false);
     }
   };
@@ -651,25 +644,15 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock }: Pick<
       <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
         <DialogContent className="bg-gray-900 border-gray-700 text-white">
           <DialogHeader>
-            <DialogTitle>Uza Hisa za {selectedStock?.details.ticker}</DialogTitle>
+            <DialogTitle>Uza Hisa za {selectedStock?.details.ticker} Sokoni</DialogTitle>
             <DialogDescription>
-              Chagua kiasi cha hisa unachotaka kuuza kwa bei ya sasa ya soko.
+              Weka kiasi cha hisa na bei unayotaka kuuza. Hii itaweka oda ya kuuza sokoni.
             </DialogDescription>
           </DialogHeader>
           {selectedStock && (
             <div className="py-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                 <div className="p-3 bg-gray-800 rounded-lg">
-                    <p className='text-sm text-gray-400'>Hisa Unazomiliki</p>
-                    <p className='font-bold font-mono text-lg'>{selectedStock.stock.shares.toLocaleString()}</p>
-                 </div>
-                  <div className="p-3 bg-gray-800 rounded-lg">
-                    <p className='text-sm text-gray-400'>Bei ya Sasa</p>
-                    <p className='font-bold font-mono text-lg'>${selectedStock.details.stockPrice.toFixed(2)}</p>
-                 </div>
-              </div>
               <div>
-                <Label htmlFor="sell-quantity">Kiasi cha Kuuza</Label>
+                <Label htmlFor="sell-quantity">Kiasi cha Kuuza (Una: {selectedStock.stock.shares.toLocaleString()})</Label>
                 <Input
                   id="sell-quantity"
                   type="number"
@@ -680,11 +663,23 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock }: Pick<
                   className="bg-gray-800 border-gray-600 mt-1"
                 />
               </div>
+               <div>
+                <Label htmlFor="sell-price">Bei kwa Hisa (Price/Share)</Label>
+                <Input
+                  id="sell-price"
+                  type="number"
+                  step="0.01"
+                  value={sellPrice}
+                  onChange={(e) => setSellPrice(Number(e.target.value))}
+                  className="bg-gray-800 border-gray-600 mt-1"
+                />
+                 <p className="text-xs text-gray-400 mt-1">Bei ya sasa sokoni: ${selectedStock.details.stockPrice.toFixed(2)}</p>
+              </div>
               <Separator className="bg-gray-700"/>
               <div className="text-center">
-                <p className="text-lg font-bold">Jumla ya Mapato</p>
-                <p className="text-2xl font-mono text-green-400">${(sellQuantity * selectedStock.details.stockPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-                <p className="text-xs text-gray-500 mt-1">Utauza hisa zako moja kwa moja sokoni.</p>
+                <p className="text-lg font-bold">Jumla ya Thamani ya Oda</p>
+                <p className="text-2xl font-mono text-green-400">${(sellQuantity * sellPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="text-xs text-gray-500 mt-1">Oda yako itaonekana kwenye soko la hisa.</p>
               </div>
             </div>
           )}
@@ -693,9 +688,9 @@ function StocksInventoryView({ playerStocks, stockListings, onSellStock }: Pick<
             <Button 
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={handleConfirmSell}
-              disabled={!selectedStock || sellQuantity <= 0 || sellQuantity > selectedStock.stock.shares}
+              disabled={!selectedStock || sellQuantity <= 0 || sellQuantity > selectedStock.stock.shares || sellPrice <= 0}
             >
-              Thibitisha Mauzo
+              Weka Oda ya Kuuza
             </Button>
           </DialogFooter>
         </DialogContent>

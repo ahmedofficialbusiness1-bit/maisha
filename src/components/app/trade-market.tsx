@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark, FileSignature, Building, Crown } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark, FileSignature, Building, Crown, Package, Briefcase } from 'lucide-react';
 import type { InventoryItem } from './inventory';
 import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
 import { cn } from '@/lib/utils';
@@ -60,6 +60,20 @@ export type ContractListing = {
   buyerName?: string;
 };
 
+export type MarketShareListing = {
+    orderId: string;
+    sellerUid: string;
+    sellerName: string;
+    sellerAvatar: string;
+    buyerUid?: string;
+    companyId: string; // Ticker
+    companyName: string;
+    sharesAmount: number;
+    pricePerShare: number;
+    status: 'open' | 'completed' | 'cancelled';
+    orderType: 'buy' | 'sell';
+    createdAt: number;
+};
 
 
 export type StockListing = {
@@ -150,9 +164,10 @@ interface TradeMarketProps {
   onBuyStock: (stock: StockListing, quantity: number) => void;
   onBuyFromMarket: (listing: PlayerListing, quantity: number) => void;
   playerName: string;
+  marketShareListings: MarketShareListing[];
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName, marketShareListings }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -663,6 +678,20 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
     </div>
     );
 
+    const renderStockExchange = () => (
+         <div className="p-1 sm:p-2 md:p-4 lg:p-6">
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Soko la Hisa la Wachezaji</CardTitle>
+                    <CardDescription>Ona oda za kununua na kuuza hisa kutoka kwa wachezaji wengine.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-gray-400">Inakuja hivi karibuni...</p>
+                </CardContent>
+            </Card>
+        </div>
+    );
+
 
   return (
     <>
@@ -671,9 +700,10 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
       
         <Tabs defaultValue="commodities" className="w-full pt-4">
             <div className="px-4 sm:px-6">
-                <TabsList className="grid w-full grid-cols-4 bg-gray-800/80">
-                    <TabsTrigger value="commodities"><LandPlot className='mr-2 h-4 w-4'/>Bidhaa</TabsTrigger>
-                    <TabsTrigger value="stocks"><Landmark className='mr-2 h-4 w'/>Hisa</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-5 bg-gray-800/80">
+                    <TabsTrigger value="commodities"><Package className='mr-2 h-4 w-4'/>Bidhaa</TabsTrigger>
+                    <TabsTrigger value="stocks-ipo"><Landmark className='mr-2 h-4 w'/>Hisa (IPO)</TabsTrigger>
+                    <TabsTrigger value="stock-exchange"><Briefcase className='mr-2 h-4 w'/>Soko la Hisa</TabsTrigger>
                     <TabsTrigger value="bonds"><FileText className='mr-2 h-4 w-4'/>Hatifungani</TabsTrigger>
                     <TabsTrigger value="presidency"><Crown className='mr-2 h-4 w-4'/>Urais</TabsTrigger>
                 </TabsList>
@@ -681,8 +711,11 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             <TabsContent value="commodities" className="mt-4">
                 {renderCommoditiesMarket()}
             </TabsContent>
-            <TabsContent value="stocks" className="mt-4">
+            <TabsContent value="stocks-ipo" className="mt-4">
                 {renderStocksMarket()}
+            </TabsContent>
+            <TabsContent value="stock-exchange" className="mt-4">
+                {renderStockExchange()}
             </TabsContent>
             <TabsContent value="bonds" className="mt-4">
                 {renderBondsMarket()}
