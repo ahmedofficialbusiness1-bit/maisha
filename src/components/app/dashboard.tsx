@@ -647,7 +647,7 @@ interface DashboardProps {
     onBoostConstruction: (slotIndex: number, starsToUse: number) => void;
     onUpgradeBuilding: (slotIndex: number) => void;
     onDemolishBuilding: (slotIndex: number) => void;
-    onBuyMaterial: (materialName: string, quantity: number) => boolean;
+    onBuyMaterial: (materialName: string, quantity: number) => Promise<boolean>;
     onUnlockSlot: (slotIndex: number) => void;
 }
 
@@ -1372,7 +1372,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                                                 {needed.toLocaleString()}x {input.name} (Una: {has.toLocaleString()})
                                             </span>
                                             {!hasEnough && (
-                                                <Button size="sm" variant="secondary" className="h-6 px-2" onClick={() => onBuyMaterial(input.name, needed - has)}>
+                                                <Button size="sm" variant="secondary" className="h-6 px-2" onClick={async () => await onBuyMaterial(input.name, needed - has)}>
                                                     Nunua
                                                 </Button>
                                             )}

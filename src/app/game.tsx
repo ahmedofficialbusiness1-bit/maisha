@@ -671,14 +671,20 @@ export function Game() {
         }
     };
 
-    const buyFromSystem = (materialName: string, quantity: number): boolean => {
-        if (!userRef || !user) return false;
+    const buyFromSystem = (materialName: string, quantity: number): Promise<boolean> => {
+      return new Promise((resolve) => {
+        if (!userRef || !user) {
+            resolve(false);
+            return;
+        }
         const costPerUnit = calculatedPrices[materialName] || 0;
-        if (costPerUnit === 0) return false;
+        if (costPerUnit === 0) {
+            resolve(false);
+            return;
+        }
 
         const totalCost = costPerUnit * quantity;
 
-        let success = false;
         runTransaction(userRef, (currentData) => {
             if (!currentData || currentData.money < totalCost) {
                 toast({ variant: 'destructive', title: "Fedha Hazitoshi", description: `Unahitaji $${totalCost.toFixed(2)} kununua hivi.` });
@@ -711,14 +717,16 @@ export function Game() {
             currentData.transactions = { ...currentData.transactions, [newTransaction.id]: newTransaction };
             currentData.notifications = { ...currentData.notifications, [newNotification.id]: newNotification };
             
-            success = true;
             return currentData;
-        });
-
-        if (success) {
-            toast({ title: 'Manunuzi Yamefanikiwa', description: `Umenunua ${quantity}x ${materialName}.` });
-        }
-        return success;
+        }).then(({ committed }) => {
+            if (committed) {
+                toast({ title: 'Manunuzi Yamefanikiwa', description: `Umenunua ${quantity}x ${materialName}.` });
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        }).catch(() => resolve(false));
+      });
     }
 
 
