@@ -4,7 +4,7 @@ import { app } from './config';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getDatabase } from 'firebase/database';
-import { FirebaseProvider, useFirebase, useAuth, useFirestore, useFirebaseApp, useDatabase } from './provider';
+import { FirebaseProvider, useFirebase, useAuth, useFirestore, useFirebaseApp } from './provider';
 import { FirebaseClientProvider } from './client-provider';
 import { useUser } from './auth/use-user';
 import { useDoc } from './firestore/use-doc';
@@ -32,5 +32,4 @@ export {
   useAuth,
   useFirestore,
   useFirebaseApp,
-  useDatabase
 };
