@@ -75,7 +75,7 @@ interface InventoryProps {
   onRejectContract: (contract: ContractListing) => void;
   onCancelContract: (contract: ContractListing) => void;
   onSellStock: (ticker: string, shares: number) => void;
-  onPostStockOrder: (ticker: string, shares: number, pricePerShare: number) => void;
+  onIssueShares: (sharesToSell: number, pricePerShare: number) => void;
   currentUserId: string;
   currentUsername: string;
   companyProfile: CompanyProfile;
@@ -510,7 +510,11 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
     );
 }
 
-function CompanyInventoryView({ companyProfile, netWorth }: Pick<InventoryProps, 'companyProfile' | 'netWorth'>) {
+function CompanyInventoryView({ companyProfile, netWorth, onIssueShares }: Pick<InventoryProps, 'companyProfile' | 'netWorth' | 'onIssueShares'>) {
+    const [isIpoDialogOpen, setIsIpoDialogOpen] = React.useState(false);
+    const [sharesToSell, setSharesToSell] = React.useState(10000);
+    const [pricePerShare, setPricePerShare] = React.useState(10);
+    
     if (!companyProfile) {
         return (
             <Card className="bg-gray-800/60 border-gray-700 text-white">
@@ -523,6 +527,15 @@ function CompanyInventoryView({ companyProfile, netWorth }: Pick<InventoryProps,
             </Card>
         );
     }
+    
+    const maxSharesToSell = companyProfile.totalShares - 200000;
+    const currentlyAvailableToSell = companyProfile.availableShares - 200000;
+
+    const handleConfirmIPO = () => {
+        onIssueShares(sharesToSell, pricePerShare);
+        setIsIpoDialogOpen(false);
+    }
+
 
   return (
     <>
@@ -543,24 +556,81 @@ function CompanyInventoryView({ companyProfile, netWorth }: Pick<InventoryProps,
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-4">
                   <div className="text-gray-400">Jumla ya Hisa</div>
                   <div className="font-mono text-right">{companyProfile.totalShares.toLocaleString()}</div>
+                  <div className="text-gray-400">Hisa Zinazopatikana Kuuzwa</div>
+                  <div className="font-mono text-right">{currentlyAvailableToSell > 0 ? currentlyAvailableToSell.toLocaleString() : 0}</div>
                   <div className="text-gray-400">Bei ya Hisa (Kadirio)</div>
                   <div className="font-mono text-right">${companyProfile.sharePrice.toFixed(2)}</div>
                   <Separator className="col-span-2 bg-gray-700 my-1"/>
                   <div className="text-gray-300 font-bold">Thamani ya Soko</div>
                   <div className="font-mono text-right font-bold text-blue-300">${netWorth.toLocaleString()}</div>
               </div>
+               <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setIsIpoDialogOpen(true)} disabled={currentlyAvailableToSell <= 0}>
+                Toa Hisa Sokoni (IPO)
+              </Button>
           </CardContent>
       </Card>
+       <Dialog open={isIpoDialogOpen} onOpenChange={setIsIpoDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Toa Hisa za {companyProfile.ticker} Sokoni</DialogTitle>
+            <DialogDescription>
+              Weka idadi ya hisa unazotaka kuuza kwa umma na bei kwa kila hisa. Hii itakuongezea pesa taslimu.
+            </DialogDescription>
+          </DialogHeader>
+            <div className="py-4 space-y-4">
+              <div>
+                <Label htmlFor="ipo-quantity">Idadi ya Hisa za Kuuza (Max: {currentlyAvailableToSell.toLocaleString()})</Label>
+                <Input
+                  id="ipo-quantity"
+                  type="number"
+                  min="1"
+                  max={currentlyAvailableToSell}
+                  value={sharesToSell}
+                  onChange={(e) => setSharesToSell(Math.max(1, Math.min(Number(e.target.value), currentlyAvailableToSell)))}
+                  className="bg-gray-800 border-gray-600 mt-1"
+                />
+              </div>
+               <div>
+                <Label htmlFor="ipo-price">Bei kwa Hisa (Price/Share)</Label>
+                <Input
+                  id="ipo-price"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={pricePerShare}
+                  onChange={(e) => setPricePerShare(Number(e.target.value))}
+                  className="bg-gray-800 border-gray-600 mt-1"
+                />
+                 <p className="text-xs text-gray-400 mt-1">Bei ya sasa ya kadirio: ${companyProfile.sharePrice.toFixed(2)}</p>
+              </div>
+              <Separator className="bg-gray-700"/>
+              <div className="text-center">
+                <p className="text-lg font-bold">Jumla ya Pesa utakayopata</p>
+                <p className="text-2xl font-mono text-green-400">${(sharesToSell * pricePerShare).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="text-xs text-gray-500 mt-1">Hisa hizi zitawekwa kwenye soko la umma (IPO).</p>
+              </div>
+            </div>
+          <DialogFooter>
+             <Button variant="outline" onClick={() => setIsIpoDialogOpen(false)}>Ghairi</Button>
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={handleConfirmIPO}
+              disabled={sharesToSell <= 0 || sharesToSell > currentlyAvailableToSell || pricePerShare <= 0}
+            >
+              Thibitisha Uuzaji
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
 
 
-function StocksInventoryView({ playerStocks, stockListings, onPostStockOrder }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onPostStockOrder'>) {
+function StocksInventoryView({ playerStocks, stockListings, onSellStock }: Pick<InventoryProps, 'playerStocks' | 'stockListings' | 'onSellStock'>) {
   const [selectedStock, setSelectedStock] = React.useState<{ stock: PlayerStock, details: StockListing } | null>(null);
   const [isSellDialogOpen, setIsSellDialogOpen] = React.useState(false);
   const [sellQuantity, setSellQuantity] = React.useState(1);
-  const [sellPrice, setSellPrice] = React.useState(0);
 
 
   const ownedStocksWithDetails = React.useMemo(() => {
@@ -575,13 +645,12 @@ function StocksInventoryView({ playerStocks, stockListings, onPostStockOrder }: 
   const handleOpenSellDialog = (stock: { stock: PlayerStock, details: StockListing }) => {
     setSelectedStock(stock);
     setSellQuantity(1);
-    setSellPrice(stock.details.stockPrice); // Pre-fill with current market price
     setIsSellDialogOpen(true);
   };
 
   const handleConfirmSell = () => {
     if (selectedStock) {
-      onPostStockOrder(selectedStock.stock.ticker, sellQuantity, sellPrice);
+      onSellStock(selectedStock.stock.ticker, sellQuantity);
       setIsSellDialogOpen(false);
     }
   };
@@ -644,9 +713,9 @@ function StocksInventoryView({ playerStocks, stockListings, onPostStockOrder }: 
       <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
         <DialogContent className="bg-gray-900 border-gray-700 text-white">
           <DialogHeader>
-            <DialogTitle>Uza Hisa za {selectedStock?.details.ticker} Sokoni</DialogTitle>
+            <DialogTitle>Uza Hisa za {selectedStock?.details.ticker}</DialogTitle>
             <DialogDescription>
-              Weka kiasi cha hisa na bei unayotaka kuuza. Hii itaweka oda ya kuuza sokoni.
+              Weka kiasi cha hisa unachotaka kuuza. Hisa zitauzwa kwa bei ya sasa ya soko.
             </DialogDescription>
           </DialogHeader>
           {selectedStock && (
@@ -663,23 +732,11 @@ function StocksInventoryView({ playerStocks, stockListings, onPostStockOrder }: 
                   className="bg-gray-800 border-gray-600 mt-1"
                 />
               </div>
-               <div>
-                <Label htmlFor="sell-price">Bei kwa Hisa (Price/Share)</Label>
-                <Input
-                  id="sell-price"
-                  type="number"
-                  step="0.01"
-                  value={sellPrice}
-                  onChange={(e) => setSellPrice(Number(e.target.value))}
-                  className="bg-gray-800 border-gray-600 mt-1"
-                />
-                 <p className="text-xs text-gray-400 mt-1">Bei ya sasa sokoni: ${selectedStock.details.stockPrice.toFixed(2)}</p>
-              </div>
               <Separator className="bg-gray-700"/>
               <div className="text-center">
-                <p className="text-lg font-bold">Jumla ya Thamani ya Oda</p>
-                <p className="text-2xl font-mono text-green-400">${(sellQuantity * sellPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-                <p className="text-xs text-gray-500 mt-1">Oda yako itaonekana kwenye soko la hisa.</p>
+                <p className="text-lg font-bold">Jumla ya Mauzo</p>
+                <p className="text-2xl font-mono text-green-400">${(sellQuantity * selectedStock.details.stockPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="text-xs text-gray-500 mt-1">Utapokea kiasi hiki mara moja.</p>
               </div>
             </div>
           )}
@@ -688,9 +745,9 @@ function StocksInventoryView({ playerStocks, stockListings, onPostStockOrder }: 
             <Button 
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={handleConfirmSell}
-              disabled={!selectedStock || sellQuantity <= 0 || sellQuantity > selectedStock.stock.shares || sellPrice <= 0}
+              disabled={!selectedStock || sellQuantity <= 0 || sellQuantity > selectedStock.stock.shares}
             >
-              Weka Oda ya Kuuza
+              Thibitisha Mauzo
             </Button>
           </DialogFooter>
         </DialogContent>

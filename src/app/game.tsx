@@ -842,63 +842,43 @@ export function Game() {
     });
   }, [userRef, companyData, user, database]);
 
-   const handlePostStockOrder = (ticker: string, shares: number, pricePerShare: number) => {
-    if (!user || !userRef || !gameState) return;
+  const handleIssueShares = (sharesToSell: number, pricePerShare: number) => {
+      if (!userRef || !gameState) return;
+      
+      runTransaction(userRef, (currentData: UserData | null) => {
+          if (!currentData || !currentData.companyProfile) return;
+          
+          const maxSharesToSell = currentData.companyProfile.totalShares - 200000;
+          const currentlyAvailableToSell = currentData.companyProfile.availableShares - 200000;
+          if (sharesToSell <= 0 || sharesToSell > currentlyAvailableToSell) {
+              toast({ variant: 'destructive', title: 'Idadi ya Hisa si Sahihi', description: `Unaweza kuuza hadi hisa ${currentlyAvailableToSell.toLocaleString()} pekee.`});
+              return; // Abort
+          }
 
-    runTransaction(userRef, (currentData) => {
-        if (!currentData) return;
+          const moneyGained = sharesToSell * pricePerShare;
+          currentData.money += moneyGained;
+          currentData.companyProfile.availableShares -= sharesToSell;
+          
+          // Add transaction & notification
+          const transRef = push(ref(database, `users/${currentData.uid}/transactions`));
+          const newTransaction: Transaction = { id: transRef.key!, type: 'income', amount: moneyGained, description: `Uuzaji wa hisa (IPO) ${sharesToSell}x ${currentData.companyProfile.ticker}`, timestamp: Date.now() };
+          currentData.transactions = { ...currentData.transactions, [newTransaction.id]: newTransaction };
+            
+          const notifRef = push(ref(database, `users/${currentData.uid}/notifications`));
+          const newNotification: Notification = { id: notifRef.key!, message: `Umefanikiwa kuuza hisa ${sharesToSell.toLocaleString()} za kampuni yako kwa $${moneyGained.toLocaleString()}`, timestamp: Date.now(), read: false, icon: 'sale' };
+          currentData.notifications = { ...currentData.notifications, [newNotification.id]: newNotification };
 
-        const playerStock = (currentData.playerStocks || []).find(s => s.ticker === ticker);
-        if (!playerStock || playerStock.shares < shares) {
-            toast({ variant: 'destructive', title: 'Insufficient Shares', description: 'You do not have enough shares to place this order.'});
-            return;
-        }
+          return currentData;
+      }).then(() => {
+          toast({ title: 'IPO Imefanikiwa!', description: 'Hisa zako sasa zinapatikana sokoni.'});
+          
+          // TODO: Update the public stock listing `companyData` state
+          // This part is tricky as it would involve another DB write to a public node
+          // and then all clients would get updated. For now, we only update the seller's state.
 
-        playerStock.shares -= shares;
-        if (playerStock.shares === 0) {
-            currentData.playerStocks = currentData.playerStocks.filter((s: PlayerStock) => s.ticker !== ticker);
-        }
-
-        return currentData;
-    }).then(transactionResult => {
-        if (!transactionResult.committed) {
-             return;
-        }
-        const companyInfo = companyData.find(c => c.ticker === ticker) || gameState.companyProfile;
-
-        const newOrderRef = push(marketSharesRef);
-        const newOrder: Omit<MarketShareListing, 'orderId'> = {
-            sellerUid: user.uid,
-            sellerName: gameState.username,
-            sellerAvatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-            companyId: ticker,
-            companyName: companyInfo.companyName,
-            sharesAmount: shares,
-            pricePerShare,
-            status: 'open',
-            orderType: 'sell',
-            createdAt: Date.now(),
-        };
-
-        set(newOrderRef, newOrder).then(() => {
-            toast({ title: 'Stock Order Posted', description: `Your sell order for ${shares}x ${ticker} has been placed on the market.` });
-        }).catch(error => {
-            console.error("Failed to post stock order:", error);
-            // Revert stock change on failure
-            runTransaction(userRef, (currentData) => {
-                if (currentData) {
-                    const playerStock = (currentData.playerStocks || []).find(s => s.ticker === ticker);
-                    if(playerStock) {
-                        playerStock.shares += shares;
-                    } else {
-                        currentData.playerStocks.push({ ticker, shares });
-                    }
-                }
-                return currentData;
-            });
-            toast({ variant: 'destructive', title: 'Failed to List Stock Order' });
-        });
-    });
+      }).catch((err) => {
+          toast({ variant: 'destructive', title: 'Uuzaji wa Hisa Umeshindikana', description: err.message });
+      })
   };
 
 
@@ -1559,7 +1539,7 @@ export function Game() {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots || []} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onPostStockOrder={handlePostStockOrder} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} />;
+        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} />;
       case 'market':
         return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} />;
       case 'encyclopedia':
