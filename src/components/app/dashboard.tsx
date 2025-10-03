@@ -789,7 +789,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       
     setSelectedInventoryItem(item);
     setSelectedRecipe(null);
-    setProductionQuantity(1);
     setSellingPrice(officialMarketPrice);
     setPriceFloor(floor);
     setPriceCeiling(ceiling);
@@ -1011,20 +1010,24 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
             if (slot.locked) {
                 const cost = calculateUnlockCost(index);
                 return (
-                    <Card
+                    <div
                       key={index}
                       onClick={() => handleCardClick(slot, index)}
-                      className="flex flex-col items-center justify-center h-32 bg-gray-800/60 border-2 border-dashed border-gray-700 hover:border-yellow-500 hover:bg-gray-800/90 transition-all cursor-pointer group"
+                      className="relative aspect-square rounded-lg overflow-hidden cursor-pointer group bg-gray-800/60 border-2 border-dashed border-gray-700 hover:border-yellow-500 transition-colors"
                     >
-                      <div className="text-center text-gray-500 group-hover:text-yellow-400 transition-colors">
-                        <Lock className="h-8 w-8 mx-auto" />
-                        <span className="text-xs font-semibold mt-1">Fungua Nafasi</span>
-                        <div className="flex items-center justify-center gap-1 text-xs font-bold mt-1">
-                            <Star className="h-3 w-3" />
-                            <span>{cost.toLocaleString()}</span>
-                        </div>
+                      <Image 
+                        src={`https://picsum.photos/seed/locked-${index}/200/200`} 
+                        alt="Locked Slot" 
+                        fill 
+                        className="object-cover opacity-30 group-hover:opacity-40 transition-opacity"
+                        data-ai-hint="isometric house"
+                      />
+                      <div className="absolute bottom-2 left-2 right-2 p-2 bg-black/60 rounded-md flex items-center justify-center gap-2">
+                        <span className="text-sm font-bold text-white tracking-wider">UNLOCK</span>
+                        <span className="font-bold text-white">{cost.toLocaleString()}</span>
+                        <Star className="h-4 w-4 text-yellow-400" />
                       </div>
-                    </Card>
+                    </div>
                 );
             }
             
