@@ -142,7 +142,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                           >
                               <CardContent className="p-3 flex items-center justify-between">
                                   <div className="flex items-center gap-4">
-                                      <div className="flex items-center gap-2 font-bold text-lg">
+                                      <div className="flex items-center gap-2 font-bold">
                                           <span>{index + 1}</span>
                                       </div>
                                       <div className="flex items-center gap-3">
@@ -170,10 +170,10 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                       </div>
                                   </div>
                                    <div className="text-right">
-                                      <p className="font-mono text-base text-green-400">
+                                      <p className="font-mono text-sm text-green-400">
                                           ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                       </p>
-                                       <p className="text-xs text-gray-400">Net Worth</p>
+                                       <p className="text-[10px] text-gray-400">Net Worth</p>
                                   </div>
                               </CardContent>
                           </Card>
