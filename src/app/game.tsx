@@ -1591,13 +1591,14 @@ export function Game() {
   
     const handleCardClick = (slot: BuildingSlot, index: number) => {
     if (slot.locked) {
-        handleOpenUnlockDialog(index);
+        // Here you will open the new unlock dialog
+        // This will be implemented in the Dashboard component
     } else if (slot.construction) {
-        handleOpenBoostDialog(index);
+        // handleOpenBoostDialog(index);
     } else if (slot.building && !slot.activity) {
-        handleOpenManagementDialog(index);
+        // handleOpenManagementDialog(index);
     } else if (!slot.building) {
-        handleOpenBuildDialog(index);
+        // handleOpenBuildDialog(index);
     }
   }
 

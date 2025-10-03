@@ -1077,7 +1077,7 @@ export function Dashboard({
               )
           }
           
-          const cost = calculateUnlockCost(index);
+          // Empty or Locked Slot
           return (
               <Card
                   key={index}
@@ -1107,7 +1107,7 @@ export function Dashboard({
                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 cursor-pointer">
                           <Lock className="h-8 w-8 text-yellow-400/80 mb-2" />
                            <p className="text-xs font-bold text-yellow-300 flex items-center justify-center gap-1">
-                              {cost.toLocaleString()} <Star className="h-3 w-3" />
+                              {calculateUnlockCost(index).toLocaleString()} <Star className="h-3 w-3" />
                           </p>
                       </div>
                   )}
