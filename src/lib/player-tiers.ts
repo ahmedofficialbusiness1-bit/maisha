@@ -33,3 +33,16 @@ export const getPlayerTier = (netWorth: number): PlayerTier => {
   }
   return currentTier;
 };
+
+export const getRankTitle = (rank: number): string | null => {
+  switch (rank) {
+    case 1:
+      return 'GOD FATHER';
+    case 2:
+      return 'CHAMPION';
+    case 3:
+      return 'NOT HUMAN';
+    default:
+      return null;
+  }
+};

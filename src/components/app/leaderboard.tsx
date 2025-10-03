@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Crown, Loader2 } from 'lucide-react';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Button } from '../ui/button';
-import { getPlayerTier } from '@/lib/player-tiers';
+import { getPlayerTier, getRankTitle } from '@/lib/player-tiers';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -84,6 +84,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                         {sortedPlayers.map((player, index) => {
                             const tier = getPlayerTier(player.netWorth);
                             const { wrapperClass, crownClass } = getRankStyles(index);
+                            const rankTitle = getRankTitle(index + 1);
                             return (
                                 <TableRow 
                                   key={player.uid} 
@@ -103,10 +104,17 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                             </div>
                                             <div className='flex flex-col items-start'>
                                                 <span className="font-semibold text-white">{player.username}</span>
-                                                <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
-                                                    <tier.icon className="h-2.5 w-2.5 mr-1" />
-                                                    {tier.name}
-                                                </Badge>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
+                                                        <tier.icon className="h-2.5 w-2.5 mr-1" />
+                                                        {tier.name}
+                                                    </Badge>
+                                                    {rankTitle && (
+                                                        <Badge className="text-[10px] py-0 px-1.5 h-auto bg-indigo-800/80 border-indigo-600 text-indigo-200">
+                                                            {rankTitle}
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                             </div>
                                         </Button>
                                     </TableCell>
@@ -125,6 +133,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                   {sortedPlayers.map((player, index) => {
                       const tier = getPlayerTier(player.netWorth);
                       const { wrapperClass, crownClass } = getRankStyles(index);
+                      const rankTitle = getRankTitle(index + 1);
                       return (
                           <Card 
                             key={player.uid} 
@@ -146,10 +155,17 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                           </div>
                                           <div>
                                               <p className="font-semibold text-white">{player.username}</p>
-                                               <Badge className={cn("text-[10px] py-0 px-1.5 h-auto mt-1", tier.color)}>
-                                                    <tier.icon className="h-2.5 w-2.5 mr-1" />
-                                                    {tier.name}
-                                                </Badge>
+                                               <div className="flex items-center gap-1 mt-1">
+                                                    <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
+                                                        <tier.icon className="h-2.5 w-2.5 mr-1" />
+                                                        {tier.name}
+                                                    </Badge>
+                                                     {rankTitle && (
+                                                        <Badge className="text-[10px] py-0 px-1.5 h-auto bg-indigo-800/80 border-indigo-600 text-indigo-200">
+                                                            {rankTitle}
+                                                        </Badge>
+                                                    )}
+                                               </div>
                                           </div>
                                       </div>
                                   </div>

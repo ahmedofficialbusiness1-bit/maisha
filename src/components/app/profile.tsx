@@ -32,7 +32,7 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { View } from '@/app/game';
-import { getPlayerTier } from '@/lib/player-tiers';
+import { getPlayerTier, getRankTitle } from '@/lib/player-tiers';
 import { Badge } from '../ui/badge';
 
 const profileFormSchema = z.object({
@@ -184,6 +184,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
 
   const rankNumber = parseInt(metrics.ranking.replace('#', ''));
   const { wrapperClass, crownClass } = getRankStyles(rankNumber);
+  const rankTitle = getRankTitle(rankNumber);
 
 
   return (
@@ -246,6 +247,11 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                                 <Badge className={cn("text-xs py-0.5 px-2.5", playerTier.color)}>
                                     <playerTier.icon className="h-3 w-3 mr-1" />
                                     {playerTier.name}
+                                </Badge>
+                            )}
+                             {rankTitle && (
+                                <Badge className="text-xs py-0.5 px-2.5 bg-indigo-800/80 border-indigo-600 text-indigo-200">
+                                    {rankTitle}
                                 </Badge>
                             )}
                         </div>
