@@ -655,6 +655,7 @@ interface DashboardProps {
     onStartSelling: (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => void;
     onBoostConstruction: (slotIndex: number, starsToUse: number) => void;
     onUpgradeBuilding: (slotIndex: number) => void;
+    onUpgradeQuality: (slotIndex: number) => void;
     onDemolishBuilding: (slotIndex: number) => void;
     onBuyMaterial: (materialName: string, quantity: number) => Promise<boolean>;
     onUnlockSlot: (slotIndex: number) => void;
@@ -709,7 +710,8 @@ export function Dashboard({
     onStartProduction, 
     onStartSelling, 
     onBoostConstruction, 
-    onUpgradeBuilding, 
+    onUpgradeBuilding,
+    onUpgradeQuality,
     onDemolishBuilding, 
     onBuyMaterial, 
     onUnlockSlot,
@@ -853,11 +855,19 @@ export function Dashboard({
     }
   }
 
+    const handleTriggerQualityUpgrade = () => {
+        if(selectedSlotIndex !== null) {
+            onUpgradeQuality(selectedSlotIndex);
+            setDialogState(prev => ({...prev, manage: false}));
+        }
+    }
+
 
   const selectedSlot = selectedSlotIndex !== null ? buildingSlots[selectedSlotIndex] : null;
   const isSelectedBuildingShop = selectedSlot?.building ? SHOP_BUILDING_IDS.includes(selectedSlot.building.id) : false;
   const isSelectedBuildingResearch = selectedSlot?.building ? RESEARCH_BUILDING_IDS.includes(selectedSlot.building.id) : false;
-  
+  const isProductionBuilding = selectedSlot?.building ? !isSelectedBuildingShop && !isSelectedBuildingResearch : false;
+
   const buildingRecipes = selectedSlot?.building
     ? recipes.filter((recipe) => recipe.buildingId === selectedSlot.building!.id)
     : [];
@@ -972,6 +982,33 @@ export function Dashboard({
     };
 
     const unlockCost = selectedSlotIndex !== null ? calculateUnlockCost(selectedSlotIndex) : 0;
+
+    const getQualityUpgradeInfo = () => {
+        if (!selectedSlot || !selectedSlot.building || !isProductionBuilding) return null;
+        
+        const currentQuality = selectedSlot.quality || 0;
+        if (currentQuality >= 5) return { canUpgrade: false, requiredItem: '', requiredAmount: 0 };
+
+        const buildingCategory = encyclopediaData.find(e => e.recipe?.buildingId === selectedSlot.building?.id)?.category;
+        
+        let researchCategory = '';
+        if (buildingCategory === 'Agriculture' || buildingCategory === 'Food') researchCategory = 'Kilimo';
+        else if (buildingCategory === 'Construction' || buildingCategory === 'Raw Material' || buildingCategory === 'Madini' || buildingCategory === 'Mafuta') researchCategory = 'Ujenzi';
+        else if (buildingCategory === 'Mavazi') researchCategory = 'Nguo';
+        else if (buildingCategory === 'Electronics' || buildingCategory === 'Vifaa') researchCategory = 'Electroniki';
+        else if (buildingCategory === 'Vehicles' || buildingCategory === 'Spares') researchCategory = 'Usafiri';
+        else if (buildingCategory === 'Space') researchCategory = 'Anga';
+        else return null;
+
+        const requiredItem = `Q${currentQuality + 1} - Utafiti ${researchCategory}`;
+        const requiredAmount = 1000 * Math.pow(3, currentQuality);
+        const invItem = inventory.find(i => i.item === requiredItem);
+        const hasEnough = invItem ? invItem.quantity >= requiredAmount : false;
+
+        return { canUpgrade: hasEnough, requiredItem, requiredAmount, currentAmount: invItem?.quantity || 0 };
+    }
+
+    const qualityUpgradeInfo = getQualityUpgradeInfo();
 
 
   return (
@@ -1170,28 +1207,31 @@ export function Dashboard({
           </DialogContent>
       </Dialog>
         
-        {/* Management Dialog */}
-        <Dialog open={dialogState.manage} onOpenChange={(open) => setDialogState(prev => ({ ...prev, manage: open }))}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white flex flex-col max-h-[90vh]">
-                <DialogHeader>
-                    <DialogTitle>Simamia {selectedSlot?.building?.name}</DialogTitle>
-                    <DialogDescription>
-                        Chagua kitendo cha kufanya kwenye jengo hili.
-                    </DialogDescription>
-                </DialogHeader>
-                 <ScrollArea className='-mr-6 pr-6 flex-grow'>
-                    <div className='py-4 space-y-4'>
-                        <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
-                            {isSelectedBuildingShop ? <Store className='mr-2'/> : <Tractor className='mr-2'/>} 
-                            {isSelectedBuildingShop ? "Anza Kuuza" : "Anza Uzalishaji"}
-                        </Button>
-                        <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
+      {/* Management Dialog */}
+      <Dialog open={dialogState.manage} onOpenChange={(open) => setDialogState(prev => ({ ...prev, manage: open }))}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white flex flex-col max-h-[90vh] max-w-4xl">
+            <DialogHeader>
+                <DialogTitle>Simamia {selectedSlot?.building?.name}</DialogTitle>
+                <DialogDescription>
+                    Chagua kitendo cha kufanya kwenye jengo hili.
+                </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className='-mr-6 pr-6 flex-grow'>
+                <div className='py-4 space-y-4'>
+                    <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
+                        {isSelectedBuildingShop ? <Store className='mr-2'/> : <Tractor className='mr-2'/>} 
+                        {isSelectedBuildingShop ? "Anza Kuuza" : "Anza Uzalishaji"}
+                    </Button>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Upgrade Building Column */}
+                        <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700 flex flex-col'>
                             <h3 className="text-lg font-semibold mb-2">Boresha Jengo</h3>
-                            <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
+                             <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
                                 <ChevronsUp className='mr-2'/> Boresha hadi Level {(selectedSlot?.level || 0) + 1}
                             </Button>
                             <Separator className='my-3 bg-gray-600'/>
-                            <div className='space-y-1'>
+                            <div className='space-y-1 flex-grow'>
                                 <p className='font-semibold mb-1 text-xs'>Gharama ya Kuboresha:</p>
                                 <div className="space-y-1">
                                     {upgradeCosts && upgradeCosts.map(cost => {
@@ -1221,13 +1261,59 @@ export function Dashboard({
                             </div>
                         </div>
 
-                        <Button className='w-full justify-start' variant="destructive" onClick={() => setDialogState(prev => ({...prev, demolish: true}))}>
-                            <Trash2 className='mr-2'/> Futa Jengo
-                        </Button>
+                        {/* Upgrade Quality Column */}
+                        <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700 flex flex-col'>
+                            <h3 className="text-lg font-semibold mb-2">Fanya Utafiti (Boresha Ubora)</h3>
+                            <div className="flex-grow space-y-3">
+                                <div className="text-center bg-gray-900/50 p-2 rounded-md">
+                                    <p className="text-xs text-gray-400">Ubora wa Sasa</p>
+                                    <p className="text-xl font-bold flex items-center justify-center gap-2">
+                                        <Award className="text-yellow-400 h-5 w-5"/>
+                                        Q{selectedSlot?.quality || 0}
+                                    </p>
+                                </div>
+                                {isProductionBuilding && qualityUpgradeInfo ? (
+                                    <>
+                                        {qualityUpgradeInfo.requiredItem ? (
+                                            <>
+                                                <Button 
+                                                    className='w-full justify-start' 
+                                                    variant="secondary" 
+                                                    onClick={handleTriggerQualityUpgrade}
+                                                    disabled={!qualityUpgradeInfo.canUpgrade}
+                                                >
+                                                    <ChevronsUp className='mr-2'/> Boresha hadi Q{(selectedSlot?.quality || 0) + 1}
+                                                </Button>
+                                                <div className='space-y-1 text-xs'>
+                                                    <p className='font-semibold mb-1'>Gharama ya Utafiti:</p>
+                                                    <div className='flex justify-between items-center p-1 rounded-md'>
+                                                        <span className={cn(qualityUpgradeInfo.canUpgrade ? 'text-gray-300' : 'text-red-400')}>
+                                                            {qualityUpgradeInfo.requiredItem}
+                                                        </span>
+                                                        <span className={cn('font-mono', qualityUpgradeInfo.canUpgrade ? 'text-gray-300' : 'text-red-400')}>
+                                                            {qualityUpgradeInfo.currentAmount.toLocaleString()}/{qualityUpgradeInfo.requiredAmount.toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                             <p className="text-center text-sm text-green-400 p-4 bg-green-900/30 rounded-md">Umefikia kiwango cha juu cha ubora!</p>
+                                        )}
+                                    </>
+                                ) : (
+                                    <p className="text-center text-sm text-gray-500 p-4 bg-gray-900/30 rounded-md">Majengo ya maduka na utafiti hayafanyiwi utafiti wa ubora.</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                </ScrollArea>
-            </DialogContent>
-        </Dialog>
+
+                    <Button className='w-full justify-start' variant="destructive" onClick={() => setDialogState(prev => ({...prev, demolish: true}))}>
+                        <Trash2 className='mr-2'/> Futa Jengo
+                    </Button>
+                </div>
+            </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
         {/* Demolish Confirmation Dialog */}
         <AlertDialog open={dialogState.demolish} onOpenChange={(open) => setDialogState(prev => ({ ...prev, demolish: open }))}>
