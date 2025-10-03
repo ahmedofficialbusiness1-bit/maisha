@@ -17,8 +17,8 @@ import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { getInitialUserData } from '@/services/game-service';
-import { getDatabase, ref, set } from 'firebase/database';
+import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
+import { getDatabase, ref, set, get, runTransaction } from 'firebase/database';
 
 
 const formSchema = z.object({
@@ -56,9 +56,31 @@ function LoginComponent() {
 
     React.useEffect(() => {
         if (!userLoading && user) {
-            router.push('/dashboard');
+            // Check if user data exists, if so, check for companyProfile
+            const userRef = ref(database, `users/${user.uid}`);
+            get(userRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val() as UserData;
+                    if (!data.companyProfile) {
+                        runTransaction(userRef, (currentData) => {
+                            if (currentData && !currentData.companyProfile) {
+                                const initial = getInitialUserData(user.uid, currentData.username, null);
+                                currentData.companyProfile = initial.companyProfile;
+                            }
+                            return currentData;
+                        }).then(() => {
+                            router.push('/dashboard');
+                        });
+                    } else {
+                        router.push('/dashboard');
+                    }
+                } else {
+                    // This case should be handled by the signup logic, but as a fallback:
+                     router.push('/dashboard');
+                }
+            });
         }
-    }, [user, userLoading, router]);
+    }, [user, userLoading, router, database]);
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsSubmitting(true);
@@ -268,5 +290,3 @@ export default function LoginPage() {
         </FirebaseClientProvider>
     );
 }
-
-    

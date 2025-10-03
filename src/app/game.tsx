@@ -131,9 +131,16 @@ export function Game() {
 
     const unsubscribe = onValue(userRef, (snapshot) => {
         if (snapshot.exists()) {
-            const data = snapshot.val() as UserData;
+            let data = snapshot.val() as UserData;
             if (!data.lastPublicRead) {
                 data.lastPublicRead = { general: 0, trade: 0, help: 0 };
+            }
+             // Retroactively add company profile if it's missing
+            if (!data.companyProfile) {
+                const initialDataForProfile = getInitialUserData(user.uid, data.username, null);
+                data.companyProfile = initialDataForProfile.companyProfile;
+                // Save the updated data back to Firebase
+                saveUserData(userRef, data);
             }
             setGameState(data);
         } else {

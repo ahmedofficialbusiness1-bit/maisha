@@ -58,7 +58,7 @@ export type PlayerPublicData = {
 export const getInitialUserData = (uid: string, displayName: string | null, email: string | null): UserData => {
   const initialUsername = displayName || (email ? email.split('@')[0] : 'Mchezaji');
   const isAdmin = uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
-  const initialMoney = isAdmin ? 1000000 : 10000;
+  const initialMoney = 10000;
   const initialSharePrice = 10;
   const initialTotalShares = 1000000;
   const initialTicker = initialUsername.slice(0, 5).toUpperCase();
@@ -69,7 +69,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     lastLogin: Date.now(),
     avatarUrl: `https://picsum.photos/seed/${uid}/100/100`,
     money: initialMoney,
-    stars: isAdmin ? 1000 : 20,
+    stars: 20,
     netWorth: initialMoney,
     buildingSlots: Array(20).fill({ building: null, level: 0 }),
     inventory: [
@@ -84,7 +84,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     playerXP: 0,
     privateNotes: `Karibu kwenye wasifu wangu! Mimi ni mchezaji mpya kwenye Uchumi wa Afrika na nina matumaini ya kujenga himaya kubwa.`,
     status: 'online',
-    role: isAdmin ? 'admin' : 'player',
+    role: 'player',
     lastSeen: Date.now(),
     lastPublicRead: { general: 0, trade: 0, help: 0 },
     companyProfile: {
