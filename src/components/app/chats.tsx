@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -9,8 +8,7 @@ import {
   Card,
   CardContent,
 } from '@/components/ui/card';
-import { useDatabase } from '@/firebase';
-import { ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, get } from 'firebase/database';
+import { getDatabase, ref, onValue, push, serverTimestamp, query, orderByChild, limitToLast, set, get } from 'firebase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -236,7 +234,7 @@ function ChatItem({ name, lastMessage, isActive, isUnread, onClick, avatar }: { 
 }
 
 function ChatWindow({ user, chat, onBack }: { user: AuthenticatedUser, chat: SelectedChat, onBack: () => void }) {
-    const database = useDatabase();
+    const database = getDatabase();
     const [messages, setMessages] = React.useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = React.useState('');
     const scrollAreaRef = React.useRef<HTMLDivElement>(null);
@@ -377,3 +375,5 @@ function ChatWindow({ user, chat, onBack }: { user: AuthenticatedUser, chat: Sel
         </>
     );
 }
+
+    

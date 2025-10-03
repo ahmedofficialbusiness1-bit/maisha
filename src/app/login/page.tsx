@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { useUser, useDatabase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { signInWithEmail, signUpWithEmail, sendPasswordReset } from '@/firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
@@ -268,3 +268,5 @@ export default function LoginPage() {
         </FirebaseClientProvider>
     );
 }
+
+    

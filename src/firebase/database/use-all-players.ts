@@ -1,8 +1,6 @@
-
 'use client';
 import * as React from 'react';
-import { ref, onValue, query, orderByChild } from 'firebase/database';
-import { useDatabase } from '..';
+import { ref, onValue, query, orderByChild, getDatabase } from 'firebase/database';
 
 export type PlayerPublicData = {
     uid: string;
@@ -15,12 +13,12 @@ export type PlayerPublicData = {
 };
 
 export function useAllPlayers() {
-  const database = useDatabase();
   const [players, setPlayers] = React.useState<PlayerPublicData[] | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<Error | null>(null);
 
   React.useEffect(() => {
+    const database = getDatabase();
     if (!database) {
       setLoading(false);
       setPlayers(null);
@@ -48,9 +46,7 @@ export function useAllPlayers() {
     return () => {
         unsubscribe();
     };
-  }, [database]);
+  }, []);
 
   return { players, loading, error };
 }
-
-    
