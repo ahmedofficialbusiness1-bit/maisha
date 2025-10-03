@@ -20,12 +20,27 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
     return [...players].sort((a, b) => b.netWorth - a.netWorth);
   }, [players]);
   
-  const getRankWrapperClasses = (rank: number) => {
-    if (rank === 0) return 'p-1 rounded-full bg-gradient-to-tr from-yellow-400 via-amber-300 to-yellow-500 shadow-2xl shadow-yellow-400/20';
-    if (rank === 1) return 'p-1 rounded-full bg-gradient-to-tr from-slate-300 via-slate-100 to-slate-400 shadow-2xl shadow-slate-400/20';
-    if (rank === 2) return 'p-1 rounded-full bg-gradient-to-tr from-orange-400 via-amber-500 to-orange-600 shadow-2xl shadow-orange-500/20';
-    return '';
-  }
+  const getRankStyles = (rank: number): { wrapperClass: string; crownClass: string } => {
+    switch (rank) {
+      case 0:
+        return {
+          wrapperClass: 'p-1 rounded-full bg-gradient-to-tr from-yellow-400 via-amber-300 to-yellow-500 shadow-2xl shadow-yellow-400/20',
+          crownClass: 'text-yellow-400',
+        };
+      case 1:
+        return {
+          wrapperClass: 'p-1 rounded-full bg-gradient-to-tr from-slate-300 via-slate-100 to-slate-400 shadow-2xl shadow-slate-400/20',
+          crownClass: 'text-slate-300',
+        };
+      case 2:
+        return {
+          wrapperClass: 'p-1 rounded-full bg-gradient-to-tr from-orange-400 via-amber-500 to-orange-600 shadow-2xl shadow-orange-500/20',
+          crownClass: 'text-orange-400',
+        };
+      default:
+        return { wrapperClass: '', crownClass: '' };
+    }
+  };
 
 
   if (loading) {
@@ -68,7 +83,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                     <TableBody>
                         {sortedPlayers.map((player, index) => {
                             const tier = getPlayerTier(player.netWorth);
-                            const rankWrapperClass = getRankWrapperClasses(index);
+                            const { wrapperClass, crownClass } = getRankStyles(index);
                             return (
                                 <TableRow 
                                   key={player.uid} 
@@ -79,12 +94,12 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                     </TableCell>
                                     <TableCell className="p-2 sm:p-4">
                                         <Button variant="ghost" className="flex items-center gap-3 p-0 h-auto hover:bg-transparent" onClick={() => onViewProfile(player.uid)}>
-                                            <div className={cn("relative", rankWrapperClass)}>
+                                            <div className={cn("relative", wrapperClass)}>
                                                 <Avatar className='h-12 w-12 border-2 border-gray-900'>
                                                     <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                                     <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                                 </Avatar>
-                                                {index < 3 && <Crown className="absolute -top-3 -right-3 h-6 w-6 text-yellow-400 rotate-[30deg]" />}
+                                                {index < 3 && <Crown className={cn("absolute -top-3 -right-3 h-6 w-6 rotate-[30deg]", crownClass)} />}
                                             </div>
                                             <div className='flex flex-col items-start'>
                                                 <span className="font-semibold text-white">{player.username}</span>
@@ -109,7 +124,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
               <div className="md:hidden space-y-3">
                   {sortedPlayers.map((player, index) => {
                       const tier = getPlayerTier(player.netWorth);
-                      const rankWrapperClass = getRankWrapperClasses(index);
+                      const { wrapperClass, crownClass } = getRankStyles(index);
                       return (
                           <Card 
                             key={player.uid} 
@@ -122,12 +137,12 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                           <span>{index + 1}</span>
                                       </div>
                                       <div className="flex items-center gap-3">
-                                          <div className={cn("relative", rankWrapperClass)}>
+                                          <div className={cn("relative", wrapperClass)}>
                                               <Avatar className='h-10 w-10 border-2 border-gray-800'>
                                                   <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                                   <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                               </Avatar>
-                                               {index < 3 && <Crown className="absolute -top-2.5 -right-2.5 h-5 w-5 text-yellow-400 rotate-[30deg]" />}
+                                               {index < 3 && <Crown className={cn("absolute -top-2.5 -right-2.5 h-5 w-5 rotate-[30deg]", crownClass)} />}
                                           </div>
                                           <div>
                                               <p className="font-semibold text-white">{player.username}</p>

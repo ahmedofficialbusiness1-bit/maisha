@@ -160,14 +160,30 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
 
   const playerTier = getPlayerTier(metrics.netWorth);
   
+  const getRankStyles = (rank: number): { wrapperClass: string; crownClass: string } => {
+    switch (rank) {
+        case 1:
+            return {
+                wrapperClass: 'p-1 rounded-md bg-gradient-to-tr from-yellow-400 via-amber-300 to-yellow-500 shadow-2xl shadow-yellow-400/20',
+                crownClass: 'text-yellow-400',
+            };
+        case 2:
+            return {
+                wrapperClass: 'p-1 rounded-md bg-gradient-to-tr from-slate-300 via-slate-100 to-slate-400 shadow-2xl shadow-slate-400/20',
+                crownClass: 'text-slate-300',
+            };
+        case 3:
+            return {
+                wrapperClass: 'p-1 rounded-md bg-gradient-to-tr from-orange-400 via-amber-500 to-orange-600 shadow-2xl shadow-orange-500/20',
+                crownClass: 'text-orange-400',
+            };
+        default:
+            return { wrapperClass: '', crownClass: '' };
+    }
+  };
+
   const rankNumber = parseInt(metrics.ranking.replace('#', ''));
-  const getRankWrapperClasses = (rank: number) => {
-    if (rank === 1) return 'p-1 rounded-md bg-gradient-to-tr from-yellow-400 via-amber-300 to-yellow-500 shadow-2xl shadow-yellow-400/20';
-    if (rank === 2) return 'p-1 rounded-md bg-gradient-to-tr from-slate-300 via-slate-100 to-slate-400 shadow-2xl shadow-slate-400/20';
-    if (rank === 3) return 'p-1 rounded-md bg-gradient-to-tr from-orange-400 via-amber-500 to-orange-600 shadow-2xl shadow-orange-500/20';
-    return '';
-  }
-  const rankWrapperClass = getRankWrapperClasses(rankNumber);
+  const { wrapperClass, crownClass } = getRankStyles(rankNumber);
 
 
   return (
@@ -195,7 +211,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                           disabled={!isEditing}
                         />
                         <div 
-                          className={cn("relative", rankWrapperClass, isEditing && "cursor-pointer hover:opacity-80 transition-opacity")}
+                          className={cn("relative", wrapperClass, isEditing && "cursor-pointer hover:opacity-80 transition-opacity")}
                           onClick={() => isEditing && fileInputRef.current?.click()}
                         >
                             <Avatar className="h-20 w-20 rounded-md border-2 border-background">
@@ -208,7 +224,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                                 </div>
                             )}
                              {rankNumber > 0 && rankNumber <= 3 && (
-                                <Crown className="absolute -top-3 -right-3 h-7 w-7 text-yellow-400 rotate-[30deg]" />
+                                <Crown className={cn("absolute -top-3 -right-3 h-7 w-7 rotate-[30deg]", crownClass)} />
                             )}
                         </div>
                         <div className={cn(
