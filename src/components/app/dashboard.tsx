@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane, Rocket, ShieldCheck, Search, Store, ShoppingCart, Lock, Award } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane, Rocket, ShieldCheck, Search, Store, ShoppingCart, Lock, Award, AlertTriangle } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import type { LucideIcon } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 
 export type BuildingType = {
   id: string;
@@ -649,10 +650,31 @@ const productCategoryToShopMap: Record<string, string> = {
     'Utafiti': 'duka_kuu' // Research items aren't typically sold, but as a fallback
 };
 
+export interface DashboardProps {
+    buildingSlots: BuildingSlot[];
+    inventory: InventoryItem[];
+    stars: number;
+    playerRank: number;
+    onBuild: (slotIndex: number, building: BuildingType) => void;
+    onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
+    onStartSelling: (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => void;
+    onBoostConstruction: (slotIndex: number, starsToUse: number) => void;
+    onUpgradeBuilding: (slotIndex: number) => void;
+    onUpgradeQuality: (slotIndex: number) => void;
+    onDemolishBuilding: (slotIndex: number) => void;
+    onBuyMaterial: (materialName: string, quantity: number) => Promise<boolean>;
+    onUnlockSlot: (slotIndex: number) => void;
+    onCardClick: (slot: BuildingSlot, index: number) => void;
+    dialogState: any;
+    setDialogState: React.Dispatch<React.SetStateAction<any>>;
+    selectedSlotIndex: number | null;
+}
+
 export function Dashboard({ 
     buildingSlots, 
     inventory, 
-    stars, 
+    stars,
+    playerRank,
     onBuild, 
     onStartProduction, 
     onStartSelling, 
@@ -666,7 +688,7 @@ export function Dashboard({
     dialogState,
     setDialogState,
     selectedSlotIndex
-}: any) {
+}: DashboardProps) {
   
   const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
   const [selectedBuildingForBuild, setSelectedBuildingForBuild] = React.useState<BuildingType | null>(null);
@@ -977,6 +999,22 @@ export function Dashboard({
 
     const qualityUpgradeInfo = getQualityUpgradeInfo();
 
+    const getSpecialMessage = () => {
+        if (playerRank <= 0) return null;
+        switch (playerRank) {
+            case 1:
+                return { title: "You are The GOD FATHER!", description: "You are number 1. Be careful, you have enemies who want your position." };
+            case 2:
+                return { title: "You are The CHAMPION!", description: "You are number 2, close to the top. The GOD FATHER is watching you." };
+            case 3:
+                return { title: "You are NON HUMAN!", description: "You are number 3. Your power is growing, but so are your rivals." };
+            default:
+                return null;
+        }
+    }
+
+  const specialMessage = getSpecialMessage();
+
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -986,6 +1024,17 @@ export function Dashboard({
           Build your empire from the ground up. Click a plot to construct or a building to produce.
         </p>
       </div>
+
+      {specialMessage && (
+        <Alert variant="destructive" className="border-yellow-500/50 bg-yellow-900/40 text-yellow-200">
+            <AlertTriangle className="h-4 w-4 !text-yellow-300" />
+            <AlertTitle className="text-yellow-200">{specialMessage.title}</AlertTitle>
+            <AlertDescription className="text-yellow-300">
+                {specialMessage.description}
+            </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {buildingSlots.map((slot: BuildingSlot, index: number) => {
           const slotName = `Slot ${String.fromCharCode(65 + index)}`;

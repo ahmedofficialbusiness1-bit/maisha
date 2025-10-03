@@ -51,13 +51,15 @@ const initialBondListings: BondListing[] = [
     { id: 2, issuer: 'Kilimo Fresh Inc.', faceValue: 1000, couponRate: 7.2, maturityDate: '2028-06-30', price: 1010, quantityAvailable: 2000, creditRating: 'BBB', issuerLogo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo' },
 ];
 
-const calculatedPrices = encyclopediaData.reduce((acc, item) => {
-    const priceString = item.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '');
-    if (priceString) {
-        acc[item.name] = parseFloat(priceString);
-    }
-    return acc;
-}, {} as Record<string, number>);
+const getPriceWithQuality = (itemName: string, quality: number) => {
+    const basePrice = encyclopediaData.find(e => e.name === itemName)?.properties.find(p => p.label === 'Market Cost')?.value.replace('$', '').replace(/,/g, '');
+    const price = parseFloat(basePrice || '0');
+    if (isNaN(price)) return 0;
+    
+    // Each quality level adds 20% to the base price
+    const qualityBonus = quality * 0.20;
+    return price * (1 + qualityBonus);
+};
 
 
 export function Game() {
@@ -661,7 +663,7 @@ export function Game() {
             .filter(l => l.commodity === materialName && l.sellerUid !== user.uid)
             .sort((a, b) => a.price - b.price)[0]; // Find cheapest
 
-        const systemPrice = calculatedPrices[materialName] || Infinity;
+        const systemPrice = getPriceWithQuality(materialName, 0) || Infinity;
 
         if (marketListing && marketListing.price <= systemPrice) {
             const buyQty = Math.min(quantity, marketListing.quantity);
@@ -689,7 +691,7 @@ export function Game() {
             resolve(false);
             return;
         }
-        const costPerUnit = calculatedPrices[materialName] || 0;
+        const costPerUnit = getPriceWithQuality(materialName, 0) || 0;
         if (costPerUnit === 0) {
             resolve(false);
             return;
@@ -1353,7 +1355,7 @@ export function Game() {
                         if (itemIndex !== -1) {
                             newInventory[itemIndex].quantity += quantity;
                         } else {
-                            newInventory.push({ item: itemName, quantity, marketPrice: calculatedPrices[itemName] || 0 });
+                            newInventory.push({ item: itemName, quantity, marketPrice: getPriceWithQuality(itemName, slot.quality || 0) });
                         }
                         const notifRefKey = push(ref(database, `users/${user.uid}/notifications`)).key!;
                         newNotifications[notifRefKey] = { id: notifRefKey, message: `Uzalishaji wa ${quantity}x ${itemName} umekamilika.`, timestamp: now, read: false, icon: 'production' };
@@ -1421,14 +1423,14 @@ export function Game() {
         if (!buildConfig) return total;
     
         let totalCostToLevel = (buildConfig.buildCost || []).reduce((sum, material) => {
-            const price = calculatedPrices[material.name] || 0;
+            const price = getPriceWithQuality(material.name, 0) || 0;
             return sum + (price * material.quantity);
         }, 0);
     
         for (let i = 2; i <= slot.level; i++) {
             const upgradeCosts = buildConfig.upgradeCost(i);
             totalCostToLevel += upgradeCosts.reduce((sum, material) => {
-                const price = calculatedPrices[material.name] || 0;
+                const price = getPriceWithQuality(material.name, 0) || 0;
                 return sum + (price * material.quantity);
             }, 0);
         }
@@ -1437,7 +1439,11 @@ export function Game() {
     }, 0);
 
     const currentInventoryValue = (gameState.inventory || []).reduce((total, item) => {
-        const price = calculatedPrices[item.item] || item.marketPrice || 0;
+        // Find the building that produces this item to determine quality
+        const producingBuildingSlot = gameState.buildingSlots.find(slot => slot.building && buildingData[slot.building.id] && recipes.some(r => r.buildingId === slot.building.id && r.output.name === item.item));
+        const quality = producingBuildingSlot?.quality || 0;
+        
+        const price = getPriceWithQuality(item.item, quality) || item.marketPrice || 0;
         return total + (item.quantity * price);
     }, 0);
 
@@ -1515,7 +1521,7 @@ export function Game() {
   }, [contractListings, user, gameState]);
 
 
-  if (userLoading || gameStateLoading) {
+  if (userLoading || gameStateLoading || !allPlayers) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-900 text-white">
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-gray-700/50 bg-gray-900/95 px-4 backdrop-blur-sm sm:h-20">
@@ -1559,13 +1565,14 @@ export function Game() {
         role: viewedProfileData.role,
   } : null;
 
+  const sortedPlayers = [...allPlayers].sort((a, b) => b.netWorth - a.netWorth);
+
   const getMetricsForProfile = (profileData: UserData | null): PlayerMetrics => {
     if (!profileData || !allPlayers) return { netWorth: 0, inventoryValue: 0, buildingValue: 0, stockValue: 0, ranking: 'N/A', rating: 'D' };
     
     const publicData = allPlayers.find(p => p.uid === profileData.uid);
     const currentNetWorth = publicData?.netWorth || profileData.netWorth;
 
-    const sortedPlayers = [...allPlayers].sort((a, b) => b.netWorth - a.netWorth);
     const rank = sortedPlayers.findIndex(p => p.uid === profileData.uid);
     
     // For the current player, use the detailed, memoized values
@@ -1591,6 +1598,8 @@ export function Game() {
         rating: getPlayerRating(currentNetWorth),
     }
   }
+
+  const currentPlayerRank = sortedPlayers.findIndex(p => p.uid === user.uid) + 1;
   
   const stockListingsWithShares = companyData.map(s => ({...s, sharesAvailable: Math.floor(s.totalShares * 0.4)}));
 
@@ -1620,7 +1629,8 @@ export function Game() {
         return <Dashboard 
                     buildingSlots={gameState.buildingSlots || []} 
                     inventory={gameState.inventory || []} 
-                    stars={gameState.stars} 
+                    stars={gameState.stars}
+                    playerRank={currentPlayerRank}
                     onBuild={handleBuild} 
                     onStartProduction={handleStartProduction} 
                     onStartSelling={handleStartSelling} 
