@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Textarea } from '../ui/textarea';
-import { Clipboard, Pencil, Upload, ArrowLeft, MessageSquare, Crown } from 'lucide-react';
+import { Clipboard, Pencil, Upload, ArrowLeft, MessageSquare, Crown, AlertTriangle } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -34,6 +34,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { View } from '@/app/game';
 import { getPlayerTier, getRankTitle } from '@/lib/player-tiers';
 import { Badge } from '../ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 const profileFormSchema = z.object({
   playerName: z
@@ -186,6 +187,20 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
   const { wrapperClass, crownClass } = getRankStyles(rankNumber);
   const rankTitle = getRankTitle(rankNumber);
 
+  const getSpecialMessage = () => {
+    switch (rankNumber) {
+        case 1:
+            return { title: "You are The GOD FATHER!", description: "You are number 1. Be careful, you have enemies who want your position." };
+        case 2:
+            return { title: "You are The CHAMPION!", description: "You are number 2, close to the top. The GOD FATHER is watching you." };
+        case 3:
+            return { title: "You are NON HUMAN!", description: "You are number 3. Your power is growing, but so are your rivals." };
+        default:
+            return null;
+    }
+  }
+
+  const specialMessage = getSpecialMessage();
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -197,6 +212,15 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
             </Button>
         </div>
       )}
+       {!isViewOnly && specialMessage && (
+            <Alert variant="destructive" className="border-yellow-500/50 bg-yellow-900/40 text-yellow-200">
+                <AlertTriangle className="h-4 w-4 !text-yellow-300" />
+                <AlertTitle className="text-yellow-200">{specialMessage.title}</AlertTitle>
+                <AlertDescription className="text-yellow-300">
+                    {specialMessage.description}
+                </AlertDescription>
+            </Alert>
+        )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 flex flex-col gap-4">
