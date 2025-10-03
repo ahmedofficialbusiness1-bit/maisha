@@ -6,7 +6,7 @@ import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
-import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type ContractListing, type MarketShareListing } from '@/components/app/trade-market';
+import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type MarketShareListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { buildingData } from '@/lib/building-data';
@@ -1588,11 +1588,23 @@ export function Game() {
         set(readRef, Date.now());
     }
   };
+  
+    const handleCardClick = (slot: BuildingSlot, index: number) => {
+    if (slot.locked) {
+        handleOpenUnlockDialog(index);
+    } else if (slot.construction) {
+        handleOpenBoostDialog(index);
+    } else if (slot.building && !slot.activity) {
+        handleOpenManagementDialog(index);
+    } else if (!slot.building) {
+        handleOpenBuildDialog(index);
+    }
+  }
 
   const renderView = () => {
     switch (view) {
       case 'dashboard':
-        return <Dashboard buildingSlots={gameState.buildingSlots || []} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} onUnlockSlot={handleUnlockSlot} />;
+        return <Dashboard buildingSlots={gameState.buildingSlots || []} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} onUnlockSlot={handleUnlockSlot} handleCardClick={handleCardClick} />;
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':

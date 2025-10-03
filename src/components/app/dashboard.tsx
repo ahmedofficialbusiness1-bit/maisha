@@ -649,6 +649,7 @@ interface DashboardProps {
     onDemolishBuilding: (slotIndex: number) => void;
     onBuyMaterial: (materialName: string, quantity: number) => Promise<boolean>;
     onUnlockSlot: (slotIndex: number) => void;
+    handleCardClick: (slot: BuildingSlot, index: number) => void;
 }
 
 const formatTime = (ms: number) => {
@@ -681,7 +682,20 @@ const productCategoryToShopMap: Record<string, string> = {
     'Utafiti': 'duka_kuu' // Research items aren't typically sold, but as a fallback
 };
 
-export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartProduction, onStartSelling, onBoostConstruction, onUpgradeBuilding, onDemolishBuilding, onBuyMaterial, onUnlockSlot }: DashboardProps) {
+export function Dashboard({ 
+    buildingSlots, 
+    inventory, 
+    stars, 
+    onBuild, 
+    onStartProduction, 
+    onStartSelling, 
+    onBoostConstruction, 
+    onUpgradeBuilding, 
+    onDemolishBuilding, 
+    onBuyMaterial, 
+    onUnlockSlot,
+    handleCardClick
+}: DashboardProps) {
   
   const [isBuildDialogOpen, setIsBuildDialogOpen] = React.useState(false);
   const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
@@ -862,18 +876,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
         }
         onUpgradeBuilding(selectedSlotIndex);
         setIsManagementDialogOpen(false);
-    }
-  }
-
-  const handleCardClick = (slot: BuildingSlot, index: number) => {
-    if (slot.locked) {
-        handleOpenUnlockDialog(index);
-    } else if (slot.construction) {
-        handleOpenBoostDialog(index);
-    } else if (slot.building && !slot.activity) {
-        handleOpenManagementDialog(index);
-    } else if (!slot.building) {
-        handleOpenBuildDialog(index);
     }
   }
 
@@ -1075,7 +1077,6 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
               )
           }
           
-          // This will render for both locked and unlocked empty slots
           const cost = calculateUnlockCost(index);
           return (
               <Card
@@ -1104,7 +1105,7 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
 
                   {slot.locked && (
                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 cursor-pointer">
-                          <Lock className="h-10 w-10 text-yellow-400/80 mb-2" />
+                          <Lock className="h-8 w-8 text-yellow-400/80 mb-2" />
                            <p className="text-xs font-bold text-yellow-300 flex items-center justify-center gap-1">
                               {cost.toLocaleString()} <Star className="h-3 w-3" />
                           </p>
