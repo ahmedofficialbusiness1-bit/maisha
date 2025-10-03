@@ -1,4 +1,4 @@
-import { Crown, Gem, Shield, Star, Rocket, Building, Anchor, LucideIcon } from "lucide-react";
+import { Crown, Gem, Shield, Sprout, Coins, Rocket, LucideIcon } from "lucide-react";
 
 export type PlayerTier = {
   name: string;
@@ -8,16 +8,16 @@ export type PlayerTier = {
 };
 
 const tiers: PlayerTier[] = [
-  { name: 'Newcomer', minNetWorth: 0, icon: Star, color: 'bg-gray-500' },
-  { name: 'Trailblazer', minNetWorth: 100000, icon: Star, color: 'bg-green-600' },
-  { name: 'Rising Venture', minNetWorth: 500000, icon: Building, color: 'bg-blue-600' },
-  { name: 'Stronghold', minNetWorth: 1000000, icon: Shield, color: 'bg-indigo-600' },
-  { name: 'Challenger', minNetWorth: 3000000, icon: Shield, color: 'bg-purple-600' },
-  { name: 'Aspiring Force', minNetWorth: 5000000, icon: Gem, color: 'bg-pink-600' },
-  { name: 'Emerging Power', minNetWorth: 15000000, icon: Gem, color: 'bg-red-600' },
-  { name: 'Dominant Player', minNetWorth: 30000000, icon: Rocket, color: 'bg-orange-600' },
-  { name: 'Industrial Titan', minNetWorth: 50000000, icon: Anchor, color: 'bg-yellow-600 text-black' },
-  { name: 'Economic Giant', minNetWorth: 75000000, icon: Anchor, color: 'bg-yellow-500 text-black' },
+  { name: 'Bronze Seed', minNetWorth: 0, icon: Sprout, color: 'bg-orange-700' },
+  { name: 'Iron Hand', minNetWorth: 200000, icon: Shield, color: 'bg-slate-600' },
+  { name: 'Silver Path', minNetWorth: 800000, icon: Coins, color: 'bg-slate-400 text-black' },
+  { name: 'Golden Rise', minNetWorth: 1500000, icon: Gem, color: 'bg-yellow-500 text-black' },
+  { name: 'Diamond Edge', minNetWorth: 3000000, icon: Gem, color: 'bg-cyan-500' },
+  { name: 'Aspiring Force', minNetWorth: 5000000, icon: Rocket, color: 'bg-pink-600' },
+  { name: 'Emerging Power', minNetWorth: 15000000, icon: Rocket, color: 'bg-red-600' },
+  { name: 'Dominant Player', minNetWorth: 30000000, icon: Crown, color: 'bg-orange-600' },
+  { name: 'Industrial Titan', minNetWorth: 50000000, icon: Crown, color: 'bg-yellow-600 text-black' },
+  { name: 'Economic Giant', minNetWorth: 75000000, icon: Crown, color: 'bg-yellow-500 text-black' },
   { name: 'Titan of Industry', minNetWorth: 100000001, icon: Crown, color: 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white' },
   { name: 'Supreme Empire', minNetWorth: 1000000001, icon: Crown, color: 'bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 text-white' }
 ];
