@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -771,6 +772,7 @@ export function Game() {
          if (!currentData) return;
          const itemIndex = currentData.inventory.findIndex((i: InventoryItem) => i.item === item.item);
          if (itemIndex === -1 || currentData.inventory[itemIndex].quantity < quantity) {
+             toast({ variant: 'destructive', title: 'Insufficient Inventory', description: 'Could not update inventory.' });
              return; // Abort if item not found or not enough quantity
          }
          currentData.inventory[itemIndex].quantity -= quantity;
@@ -778,7 +780,6 @@ export function Game() {
          return currentData;
      }).then(transactionResult => {
          if (!transactionResult.committed) {
-             toast({ variant: 'destructive', title: 'Failed to List Item', description: 'Could not update inventory.' });
              return;
          }
 
@@ -797,7 +798,7 @@ export function Game() {
              imageHint: productInfo?.imageHint || 'product photo'
          };
 
-         set(listingRef).then(() => {
+         set(listingRef, newListing).then(() => {
             toast({ title: 'Item Posted', description: `${quantity}x ${item.item} has been listed on the market.` });
          }).catch(error => {
             console.error("Failed to post to market:", error);
@@ -1512,3 +1513,5 @@ export function Game() {
     </div>
   );
 }
+
+    
