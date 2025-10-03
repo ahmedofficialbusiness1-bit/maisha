@@ -658,7 +658,6 @@ interface DashboardProps {
     onDemolishBuilding: (slotIndex: number) => void;
     onBuyMaterial: (materialName: string, quantity: number) => Promise<boolean>;
     onUnlockSlot: (slotIndex: number) => void;
-    onUpgradeQuality: (slotIndex: number) => void;
     onCardClick: (slot: BuildingSlot, index: number) => void;
     dialogState: {
         build: boolean;
@@ -714,7 +713,6 @@ export function Dashboard({
     onDemolishBuilding, 
     onBuyMaterial, 
     onUnlockSlot,
-    onUpgradeQuality,
     onCardClick,
     dialogState,
     setDialogState,
@@ -855,19 +853,10 @@ export function Dashboard({
     }
   }
 
-  const handleTriggerQualityUpgrade = () => {
-      if (selectedSlotIndex !== null) {
-          onUpgradeQuality(selectedSlotIndex);
-          // Keep the dialog open to see the result, or close it.
-          // For now, let's assume the main game state will update and re-render.
-      }
-  }
-
 
   const selectedSlot = selectedSlotIndex !== null ? buildingSlots[selectedSlotIndex] : null;
   const isSelectedBuildingShop = selectedSlot?.building ? SHOP_BUILDING_IDS.includes(selectedSlot.building.id) : false;
   const isSelectedBuildingResearch = selectedSlot?.building ? RESEARCH_BUILDING_IDS.includes(selectedSlot.building.id) : false;
-  const isSelectedBuildingProducible = selectedSlot?.building && !isSelectedBuildingShop && !isSelectedBuildingResearch;
   
   const buildingRecipes = selectedSlot?.building
     ? recipes.filter((recipe) => recipe.buildingId === selectedSlot.building!.id)
@@ -983,26 +972,6 @@ export function Dashboard({
     };
 
     const unlockCost = selectedSlotIndex !== null ? calculateUnlockCost(selectedSlotIndex) : 0;
-    
-    const getQualityUpgradeInfo = () => {
-        if (!selectedSlot || !selectedSlot.building || !isSelectedBuildingProducible) {
-            return null;
-        }
-
-        const currentQuality = selectedSlot.quality ?? 0;
-        if (currentQuality >= 5) return { requirement: null, cost: 0, canAfford: false, current: currentQuality, next: 6 };
-
-        const nextQuality = currentQuality + 1;
-        const buildingType = encyclopediaData.find(e => e.recipe?.buildingId === selectedSlot.building?.id)?.category || 'Ujenzi';
-        const requirement = `Q${nextQuality} - Utafiti ${buildingType}`;
-        const cost = 1000 * Math.pow(3, nextQuality - 1);
-        const playerHas = inventory.find(i => i.item === requirement)?.quantity || 0;
-        const canAfford = playerHas >= cost;
-        
-        return { requirement, cost, canAfford, current: currentQuality, next: nextQuality, playerHas };
-    };
-
-    const qualityInfo = getQualityUpgradeInfo();
 
 
   return (
@@ -1016,91 +985,66 @@ export function Dashboard({
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {buildingSlots.map((slot, index) => {
           const slotName = `Slot ${String.fromCharCode(65 + index)}`;
-          if (slot.building) {
-              const currentActivityName = slot.activity ? slot.activity!.recipeId : null;
-              const style = buildingStyles[slot.building.id] || buildingStyles.default;
-              return (
-                  <Card
-                    key={index}
-                    onClick={() => onCardClick(slot, index)}
-                    className={cn(
-                      "flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2"
-                    )}
-                  >
-                      <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
-                        {slotName}
-                      </div>
-                      <div className="absolute top-1 right-1 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10 flex items-center gap-1">
-                        {isSelectedBuildingProducible && (
-                            <>
-                                <Award className="h-2.5 w-2.5 text-yellow-400"/> 
-                                <span>Q{slot.quality ?? 0}</span>
-                            </>
-                        )}
-                      </div>
-                      <div className="w-full h-4/6 relative flex items-center justify-center">
-                          <div className={cn("w-4/5 h-full rounded-t-md flex items-center justify-center", style.body)}>
-                              <p className="text-3xl font-bold">🏢</p>
-                          </div>
-                          <div 
-                              className={cn("absolute top-0 w-full h-0 border-b-[30px]", style.roof)}
-                              style={{
-                                  borderLeft: '20px solid transparent',
-                                  borderRight: '20px solid transparent',
-                              }}
-                          />
-                      </div>
-
-                      {slot.activity?.type === 'sell' && (
-                         <div className="absolute top-8 right-2 p-1 bg-green-500/80 rounded-full animate-pulse">
-                            <CircleDollarSign className="h-4 w-4 text-white" />
-                         </div>
-                      )}
-                      {slot.activity?.type === 'produce' && (
-                          <div className="absolute top-8 right-2 p-1 bg-blue-500/80 rounded-full animate-pulse">
-                              <Tractor className="h-4 w-4 text-white" />
-                          </div>
-                      )}
-                      {slot.construction && (
-                         <div className="absolute top-8 right-2 p-1 bg-orange-500/80 rounded-full animate-pulse">
-                            <Hammer className="h-4 w-4 text-white" />
-                         </div>
-                      )}
-                      {!slot.activity && !slot.construction && (
-                         <div className="absolute top-8 right-2 p-1 bg-gray-900/80 rounded-full">
-                             <Settings className="h-4 w-4 text-white" />
-                         </div>
-                      )}
-                      <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
-                          <p className="text-xs font-bold truncate">{slot.building.name} (Lvl {slot.level || 0})</p>
-                          {slot.activity && currentActivityName ? (
-                              <div className='text-xs font-mono text-green-300 flex items-center justify-center gap-2'>
-                                 <span>{formatTime(slot.activity.endTime - now)}</span>
-                                 <span>| {currentActivityName}</span>
-                              </div>
-                          ) : slot.construction ? (
-                              <div className='text-xs font-mono text-orange-300 flex items-center justify-center gap-2'>
-                                 <span>{formatTime(slot.construction.endTime - now)}</span>
-                                 <span>| Inaboreshwa</span>
-                              </div>
-                          ) : (
-                              <p className='text-xs text-green-400 font-semibold'>Available</p>
-                          )}
-                      </div>
-                  </Card>
-              )
-          }
-          
-          // Empty Slot (locked or unlocked)
           return (
-              <Card
-                  key={index}
-                  onClick={() => onCardClick(slot, index)}
-                  className="flex flex-col items-center justify-center h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2 hover:bg-gray-700/80 transition-colors"
-              >
-                  <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
-                    {slotName}
-                  </div>
+            <Card
+              key={index}
+              onClick={() => onCardClick(slot, index)}
+              className={cn(
+                "flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2",
+                slot.building ? "" : "hover:bg-gray-700/80 transition-colors"
+              )}
+            >
+              <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
+                {slotName}
+              </div>
+              
+              {/* === BUILT BUILDING VIEW === */}
+              {slot.building && (
+                <>
+                    <div className="absolute top-1 right-1 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10 flex items-center gap-1">
+                      <Award className="h-2.5 w-2.5 text-yellow-400"/> 
+                      <span>Q{slot.quality ?? 0}</span>
+                    </div>
+                    <div className="w-full h-4/6 relative flex items-center justify-center">
+                        <div className={cn("w-4/5 h-full rounded-t-md flex items-center justify-center", (buildingStyles[slot.building.id] || buildingStyles.default).body)}>
+                            <p className="text-3xl font-bold">🏢</p>
+                        </div>
+                        <div 
+                            className={cn("absolute top-0 w-full h-0 border-b-[30px]", (buildingStyles[slot.building.id] || buildingStyles.default).roof)}
+                            style={{
+                                borderLeft: '20px solid transparent',
+                                borderRight: '20px solid transparent',
+                            }}
+                        />
+                    </div>
+
+                    {slot.activity?.type === 'sell' && ( <div className="absolute top-8 right-2 p-1 bg-green-500/80 rounded-full animate-pulse"><CircleDollarSign className="h-4 w-4 text-white" /></div>)}
+                    {slot.activity?.type === 'produce' && (<div className="absolute top-8 right-2 p-1 bg-blue-500/80 rounded-full animate-pulse"><Tractor className="h-4 w-4 text-white" /></div>)}
+                    {slot.construction && (<div className="absolute top-8 right-2 p-1 bg-orange-500/80 rounded-full animate-pulse"><Hammer className="h-4 w-4 text-white" /></div>)}
+                    {!slot.activity && !slot.construction && (<div className="absolute top-8 right-2 p-1 bg-gray-900/80 rounded-full"><Settings className="h-4 w-4 text-white" /></div>)}
+                    
+                    <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
+                        <p className="text-xs font-bold truncate">{slot.building.name} (Lvl {slot.level || 0})</p>
+                        {slot.activity ? (
+                            <div className='text-xs font-mono text-green-300 flex items-center justify-center gap-2'>
+                                <span>{formatTime(slot.activity.endTime - now)}</span>
+                                <span>| {slot.activity!.recipeId}</span>
+                            </div>
+                        ) : slot.construction ? (
+                            <div className='text-xs font-mono text-orange-300 flex items-center justify-center gap-2'>
+                                <span>{formatTime(slot.construction.endTime - now)}</span>
+                                <span>| Inaboreshwa</span>
+                            </div>
+                        ) : (
+                            <p className='text-xs text-green-400 font-semibold'>Available</p>
+                        )}
+                    </div>
+                </>
+              )}
+
+              {/* === EMPTY SLOT VIEW (LOCKED OR UNLOCKED) === */}
+              {!slot.building && (
+                <>
                   <div className="w-full h-full relative flex flex-col items-center justify-center">
                     <div className="w-4/5 h-4/5 rounded-md flex flex-col items-center justify-center bg-gray-700/50 border-2 border-dashed border-gray-500 group-hover:border-yellow-400 transition-colors">
                       {!slot.locked && (
@@ -1120,7 +1064,9 @@ export function Dashboard({
                           </p>
                       </div>
                   )}
-              </Card>
+                </>
+              )}
+            </Card>
           )
         })}
       </div>
@@ -1233,7 +1179,7 @@ export function Dashboard({
                         Chagua kitendo cha kufanya kwenye jengo hili.
                     </DialogDescription>
                 </DialogHeader>
-                 <ScrollArea className='-mr-6 pr-6'>
+                 <ScrollArea className='-mr-6 pr-6 flex-grow'>
                     <div className='py-4 space-y-4'>
                         <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
                             {isSelectedBuildingShop ? <Store className='mr-2'/> : <Tractor className='mr-2'/>} 
@@ -1274,35 +1220,6 @@ export function Dashboard({
                                 </div>
                             </div>
                         </div>
-                        {isSelectedBuildingProducible && (
-                            <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
-                                <h3 className="text-lg font-semibold mb-2">Fanya Utafiti (Boresha Ubora)</h3>
-                                <p className="text-sm text-gray-400 mb-2">
-                                    Kiwango cha sasa cha ubora: <strong className="text-yellow-300">Q{qualityInfo?.current ?? 0}</strong>
-                                </p>
-                                {qualityInfo && qualityInfo.requirement ? (
-                                    <>
-                                        <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerQualityUpgrade} disabled={!qualityInfo.canAfford}>
-                                            <Award className='mr-2'/> Boresha hadi Q{qualityInfo.next}
-                                        </Button>
-                                        <Separator className='my-3 bg-gray-600'/>
-                                        <div className='space-y-1'>
-                                            <p className='font-semibold mb-1 text-xs'>Gharama ya Utafiti:</p>
-                                            <div className='flex justify-between items-center p-1 rounded-md text-xs'>
-                                                <span className={cn(qualityInfo.canAfford ? 'text-gray-300' : 'text-red-400')}>
-                                                    {qualityInfo.requirement}
-                                                </span>
-                                                <span className={cn('font-mono', qualityInfo.canAfford ? 'text-gray-300' : 'text-red-400')}>
-                                                    {qualityInfo.playerHas.toLocaleString()} / {qualityInfo.cost.toLocaleString()}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <p className="text-sm text-green-400">Utafiti umefikia kiwango cha juu!</p>
-                                )}
-                            </div>
-                        )}
 
                         <Button className='w-full justify-start' variant="destructive" onClick={() => setDialogState(prev => ({...prev, demolish: true}))}>
                             <Trash2 className='mr-2'/> Futa Jengo
@@ -1404,7 +1321,7 @@ export function Dashboard({
                         </ScrollArea>
                     </div>
                     {/* Production/Sale Details */}
-                    <div className="col-span-2">
+                    <div className="col-span-2 flex-grow">
                         <ScrollArea className="h-full">
                             <div className='pr-4'>
                                 {selectedRecipe ? ( // PRODUCER VIEW
@@ -1573,5 +1490,3 @@ export function Dashboard({
     </div>
   );
 }
-
-    
