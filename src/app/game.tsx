@@ -324,6 +324,7 @@ export function Game() {
             currentData.username = newName;
             currentData.avatarUrl = newAvatar;
             currentData.privateNotes = data.privateNotes || '';
+            currentData.companyProfile.companyName = newName;
         }
         return currentData;
     }).then(() => {
@@ -1569,5 +1570,7 @@ export function Game() {
     </div>
   );
 }
+
+    
 
     
