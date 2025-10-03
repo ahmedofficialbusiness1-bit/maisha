@@ -561,7 +561,7 @@ export function Game() {
             timestamp: Date.now(), read: false, 
             icon: 'sale' 
         };
-        currentData.notifications = { ...(currentData.notifications || {}), [notifRef.key!]: newNotification };
+        currentData.notifications = { ...(currentData.notifications || {}), [newNotifRef.key!]: newNotification };
 
         return currentData;
     });
@@ -851,7 +851,7 @@ export function Game() {
              seller: gameState.username,
              sellerUid: user.uid,
              avatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-             quality: productInfo?.properties.find(p => p.label === 'Quality')?.value ? parseInt(productInfo.properties.find(p => p.label === 'Quality')!.value) : 1,
+             quality: 1,
              imageHint: productInfo?.imageHint || 'product photo'
          };
 
