@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Textarea } from '../ui/textarea';
-import { Clipboard, Pencil, Upload, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Clipboard, Pencil, Upload, ArrowLeft, MessageSquare, Crown } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -206,6 +206,9 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-md pointer-events-none">
                                     <Upload className="h-6 w-6 text-white" />
                                 </div>
+                            )}
+                             {rankNumber > 0 && rankNumber <= 3 && (
+                                <Crown className="absolute -top-3 -right-3 h-7 w-7 text-yellow-400 rotate-[30deg]" />
                             )}
                         </div>
                         <div className={cn(

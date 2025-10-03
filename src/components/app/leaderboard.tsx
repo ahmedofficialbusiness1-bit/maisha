@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Loader2 } from 'lucide-react';
+import { Crown, Loader2 } from 'lucide-react';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Button } from '../ui/button';
 import { getPlayerTier } from '@/lib/player-tiers';
@@ -79,11 +79,12 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                     </TableCell>
                                     <TableCell className="p-2 sm:p-4">
                                         <Button variant="ghost" className="flex items-center gap-3 p-0 h-auto hover:bg-transparent" onClick={() => onViewProfile(player.uid)}>
-                                            <div className={cn(rankWrapperClass)}>
+                                            <div className={cn("relative", rankWrapperClass)}>
                                                 <Avatar className='h-12 w-12 border-2 border-gray-900'>
                                                     <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                                     <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                                 </Avatar>
+                                                {index < 3 && <Crown className="absolute -top-3 -right-3 h-6 w-6 text-yellow-400 rotate-[30deg]" />}
                                             </div>
                                             <div className='flex flex-col items-start'>
                                                 <span className="font-semibold text-white">{player.username}</span>
@@ -121,11 +122,12 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                           <span>{index + 1}</span>
                                       </div>
                                       <div className="flex items-center gap-3">
-                                          <div className={cn(rankWrapperClass)}>
+                                          <div className={cn("relative", rankWrapperClass)}>
                                               <Avatar className='h-10 w-10 border-2 border-gray-800'>
                                                   <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                                   <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                               </Avatar>
+                                               {index < 3 && <Crown className="absolute -top-2.5 -right-2.5 h-5 w-5 text-yellow-400 rotate-[30deg]" />}
                                           </div>
                                           <div>
                                               <p className="font-semibold text-white">{player.username}</p>
