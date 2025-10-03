@@ -1007,10 +1007,10 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {buildingSlots.map((slot, index) => {
-          const currentActivityName = slot.activity ? slot.activity!.recipeId : null;
-          const style = slot.building ? (buildingStyles[slot.building.id] || buildingStyles.default) : buildingStyles.default;
-          
+          const slotName = `Slot ${String.fromCharCode(65 + index)}`;
           if (slot.building) {
+              const currentActivityName = slot.activity ? slot.activity!.recipeId : null;
+              const style = buildingStyles[slot.building.id] || buildingStyles.default;
               return (
                   <Card
                     key={index}
@@ -1019,6 +1019,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                       "flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2"
                     )}
                   >
+                      <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
+                        {slotName}
+                      </div>
                       <div className="w-full h-4/6 relative flex items-center justify-center">
                           <div className={cn("w-4/5 h-full rounded-t-md flex items-center justify-center", style.body)}>
                               <p className="text-3xl font-bold">🏢</p>
@@ -1033,17 +1036,17 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                       </div>
 
                       {slot.activity?.type === 'sell' && (
-                         <div className="absolute top-2 left-2 p-1 bg-green-500/80 rounded-full animate-pulse">
+                         <div className="absolute top-2 right-2 p-1 bg-green-500/80 rounded-full animate-pulse">
                             <CircleDollarSign className="h-4 w-4 text-white" />
                          </div>
                       )}
                       {slot.activity?.type === 'produce' && (
-                          <div className="absolute top-2 left-2 p-1 bg-blue-500/80 rounded-full animate-pulse">
+                          <div className="absolute top-2 right-2 p-1 bg-blue-500/80 rounded-full animate-pulse">
                               <Tractor className="h-4 w-4 text-white" />
                           </div>
                       )}
                       {slot.construction && (
-                         <div className="absolute top-2 left-2 p-1 bg-orange-500/80 rounded-full animate-pulse">
+                         <div className="absolute top-2 right-2 p-1 bg-orange-500/80 rounded-full animate-pulse">
                             <Hammer className="h-4 w-4 text-white" />
                          </div>
                       )}
@@ -1080,6 +1083,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                   onClick={() => handleCardClick(slot, index)}
                   className="flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2 hover:bg-gray-700/80 transition-colors"
               >
+                  <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
+                    {slotName}
+                  </div>
                   <div className="w-full h-4/6 relative flex items-center justify-center">
                       <div className="w-4/5 h-full rounded-t-md flex items-center justify-center bg-gray-700/50">
                           {!slot.locked && <PlusCircle className="h-8 w-8 text-gray-500 group-hover:text-blue-400 transition-colors" />}
