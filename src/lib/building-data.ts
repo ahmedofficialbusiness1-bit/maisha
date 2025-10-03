@@ -19,31 +19,50 @@ const DUKA_KUU_BUILD_COST = [
     { name: 'Mbao', quantity: 500 },
     { name: 'Matofali', quantity: 1000 },
     { name: 'Zege', quantity: 200 },
+    { name: 'Mabati', quantity: 150 },
+    { name: 'Nondo', quantity: 100 },
+    { name: 'Chuma', quantity: 50 },
 ];
 const DUKA_LA_UJENZI_BUILD_COST = [
-    { name: 'Nondo', quantity: 300 },
+    { name: 'Nondo', quantity: 500 },
     { name: 'Saruji', quantity: 500 },
     { name: 'Zege', quantity: 400 },
+    { name: 'Mabati', quantity: 200 },
+    { name: 'Matofali', quantity: 800 },
+    { name: 'Chuma', quantity: 250 },
 ];
 const DUKA_LA_NGUO_BUILD_COST = [
     { name: 'Mbao', quantity: 400 },
     { name: 'Kioo', quantity: 200 },
     { name: 'Zege', quantity: 150 },
+    { name: 'Mabati', quantity: 100 },
+    { name: 'Nondo', quantity: 50 },
+    { name: 'Matofali', quantity: 300 },
+    { name: 'Chuma', quantity: 50 },
 ];
 const DUKA_LA_ELECTRONIKI_BUILD_COST = [
     { name: 'Chuma', quantity: 300 },
     { name: 'Kioo', quantity: 300 },
     { name: 'Nondo', quantity: 150 },
+    { name: 'Mabati', quantity: 150 },
+    { name: 'Zege', quantity: 200 },
+    { name: 'Matofali', quantity: 400 },
 ];
 const DUKA_LA_MAGARI_BUILD_COST = [
     { name: 'Nondo', quantity: 800 },
     { name: 'Chuma', quantity: 500 },
     { name: 'Zege', quantity: 600 },
+    { name: 'Mabati', quantity: 400 },
+    { name: 'Matofali', quantity: 1200 },
+    { name: 'Kioo', quantity: 300 },
 ];
 const DUKA_LA_ANGA_BUILD_COST = [
     { name: 'Nondo', quantity: 2000 },
     { name: 'Chuma', quantity: 1500 },
     { name: 'Zege', quantity: 1000 },
+    { name: 'Mabati', quantity: 800 },
+    { name: 'Matofali', quantity: 2500 },
+    { name: 'Kioo', quantity: 1000 },
 ];
 const SHAMBA_BUILD_COST = [
     { name: 'Mabati', quantity: 150 },
@@ -729,40 +748,76 @@ export const buildingData: Record<string, BuildingConfig> = {
     // Research Buildings
     utafiti_kilimo: {
         productionRate: 3, // 3 research point per hour
-        buildCost: [{ name: 'Mbao', quantity: 1000 }, { name: 'Kioo', quantity: 500 }, { name: 'Zege', quantity: 500 }],
+        buildCost: [
+            { name: 'Mbao', quantity: 1000 }, 
+            { name: 'Matofali', quantity: 1000 },
+            { name: 'Nondo', quantity: 1000 },
+            { name: 'Zege', quantity: 1000 },
+            { name: 'Mabati', quantity: 1000 },
+            { name: 'Chuma', quantity: 1000 }
+        ],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     utafiti_ujenzi: {
         productionRate: 3,
-        buildCost: [{ name: 'Nondo', quantity: 1000 }, { name: 'Zege', quantity: 1000 }, { name: 'Chuma', quantity: 500 }],
+        buildCost: [
+            { name: 'Mbao', quantity: 1500 }, 
+            { name: 'Matofali', quantity: 1500 },
+            { name: 'Nondo', quantity: 1500 },
+            { name: 'Zege', quantity: 1500 },
+            { name: 'Mabati', quantity: 1500 },
+            { name: 'Chuma', quantity: 1500 }
+        ],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     utafiti_nguo: {
         productionRate: 3,
-        buildCost: [{ name: 'Kitamba', quantity: 500 }, { name: 'Kioo', quantity: 500 }, { name: 'Mbao', quantity: 500 }],
+        buildCost: [
+            { name: 'Mbao', quantity: 2000 }, 
+            { name: 'Matofali', quantity: 2000 },
+            { name: 'Nondo', quantity: 2000 },
+            { name: 'Zege', quantity: 2000 },
+            { name: 'Mabati', quantity: 2000 },
+            { name: 'Chuma', quantity: 2000 }
+        ],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     utafiti_electroniki: {
         productionRate: 3,
-        buildCost: [{ name: 'Nyaya', quantity: 1000 }, { name: 'PCB', quantity: 200 }, { name: 'Kioo', quantity: 300 }],
+        buildCost: [
+            { name: 'Mbao', quantity: 5000 }, 
+            { name: 'Matofali', quantity: 5000 },
+            { name: 'Nondo', quantity: 5000 },
+            { name: 'Zege', quantity: 5000 },
+            { name: 'Mabati', quantity: 5000 },
+            { name: 'Chuma', quantity: 5000 }
+        ],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     utafiti_usafiri: {
         productionRate: 3,
-        buildCost: [{ name: 'Engine', quantity: 5 }, { name: 'Car Body', quantity: 5 }, { name: 'Nondo', quantity: 1000 }],
+        buildCost: [
+            { name: 'Mbao', quantity: 10000 }, 
+            { name: 'Matofali', quantity: 10000 },
+            { name: 'Nondo', quantity: 10000 },
+            { name: 'Zege', quantity: 10000 },
+            { name: 'Mabati', quantity: 10000 },
+            { name: 'Chuma', quantity: 10000 }
+        ],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
     utafiti_anga: {
         productionRate: 3,
-        buildCost: [{ name: 'Tarakilishi', quantity: 2 }, { name: 'Fuselage', quantity: 1 }, { name: 'Nondo', quantity: 5000 }],
+        buildCost: [
+            { name: 'Mbao', quantity: 50000 }, 
+            { name: 'Matofali', quantity: 50000 },
+            { name: 'Nondo', quantity: 50000 },
+            { name: 'Zege', quantity: 50000 },
+            { name: 'Mabati', quantity: 50000 },
+            { name: 'Chuma', quantity: 50000 }
+        ],
         upgradeCost: function(level) { return calculateUpgradeCost(this.buildCost, level)}
     },
 };
-
-    
-
-    
-
-    
 
     
