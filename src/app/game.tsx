@@ -1181,48 +1181,6 @@ export function Game() {
     });
   }, [companyData, userRef, gameState, user, database]);
   
-  const handleGoPublic = () => {
-    if (!userRef || !database || !user) return;
-    
-    runTransaction(userRef, (currentData) => {
-        if(!currentData) return;
-
-        const sharesToSell = currentData.companyProfile.totalShares * 0.20;
-        const cashInfusion = sharesToSell * currentData.companyProfile.sharePrice;
-
-        currentData.companyProfile.isPublic = true;
-        currentData.companyProfile.availableShares -= sharesToSell;
-        currentData.money += cashInfusion;
-        
-        const newPublicListing: StockListing = {
-            id: currentData.companyProfile.ticker,
-            ticker: currentData.companyProfile.ticker,
-            companyName: currentData.companyProfile.companyName,
-            stockPrice: currentData.companyProfile.sharePrice,
-            totalShares: currentData.companyProfile.totalShares,
-            marketCap: currentData.companyProfile.marketCap,
-            logo: currentData.companyProfile.logo,
-            imageHint: 'company logo',
-            creditRating: getPlayerRating(currentData.netWorth),
-            isPlayerCompany: true,
-        };
-        
-        const companyRef = ref(database, `companies/${currentData.companyProfile.ticker}`);
-        set(companyRef, newPublicListing);
-
-        const transRefKey = push(ref(database, `users/${user.uid}/transactions`)).key!;
-        const newTransaction: Transaction = { id: transRefKey, type: 'income', amount: cashInfusion, description: `Initial Public Offering (IPO)`, timestamp: Date.now() };
-        
-        const notifRefKey = push(ref(database, `users/${user.uid}/notifications`)).key!;
-        const newNotification: Notification = { id: notifRefKey, message: `Hongera! Kampuni yako sasa inauzwa sokoni! Umepata $${cashInfusion.toLocaleString()}.`, timestamp: Date.now(), read: false, icon: 'sale' };
-
-        currentData.transactions = { ...currentData.transactions, [transRefKey]: newTransaction };
-        currentData.notifications = { ...currentData.notifications, [notifRefKey]: newNotification };
-        
-        return currentData;
-    });
-  };
-
 
 
   // Game loop for processing finished activities
@@ -1521,7 +1479,7 @@ export function Game() {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots || []} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} onGoPublic={handleGoPublic} />;
+        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} />;
       case 'market':
         return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} />;
       case 'encyclopedia':

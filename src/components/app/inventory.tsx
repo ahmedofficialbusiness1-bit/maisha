@@ -76,7 +76,6 @@ interface InventoryProps {
   onRejectContract: (contract: ContractListing) => void;
   onCancelContract: (contract: ContractListing) => void;
   onSellStock: (ticker: string, shares: number) => void;
-  onGoPublic: () => void;
   currentUserId: string;
   currentUsername: string;
   companyProfile: CompanyProfile;
@@ -511,9 +510,7 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
     );
 }
 
-function CompanyInventoryView({ companyProfile, netWorth, onGoPublic }: Pick<InventoryProps, 'companyProfile' | 'netWorth' | 'onGoPublic'>) {
-  const [isPublicDialogOpen, setIsPublicDialogOpen] = React.useState(false);
-  const IPO_QUALIFICATION_NET_WORTH = 50000;
+function CompanyInventoryView({ companyProfile, netWorth }: Pick<InventoryProps, 'companyProfile' | 'netWorth'>) {
   
   if (!companyProfile) {
     return (
@@ -533,14 +530,7 @@ function CompanyInventoryView({ companyProfile, netWorth, onGoPublic }: Pick<Inv
       </Card>
     );
   }
-  
-  const isQualifiedForIPO = netWorth >= IPO_QUALIFICATION_NET_WORTH;
 
-  const handleConfirmGoPublic = () => {
-    onGoPublic();
-    setIsPublicDialogOpen(false);
-  }
-  
   return (
     <>
       <Card className="bg-gray-800/60 border-gray-700">
@@ -566,49 +556,17 @@ function CompanyInventoryView({ companyProfile, netWorth, onGoPublic }: Pick<Inv
                   <div className="text-gray-300 font-bold">Thamani ya Soko</div>
                   <div className="font-mono text-right font-bold text-blue-300">${netWorth.toLocaleString()}</div>
               </div>
+              
+              <Alert variant="default" className="bg-blue-600/10 border-blue-500/30">
+                  <Info className="h-4 w-4 text-blue-300" />
+                  <AlertTitle className="text-blue-300">Uuzaji wa Hisa (IPO)</AlertTitle>
+                  <AlertDescription className="text-blue-400">
+                      Sheria na kanuni za jinsi ya kuuza hisa za kampuni yako kwa umma (IPO) zitakuja hivi karibuni. Endelea kufuatilia!
+                  </AlertDescription>
+              </Alert>
 
-              {companyProfile.isPublic ? (
-                  <Alert variant="default" className="bg-green-600/10 border-green-500/30">
-                      <Info className="h-4 w-4 text-green-300" />
-                      <AlertTitle className="text-green-300">Kampuni ya Umma</AlertTitle>
-                      <AlertDescription className="text-green-400">
-                          Hongera! Kampuni yako sasa inauza hisa zake kwenye soko la umma.
-                      </AlertDescription>
-                  </Alert>
-              ) : isQualifiedForIPO ? (
-                  <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setIsPublicDialogOpen(true)}>
-                      <TrendingUp className="mr-2 h-4 w-4" /> Toa Hisa Sokoni (Go Public)
-                  </Button>
-              ) : (
-                  <Alert variant="default" className="bg-yellow-600/10 border-yellow-500/30">
-                      <Info className="h-4 w-4 text-yellow-300" />
-                      <AlertTitle className="text-yellow-300">Vigezo Havijatimizwa</AlertTitle>
-                      <AlertDescription className="text-yellow-400">
-                          Kampuni yako inahitaji kufikia thamani ya ${IPO_QUALIFICATION_NET_WORTH.toLocaleString()} ili uweze kuuza hisa. Endelea kukuza biashara yako!
-                      </AlertDescription>
-                  </Alert>
-              )}
           </CardContent>
       </Card>
-      
-      <AlertDialog open={isPublicDialogOpen} onOpenChange={setIsPublicDialogOpen}>
-          <AlertDialogContent className="bg-gray-900 border-gray-700 text-white">
-              <AlertDialogHeader>
-              <AlertDialogTitle>Thibitisha Kuuza Hisa (IPO)</AlertDialogTitle>
-              <AlertDialogDescription>
-                  Je, una uhakika unataka kuuza hisa za kampuni yako kwa umma?
-                  <br/><br/>
-                  Hiki ni kitendo kisichoweza kutenduliwa. Utapokea pesa taslimu kwa kuuza 20% ya hisa zako, na kampuni yako itaorodheshwa kwenye soko la hisa kwa wachezaji wengine kununua.
-              </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                  <AlertDialogCancel>Ghairi</AlertDialogCancel>
-                  <AlertDialogAction className="bg-green-600 hover:bg-green-700" onClick={handleConfirmGoPublic}>
-                     Ndiyo, Toa Hisa Sokoni
-                  </AlertDialogAction>
-              </AlertDialogFooter>
-          </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
