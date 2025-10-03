@@ -1022,6 +1022,9 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
                         className="object-cover opacity-30 group-hover:opacity-40 transition-opacity"
                         data-ai-hint="isometric house"
                       />
+                       <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
+                            <Lock className="h-10 w-10 text-yellow-400/80" />
+                        </div>
                       <div className="absolute bottom-2 left-2 right-2 p-2 bg-black/60 rounded-md flex items-center justify-center gap-2">
                         <span className="text-sm font-bold text-white tracking-wider">UNLOCK</span>
                         <span className="font-bold text-white">{cost.toLocaleString()}</span>
@@ -1094,14 +1097,25 @@ export function Dashboard({ buildingSlots, inventory, stars, onBuild, onStartPro
             </Card>
           ) : (
             <Card
-              key={index}
-              onClick={() => handleOpenBuildDialog(index)}
-              className="flex items-center justify-center h-32 bg-gray-800/60 border-2 border-dashed border-gray-700 hover:border-blue-500 hover:bg-gray-800/90 transition-all cursor-pointer"
+                key={index}
+                onClick={() => handleOpenBuildDialog(index)}
+                className="flex flex-col items-center justify-between h-32 bg-gray-800/80 border-gray-700 overflow-hidden group relative cursor-pointer aspect-square p-2 hover:bg-gray-700/80 transition-colors"
             >
-              <div className="text-center text-gray-500">
-                <PlusCircle className="h-8 w-8 mx-auto" />
-                <span className="text-xs font-semibold">Build</span>
-              </div>
+                <div className="w-full h-4/6 relative flex items-center justify-center">
+                    <div className={cn("w-4/5 h-full rounded-t-md flex items-center justify-center bg-gray-700/50")}>
+                         <PlusCircle className="h-8 w-8 text-gray-500 group-hover:text-blue-400 transition-colors" />
+                    </div>
+                    <div 
+                        className={cn("absolute top-0 w-full h-0 border-b-[30px] border-b-gray-600/50")}
+                        style={{
+                            borderLeft: '20px solid transparent',
+                            borderRight: '20px solid transparent',
+                        }}
+                    />
+                </div>
+                 <div className="absolute bottom-0 p-2 text-center w-full bg-black/60">
+                    <p className="text-xs font-bold truncate text-gray-400 group-hover:text-blue-300 transition-colors">Build</p>
+                </div>
             </Card>
           )
         })}
