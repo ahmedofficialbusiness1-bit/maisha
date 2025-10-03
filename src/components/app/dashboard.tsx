@@ -688,13 +688,6 @@ export function Dashboard({
     return () => clearInterval(interval);
   }, []);
 
-  const handleOpenBuildDialog = (index: number) => {
-    setBuildDialogStep('list');
-    setSelectedBuildingForBuild(null);
-    setBuildingSearch('');
-    setDialogState({ ...dialogState, build: true, selectedSlotIndex: index });
-  };
-  
   const handleSelectBuildingToShowDetails = (building: BuildingType) => {
     setSelectedBuildingForBuild(building);
     setBuildDialogStep('details');
@@ -900,6 +893,29 @@ export function Dashboard({
 
   const buildCosts = selectedBuildingForBuild ? buildingData[selectedBuildingForBuild.id]?.buildCost : [];
   const canAffordBuild = hasEnoughMaterials(buildCosts);
+
+  const buildingCategories = React.useMemo(() => {
+    return availableBuildings.reduce((acc, building) => {
+        const firstRecipe = recipes.find(r => r.buildingId === building.id);
+        let category = 'Other';
+        if (SHOP_BUILDING_IDS.includes(building.id)) {
+            category = 'Shops';
+        } else if (RESEARCH_BUILDING_IDS.includes(building.id)) {
+            category = 'Research';
+        } else if (firstRecipe) {
+            const product = encyclopediaData.find(p => p.name === firstRecipe.output.name);
+            category = product?.category || 'Production';
+        } else {
+             if (building.id.includes('uchimbaji')) category = 'Mining';
+             else if (building.id.includes('kiwanda')) category = 'Factories';
+        }
+        if (!acc[category]) {
+            acc[category] = [];
+        }
+        acc[category].push(building);
+        return acc;
+    }, {} as Record<string, BuildingType[]>);
+  }, []);
   
     const filteredBuildingCategories = React.useMemo(() => {
         if (!buildingSearch) return buildingCategories;
@@ -917,7 +933,7 @@ export function Dashboard({
             }
         }
         return filtered;
-    }, [buildingSearch]);
+    }, [buildingSearch, buildingCategories]);
 
     const handleSellingPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = parseFloat(e.target.value) || 0;
@@ -1540,4 +1556,6 @@ const formatTime = (ms: number) => {
     return `${minutes}:${seconds}`;
 };
 
-  
+    
+
+    
