@@ -42,7 +42,7 @@ export type Notification = {
 const BUILDING_SLOTS = 20;
 
 const initialCompanyData: StockListing[] = [
-    { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, totalShares: 250000, marketCap: 450.75 * 250000, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 100000, dividendYield: 0.015 },
+    { id: 'UCHUMI', ticker: 'UCHUMI', companyName: 'Uchumi wa Afrika', stockPrice: 450.75, totalShares: 250000, marketCap: 450.75 * 250000, logo: 'https://picsum.photos/seed/uchumi/40/40', imageHint: 'company logo', creditRating: 'AA+', dailyRevenue: 100000, dividendYield: 0.015, isPlayerCompany: false },
     { id: 'KILIMO', ticker: 'KILIMO', companyName: 'Kilimo Fresh Inc.', stockPrice: 120.50, totalShares: 1000000, marketCap: 120.50 * 1000000, logo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo', creditRating: 'A-', dailyRevenue: 150000, dividendYield: 0.022, isPlayerCompany: false },
 ];
 
@@ -252,11 +252,10 @@ export function Game() {
   };
   
  const addNotification = React.useCallback((message: string, icon: Notification['icon']) => {
-    if (!userRef) return;
+    if (!userRef || !user) return;
     runTransaction(userRef, (currentData) => {
         if (currentData) {
-            const notificationsRef = ref(userRef, 'notifications');
-            const newNotifRef = push(notificationsRef);
+            const newNotifRef = push(ref(database, `users/${user.uid}/notifications`));
             const newNotification: Notification = {
                 id: newNotifRef.key!,
                 message,
@@ -268,15 +267,14 @@ export function Game() {
         }
         return currentData;
     });
-  }, [userRef]);
+  }, [userRef, user, database]);
 
 
  const addTransaction = React.useCallback((type: 'income' | 'expense', amount: number, description: string) => {
-    if (!userRef) return;
+    if (!userRef || !user) return;
     runTransaction(userRef, (currentData) => {
         if (currentData) {
-            const transactionsRef = ref(userRef, 'transactions');
-            const newTransRef = push(transactionsRef);
+            const newTransRef = push(ref(database, `users/${user.uid}/transactions`));
             const newTransaction: Transaction = {
                 id: newTransRef.key!,
                 type,
@@ -288,7 +286,7 @@ export function Game() {
         }
         return currentData;
     });
-}, [userRef]);
+}, [userRef, user, database]);
 
 
   const handleMarkNotificationsRead = () => {
@@ -358,7 +356,7 @@ export function Game() {
   }
   
   const handleBuild = (slotIndex: number, building: BuildingType) => {
-    if (!userRef) return;
+    if (!userRef || !user) return;
 
     runTransaction(userRef, (currentData) => {
         if (!currentData) return currentData;
@@ -395,7 +393,7 @@ export function Game() {
         };
         
         // Add notification
-        const newNotifRef = push(ref(userRef, 'notifications'));
+        const newNotifRef = push(ref(database, `users/${user.uid}/notifications`));
         const newNotification: Notification = { 
             id: newNotifRef.key!, 
             message: `Ujenzi wa ${building.name} umeanza.`, 
@@ -410,7 +408,7 @@ export function Game() {
   };
   
   const handleUpgradeBuilding = (slotIndex: number) => {
-    if (!userRef) return;
+    if (!userRef || !user) return;
 
     runTransaction(userRef, (currentData) => {
         if (!currentData) return currentData;
@@ -447,7 +445,7 @@ export function Game() {
         };
         
         // Add notification
-        const notifRef = push(ref(userRef, 'notifications'));
+        const notifRef = push(ref(database, `users/${user.uid}/notifications`));
         const newNotification: Notification = { 
             id: notifRef.key!, 
             message: `Uboreshaji wa ${slot.building.name} hadi Lvl ${slot.level + 1} umeanza.`, 
@@ -472,7 +470,7 @@ export function Game() {
   };
 
   const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
-     if (!userRef) return;
+     if (!userRef || !user) return;
      runTransaction(userRef, (currentData) => {
          if (!currentData) return;
 
@@ -498,7 +496,7 @@ export function Game() {
              };
          }
          
-         const notifRef = push(ref(userRef, 'notifications'));
+         const notifRef = push(ref(database, `users/${user.uid}/notifications`));
          const newNotification: Notification = { 
             id: notifRef.key!, 
             message: `Umeanza kuzalisha ${recipe.output.quantity * quantity}x ${recipe.output.name}.`, 
@@ -513,7 +511,7 @@ export function Game() {
   };
 
   const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => {
-    if (!userRef) return;
+    if (!userRef || !user) return;
     runTransaction(userRef, (currentData) => {
         if (!currentData) return;
 
@@ -537,7 +535,7 @@ export function Game() {
             };
         }
         
-        const notifRef = push(ref(userRef, 'notifications'));
+        const notifRef = push(ref(database, `users/${user.uid}/notifications`));
         const newNotification: Notification = { 
             id: notifRef.key!, 
             message: `Umeanza kuuza ${quantity}x ${item.item}.`, 
@@ -566,7 +564,7 @@ export function Game() {
   };
   
   const handleBuyMaterial = (materialName: string, quantity: number): boolean => {
-    if (!userRef) return false;
+    if (!userRef || !user) return false;
     const costPerUnit = calculatedPrices[materialName] || 0;
     if (costPerUnit === 0) return false;
 
@@ -586,13 +584,13 @@ export function Game() {
         }
         currentData.inventory = newInventory;
         
-        const transRef = push(ref(userRef, 'transactions'));
+        const transRef = push(ref(database, `users/${user.uid}/transactions`));
         const newTransaction: Transaction = {
           id: transRef.key!, type: 'expense', amount: totalCost, 
           description: `Nunua ${quantity}x ${materialName}`, timestamp: Date.now()
         };
         
-        const notifRef = push(ref(userRef, 'notifications'));
+        const notifRef = push(ref(database, `users/${user.uid}/notifications`));
         const newNotification: Notification = {
           id: notifRef.key!, message: `Umenunua ${quantity}x ${materialName} kwa $${totalCost.toFixed(2)}.`, 
           timestamp: Date.now(), read: false, icon: 'purchase'
@@ -655,10 +653,10 @@ export function Game() {
                         newInventory.push({ item: listing.commodity, quantity: quantityToBuy, marketPrice: listing.price });
                     }
                     
-                    const transRef = push(ref(userRef, 'transactions'));
+                    const transRef = push(ref(database, `users/${user.uid}/transactions`));
                     const newTransaction: Transaction = { id: transRef.key!, type: 'expense', amount: totalCost, description: `Bought ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, timestamp: Date.now() };
 
-                    const notifRef = push(ref(userRef, 'notifications'));
+                    const notifRef = push(ref(database, `users/${user.uid}/notifications`));
                     const newNotification: Notification = { id: notifRef.key!, message: `Umenunua ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, timestamp: Date.now(), read: false, icon: 'purchase' };
 
                     currentData.money -= totalCost;
@@ -677,11 +675,11 @@ export function Game() {
             if (sellerData) {
                 sellerData.money += totalCost;
                 
-                const sellerTransRef = push(ref(sellerUserRef, 'transactions'));
+                const sellerTransRef = push(ref(database, `users/${listing.sellerUid}/transactions`));
                 const newTransaction: Transaction = { id: sellerTransRef.key!, type: 'income', amount: totalCost, description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`, timestamp: Date.now() };
                 sellerData.transactions = { ...sellerData.transactions, [newTransaction.id]: newTransaction };
 
-                const sellerNotifRef = push(ref(sellerUserRef, 'notifications'));
+                const sellerNotifRef = push(ref(database, `users/${listing.sellerUid}/notifications`));
                 const newNotification: Notification = { id: sellerNotifRef.key!, message: `You sold ${quantityToBuy}x ${listing.commodity} for $${totalCost.toFixed(2)} to ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
                 sellerData.notifications = { ...sellerData.notifications, [newNotification.id]: newNotification };
             }
@@ -697,7 +695,7 @@ export function Game() {
   };
   
  const handleBuyStock = React.useCallback((stock: StockListing, quantity: number) => {
-    if (!userRef || quantity <= 0) return;
+    if (!userRef || quantity <= 0 || !user) return;
     
     runTransaction(userRef, currentData => {
         if (!currentData) return;
@@ -715,10 +713,10 @@ export function Game() {
         }
         currentData.playerStocks = newPlayerStocks;
         
-        const transRef = push(ref(userRef, 'transactions'));
+        const transRef = push(ref(database, `users/${user.uid}/transactions`));
         const newTransaction: Transaction = { id: transRef.key!, type: 'expense', amount: totalCost, description: `Nunua hisa ${quantity}x ${stock.ticker}`, timestamp: Date.now() };
         
-        const notifRef = push(ref(userRef, 'notifications'));
+        const notifRef = push(ref(database, `users/${user.uid}/notifications`));
         const newNotification: Notification = { id: notifRef.key!, message: `Umenunua hisa ${quantity}x ${stock.ticker}.`, timestamp: Date.now(), read: false, icon: 'purchase' };
 
         currentData.transactions = { ...currentData.transactions, [newTransaction.id]: newTransaction };
@@ -726,11 +724,11 @@ export function Game() {
         
         return currentData;
     });
-  }, [userRef]);
+  }, [userRef, user, database]);
 
 
  const handleSellStock = React.useCallback((ticker: string, shares: number) => {
-    if (!userRef || shares <= 0) return;
+    if (!userRef || shares <= 0 || !user) return;
     
     const stockInfo = companyData.find(s => s.ticker === ticker);
     if (!stockInfo) return;
@@ -752,10 +750,10 @@ export function Game() {
         }).filter(s => s.shares > 0);
         currentData.playerStocks = newPlayerStocks;
 
-        const transRef = push(ref(userRef, 'transactions'));
+        const transRef = push(ref(database, `users/${user.uid}/transactions`));
         const newTransaction: Transaction = { id: transRef.key!, type: 'income', amount: totalSale, description: `Uza hisa ${shares}x ${ticker}`, timestamp: Date.now() };
 
-        const notifRef = push(ref(userRef, 'notifications'));
+        const notifRef = push(ref(database, `users/${user.uid}/notifications`));
         const newNotification: Notification = { id: notifRef.key!, message: `Umeuza hisa ${shares}x ${ticker}.`, timestamp: Date.now(), read: false, icon: 'sale' };
 
         currentData.transactions = { ...currentData.transactions, [newTransaction.id]: newTransaction };
@@ -763,7 +761,7 @@ export function Game() {
         
         return currentData;
     });
-  }, [userRef, companyData]);
+  }, [userRef, companyData, user, database]);
 
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
@@ -911,11 +909,11 @@ export function Game() {
         if (userData) {
             userData.money += amount;
 
-            const transRef = push(ref(targetUserRef, 'transactions'));
+            const transRef = push(ref(database, `users/${targetUid}/transactions`));
             const newTransaction: Transaction = { id: transRef.key!, type: 'income', amount: amount, description: `Admin Gift: Money`, timestamp: Date.now() };
             userData.transactions = { ...userData.transactions, [newTransaction.id]: newTransaction };
             
-            const notifRef = push(ref(targetUserRef, 'notifications'));
+            const notifRef = push(ref(database, `users/${targetUid}/notifications`));
             const newNotification: Notification = { id: notifRef.key!, message: `You received $${amount.toLocaleString()} from an Admin.`, timestamp: Date.now(), read: false, icon: 'purchase' };
             userData.notifications = { ...userData.notifications, [newNotification.id]: newNotification };
         }
@@ -936,7 +934,7 @@ export function Game() {
         if (userData) {
             userData.stars += amount;
 
-            const notifRef = push(ref(targetUserRef, 'notifications'));
+            const notifRef = push(ref(database, `users/${targetUid}/notifications`));
             const newNotification: Notification = { id: notifRef.key!, message: `You received ${amount.toLocaleString()} Stars from an Admin.`, timestamp: Date.now(), read: false, icon: 'purchase' };
             userData.notifications = { ...userData.notifications, [newNotification.id]: newNotification };
         }
@@ -988,7 +986,7 @@ export function Game() {
                     newInventory.push({ item: contract.commodity, quantity: contract.quantity, marketPrice: contract.pricePerUnit });
                 }
                 
-                const transRef = push(ref(userRef, 'transactions'));
+                const transRef = push(ref(database, `users/${user.uid}/transactions`));
                 const newTransaction: Transaction = { id: transRef.key!, type: 'expense', amount: totalCost, description: `Contract purchase: ${contract.quantity}x ${contract.commodity}`, timestamp: Date.now() };
                 
                 currentData.money -= totalCost;
@@ -1006,11 +1004,11 @@ export function Game() {
                 if (sellerData) {
                     sellerData.money += totalCost;
 
-                    const transRef = push(ref(sellerUserRef, 'transactions'));
+                    const transRef = push(ref(database, `users/${contract.sellerUid}/transactions`));
                     const newTransaction: Transaction = { id: transRef.key!, type: 'income', amount: totalCost, description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`, timestamp: Date.now() };
                     sellerData.transactions = { ...sellerData.transactions, [newTransaction.id]: newTransaction };
                     
-                    const notifRef = push(ref(sellerUserRef, 'notifications'));
+                    const notifRef = push(ref(database, `users/${contract.sellerUid}/notifications`));
                     const newNotification: Notification = { id: notifRef.key!, message: `Your contract for ${contract.quantity}x ${contract.commodity} was accepted by ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
                     sellerData.notifications = { ...sellerData.notifications, [newNotification.id]: newNotification };
                 }
@@ -1046,7 +1044,7 @@ export function Game() {
                     sellerData.inventory.push({ item: contract.commodity, quantity: contract.quantity, marketPrice: contract.pricePerUnit });
                 }
 
-                const notifRef = push(ref(sellerUserRef, 'notifications'));
+                const notifRef = push(ref(database, `users/${contract.sellerUid}/notifications`));
                 const newNotification: Notification = { id: notifRef.key!, message: `Your contract for ${contract.quantity}x ${contract.commodity} was rejected. Items have been returned.`, timestamp: Date.now(), read: false, icon: 'purchase' };
                 sellerData.notifications = { ...sellerData.notifications, [newNotification.id]: newNotification };
             }
@@ -1083,7 +1081,7 @@ export function Game() {
   };
 
   const handleDailyDividends = React.useCallback(() => {
-    if (!userRef || !gameState) return;
+    if (!userRef || !gameState || !user) return;
     runTransaction(userRef, (currentGameState) => {
         if (!currentGameState || !currentGameState.playerStocks || currentGameState.playerStocks.length === 0) return currentGameState;
         
@@ -1096,7 +1094,7 @@ export function Game() {
                 const dividendEarned = dividendPerShare * playerStock.shares;
                 totalDividend += dividendEarned;
                 
-                const notifRef = push(ref(userRef, 'notifications'));
+                const notifRef = push(ref(database, `users/${user.uid}/notifications`));
                 const newNotification: Notification = {
                     id: notifRef.key!,
                     message: `Umelipwa gawio la $${dividendEarned.toFixed(2)} kutoka kwa hisa za ${playerStock.ticker}.`,
@@ -1109,7 +1107,7 @@ export function Game() {
         }
 
         if (totalDividend > 0) {
-            const transRef = push(ref(userRef, 'transactions'));
+            const transRef = push(ref(database, `users/${user.uid}/transactions`));
             const newTransaction: Transaction = {
                 id: transRef.key!,
                 type: 'income',
@@ -1123,10 +1121,10 @@ export function Game() {
         }
         return currentGameState;
     });
-  }, [companyData, userRef, gameState]);
+  }, [companyData, userRef, gameState, user, database]);
   
   const handleGoPublic = () => {
-    if (!userRef || !database) return;
+    if (!userRef || !database || !user) return;
     
     runTransaction(userRef, (currentData) => {
         if(!currentData) return;
@@ -1154,10 +1152,10 @@ export function Game() {
         const companyRef = ref(database, `companies/${currentData.companyProfile.ticker}`);
         set(companyRef, newPublicListing);
 
-        const transRef = push(ref(userRef, 'transactions'));
+        const transRef = push(ref(database, `users/${user.uid}/transactions`));
         const newTransaction: Transaction = { id: transRef.key!, type: 'income', amount: cashInfusion, description: `Initial Public Offering (IPO)`, timestamp: Date.now() };
         
-        const notifRef = push(ref(userRef, 'notifications'));
+        const notifRef = push(ref(database, `users/${user.uid}/notifications`));
         const newNotification: Notification = { id: notifRef.key!, message: `Hongera! Kampuni yako sasa inauzwa sokoni! Umepata $${cashInfusion.toLocaleString()}.`, timestamp: Date.now(), read: false, icon: 'sale' };
 
         currentData.transactions = { ...currentData.transactions, [newTransaction.id]: newTransaction };
@@ -1171,7 +1169,7 @@ export function Game() {
 
   // Game loop for processing finished activities
   React.useEffect(() => {
-    if (!userRef || !gameState) return;
+    if (!userRef || !gameState || !user) return;
     const activityInterval = setInterval(() => {
         runTransaction(userRef, (currentGameState: UserData | null) => {
             if (!currentGameState) return null;
@@ -1197,7 +1195,7 @@ export function Game() {
                 // Process construction
                 if (slot.construction && now >= slot.construction.endTime) {
                     slot.level = slot.construction.targetLevel;
-                    const notifRef = push(ref(userRef, 'notifications'));
+                    const notifRef = push(ref(database, `users/${user.uid}/notifications`));
                     newNotifications[notifRef.key!] = { id: notifRef.key!, message: `Ujenzi wa ${slot.building?.name} Lvl ${slot.level} umekamilika!`, timestamp: now, read: false, icon: 'construction' };
                     newXP += 100 * slot.level;
                     delete slot.construction;
@@ -1214,16 +1212,16 @@ export function Game() {
                         } else {
                             newInventory.push({ item: itemName, quantity, marketPrice: calculatedPrices[itemName] || 0 });
                         }
-                        const notifRef = push(ref(userRef, 'notifications'));
+                        const notifRef = push(ref(database, `users/${user.uid}/notifications`));
                         newNotifications[notifRef.key!] = { id: notifRef.key!, message: `Uzalishaji wa ${quantity}x ${itemName} umekamilika.`, timestamp: now, read: false, icon: 'production' };
                         newXP += quantity * 2;
                     } else if (slot.activity.type === 'sell') {
                         const { saleValue, quantity, recipeId: itemName } = slot.activity;
                         const profit = saleValue * 0.95; // 5% tax
-                        const transRef = push(ref(userRef, 'transactions'));
+                        const transRef = push(ref(database, `users/${user.uid}/transactions`));
                         newTransactions[transRef.key!] = { id: transRef.key!, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${itemName}`, timestamp: now };
                         newMoney += profit;
-                        const notifRef = push(ref(userRef, 'notifications'));
+                        const notifRef = push(ref(database, `users/${user.uid}/notifications`));
                         newNotifications[notifRef.key!] = { id: notifRef.key!, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, timestamp: now, read: false, icon: 'sale' };
                         newXP += Math.floor(profit * 0.01);
                     }
@@ -1238,7 +1236,7 @@ export function Game() {
                 while (newXP >= xpForNextLevel) {
                     newXP -= xpForNextLevel;
                     newLevel++;
-                    const levelUpNotifRef = push(ref(userRef, 'notifications'));
+                    const levelUpNotifRef = push(ref(database, `users/${user.uid}/notifications`));
                     newNotifications[levelUpNotifRef.key!] = { id: levelUpNotifRef.key!, message: `Hongera! Umefikia Level ${newLevel}!`, timestamp: now, read: false, icon: 'level-up' };
                     xpForNextLevel = getXpForNextLevel(newLevel);
                 }
@@ -1264,7 +1262,7 @@ export function Game() {
         clearInterval(activityInterval);
         clearInterval(dividendInterval);
     };
-  }, [userRef, gameState, handleDailyDividends]);
+  }, [userRef, gameState, handleDailyDividends, user, database]);
 
   const { netWorth, buildingValue, stockValue, inventoryValue } = React.useMemo(() => {
     if (!gameState) return { netWorth: 0, buildingValue: 0, stockValue: 0, inventoryValue: 0 };
