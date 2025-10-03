@@ -1226,87 +1226,89 @@ export function Dashboard({
         
         {/* Management Dialog */}
         <Dialog open={dialogState.manage} onOpenChange={(open) => setDialogState(prev => ({ ...prev, manage: open }))}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white">
+            <DialogContent className="bg-gray-900 border-gray-700 text-white flex flex-col max-h-[90vh]">
                 <DialogHeader>
                     <DialogTitle>Simamia {selectedSlot?.building?.name}</DialogTitle>
                     <DialogDescription>
                         Chagua kitendo cha kufanya kwenye jengo hili.
                     </DialogDescription>
                 </DialogHeader>
-                <div className='py-4 space-y-4'>
-                    <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
-                        {isSelectedBuildingShop ? <Store className='mr-2'/> : <Tractor className='mr-2'/>} 
-                        {isSelectedBuildingShop ? "Anza Kuuza" : "Anza Uzalishaji"}
-                    </Button>
-                    <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
-                        <h3 className="text-lg font-semibold mb-2">Boresha Jengo</h3>
-                        <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
-                            <ChevronsUp className='mr-2'/> Boresha hadi Level {(selectedSlot?.level || 0) + 1}
+                 <ScrollArea className='-mr-6 pr-6'>
+                    <div className='py-4 space-y-4'>
+                        <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
+                            {isSelectedBuildingShop ? <Store className='mr-2'/> : <Tractor className='mr-2'/>} 
+                            {isSelectedBuildingShop ? "Anza Kuuza" : "Anza Uzalishaji"}
                         </Button>
-                        <Separator className='my-3 bg-gray-600'/>
-                        <div className='space-y-1'>
-                            <p className='font-semibold mb-1 text-xs'>Gharama ya Kuboresha:</p>
-                            <div className="space-y-1">
-                                {upgradeCosts && upgradeCosts.map(cost => {
-                                    const invItem = inventory.find(i => i.item === cost.name);
-                                    const has = invItem?.quantity || 0;
-                                    const needed = cost.quantity;
-                                    const hasEnough = has >= needed;
-                                    return (
-                                        <div key={cost.name} className='flex justify-between items-center p-1 rounded-md text-xs'>
-                                            <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                {cost.name}
-                                            </span>
-                                            <div className='flex items-center gap-1'>
-                                                <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                    {has.toLocaleString()}/{needed.toLocaleString()}
+                        <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
+                            <h3 className="text-lg font-semibold mb-2">Boresha Jengo</h3>
+                            <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerUpgrade} disabled={!canAffordUpgrade}>
+                                <ChevronsUp className='mr-2'/> Boresha hadi Level {(selectedSlot?.level || 0) + 1}
+                            </Button>
+                            <Separator className='my-3 bg-gray-600'/>
+                            <div className='space-y-1'>
+                                <p className='font-semibold mb-1 text-xs'>Gharama ya Kuboresha:</p>
+                                <div className="space-y-1">
+                                    {upgradeCosts && upgradeCosts.map(cost => {
+                                        const invItem = inventory.find(i => i.item === cost.name);
+                                        const has = invItem?.quantity || 0;
+                                        const needed = cost.quantity;
+                                        const hasEnough = has >= needed;
+                                        return (
+                                            <div key={cost.name} className='flex justify-between items-center p-1 rounded-md text-xs'>
+                                                <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                    {cost.name}
                                                 </span>
-                                                {!hasEnough && (
-                                                    <Button size="sm" variant="secondary" className="h-5 px-1.5 text-[10px]" onClick={() => onBuyMaterial(cost.name, needed - has)}>
-                                                        Nunua
-                                                    </Button>
-                                                )}
+                                                <div className='flex items-center gap-1'>
+                                                    <span className={cn('font-mono', hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                        {has.toLocaleString()}/{needed.toLocaleString()}
+                                                    </span>
+                                                    {!hasEnough && (
+                                                        <Button size="sm" variant="secondary" className="h-5 px-1.5 text-[10px]" onClick={() => onBuyMaterial(cost.name, needed - has)}>
+                                                            Nunua
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )
-                                })}
+                                        )
+                                    })}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                     {isSelectedBuildingProducible && (
-                        <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
-                             <h3 className="text-lg font-semibold mb-2">Fanya Utafiti (Boresha Ubora)</h3>
-                             <p className="text-sm text-gray-400 mb-2">
-                                Kiwango cha sasa cha ubora: <strong className="text-yellow-300">Q{qualityInfo?.current ?? 0}</strong>
-                             </p>
-                             {qualityInfo && qualityInfo.requirement ? (
-                                <>
-                                    <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerQualityUpgrade} disabled={!qualityInfo.canAfford}>
-                                        <Award className='mr-2'/> Boresha hadi Q{qualityInfo.next}
-                                    </Button>
-                                    <Separator className='my-3 bg-gray-600'/>
-                                    <div className='space-y-1'>
-                                        <p className='font-semibold mb-1 text-xs'>Gharama ya Utafiti:</p>
-                                        <div className='flex justify-between items-center p-1 rounded-md text-xs'>
-                                            <span className={cn(qualityInfo.canAfford ? 'text-gray-300' : 'text-red-400')}>
-                                                {qualityInfo.requirement}
-                                            </span>
-                                            <span className={cn('font-mono', qualityInfo.canAfford ? 'text-gray-300' : 'text-red-400')}>
-                                                {qualityInfo.playerHas.toLocaleString()} / {qualityInfo.cost.toLocaleString()}
-                                            </span>
+                        {isSelectedBuildingProducible && (
+                            <div className='p-4 rounded-lg bg-gray-800/50 border border-gray-700'>
+                                <h3 className="text-lg font-semibold mb-2">Fanya Utafiti (Boresha Ubora)</h3>
+                                <p className="text-sm text-gray-400 mb-2">
+                                    Kiwango cha sasa cha ubora: <strong className="text-yellow-300">Q{qualityInfo?.current ?? 0}</strong>
+                                </p>
+                                {qualityInfo && qualityInfo.requirement ? (
+                                    <>
+                                        <Button className='w-full justify-start' variant="secondary" onClick={handleTriggerQualityUpgrade} disabled={!qualityInfo.canAfford}>
+                                            <Award className='mr-2'/> Boresha hadi Q{qualityInfo.next}
+                                        </Button>
+                                        <Separator className='my-3 bg-gray-600'/>
+                                        <div className='space-y-1'>
+                                            <p className='font-semibold mb-1 text-xs'>Gharama ya Utafiti:</p>
+                                            <div className='flex justify-between items-center p-1 rounded-md text-xs'>
+                                                <span className={cn(qualityInfo.canAfford ? 'text-gray-300' : 'text-red-400')}>
+                                                    {qualityInfo.requirement}
+                                                </span>
+                                                <span className={cn('font-mono', qualityInfo.canAfford ? 'text-gray-300' : 'text-red-400')}>
+                                                    {qualityInfo.playerHas.toLocaleString()} / {qualityInfo.cost.toLocaleString()}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                </>
-                             ) : (
-                                <p className="text-sm text-green-400">Utafiti umefikia kiwango cha juu!</p>
-                             )}
-                        </div>
-                     )}
+                                    </>
+                                ) : (
+                                    <p className="text-sm text-green-400">Utafiti umefikia kiwango cha juu!</p>
+                                )}
+                            </div>
+                        )}
 
-                    <Button className='w-full justify-start' variant="destructive" onClick={() => setDialogState(prev => ({...prev, demolish: true}))}>
-                        <Trash2 className='mr-2'/> Futa Jengo
-                    </Button>
-                </div>
+                        <Button className='w-full justify-start' variant="destructive" onClick={() => setDialogState(prev => ({...prev, demolish: true}))}>
+                            <Trash2 className='mr-2'/> Futa Jengo
+                        </Button>
+                    </div>
+                </ScrollArea>
             </DialogContent>
         </Dialog>
 
@@ -1349,171 +1351,171 @@ export function Dashboard({
 
         {/* Production/Selling Dialog */}
         <Dialog open={dialogState.production} onOpenChange={(open) => setDialogState(prev => ({...prev, production: open}))}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl">
+            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl max-h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>{isSelectedBuildingShop ? 'Uza Bidhaa' : 'Uzalishaji'}: {selectedSlot?.building?.name} (Lvl {selectedSlot?.level})</DialogTitle>
                     <DialogDescription>
                         {isSelectedBuildingShop ? 'Chagua bidhaa, weka kiasi na bei, na anza kuuza.' : 'Chagua bidhaa, weka kiasi, na anza mchakato wa uzalishaji.'}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid grid-cols-3 gap-4 pt-4">
+                <div className="grid grid-cols-3 gap-4 pt-4 flex-grow overflow-hidden">
                     {/* Recipe/Item List */}
                     <div className="col-span-1 flex flex-col gap-2">
-                        {isSelectedBuildingShop ? (
-                            shopInventory.length > 0 ? (
-                                <ScrollArea className="h-96">
-                                <div className="flex flex-col gap-2 pr-4">
-                                {shopInventory.map((item) => (
-                                    <Button
-                                    key={item.item}
-                                    variant="outline"
-                                    className={cn(
-                                        "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
-                                        selectedInventoryItem?.item === item.item && "bg-blue-600 border-blue-400"
-                                    )}
-                                    onClick={() => setSelectedInventoryItem(item)}
-                                    >
-                                    {item.item}
-                                    </Button>
-                                ))}
-                                </div>
-                                </ScrollArea>
-                            ) : (
-                                <p className="text-sm text-gray-500">Hakuna bidhaa zinazohusiana na duka hili kwenye ghala.</p>
-                            )
-                        ) : (
-                             buildingRecipes.length > 0 ? (
-                                <ScrollArea className="h-96">
-                                <div className="flex flex-col gap-2 pr-4">
-                                {buildingRecipes.map((recipe) => (
-                                    <Button
-                                    key={recipe.id}
-                                    variant="outline"
-                                    className={cn(
-                                        "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
-                                        selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
-                                    )}
-                                    onClick={() => setSelectedRecipe(recipe)}
-                                    >
-                                    {recipe.output.name}
-                                    </Button>
-                                ))}
-                                </div>
-                                </ScrollArea>
-                            ) : (
-                                <p className="text-sm text-gray-500">Hakuna mapishi kwa jengo hili.</p>
-                            )
-                        )}
+                        <ScrollArea className="h-full">
+                            <div className="flex flex-col gap-2 pr-4">
+                                {isSelectedBuildingShop ? (
+                                    shopInventory.length > 0 ? (
+                                        shopInventory.map((item) => (
+                                            <Button
+                                            key={item.item}
+                                            variant="outline"
+                                            className={cn(
+                                                "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
+                                                selectedInventoryItem?.item === item.item && "bg-blue-600 border-blue-400"
+                                            )}
+                                            onClick={() => setSelectedInventoryItem(item)}
+                                            >
+                                            {item.item}
+                                            </Button>
+                                        ))
+                                    ) : (
+                                        <p className="text-sm text-gray-500">Hakuna bidhaa zinazohusiana na duka hili kwenye ghala.</p>
+                                    )
+                                ) : (
+                                    buildingRecipes.length > 0 ? (
+                                        buildingRecipes.map((recipe) => (
+                                            <Button
+                                            key={recipe.id}
+                                            variant="outline"
+                                            className={cn(
+                                                "w-full justify-start h-auto py-2 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:text-white",
+                                                selectedRecipe?.id === recipe.id && "bg-blue-600 border-blue-400"
+                                            )}
+                                            onClick={() => setSelectedRecipe(recipe)}
+                                            >
+                                            {recipe.output.name}
+                                            </Button>
+                                        ))
+                                    ) : (
+                                        <p className="text-sm text-gray-500">Hakuna mapishi kwa jengo hili.</p>
+                                    )
+                                )}
+                            </div>
+                        </ScrollArea>
                     </div>
                     {/* Production/Sale Details */}
                     <div className="col-span-2">
-                        {selectedRecipe ? ( // PRODUCER VIEW
-                            <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
-                                <h3 className='text-xl font-bold'>{selectedRecipe.output.name}</h3>
-                                <div>
-                                    <h4 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h4>
-                                    <div className='text-sm space-y-2 text-gray-300 list-disc list-inside'>
-                                    {selectedRecipe.inputs.length > 0 ? selectedRecipe.inputs.map(input => {
-                                        const invItem = inventory.find(i => i.item === input.name);
-                                        const has = invItem?.quantity || 0;
-                                        const needed = input.quantity * productionQuantity;
-                                        const hasEnough = has >= needed;
-                                        return (
-                                        <div key={input.name} className='flex justify-between items-center'>
-                                            <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
-                                                {needed.toLocaleString()}x {input.name} (Una: {has.toLocaleString()})
-                                            </span>
-                                            {!hasEnough && (
-                                                <Button size="sm" variant="secondary" className="h-6 px-2" onClick={async () => await onBuyMaterial(input.name, needed - has)}>
-                                                    Nunua
-                                                </Button>
-                                            )}
+                        <ScrollArea className="h-full">
+                            <div className='pr-4'>
+                                {selectedRecipe ? ( // PRODUCER VIEW
+                                    <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
+                                        <h3 className='text-xl font-bold'>{selectedRecipe.output.name}</h3>
+                                        <div>
+                                            <h4 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h4>
+                                            <div className='text-sm space-y-2 text-gray-300 list-disc list-inside'>
+                                            {selectedRecipe.inputs.length > 0 ? selectedRecipe.inputs.map(input => {
+                                                const invItem = inventory.find(i => i.item === input.name);
+                                                const has = invItem?.quantity || 0;
+                                                const needed = input.quantity * productionQuantity;
+                                                const hasEnough = has >= needed;
+                                                return (
+                                                <div key={input.name} className='flex justify-between items-center'>
+                                                    <span className={cn(hasEnough ? 'text-gray-300' : 'text-red-400')}>
+                                                        {needed.toLocaleString()}x {input.name} (Una: {has.toLocaleString()})
+                                                    </span>
+                                                    {!hasEnough && (
+                                                        <Button size="sm" variant="secondary" className="h-6 px-2" onClick={async () => await onBuyMaterial(input.name, needed - has)}>
+                                                            Nunua
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                                )
+                                            }) : <p className='text-sm text-gray-400 italic'>Hakuna vifaa vinavyohitajika.</p>}
+                                            </div>
                                         </div>
-                                        )
-                                    }) : <p className='text-sm text-gray-400 italic'>Hakuna vifaa vinavyohitajika.</p>}
+                                        <div className='space-y-2'>
+                                        <Label htmlFor='quantity'>Idadi ya Kuzalisha</Label>
+                                        <Input 
+                                            id="quantity" type="number" min="1" value={productionQuantity}
+                                            onChange={(e) => setProductionQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                            className='bg-gray-700 border-gray-600'
+                                        />
+                                        </div>
+                                        <Separator className='my-4 bg-gray-600'/>
+                                        <div className='space-y-3'>
+                                            <div className='flex justify-between items-center'>
+                                            <span className='text-gray-400'>Gharama ya Uzalishaji:</span>
+                                            <span className='font-bold'>${calculateProductionCost(selectedRecipe, productionQuantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            </div>
+                                            <div className='flex justify-between items-center'>
+                                            <span className='text-gray-400'>Muda wa Uzalishaji:</span>
+                                            <span className='font-bold'>{formatTime(calculateProductionTime(productionQuantity))}</span>
+                                            </div>
+                                            <Button
+                                            className='w-full bg-green-600 hover:bg-green-700'
+                                            onClick={handleConfirmProductionOrSale}
+                                            disabled={!hasEnoughInputsForProduction(selectedRecipe, productionQuantity)}
+                                            >
+                                            <CheckCircle className='mr-2'/> Anza Uzalishaji
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className='space-y-2'>
-                                  <Label htmlFor='quantity'>Idadi ya Kuzalisha</Label>
-                                  <Input 
-                                      id="quantity" type="number" min="1" value={productionQuantity}
-                                      onChange={(e) => setProductionQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                      className='bg-gray-700 border-gray-600'
-                                  />
-                                </div>
-                                <Separator className='my-4 bg-gray-600'/>
-                                <div className='space-y-3'>
-                                    <div className='flex justify-between items-center'>
-                                      <span className='text-gray-400'>Gharama ya Uzalishaji:</span>
-                                      <span className='font-bold'>${calculateProductionCost(selectedRecipe, productionQuantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                ) : selectedInventoryItem ? ( // SHOP VIEW
+                                <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
+                                    <h3 className='text-xl font-bold'>{selectedInventoryItem.item}</h3>
+                                    
+                                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                                        <div className='space-y-2'>
+                                            <Label htmlFor='quantity-sell'>Idadi (Una: {selectedInventoryItem.quantity.toLocaleString()})</Label>
+                                            <Input 
+                                                id="quantity-sell" type="number" min="1" max={selectedInventoryItem.quantity} value={productionQuantity}
+                                                onChange={(e) => setProductionQuantity(Math.max(1, Math.min(parseInt(e.target.value) || 1, selectedInventoryItem.quantity)))}
+                                                className='bg-gray-700 border-gray-600'
+                                            />
+                                        </div>
+                                        <div className='space-y-2'>
+                                            <Label htmlFor='price-sell'>Bei kwa Kipande</Label>
+                                            <Input 
+                                                id="price-sell" type="number"
+                                                value={sellingPrice}
+                                                onChange={handleSellingPriceChange}
+                                                step="0.01"
+                                                className='bg-gray-700 border-gray-600'
+                                            />
+                                        </div>
                                     </div>
-                                    <div className='flex justify-between items-center'>
-                                      <span className='text-gray-400'>Muda wa Uzalishaji:</span>
-                                      <span className='font-bold'>{formatTime(calculateProductionTime(productionQuantity))}</span>
-                                    </div>
-                                    <Button
-                                      className='w-full bg-green-600 hover:bg-green-700'
-                                      onClick={handleConfirmProductionOrSale}
-                                      disabled={!hasEnoughInputsForProduction(selectedRecipe, productionQuantity)}
-                                    >
-                                      <CheckCircle className='mr-2'/> Anza Uzalishaji
-                                    </Button>
-                                </div>
-                            </div>
-                        ) : selectedInventoryItem ? ( // SHOP VIEW
-                           <div className='space-y-4 p-4 bg-gray-800/50 rounded-lg'>
-                              <h3 className='text-xl font-bold'>{selectedInventoryItem.item}</h3>
-                              
-                              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                                <div className='space-y-2'>
-                                    <Label htmlFor='quantity-sell'>Idadi (Una: {selectedInventoryItem.quantity.toLocaleString()})</Label>
-                                    <Input 
-                                        id="quantity-sell" type="number" min="1" max={selectedInventoryItem.quantity} value={productionQuantity}
-                                        onChange={(e) => setProductionQuantity(Math.max(1, Math.min(parseInt(e.target.value) || 1, selectedInventoryItem.quantity)))}
-                                        className='bg-gray-700 border-gray-600'
-                                    />
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label htmlFor='price-sell'>Bei kwa Kipande</Label>
-                                    <Input 
-                                        id="price-sell" type="number"
-                                        value={sellingPrice}
-                                        onChange={handleSellingPriceChange}
-                                        step="0.01"
-                                        className='bg-gray-700 border-gray-600'
-                                    />
-                                </div>
-                              </div>
-                                <div className='text-xs text-center text-gray-400'>
-                                    <p>Bei Elekezi: ${selectedInventoryItem.marketPrice.toFixed(2)}</p>
-                                    <p>Kikomo: ${priceFloor.toFixed(2)} - ${priceCeiling.toFixed(2)}</p>
-                                </div>
+                                        <div className='text-xs text-center text-gray-400'>
+                                            <p>Bei Elekezi: ${selectedInventoryItem.marketPrice.toFixed(2)}</p>
+                                            <p>Kikomo: ${priceFloor.toFixed(2)} - ${priceCeiling.toFixed(2)}</p>
+                                        </div>
 
-                              <Separator className='my-2 bg-gray-600'/>
+                                    <Separator className='my-2 bg-gray-600'/>
 
-                              <div className='space-y-3'>
-                                  <div className='flex justify-between items-center'>
-                                    <span className='text-gray-400'>Thamani ya Mauzo:</span>
-                                    <span className='font-bold text-green-400'>${(productionQuantity * sellingPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                  </div>
-                                  <div className='flex justify-between items-center'>
-                                    <span className='text-gray-400'>Muda wa Kuuza:</span>
-                                    <span className='font-bold'>{formatTime(calculateSaleTime(productionQuantity))}</span>
-                                  </div>
-                                  <Button
-                                    className='w-full bg-green-600 hover:bg-green-700'
-                                    onClick={handleConfirmProductionOrSale}
-                                    disabled={productionQuantity > selectedInventoryItem.quantity}
-                                  >
-                                    <CheckCircle className='mr-2'/> Anza Kuuza
-                                  </Button>
-                              </div>
-                          </div>
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-center text-gray-500 p-4 rounded-lg bg-gray-800/50">
-                            <p>Chagua bidhaa kutoka kushoto ili kuanza.</p>
+                                    <div className='space-y-3'>
+                                        <div className='flex justify-between items-center'>
+                                            <span className='text-gray-400'>Thamani ya Mauzo:</span>
+                                            <span className='font-bold text-green-400'>${(productionQuantity * sellingPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        </div>
+                                        <div className='flex justify-between items-center'>
+                                            <span className='text-gray-400'>Muda wa Kuuza:</span>
+                                            <span className='font-bold'>{formatTime(calculateSaleTime(productionQuantity))}</span>
+                                        </div>
+                                        <Button
+                                            className='w-full bg-green-600 hover:bg-green-700'
+                                            onClick={handleConfirmProductionOrSale}
+                                            disabled={productionQuantity > selectedInventoryItem.quantity}
+                                        >
+                                            <CheckCircle className='mr-2'/> Anza Kuuza
+                                        </Button>
+                                    </div>
+                                </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-center text-gray-500 p-4 rounded-lg bg-gray-800/50">
+                                    <p>Chagua bidhaa kutoka kushoto ili kuanza.</p>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </ScrollArea>
                     </div>
                 </div>
             </DialogContent>
@@ -1571,3 +1573,5 @@ export function Dashboard({
     </div>
   );
 }
+
+    
