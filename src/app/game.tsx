@@ -22,7 +22,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getDatabase, ref, onValue, set, get, push, remove, runTransaction } from 'firebase/database';
+import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, update } from 'firebase/database';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 
 export type PlayerStock = {
@@ -146,7 +146,7 @@ export function Game() {
         } else {
             // New user, create initial data
             const initialData = getInitialUserData(user.uid, user.displayName || 'Mchezaji', user.email);
-            saveUserData(database, user.uid, initialData);
+            saveUserData(userRef, initialData);
             setGameState(initialData);
         }
         setGameStateLoading(false);
@@ -301,13 +301,14 @@ export function Game() {
   }
 
   const handleUpdateProfile = (data: ProfileData) => {
-    if (!allPlayers || !gameState || !userRef) return;
-
+    if (!allPlayers || !gameState || !userRef || !marketRef || !user) return;
+  
     const newName = data.playerName;
+    const newAvatar = data.avatarUrl;
     const isNameTaken = allPlayers.some(player => 
         player.username.toLowerCase() === newName.toLowerCase() && player.uid !== gameState.uid
     );
-
+  
     if (isNameTaken) {
         toast({
             variant: 'destructive',
@@ -316,18 +317,36 @@ export function Game() {
         });
         return;
     }
-      
+        
+    // 1. Update the user's private data
     runTransaction(userRef, (currentData) => {
         if (currentData) {
-            currentData.username = data.playerName;
-            currentData.avatarUrl = data.avatarUrl;
+            currentData.username = newName;
+            currentData.avatarUrl = newAvatar;
             currentData.privateNotes = data.privateNotes || '';
         }
         return currentData;
+    }).then(() => {
+        // 2. After successful update, find and update all market listings
+        const updates: Record<string, any> = {};
+        playerListings.forEach(listing => {
+            if (listing.sellerUid === user.uid) {
+                updates[`/market/${listing.id}/seller`] = newName;
+                updates[`/market/${listing.id}/avatar`] = newAvatar;
+            }
+        });
+  
+        // 3. Perform the multi-path update on the market
+        if (Object.keys(updates).length > 0) {
+            update(ref(database), updates);
+        }
+  
+        toast({ title: 'Wasifu Umehifadhiwa', description: 'Mabadiliko yako yamehifadhiwa kote.' });
+        handleSetView('dashboard');
+    }).catch(error => {
+        console.error("Profile update failed:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not update profile.' });
     });
-
-    toast({ title: 'Wasifu Umehifadhiwa', description: 'Mabadiliko yako yamehifadhiwa.' });
-    handleSetView('dashboard');
   }
 
   const handleViewProfile = (playerId: string) => {
@@ -831,7 +850,7 @@ export function Game() {
              seller: gameState.username,
              sellerUid: user.uid,
              avatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-             quality: 1, // Placeholder
+             quality: productInfo?.properties.find(p => p.label === 'Quality')?.value ? parseInt(productInfo.properties.find(p => p.label === 'Quality')!.value) : 1,
              imageHint: productInfo?.imageHint || 'product photo'
          };
 
