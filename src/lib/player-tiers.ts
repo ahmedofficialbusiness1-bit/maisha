@@ -41,7 +41,7 @@ export const getRankTitle = (rank: number): string | null => {
     case 2:
       return 'CHAMPION';
     case 3:
-      return 'NOT HUMAN';
+      return 'NON HUMAN';
     default:
       return null;
   }
