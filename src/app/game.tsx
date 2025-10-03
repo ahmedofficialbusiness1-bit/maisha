@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -20,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
-import { useUser, useDatabase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, update } from 'firebase/database';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
@@ -63,7 +61,7 @@ const calculatedPrices = encyclopediaData.reduce((acc, item) => {
 
 export function Game() {
   const { user, loading: userLoading } = useUser();
-  const database = useDatabase();
+  const database = getDatabase();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
@@ -87,11 +85,11 @@ export function Game() {
   const { players: allPlayers } = useAllPlayers();
 
   // Refs for Firebase paths
-  const userRef = React.useMemo(() => database && user ? ref(database, `users/${user.uid}`) : null, [database, user]);
-  const playerPublicRef = React.useMemo(() => database && user ? ref(database, `players/${user.uid}`) : null, [database, user]);
-  const marketRef = React.useMemo(() => database ? ref(database, 'market') : null, [database]);
-  const contractsRef = React.useMemo(() => database ? ref(database, 'contracts') : null, [database]);
-  const chatMetadataRef = React.useMemo(() => database ? ref(database, 'chat-metadata') : null, [database]);
+  const userRef = React.useMemo(() => user ? ref(database, `users/${user.uid}`) : null, [database, user]);
+  const playerPublicRef = React.useMemo(() => user ? ref(database, `players/${user.uid}`) : null, [database, user]);
+  const marketRef = React.useMemo(() => ref(database, 'market'), [database]);
+  const contractsRef = React.useMemo(() => ref(database, 'contracts'), [database]);
+  const chatMetadataRef = React.useMemo(() => ref(database, 'chat-metadata'), [database]);
 
   
   const handleSetView = React.useCallback((newView: View) => {
@@ -106,7 +104,7 @@ export function Game() {
 
   // Periodically update lastSeen to keep user online
   React.useEffect(() => {
-      if (!userRef || !database) return;
+      if (!userRef) return;
       
       const interval = setInterval(() => {
           if(document.hasFocus() && userRef) {
@@ -120,11 +118,11 @@ export function Game() {
       }, 60 * 1000); // every minute
 
       return () => clearInterval(interval);
-  }, [userRef, database]);
+  }, [userRef]);
 
   // Unified listener for all user data
   React.useEffect(() => {
-    if (userLoading || !database) return;
+    if (userLoading) return;
     if (!user) {
         router.replace('/');
         return;
@@ -165,7 +163,7 @@ export function Game() {
 
   // Effect to fetch data for a viewed profile
   React.useEffect(() => {
-    if (viewedProfileUid && database) {
+    if (viewedProfileUid) {
         const profileUserRef = ref(database, `users/${viewedProfileUid}`);
         get(profileUserRef).then((snapshot) => {
             if (snapshot.exists()) {
@@ -212,7 +210,7 @@ export function Game() {
 
   // Update public player data (RTDB) whenever critical info changes
   React.useEffect(() => {
-    if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef || !database) return;
+    if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef || !userRef) return;
     
     const isAdmin = gameState.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
     const currentRole = isAdmin ? 'admin' : 'player';
@@ -229,7 +227,7 @@ export function Game() {
     set(playerPublicRef, publicData);
     
     // Update local game state if role changed (this should be a transaction)
-    if (gameState.role !== currentRole && userRef) {
+    if (gameState.role !== currentRole) {
         runTransaction(userRef, (currentData) => {
             if (currentData) {
                 currentData.role = currentRole;
@@ -246,7 +244,7 @@ export function Game() {
   };
   
  const addNotification = React.useCallback((message: string, icon: Notification['icon']) => {
-    if (!userRef || !user || !database) return;
+    if (!userRef || !user) return;
     runTransaction(userRef, (currentData) => {
         if (currentData) {
             const newNotifRef = push(ref(database, `users/${user.uid}/notifications`));
@@ -265,7 +263,7 @@ export function Game() {
 
 
  const addTransaction = React.useCallback((type: 'income' | 'expense', amount: number, description: string) => {
-    if (!userRef || !user || !database) return;
+    if (!userRef || !user) return;
     runTransaction(userRef, (currentData) => {
         if (currentData) {
             const newTransRef = push(ref(database, `users/${user.uid}/transactions`));
@@ -296,7 +294,7 @@ export function Game() {
   }
 
   const handleUpdateProfile = (data: ProfileData) => {
-    if (!allPlayers || !gameState || !userRef || !marketRef || !user || !database) return;
+    if (!allPlayers || !gameState || !userRef || !marketRef || !user) return;
   
     const newName = data.playerName;
     const newAvatar = data.avatarUrl;
@@ -319,6 +317,12 @@ export function Game() {
             currentData.username = newName;
             currentData.avatarUrl = newAvatar;
             currentData.privateNotes = data.privateNotes || '';
+            
+            // Ensure companyProfile exists before updating it
+            if (!currentData.companyProfile) {
+                const initial = getInitialUserData(currentData.uid, newName, null);
+                currentData.companyProfile = initial.companyProfile;
+            }
             currentData.companyProfile.companyName = newName;
         }
         return currentData;
@@ -370,7 +374,7 @@ export function Game() {
   }
   
   const handleBuild = (slotIndex: number, building: BuildingType) => {
-    if (!userRef || !user || !database) return;
+    if (!userRef || !user) return;
 
     runTransaction(userRef, (currentData) => {
         if (!currentData) return currentData;
@@ -422,7 +426,7 @@ export function Game() {
   };
   
   const handleUpgradeBuilding = (slotIndex: number) => {
-    if (!userRef || !user || !database) return;
+    if (!userRef || !user) return;
 
     runTransaction(userRef, (currentData) => {
         if (!currentData) return currentData;
@@ -484,7 +488,7 @@ export function Game() {
   };
 
   const handleStartProduction = (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => {
-     if (!userRef || !user || !database) return;
+     if (!userRef || !user) return;
      runTransaction(userRef, (currentData) => {
          if (!currentData) return;
 
@@ -525,7 +529,7 @@ export function Game() {
   };
 
   const handleStartSelling = (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => {
-    if (!userRef || !user || !database) return;
+    if (!userRef || !user) return;
     runTransaction(userRef, (currentData) => {
         if (!currentData) return;
 
@@ -578,7 +582,7 @@ export function Game() {
   };
   
     const handleBuyMaterial = async (materialName: string, quantity: number): Promise<boolean> => {
-        if (!userRef || !user || !gameState || !database) return false;
+        if (!userRef || !user || !gameState) return false;
 
         // 1. Check market first
         const marketListing = playerListings
@@ -608,7 +612,7 @@ export function Game() {
     };
 
     const buyFromSystem = (materialName: string, quantity: number): boolean => {
-        if (!userRef || !user || !database) return false;
+        if (!userRef || !user) return false;
         const costPerUnit = calculatedPrices[materialName] || 0;
         if (costPerUnit === 0) return false;
 
@@ -659,7 +663,7 @@ export function Game() {
 
 
   const handleBuyFromMarket = async (listing: PlayerListing, quantityToBuy: number) => {
-    if (!user || !gameState || !database) return;
+    if (!user || !gameState) return;
     if (listing.sellerUid === user.uid) {
         toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot buy your own items.' });
         return;
@@ -748,7 +752,7 @@ export function Game() {
   };
   
  const handleBuyStock = React.useCallback((stock: StockListing, quantity: number) => {
-    if (!userRef || quantity <= 0 || !user || !database) return;
+    if (!userRef || quantity <= 0 || !user) return;
     
     runTransaction(userRef, currentData => {
         if (!currentData) return;
@@ -781,7 +785,7 @@ export function Game() {
 
 
  const handleSellStock = React.useCallback((ticker: string, shares: number) => {
-    if (!userRef || shares <= 0 || !user || !database) return;
+    if (!userRef || shares <= 0 || !user) return;
     
     const stockInfo = companyData.find(s => s.ticker === ticker);
     if (!stockInfo) return;
@@ -818,7 +822,7 @@ export function Game() {
 
 
   const handlePostToMarket = (item: InventoryItem, quantity: number, price: number) => {
-     if (!user || !gameState || !userRef || !database || quantity <= 0 || quantity > item.quantity) return;
+     if (!user || !gameState || !userRef || quantity <= 0 || quantity > item.quantity) return;
      // Optimistically update inventory via transaction to be safe
      runTransaction(userRef, (currentData) => {
          if (!currentData) return;
@@ -846,7 +850,7 @@ export function Game() {
              seller: gameState.username,
              sellerUid: user.uid,
              avatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-             quality: 1,
+             quality: 1, // Default quality
              imageHint: productInfo?.imageHint || 'product photo'
          };
 
@@ -872,7 +876,7 @@ export function Game() {
   };
 
   const handleCreateContract = (item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => {
-    if (!user || !gameState || !userRef || !database || quantity <= 0 || pricePerUnit <= 0) return;
+    if (!user || !gameState || !userRef || quantity <= 0 || pricePerUnit <= 0) return;
     
     // Optimistically deduct items via transaction
     runTransaction(userRef, (currentData) => {
@@ -929,7 +933,7 @@ export function Game() {
   }
 
   const handleAdminSendItem = (itemName: string, quantity: number, targetUid: string) => {
-    if (!user || !gameState || gameState.role !== 'admin' || !database) return;
+    if (!user || !gameState || gameState.role !== 'admin') return;
 
     const newContractRef = push(ref(database, 'contracts'));
     const productInfo = encyclopediaData.find(e => e.name === itemName);
@@ -955,7 +959,7 @@ export function Game() {
   };
 
   const handleAdminSendMoney = (amount: number, targetUid: string) => {
-    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid || !database) return;
+    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
 
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -980,7 +984,7 @@ export function Game() {
   }
 
   const handleAdminSendStars = (amount: number, targetUid: string) => {
-    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid || !database) return;
+    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
     
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -1001,7 +1005,7 @@ export function Game() {
   }
 
   const handleAcceptContract = async (contract: ContractListing) => {
-    if (!user || !gameState || !userRef || !database) return;
+    if (!user || !gameState || !userRef) return;
 
     if (contract.sellerUid === user.uid) {
         toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot accept your own contract.' });
@@ -1078,7 +1082,7 @@ export function Game() {
   };
   
   const handleRejectContract = async (contract: ContractListing) => {
-    if (!user || !gameState || !database) return;
+    if (!user || !gameState) return;
 
     if (contract.buyerIdentifier && contract.buyerIdentifier !== user.uid && contract.buyerIdentifier !== gameState?.username) return;
 
@@ -1109,7 +1113,7 @@ export function Game() {
   };
 
   const handleCancelContract = async (contract: ContractListing) => {
-    if (!user || !userRef || !database) return;
+    if (!user || !userRef) return;
     if (user.uid !== contract.sellerUid) return;
 
     const contractRef = ref(database, `contracts/${contract.id}`);
@@ -1134,7 +1138,7 @@ export function Game() {
   };
 
   const handleDailyDividends = React.useCallback(() => {
-    if (!userRef || !gameState || !user || !database) return;
+    if (!userRef || !gameState || !user) return;
     runTransaction(userRef, (currentGameState) => {
         if (!currentGameState || !currentGameState.playerStocks || currentGameState.playerStocks.length === 0) return currentGameState;
         
@@ -1180,7 +1184,7 @@ export function Game() {
 
   // Game loop for processing finished activities
   React.useEffect(() => {
-    if (!userRef || !gameState || !user || !database) return;
+    if (!userRef || !gameState || !user) return;
     const activityInterval = setInterval(() => {
         runTransaction(userRef, (currentGameState: UserData | null) => {
             if (!currentGameState) return null;
@@ -1463,7 +1467,7 @@ export function Game() {
   const stockListingsWithShares = companyData.map(s => ({...s, sharesAvailable: Math.floor(s.totalShares * 0.4)}));
 
   const handlePublicRoomRead = (roomId: string) => {
-    if (database && user) {
+    if (user) {
         const readRef = ref(database, `users/${user.uid}/lastPublicRead/${roomId}`);
         set(readRef, Date.now());
     }
@@ -1523,8 +1527,3 @@ export function Game() {
     </div>
   );
 }
-
-    
-
-    
-
