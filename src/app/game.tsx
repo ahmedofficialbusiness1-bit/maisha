@@ -23,6 +23,7 @@ import { useUser } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, update } from 'firebase/database';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
+import { recipes } from '@/lib/recipe-data';
 
 export type PlayerStock = {
     ticker: string;
@@ -1440,7 +1441,7 @@ export function Game() {
 
     const currentInventoryValue = (gameState.inventory || []).reduce((total, item) => {
         // Find the building that produces this item to determine quality
-        const producingBuildingSlot = gameState.buildingSlots.find(slot => slot.building && buildingData[slot.building.id] && recipes.some(r => r.buildingId === slot.building.id && r.output.name === item.item));
+        const producingBuildingSlot = gameState.buildingSlots.find(slot => slot.building && buildingData[slot.building.id] && recipes.some(r => r.buildingId === slot.building!.id && r.output.name === item.item));
         const quality = producingBuildingSlot?.quality || 0;
         
         const price = getPriceWithQuality(item.item, quality) || item.marketPrice || 0;
@@ -1636,6 +1637,7 @@ export function Game() {
                     onStartSelling={handleStartSelling} 
                     onBoostConstruction={handleBoostConstruction} 
                     onUpgradeBuilding={handleUpgradeBuilding} 
+                    onUpgradeQuality={() => {}}
                     onDemolishBuilding={handleDemolishBuilding} 
                     onBuyMaterial={handleBuyMaterial} 
                     onUnlockSlot={handleUnlockSlot} 
@@ -1694,3 +1696,5 @@ export function Game() {
     </div>
   );
 }
+
+    
