@@ -631,59 +631,6 @@ export const RESEARCH_BUILDING_IDS = [
     'utafiti_anga',
 ];
 
-const buildingCategories: Record<string, BuildingType[]> = {
-    'Maduka': availableBuildings.filter(b => b.id.startsWith('duka_')),
-    'Uzalishaji wa Msingi': availableBuildings.filter(b => ['shamba', 'zizi', 'kiwanda_cha_samaki', 'kiwanda_cha_umeme', 'kiwanda_cha_maji'].includes(b.id)),
-    'Madini na Malighafi': availableBuildings.filter(b => b.id.startsWith('uchimbaji_')),
-    'Viwanda vya Usindikaji': availableBuildings.filter(b => 
-        (b.id.startsWith('kiwanda_cha_') || b.id === 'mgahawa' || b.id === 'sonara') && 
-        !['kiwanda_cha_samaki', 'kiwanda_cha_umeme', 'kiwanda_cha_maji'].includes(b.id) &&
-        !b.id.includes('_k_') && !b.id.includes('_anga') && !b.id.includes('_roketi')
-    ),
-    'Teknolojia ya Anga': availableBuildings.filter(b => b.id.startsWith('kiwanda_cha_k_') || b.id.startsWith('kiwanda_cha_anga') || b.id.startsWith('kiwanda_cha_roketi')),
-    'Utafiti': availableBuildings.filter(b => b.id.startsWith('utafiti_')),
-    'Utawala': availableBuildings.filter(b => ['ofisi_ya_leseni', 'wizara_ya_madini'].includes(b.id))
-};
-
-
-interface DashboardProps {
-    buildingSlots: BuildingSlot[];
-    inventory: InventoryItem[];
-    stars: number;
-    onBuild: (slotIndex: number, building: BuildingType) => void;
-    onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
-    onStartSelling: (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => void;
-    onBoostConstruction: (slotIndex: number, starsToUse: number) => void;
-    onUpgradeBuilding: (slotIndex: number) => void;
-    onUpgradeQuality: (slotIndex: number) => void;
-    onDemolishBuilding: (slotIndex: number) => void;
-    onBuyMaterial: (materialName: string, quantity: number) => Promise<boolean>;
-    onUnlockSlot: (slotIndex: number) => void;
-    onCardClick: (slot: BuildingSlot, index: number) => void;
-    dialogState: {
-        build: boolean;
-        manage: boolean;
-        production: boolean;
-        boost: boolean;
-        demolish: boolean;
-        unlock: boolean;
-    };
-    setDialogState: React.Dispatch<React.SetStateAction<DashboardProps['dialogState']>>;
-    selectedSlotIndex: number | null;
-}
-
-const formatTime = (ms: number) => {
-    if (ms <= 0) return '00:00';
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
-    const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
-    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-    if (parseInt(hours) > 0) {
-        return `${hours}:${minutes}:${seconds}`;
-    }
-    return `${minutes}:${seconds}`;
-};
-
 const productCategoryToShopMap: Record<string, string> = {
     'Construction': 'duka_la_ujenzi',
     'Raw Material': 'duka_la_ujenzi',
@@ -719,7 +666,7 @@ export function Dashboard({
     dialogState,
     setDialogState,
     selectedSlotIndex
-}: DashboardProps) {
+}: any) {
   
   const [buildDialogStep, setBuildDialogStep] = React.useState<'list' | 'details'>('list');
   const [selectedBuildingForBuild, setSelectedBuildingForBuild] = React.useState<BuildingType | null>(null);
@@ -741,11 +688,11 @@ export function Dashboard({
     return () => clearInterval(interval);
   }, []);
 
-  const handleOpenBuildDialog = () => {
+  const handleOpenBuildDialog = (index: number) => {
     setBuildDialogStep('list');
     setSelectedBuildingForBuild(null);
     setBuildingSearch('');
-    setDialogState(prev => ({...prev, build: true}));
+    setDialogState({ ...dialogState, build: true, selectedSlotIndex: index });
   };
   
   const handleSelectBuildingToShowDetails = (building: BuildingType) => {
@@ -761,7 +708,7 @@ export function Dashboard({
   const hasEnoughMaterials = (costs: {name: string, quantity: number}[]): boolean => {
       if (!costs) return false;
       return costs.every(cost => {
-          const inventoryItem = inventory.find(item => item.item === cost.name);
+          const inventoryItem = inventory.find((item: InventoryItem) => item.item === cost.name);
           return inventoryItem && inventoryItem.quantity >= cost.quantity;
       });
   };
@@ -773,13 +720,13 @@ export function Dashboard({
             return;
         }
         onBuild(selectedSlotIndex, selectedBuildingForBuild);
-        setDialogState(prev => ({...prev, build: false}));
+        setDialogState({ ...dialogState, build: false });
     }
   };
 
 
   const handleOpenProductionDialog = () => {
-    setDialogState(prev => ({...prev, manage: false, production: true}));
+    setDialogState({ ...dialogState, manage: false, production: true });
     setSelectedRecipe(null);
     setSelectedInventoryItem(null);
     setProductionQuantity(1);
@@ -815,7 +762,7 @@ export function Dashboard({
       onStartSelling(selectedSlotIndex, selectedInventoryItem, productionQuantity, sellingPrice, totalDurationMs);
     }
     
-    setDialogState(prev => ({...prev, production: false}));
+    setDialogState({ ...dialogState, production: false });
     setSelectedRecipe(null);
     setSelectedInventoryItem(null);
   }
@@ -824,21 +771,21 @@ export function Dashboard({
       if (selectedSlotIndex !== null && boostAmount > 0) {
           onBoostConstruction(selectedSlotIndex, boostAmount);
       }
-      setDialogState(prev => ({...prev, boost: false}));
+      setDialogState({ ...dialogState, boost: false });
   }
 
   const handleConfirmUnlock = () => {
     if (selectedSlotIndex !== null) {
       onUnlockSlot(selectedSlotIndex);
     }
-    setDialogState(prev => ({...prev, unlock: false}));
+    setDialogState({ ...dialogState, unlock: false });
   };
 
   const handleConfirmDemolish = () => {
       if(selectedSlotIndex !== null) {
           onDemolishBuilding(selectedSlotIndex);
       }
-      setDialogState(prev => ({...prev, demolish: false, manage: false}));
+      setDialogState({ ...dialogState, demolish: false, manage: false });
   }
   
   const handleTriggerUpgrade = () => {
@@ -851,14 +798,14 @@ export function Dashboard({
             return;
         }
         onUpgradeBuilding(selectedSlotIndex);
-        setDialogState(prev => ({...prev, manage: false}));
+        setDialogState({ ...dialogState, manage: false });
     }
   }
 
     const handleTriggerQualityUpgrade = () => {
         if(selectedSlotIndex !== null) {
             onUpgradeQuality(selectedSlotIndex);
-            setDialogState(prev => ({...prev, manage: false}));
+            setDialogState({ ...dialogState, manage: false });
         }
     }
 
@@ -877,7 +824,7 @@ export function Dashboard({
   
     const shopId = selectedSlot.building.id;
   
-    return inventory.filter(item => {
+    return inventory.filter((item: InventoryItem) => {
       const productInfo = encyclopediaData.find(e => e.name === item.item);
       if (!productInfo) return false;
       const targetShopId = productCategoryToShopMap[productInfo.category] || 'duka_kuu';
@@ -891,42 +838,46 @@ export function Dashboard({
   const hasEnoughInputsForProduction = (recipe: Recipe, quantity: number) => {
     if (!recipe.inputs) return true;
     return recipe.inputs.every(input => {
-        const inventoryItem = inventory.find(item => item.item === input.name);
+        const inventoryItem = inventory.find((item: InventoryItem) => item.item === input.name);
         const neededQuantity = input.quantity * quantity;
         return inventoryItem && inventoryItem.quantity >= neededQuantity;
     });
   }
 
-  const calculateProductionTime = (quantity: number): number => {
-      if (!selectedSlot || !selectedRecipe) return 0;
-      const buildingInfo = buildingData[selectedRecipe.buildingId];
-      // Time in seconds for one batch, adjusted by level
-      const ratePerHr = buildingInfo.productionRate * (1 + (selectedSlot.level - 1) * 0.4);
-      if (ratePerHr <= 0) return Infinity; // Avoid division by zero for non-producing buildings
-      
-      const totalBatches = quantity;
-      const totalSeconds = (totalBatches / ratePerHr) * 3600;
-      return totalSeconds * 1000; // time in ms
-  }
+    const calculateProductionTime = (quantity: number): number => {
+        if (!selectedSlot || !selectedRecipe) return 0;
+        const buildingInfo = buildingData[selectedRecipe.buildingId];
+        // Base rate is units per hour
+        const levelBonus = (1 + (selectedSlot.level - 1) * 0.4);
+        const qualityBonus = (1 + (selectedSlot.quality || 0) * 0.20);
+        const effectiveRatePerHr = buildingInfo.productionRate * levelBonus * qualityBonus;
 
-  const calculateSaleTime = (quantity: number): number => {
-    if (!selectedSlot || !selectedInventoryItem || !selectedSlot.building) return 0;
+        if (effectiveRatePerHr <= 0) return Infinity;
 
-    const shopInfo = buildingData[selectedSlot.building.id];
-    const saleMultiplier = shopInfo.saleRateMultiplier || 1;
-    
-    // We need the base production rate of the item being sold to calculate sale time
-    const itemRecipe = recipes.find(r => r.output.name === selectedInventoryItem.item);
-    const itemBuildingInfo = itemRecipe ? buildingData[itemRecipe.buildingId] : null;
-    const baseProductionRate = itemBuildingInfo ? itemBuildingInfo.productionRate : 100; // Fallback rate
+        const totalBatches = quantity;
+        const totalSeconds = (totalBatches / effectiveRatePerHr) * 3600;
+        return totalSeconds * 1000; // time in ms
+    };
 
-    // Time in seconds for one item, adjusted by shop level and sale multiplier
-    const saleRatePerHr = (baseProductionRate * saleMultiplier) * (1 + (selectedSlot.level - 1) * 0.4);
-    if (saleRatePerHr <= 0) return 5000 * quantity; // Avoid division by zero, provide a fallback time
 
-    const totalSeconds = (quantity / saleRatePerHr) * 3600;
-    return totalSeconds * 1000; // time in ms
-  }
+    const calculateSaleTime = (quantity: number): number => {
+        if (!selectedSlot || !selectedInventoryItem || !selectedSlot.building) return 0;
+
+        const shopInfo = buildingData[selectedSlot.building.id];
+        const saleMultiplier = shopInfo.saleRateMultiplier || 1;
+        
+        // We need the base production rate of the item being sold to calculate sale time
+        const itemRecipe = recipes.find(r => r.output.name === selectedInventoryItem.item);
+        const itemBuildingInfo = itemRecipe ? buildingData[itemRecipe.buildingId] : null;
+        const baseProductionRate = itemBuildingInfo ? itemBuildingInfo.productionRate : 100; // Fallback rate
+
+        // Time in seconds for one item, adjusted by shop level and sale multiplier
+        const saleRatePerHr = (baseProductionRate * saleMultiplier) * (1 + (selectedSlot.level - 1) * 0.4);
+        if (saleRatePerHr <= 0) return 5000 * quantity; // Avoid division by zero, provide a fallback time
+
+        const totalSeconds = (quantity / saleRatePerHr) * 3600;
+        return totalSeconds * 1000; // time in ms
+    }
   
   const calculateProductionCost = (recipe: Recipe, quantity: number): number => {
     let totalCost = 0;
@@ -968,11 +919,11 @@ export function Dashboard({
         return filtered;
     }, [buildingSearch]);
 
-  const handleSellingPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value) || 0;
-    const clampedValue = Math.max(priceFloor, Math.min(value, priceCeiling));
-    setSellingPrice(clampedValue);
-  };
+    const handleSellingPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = parseFloat(e.target.value) || 0;
+        const clampedValue = Math.max(priceFloor, Math.min(value, priceCeiling));
+        setSellingPrice(clampedValue);
+    };
 
     const calculateUnlockCost = (slotIndex: number) => {
         if (slotIndex < 10) return 0;
@@ -1002,7 +953,7 @@ export function Dashboard({
 
         const requiredItem = `Q${currentQuality + 1} - Utafiti ${researchCategory}`;
         const requiredAmount = 1000 * Math.pow(3, currentQuality);
-        const invItem = inventory.find(i => i.item === requiredItem);
+        const invItem = inventory.find((i:InventoryItem) => i.item === requiredItem);
         const hasEnough = invItem ? invItem.quantity >= requiredAmount : false;
 
         return { canUpgrade: hasEnough, requiredItem, requiredAmount, currentAmount: invItem?.quantity || 0 };
@@ -1020,7 +971,7 @@ export function Dashboard({
         </p>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {buildingSlots.map((slot, index) => {
+        {buildingSlots.map((slot: BuildingSlot, index: number) => {
           const slotName = `Slot ${String.fromCharCode(65 + index)}`;
           return (
             <Card
@@ -1109,7 +1060,7 @@ export function Dashboard({
       </div>
 
       {/* Build Dialog */}
-      <Dialog open={dialogState.build} onOpenChange={(open) => setDialogState(prev => ({ ...prev, build: open }))}>
+      <Dialog open={dialogState.build} onOpenChange={(open) => setDialogState({ ...dialogState, build: open })}>
           <DialogContent className="bg-gray-900 border-gray-700 text-white flex flex-col max-h-[90vh]">
             <DialogHeader>
               {buildDialogStep === 'details' && selectedBuildingForBuild && (
@@ -1167,8 +1118,8 @@ export function Dashboard({
                     <div>
                         <h3 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h3>
                         <div className="space-y-1">
-                            {buildCosts && buildCosts.map(cost => {
-                                const invItem = inventory.find(i => i.item === cost.name);
+                            {buildCosts && buildCosts.map((cost: any) => {
+                                const invItem = inventory.find((i: any) => i.item === cost.name);
                                 const has = invItem?.quantity || 0;
                                 const needed = cost.quantity;
                                 const hasEnough = has >= needed;
@@ -1208,7 +1159,7 @@ export function Dashboard({
       </Dialog>
         
       {/* Management Dialog */}
-      <Dialog open={dialogState.manage} onOpenChange={(open) => setDialogState(prev => ({ ...prev, manage: open }))}>
+      <Dialog open={dialogState.manage} onOpenChange={(open) => setDialogState({ ...dialogState, manage: open })}>
         <DialogContent className="bg-gray-900 border-gray-700 text-white flex flex-col max-h-[90vh] max-w-4xl">
             <DialogHeader>
                 <DialogTitle>Simamia {selectedSlot?.building?.name}</DialogTitle>
@@ -1217,7 +1168,7 @@ export function Dashboard({
                 </DialogDescription>
             </DialogHeader>
             <ScrollArea className='-mr-6 pr-6 flex-grow'>
-                <div className='py-4 space-y-4'>
+                 <div className='py-4 space-y-4'>
                     <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
                         {isSelectedBuildingShop ? <Store className='mr-2'/> : <Tractor className='mr-2'/>} 
                         {isSelectedBuildingShop ? "Anza Kuuza" : "Anza Uzalishaji"}
@@ -1234,8 +1185,8 @@ export function Dashboard({
                             <div className='space-y-1 flex-grow'>
                                 <p className='font-semibold mb-1 text-xs'>Gharama ya Kuboresha:</p>
                                 <div className="space-y-1">
-                                    {upgradeCosts && upgradeCosts.map(cost => {
-                                        const invItem = inventory.find(i => i.item === cost.name);
+                                    {upgradeCosts && upgradeCosts.map((cost: any) => {
+                                        const invItem = inventory.find((i: any) => i.item === cost.name);
                                         const has = invItem?.quantity || 0;
                                         const needed = cost.quantity;
                                         const hasEnough = has >= needed;
@@ -1307,7 +1258,7 @@ export function Dashboard({
                         </div>
                     </div>
 
-                    <Button className='w-full justify-start' variant="destructive" onClick={() => setDialogState(prev => ({...prev, demolish: true}))}>
+                    <Button className='w-full justify-start' variant="destructive" onClick={() => setDialogState({ ...dialogState, demolish: true })}>
                         <Trash2 className='mr-2'/> Futa Jengo
                     </Button>
                 </div>
@@ -1316,7 +1267,7 @@ export function Dashboard({
       </Dialog>
 
         {/* Demolish Confirmation Dialog */}
-        <AlertDialog open={dialogState.demolish} onOpenChange={(open) => setDialogState(prev => ({ ...prev, demolish: open }))}>
+        <AlertDialog open={dialogState.demolish} onOpenChange={(open) => setDialogState({ ...dialogState, demolish: open })}>
             <AlertDialogContent>
                 <AlertDialogHeader>
                 <AlertDialogTitle>Una uhakika?</AlertDialogTitle>
@@ -1334,7 +1285,7 @@ export function Dashboard({
         </AlertDialog>
 
          {/* Unlock Slot Confirmation Dialog */}
-        <AlertDialog open={dialogState.unlock} onOpenChange={(open) => setDialogState(prev => ({ ...prev, unlock: open }))}>
+        <AlertDialog open={dialogState.unlock} onOpenChange={(open) => setDialogState({ ...dialogState, unlock: open })}>
             <AlertDialogContent>
                 <AlertDialogHeader>
                 <AlertDialogTitle>Fungua Nafasi ya Ujenzi</AlertDialogTitle>
@@ -1353,7 +1304,7 @@ export function Dashboard({
 
 
         {/* Production/Selling Dialog */}
-        <Dialog open={dialogState.production} onOpenChange={(open) => setDialogState(prev => ({...prev, production: open}))}>
+        <Dialog open={dialogState.production} onOpenChange={(open) => setDialogState({ ...dialogState, production: open })}>
             <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl max-h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>{isSelectedBuildingShop ? 'Uza Bidhaa' : 'Uzalishaji'}: {selectedSlot?.building?.name} (Lvl {selectedSlot?.level})</DialogTitle>
@@ -1368,7 +1319,7 @@ export function Dashboard({
                             <div className="flex flex-col gap-2 pr-4">
                                 {isSelectedBuildingShop ? (
                                     shopInventory.length > 0 ? (
-                                        shopInventory.map((item) => (
+                                        shopInventory.map((item: InventoryItem) => (
                                             <Button
                                             key={item.item}
                                             variant="outline"
@@ -1386,7 +1337,7 @@ export function Dashboard({
                                     )
                                 ) : (
                                     buildingRecipes.length > 0 ? (
-                                        buildingRecipes.map((recipe) => (
+                                        buildingRecipes.map((recipe: Recipe) => (
                                             <Button
                                             key={recipe.id}
                                             variant="outline"
@@ -1417,7 +1368,7 @@ export function Dashboard({
                                             <h4 className='font-semibold mb-2'>Vifaa Vinavyohitajika</h4>
                                             <div className='text-sm space-y-2 text-gray-300 list-disc list-inside'>
                                             {selectedRecipe.inputs.length > 0 ? selectedRecipe.inputs.map(input => {
-                                                const invItem = inventory.find(i => i.item === input.name);
+                                                const invItem = inventory.find((i: InventoryItem) => i.item === input.name);
                                                 const has = invItem?.quantity || 0;
                                                 const needed = input.quantity * productionQuantity;
                                                 const hasEnough = has >= needed;
@@ -1525,7 +1476,7 @@ export function Dashboard({
         </Dialog>
         
         {/* Boost Dialog */}
-        <Dialog open={dialogState.boost} onOpenChange={(open) => setDialogState(prev => ({ ...prev, boost: open }))}>
+        <Dialog open={dialogState.boost} onOpenChange={(open) => setDialogState({ ...dialogState, boost: open })}>
             <DialogContent className="bg-gray-900 border-gray-700 text-white">
                 <DialogHeader>
                     <DialogTitle>Harakisha Ujenzi</DialogTitle>
@@ -1562,7 +1513,7 @@ export function Dashboard({
                     </div>
                 </div>
                 <DialogFooter className="mt-auto pt-4">
-                    <Button variant="outline" onClick={() => setDialogState(prev => ({ ...prev, boost: false }))}>Ghairi</Button>
+                    <Button variant="outline" onClick={() => setDialogState({ ...dialogState, boost: false })}>Ghairi</Button>
                     <Button 
                         className='bg-blue-600 hover:bg-blue-700' 
                         onClick={handleConfirmBoost}
@@ -1576,3 +1527,17 @@ export function Dashboard({
     </div>
   );
 }
+
+const formatTime = (ms: number) => {
+    if (ms <= 0) return '00:00';
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+    const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+    if (parseInt(hours) > 0) {
+        return `${hours}:${minutes}:${seconds}`;
+    }
+    return `${minutes}:${seconds}`;
+};
+
+  
