@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, FileSignature, Archive, Handshake, Inbox, Check, X, Hourglass, History, LineChart, Banknote, Building, Info, TrendingUp, Loader2 } from 'lucide-react';
+import { MoreHorizontal, FileSignature, Archive, Handshake, Inbox, Check, X, Hourglass, History, LineChart, Banknote, Building, Info, TrendingUp, Loader2, CircleDollarSign } from 'lucide-react';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -80,6 +80,7 @@ interface InventoryProps {
   currentUsername: string;
   companyProfile: CompanyProfile;
   netWorth: number;
+  playerMoney: number;
 }
 
 function ItemInventoryView({ inventoryItems, onPostToMarket, onCreateContract }: Pick<InventoryProps, 'inventoryItems' | 'onPostToMarket' | 'onCreateContract'>) {
@@ -510,7 +511,7 @@ function ContractInventoryView({ contractListings, currentUserId, currentUsernam
     );
 }
 
-function CompanyInventoryView({ companyProfile, netWorth, onIssueShares }: Pick<InventoryProps, 'companyProfile' | 'netWorth' | 'onIssueShares'>) {
+function CompanyInventoryView({ companyProfile, netWorth, playerMoney, onIssueShares }: Pick<InventoryProps, 'companyProfile' | 'netWorth' | 'playerMoney' | 'onIssueShares'>) {
     const [isIpoDialogOpen, setIsIpoDialogOpen] = React.useState(false);
     const [sharesToSell, setSharesToSell] = React.useState(10000);
     const [pricePerShare, setPricePerShare] = React.useState(10);
@@ -522,14 +523,15 @@ function CompanyInventoryView({ companyProfile, netWorth, onIssueShares }: Pick<
                     <CardTitle>Maelezo ya Kampuni</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p>Maelezo ya kampuni yanapatikana.</p>
+                    <p>Maelezo ya kampuni hayapatikani.</p>
                 </CardContent>
             </Card>
         );
     }
     
-    const maxSharesToSell = companyProfile.totalShares - 200000;
-    const currentlyAvailableToSell = companyProfile.availableShares - 200000;
+    const maxSharesPlayerCanSell = companyProfile.totalShares - 200000;
+    const canIssueShares = netWorth >= 1000000 && playerMoney >= 1000000;
+
 
     const handleConfirmIPO = () => {
         onIssueShares(sharesToSell, pricePerShare);
@@ -539,6 +541,25 @@ function CompanyInventoryView({ companyProfile, netWorth, onIssueShares }: Pick<
 
   return (
     <>
+      <div className="space-y-4">
+        {!canIssueShares && (
+             <Alert variant="destructive" className="bg-yellow-900/40 border-yellow-500/50 text-yellow-300">
+                <Info className="h-4 w-4 !text-yellow-300" />
+                <AlertTitle>Vigezo Havijatimizwa</AlertTitle>
+                <AlertDescription>
+                    Ili kutoa hisa za kampuni yako (IPO), unahitaji kufikia vigezo vifuatavyo:
+                    <ul className="list-disc pl-5 mt-2 text-yellow-400">
+                        <li className={cn(netWorth >= 1000000 ? 'text-green-400' : '')}>
+                            Thamani ya Kampuni (Net Worth): <strong>$1,000,000</strong> (Sasa: ${netWorth.toLocaleString()})
+                        </li>
+                         <li className={cn(playerMoney >= 1000000 ? 'text-green-400' : '')}>
+                            Pesa Taslimu (Cash): <strong>$1,000,000</strong> (Sasa: ${playerMoney.toLocaleString()})
+                        </li>
+                    </ul>
+                     <p className="mt-2 text-yellow-500">Endelea kukuza himaya yako ili ufikie vigezo hivi.</p>
+                </AlertDescription>
+            </Alert>
+        )}
       <Card className="bg-gray-800/60 border-gray-700">
           <CardHeader>
               <div className="flex items-center gap-3">
@@ -557,36 +578,40 @@ function CompanyInventoryView({ companyProfile, netWorth, onIssueShares }: Pick<
                   <div className="text-gray-400">Jumla ya Hisa</div>
                   <div className="font-mono text-right">{companyProfile.totalShares.toLocaleString()}</div>
                   <div className="text-gray-400">Hisa Zinazopatikana Kuuzwa</div>
-                  <div className="font-mono text-right">{currentlyAvailableToSell > 0 ? currentlyAvailableToSell.toLocaleString() : 0}</div>
+                  <div className="font-mono text-right">{maxSharesPlayerCanSell > 0 ? maxSharesPlayerCanSell.toLocaleString() : 0}</div>
                   <div className="text-gray-400">Bei ya Hisa (Kadirio)</div>
                   <div className="font-mono text-right">${companyProfile.sharePrice.toFixed(2)}</div>
                   <Separator className="col-span-2 bg-gray-700 my-1"/>
+                  <div className="text-gray-300 font-bold">Mfuko wa Hakiba</div>
+                  <div className="font-mono text-right font-bold text-cyan-300">${companyProfile.securityFund.toLocaleString()}</div>
                   <div className="text-gray-300 font-bold">Thamani ya Soko</div>
                   <div className="font-mono text-right font-bold text-blue-300">${netWorth.toLocaleString()}</div>
               </div>
-               <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setIsIpoDialogOpen(true)} disabled={currentlyAvailableToSell <= 0}>
-                Toa Hisa Sokoni (IPO)
+               <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setIsIpoDialogOpen(true)} disabled={maxSharesPlayerCanSell <= 0 || !canIssueShares}>
+                <CircleDollarSign className="mr-2 h-4 w-4" /> Toa Hisa Sokoni (IPO)
               </Button>
           </CardContent>
       </Card>
+       </div>
+
        <Dialog open={isIpoDialogOpen} onOpenChange={setIsIpoDialogOpen}>
         <DialogContent className="bg-gray-900 border-gray-700 text-white">
           <DialogHeader>
             <DialogTitle>Toa Hisa za {companyProfile.ticker} Sokoni</DialogTitle>
             <DialogDescription>
-              Weka idadi ya hisa unazotaka kuuza kwa umma na bei kwa kila hisa. Hii itakuongezea pesa taslimu.
+              Weka idadi ya hisa unazotaka kuuza kwa umma na bei kwa kila hisa. Hii itakuongezea pesa taslimu na kuweka $1,000,000 kama mfuko wa hakiba.
             </DialogDescription>
           </DialogHeader>
             <div className="py-4 space-y-4">
               <div>
-                <Label htmlFor="ipo-quantity">Idadi ya Hisa za Kuuza (Max: {currentlyAvailableToSell.toLocaleString()})</Label>
+                <Label htmlFor="ipo-quantity">Idadi ya Hisa za Kuuza (Max: {maxSharesPlayerCanSell.toLocaleString()})</Label>
                 <Input
                   id="ipo-quantity"
                   type="number"
                   min="1"
-                  max={currentlyAvailableToSell}
+                  max={maxSharesPlayerCanSell}
                   value={sharesToSell}
-                  onChange={(e) => setSharesToSell(Math.max(1, Math.min(Number(e.target.value), currentlyAvailableToSell)))}
+                  onChange={(e) => setSharesToSell(Math.max(1, Math.min(Number(e.target.value), maxSharesPlayerCanSell)))}
                   className="bg-gray-800 border-gray-600 mt-1"
                 />
               </div>
@@ -608,6 +633,9 @@ function CompanyInventoryView({ companyProfile, netWorth, onIssueShares }: Pick<
                 <p className="text-lg font-bold">Jumla ya Pesa utakayopata</p>
                 <p className="text-2xl font-mono text-green-400">${(sharesToSell * pricePerShare).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                 <p className="text-xs text-gray-500 mt-1">Hisa hizi zitawekwa kwenye soko la umma (IPO).</p>
+                 {companyProfile.securityFund === 0 && (
+                    <p className="text-sm text-yellow-400 mt-2">Kumbuka: $1,000,000 zitatolewa kwenye pesa zako na kuwekwa kama mfuko wa hakiba.</p>
+                )}
               </div>
             </div>
           <DialogFooter>
@@ -615,7 +643,7 @@ function CompanyInventoryView({ companyProfile, netWorth, onIssueShares }: Pick<
             <Button 
               className="bg-green-600 hover:bg-green-700 text-white"
               onClick={handleConfirmIPO}
-              disabled={sharesToSell <= 0 || sharesToSell > currentlyAvailableToSell || pricePerShare <= 0}
+              disabled={sharesToSell <= 0 || sharesToSell > maxSharesPlayerCanSell || pricePerShare <= 0}
             >
               Thibitisha Uuzaji
             </Button>

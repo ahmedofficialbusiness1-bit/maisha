@@ -234,8 +234,8 @@ export function Game() {
   React.useEffect(() => {
     if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef || !userRef) return;
     
-    const isAdmin = gameState.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
-    const currentRole = isAdmin ? 'admin' : 'player';
+    // Determine role - this could be more complex later
+    const currentRole = gameState.role || 'player';
 
     const publicData: PlayerPublicData = {
         uid: gameState.uid,
@@ -258,7 +258,7 @@ export function Game() {
         });
     }
 
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, userRef, database]);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, userRef, database, gameState?.role]);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -544,7 +544,7 @@ export function Game() {
             read: false, 
             icon: 'production' 
          };
-         currentData.notifications = { ...(currentData.notifications || {}), [notifRef.key!]: newNotification };
+         currentData.notifications = { ...(currentData.notifications || {}), [newNotifRef.key!]: newNotification };
          
          return currentData;
      });
@@ -843,21 +843,35 @@ export function Game() {
   }, [userRef, companyData, user, database]);
 
   const handleIssueShares = (sharesToSell: number, pricePerShare: number) => {
-      if (!userRef || !gameState) return;
-      
+      if (!userRef || !gameState || !netWorth) return;
+       // IPO Conditions Check
+        if (netWorth < 1000000) {
+            toast({ variant: 'destructive', title: 'Thamani ya Kampuni Haitoshi', description: `Unahitaji thamani ya angalau $1,000,000. Thamani yako sasa ni $${netWorth.toLocaleString()}.`});
+            return;
+        }
+        if (gameState.money < 1000000) {
+            toast({ variant: 'destructive', title: 'Pesa Taslimu Hazitoshi', description: `Unahitaji kuwa na angalau $1,000,000 taslimu. Una $${gameState.money.toLocaleString()}.`});
+            return;
+        }
+
       runTransaction(userRef, (currentData: UserData | null) => {
           if (!currentData || !currentData.companyProfile) return;
           
-          const maxSharesToSell = currentData.companyProfile.totalShares - 200000;
-          const currentlyAvailableToSell = currentData.companyProfile.availableShares - 200000;
-          if (sharesToSell <= 0 || sharesToSell > currentlyAvailableToSell) {
-              toast({ variant: 'destructive', title: 'Idadi ya Hisa si Sahihi', description: `Unaweza kuuza hadi hisa ${currentlyAvailableToSell.toLocaleString()} pekee.`});
+          const maxSharesPlayerCanSell = currentData.companyProfile.totalShares - 200000;
+           if (sharesToSell <= 0 || sharesToSell > maxSharesPlayerCanSell) {
+              toast({ variant: 'destructive', title: 'Idadi ya Hisa si Sahihi', description: `Unaweza kuuza hadi hisa ${maxSharesPlayerCanSell.toLocaleString()} pekee.`});
               return; // Abort
           }
 
           const moneyGained = sharesToSell * pricePerShare;
           currentData.money += moneyGained;
           currentData.companyProfile.availableShares -= sharesToSell;
+
+           // Block the security fund if it hasn't been blocked yet
+          if (currentData.companyProfile.securityFund === 0) {
+              currentData.money -= 1000000;
+              currentData.companyProfile.securityFund = 1000000;
+          }
           
           // Add transaction & notification
           const transRef = push(ref(database, `users/${currentData.uid}/transactions`));
@@ -871,11 +885,6 @@ export function Game() {
           return currentData;
       }).then(() => {
           toast({ title: 'IPO Imefanikiwa!', description: 'Hisa zako sasa zinapatikana sokoni.'});
-          
-          // TODO: Update the public stock listing `companyData` state
-          // This part is tricky as it would involve another DB write to a public node
-          // and then all clients would get updated. For now, we only update the seller's state.
-
       }).catch((err) => {
           toast({ variant: 'destructive', title: 'Uuzaji wa Hisa Umeshindikana', description: err.message });
       })
@@ -1539,7 +1548,7 @@ export function Game() {
       case 'dashboard':
         return <Dashboard buildingSlots={gameState.buildingSlots || []} inventory={gameState.inventory || []} stars={gameState.stars} onBuild={handleBuild} onStartProduction={handleStartProduction} onStartSelling={handleStartSelling} onBoostConstruction={handleBoostConstruction} onUpgradeBuilding={handleUpgradeBuilding} onDemolishBuilding={handleDemolishBuilding} onBuyMaterial={handleBuyMaterial} />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} />;
+        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':
         return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} />;
       case 'encyclopedia':

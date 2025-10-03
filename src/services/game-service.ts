@@ -17,6 +17,7 @@ export type CompanyProfile = {
   marketCap: number;
   isPublic: boolean;
   ownerUid: string;
+  securityFund: number;
 };
 
 // This is the private user data, stored under /users/{uid}
@@ -57,7 +58,6 @@ export type PlayerPublicData = {
 // Function to get initial user data
 export const getInitialUserData = (uid: string, displayName: string | null, email: string | null): UserData => {
   const initialUsername = displayName || (email ? email.split('@')[0] : 'Mchezaji');
-  const isAdmin = uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
   const initialMoney = 10000;
   const initialSharePrice = 10;
   const initialTotalShares = 1000000;
@@ -97,6 +97,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
       marketCap: initialTotalShares * initialSharePrice,
       isPublic: false,
       ownerUid: uid,
+      securityFund: 0,
     },
   };
 }
