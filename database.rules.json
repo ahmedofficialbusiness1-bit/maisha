@@ -4,14 +4,14 @@
     "users": {
       "$uid": {
         ".read": "auth != null",
-        ".write": "auth != null && (auth.uid === $uid || (newData.child('money').val() !== data.child('money').val()) || (newData.child('inventory').val() !== data.child('inventory').val()) || (newData.child('notifications').val() !== data.child('notifications').val()) || (newData.child('transactions').val() !== data.child('transactions').val()))"
+        ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')"
       }
     },
     "players": {
       ".read": "auth != null",
       ".indexOn": ["netWorth", "username"],
       "$uid": {
-        ".write": "auth != null && auth.uid === $uid"
+        ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')"
       }
     },
     "market": {
@@ -24,7 +24,7 @@
     },
     "chat": {
       "$chatRoomId": {
-        ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.beginsWith(auth.uid) || $chatRoomId.endsWith(auth.uid))",
+        ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.startsWith(auth.uid) || $chatRoomId.endsWith(auth.uid))",
         ".write": "auth != null"
       }
     },
@@ -34,7 +34,3 @@
     }
   }
 }
-
-    
-
-
