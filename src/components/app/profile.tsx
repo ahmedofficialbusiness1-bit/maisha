@@ -43,7 +43,7 @@ const profileFormSchema = z.object({
       message: 'Jina lisizidi herufi 30.',
     }),
   avatarUrl: z.string().optional().or(z.literal('')),
-  privateNotes: z.string().max(500, { message: 'Maelezo yasizidi herufi 500.'}).optional(),
+  privateNotes: z.string().optional(),
 });
 
 // We omit the server-controlled fields from the ProfileData for the form
@@ -346,5 +346,3 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     </div>
   );
 }
-
-    
