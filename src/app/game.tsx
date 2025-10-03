@@ -659,89 +659,91 @@ export function Game() {
     const handleBuyMaterial = async (materialName: string, quantity: number): Promise<boolean> => {
         if (!userRef || !user || !gameState) return false;
 
-        // 1. Check market first
-        const marketListing = playerListings
+        const cheapestListing = playerListings
             .filter(l => l.commodity === materialName && l.sellerUid !== user.uid)
-            .sort((a, b) => a.price - b.price)[0]; // Find cheapest
+            .sort((a, b) => a.price - b.price)[0];
 
         const systemPrice = getPriceWithQuality(materialName, 0) || Infinity;
 
-        if (marketListing && marketListing.price <= systemPrice) {
-            const buyQty = Math.min(quantity, marketListing.quantity);
+        if (cheapestListing && cheapestListing.price <= systemPrice) {
+            // Market is cheaper or equal, buy from market
+            const quantityToBuy = Math.min(quantity, cheapestListing.quantity);
             try {
-                await handleBuyFromMarket(marketListing, buyQty);
-                // If we still need more, buy the rest from the system
-                const remainingQty = quantity - buyQty;
-                if (remainingQty > 0) {
-                   return await handleBuyMaterial(materialName, remainingQty);
+                await handleBuyFromMarket(cheapestListing, quantityToBuy);
+                const remainingQuantity = quantity - quantityToBuy;
+                if (remainingQuantity > 0) {
+                    // If more is needed, recursively call to buy the rest (will likely buy from system now)
+                    return await handleBuyMaterial(materialName, remainingQuantity);
                 }
-                return true; // Purchase successful
-            } catch {
-                // If market buy fails, fallback to system buy
-                return buyFromSystem(materialName, quantity);
+                return true;
+            } catch (error) {
+                // If market buy fails for some reason (e.g., item was just sold), fall back to system
+                return await buyFromSystem(materialName, quantity);
             }
         } else {
-            // 2. No market listing or system is cheaper, buy from system
-            return buyFromSystem(materialName, quantity);
+            // System is cheaper or no market listings available, buy from system
+            return await buyFromSystem(materialName, quantity);
         }
     };
 
-    const buyFromSystem = (materialName: string, quantity: number): Promise<boolean> => {
-      return new Promise((resolve) => {
-        if (!userRef || !user) {
-            resolve(false);
-            return;
-        }
+    const buyFromSystem = async (materialName: string, quantity: number): Promise<boolean> => {
+        if (!userRef || !user) return false;
+        
         const costPerUnit = getPriceWithQuality(materialName, 0) || 0;
         if (costPerUnit === 0) {
-            resolve(false);
-            return;
+             toast({ variant: 'destructive', title: "Item Not Available", description: `${materialName} cannot be purchased from the system.` });
+             return false;
         }
 
         const totalCost = costPerUnit * quantity;
 
-        runTransaction(userRef, (currentData) => {
-            if (!currentData || currentData.money < totalCost) {
-                toast({ variant: 'destructive', title: "Fedha Hazitoshi", description: `Unahitaji $${totalCost.toFixed(2)} kununua hivi.` });
-                return; // Abort
-            }
-            
-            currentData.money -= totalCost;
-            
-            let newInventory = [...(currentData.inventory || [])];
-            const itemIndex = newInventory.findIndex((i: InventoryItem) => i.item === materialName);
-            if (itemIndex > -1) {
-                newInventory[itemIndex].quantity += quantity;
-            } else {
-                newInventory.push({ item: materialName, quantity, marketPrice: costPerUnit });
-            }
-            currentData.inventory = newInventory;
-            
-            const newTransaction: Transaction = {
-                id: push(ref(database, `users/${user.uid}/transactions`)).key!,
-                type: 'expense', amount: totalCost, 
-                description: `Nunua ${quantity}x ${materialName} kutoka sokoni`, timestamp: Date.now()
-            };
-            
-            const newNotification: Notification = {
-                id: push(ref(database, `users/${user.uid}/notifications`)).key!,
-                message: `Umenunua ${quantity}x ${materialName} kwa $${totalCost.toFixed(2)}.`, 
-                timestamp: Date.now(), read: false, icon: 'purchase'
-            };
+        try {
+            const { committed } = await runTransaction(userRef, (currentData) => {
+                if (!currentData || currentData.money < totalCost) {
+                    return; // Abort transaction (insufficient funds)
+                }
+                
+                currentData.money -= totalCost;
+                
+                let newInventory = [...(currentData.inventory || [])];
+                const itemIndex = newInventory.findIndex((i: InventoryItem) => i.item === materialName);
+                if (itemIndex > -1) {
+                    newInventory[itemIndex].quantity += quantity;
+                } else {
+                    newInventory.push({ item: materialName, quantity, marketPrice: costPerUnit });
+                }
+                currentData.inventory = newInventory;
+                
+                const newTransaction: Transaction = {
+                    id: push(ref(database, `users/${user.uid}/transactions`)).key!,
+                    type: 'expense', amount: totalCost, 
+                    description: `Bought ${quantity}x ${materialName} from system`, timestamp: Date.now()
+                };
+                
+                const newNotification: Notification = {
+                    id: push(ref(database, `users/${user.uid}/notifications`)).key!,
+                    message: `You bought ${quantity}x ${materialName} for $${totalCost.toFixed(2)}.`, 
+                    timestamp: Date.now(), read: false, icon: 'purchase'
+                };
 
-            currentData.transactions = { ...currentData.transactions, [newTransaction.id]: newTransaction };
-            currentData.notifications = { ...currentData.notifications, [newNotification.id]: newNotification };
-            
-            return currentData;
-        }).then(({ committed }) => {
+                currentData.transactions = { ...currentData.transactions, [newTransaction.id]: newTransaction };
+                currentData.notifications = { ...currentData.notifications, [newNotification.id]: newNotification };
+                
+                return currentData;
+            });
+
             if (committed) {
-                toast({ title: 'Manunuzi Yamefanikiwa', description: `Umenunua ${quantity}x ${materialName}.` });
-                resolve(true);
+                toast({ title: 'Purchase Successful', description: `Bought ${quantity}x ${materialName} from system.` });
+                return true;
             } else {
-                resolve(false);
+                toast({ variant: 'destructive', title: "Insufficient Funds" });
+                return false;
             }
-        }).catch(() => resolve(false));
-      });
+        } catch (error) {
+            console.error("System purchase failed:", error);
+            toast({ variant: 'destructive', title: 'Purchase Failed' });
+            return false;
+        }
     }
 
 
@@ -1696,5 +1698,7 @@ export function Game() {
     </div>
   );
 }
+
+    
 
     
