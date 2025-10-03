@@ -159,6 +159,15 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     : 'recently';
 
   const playerTier = getPlayerTier(metrics.netWorth);
+  
+  const rankNumber = parseInt(metrics.ranking.replace('#', ''));
+  const getRankClasses = (rank: number) => {
+    if (rank === 1) return 'border-4 border-yellow-400 shadow-lg shadow-yellow-400/20';
+    if (rank === 2) return 'border-4 border-slate-400 shadow-lg shadow-slate-400/20';
+    if (rank === 3) return 'border-4 border-orange-400 shadow-lg shadow-orange-400/20';
+    return 'border-2 border-yellow-400'; // Default border for consistency
+  }
+
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -185,7 +194,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                           disabled={!isEditing}
                         />
                         <Avatar 
-                          className={cn("h-20 w-20 border-2 border-yellow-400 rounded-md", isEditing && "cursor-pointer hover:opacity-80 transition-opacity")}
+                          className={cn("h-20 w-20 rounded-md", getRankClasses(rankNumber), isEditing && "cursor-pointer hover:opacity-80 transition-opacity")}
                           onClick={() => isEditing && fileInputRef.current?.click()}
                         >
                             <AvatarImage src={avatarUrl} alt={currentProfile.playerName} data-ai-hint="player logo" className="rounded-none" />

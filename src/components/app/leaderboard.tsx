@@ -19,6 +19,14 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
     // Sort players by netWorth in descending order
     return [...players].sort((a, b) => b.netWorth - a.netWorth);
   }, [players]);
+  
+  const getRankClasses = (rank: number) => {
+    if (rank === 0) return 'border-4 border-yellow-400 shadow-lg shadow-yellow-400/20';
+    if (rank === 1) return 'border-4 border-slate-400 shadow-lg shadow-slate-400/20';
+    if (rank === 2) return 'border-4 border-orange-400 shadow-lg shadow-orange-400/20';
+    return 'border-2 border-gray-600';
+  }
+
 
   if (loading) {
     return (
@@ -70,7 +78,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                     </TableCell>
                                     <TableCell className="p-2 sm:p-4">
                                         <Button variant="ghost" className="flex items-center gap-3 p-0 h-auto hover:bg-transparent" onClick={() => onViewProfile(player.uid)}>
-                                            <Avatar>
+                                            <Avatar className={cn('h-12 w-12', getRankClasses(index))}>
                                                 <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                                 <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                             </Avatar>
@@ -109,7 +117,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                           <span>{index + 1}</span>
                                       </div>
                                       <div className="flex items-center gap-3">
-                                          <Avatar className="h-10 w-10">
+                                          <Avatar className={cn('h-10 w-10', getRankClasses(index))}>
                                               <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                               <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                           </Avatar>
