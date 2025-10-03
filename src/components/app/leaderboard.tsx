@@ -20,11 +20,11 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
     return [...players].sort((a, b) => b.netWorth - a.netWorth);
   }, [players]);
   
-  const getRankClasses = (rank: number) => {
-    if (rank === 0) return 'border-4 border-yellow-400 shadow-lg shadow-yellow-400/20';
-    if (rank === 1) return 'border-4 border-slate-400 shadow-lg shadow-slate-400/20';
-    if (rank === 2) return 'border-4 border-orange-400 shadow-lg shadow-orange-400/20';
-    return 'border-2 border-gray-600';
+  const getRankWrapperClasses = (rank: number) => {
+    if (rank === 0) return 'p-1 rounded-full bg-gradient-to-tr from-yellow-400 via-amber-300 to-yellow-500 shadow-2xl shadow-yellow-400/20';
+    if (rank === 1) return 'p-1 rounded-full bg-gradient-to-tr from-slate-300 via-slate-100 to-slate-400 shadow-2xl shadow-slate-400/20';
+    if (rank === 2) return 'p-1 rounded-full bg-gradient-to-tr from-orange-400 via-amber-500 to-orange-600 shadow-2xl shadow-orange-500/20';
+    return '';
   }
 
 
@@ -68,6 +68,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                     <TableBody>
                         {sortedPlayers.map((player, index) => {
                             const tier = getPlayerTier(player.netWorth);
+                            const rankWrapperClass = getRankWrapperClasses(index);
                             return (
                                 <TableRow 
                                   key={player.uid} 
@@ -78,10 +79,12 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                     </TableCell>
                                     <TableCell className="p-2 sm:p-4">
                                         <Button variant="ghost" className="flex items-center gap-3 p-0 h-auto hover:bg-transparent" onClick={() => onViewProfile(player.uid)}>
-                                            <Avatar className={cn('h-12 w-12', getRankClasses(index))}>
-                                                <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
-                                                <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
-                                            </Avatar>
+                                            <div className={cn(rankWrapperClass)}>
+                                                <Avatar className='h-12 w-12 border-2 border-gray-900'>
+                                                    <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
+                                                    <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                            </div>
                                             <div className='flex flex-col items-start'>
                                                 <span className="font-semibold text-white">{player.username}</span>
                                                 <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
@@ -105,6 +108,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
               <div className="md:hidden space-y-3">
                   {sortedPlayers.map((player, index) => {
                       const tier = getPlayerTier(player.netWorth);
+                      const rankWrapperClass = getRankWrapperClasses(index);
                       return (
                           <Card 
                             key={player.uid} 
@@ -117,10 +121,12 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                           <span>{index + 1}</span>
                                       </div>
                                       <div className="flex items-center gap-3">
-                                          <Avatar className={cn('h-10 w-10', getRankClasses(index))}>
-                                              <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
-                                              <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
-                                          </Avatar>
+                                          <div className={cn(rankWrapperClass)}>
+                                              <Avatar className='h-10 w-10 border-2 border-gray-800'>
+                                                  <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
+                                                  <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
+                                              </Avatar>
+                                          </div>
                                           <div>
                                               <p className="font-semibold text-white">{player.username}</p>
                                                <Badge className={cn("text-[10px] py-0 px-1.5 h-auto mt-1", tier.color)}>

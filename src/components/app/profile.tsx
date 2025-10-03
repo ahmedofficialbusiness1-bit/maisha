@@ -161,12 +161,13 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
   const playerTier = getPlayerTier(metrics.netWorth);
   
   const rankNumber = parseInt(metrics.ranking.replace('#', ''));
-  const getRankClasses = (rank: number) => {
-    if (rank === 1) return 'border-4 border-yellow-400 shadow-lg shadow-yellow-400/20';
-    if (rank === 2) return 'border-4 border-slate-400 shadow-lg shadow-slate-400/20';
-    if (rank === 3) return 'border-4 border-orange-400 shadow-lg shadow-orange-400/20';
-    return 'border-2 border-yellow-400'; // Default border for consistency
+  const getRankWrapperClasses = (rank: number) => {
+    if (rank === 1) return 'p-1 rounded-md bg-gradient-to-tr from-yellow-400 via-amber-300 to-yellow-500 shadow-2xl shadow-yellow-400/20';
+    if (rank === 2) return 'p-1 rounded-md bg-gradient-to-tr from-slate-300 via-slate-100 to-slate-400 shadow-2xl shadow-slate-400/20';
+    if (rank === 3) return 'p-1 rounded-md bg-gradient-to-tr from-orange-400 via-amber-500 to-orange-600 shadow-2xl shadow-orange-500/20';
+    return '';
   }
+  const rankWrapperClass = getRankWrapperClasses(rankNumber);
 
 
   return (
@@ -193,20 +194,22 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                           onChange={handleImageUpload}
                           disabled={!isEditing}
                         />
-                        <Avatar 
-                          className={cn("h-20 w-20 rounded-md", getRankClasses(rankNumber), isEditing && "cursor-pointer hover:opacity-80 transition-opacity")}
+                        <div 
+                          className={cn("relative", rankWrapperClass, isEditing && "cursor-pointer hover:opacity-80 transition-opacity")}
                           onClick={() => isEditing && fileInputRef.current?.click()}
                         >
-                            <AvatarImage src={avatarUrl} alt={currentProfile.playerName} data-ai-hint="player logo" className="rounded-none" />
-                            <AvatarFallback className="rounded-md">{currentProfile.playerName.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        {isEditing && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-md pointer-events-none">
-                                <Upload className="h-6 w-6 text-white" />
-                            </div>
-                        )}
+                            <Avatar className="h-20 w-20 rounded-md border-2 border-background">
+                                <AvatarImage src={avatarUrl} alt={currentProfile.playerName} data-ai-hint="player logo" className="rounded-none" />
+                                <AvatarFallback className="rounded-md">{currentProfile.playerName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                             {isEditing && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-md pointer-events-none">
+                                    <Upload className="h-6 w-6 text-white" />
+                                </div>
+                            )}
+                        </div>
                         <div className={cn(
-                            "absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-gray-800",
+                            "absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-gray-800",
                             isOnline ? 'bg-green-500' : 'bg-gray-500'
                         )} />
                     </div>
