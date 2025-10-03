@@ -884,7 +884,7 @@ export function Dashboard({
     const calculateProductionTime = (quantity: number): number => {
         if (!selectedSlot || !selectedRecipe) return 0;
         const buildingInfo = buildingData[selectedRecipe.buildingId];
-        // Base rate is units per hour
+        // Base rate is units per hour at level 1
         const levelBonus = (1 + (selectedSlot.level - 1) * 0.4);
         const qualityBonus = (1 + (selectedSlot.quality || 0) * 0.20);
         const effectiveRatePerHr = buildingInfo.productionRate * levelBonus * qualityBonus;
@@ -1254,7 +1254,7 @@ export function Dashboard({
                     Chagua kitendo cha kufanya kwenye jengo hili.
                 </DialogDescription>
             </DialogHeader>
-            <ScrollArea className='-mr-6 pr-6 flex-grow'>
+            <ScrollArea className='-mr-6 pr-6 h-[60vh]'>
                  <div className='py-4 space-y-4'>
                     <Button className='w-full justify-start bg-green-600 hover:bg-green-700' onClick={handleOpenProductionDialog}>
                         {isSelectedBuildingShop ? <Store className='mr-2'/> : <Tractor className='mr-2'/>} 
@@ -1630,4 +1630,5 @@ const formatTime = (ms: number) => {
     
 
     
+
 
