@@ -35,6 +35,10 @@
     "marketShares": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+    "election": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('players').child(auth.uid).child('role').val() === 'admin'"
     }
   }
 }

@@ -1,9 +1,10 @@
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award, Shield, BookOpen, LineChart } from 'lucide-react';
+import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award, Shield, BookOpen, LineChart, Crown } from 'lucide-react';
 import { useMemo } from 'react';
 import type { View } from '@/app/game';
 import {
@@ -33,6 +34,7 @@ interface AppHeaderProps {
     playerXP: number;
     xpForNextLevel: number;
     isAdmin?: boolean;
+    isPresident?: boolean;
 }
 
 function formatCurrency(value: number): string {
@@ -45,7 +47,7 @@ function formatCurrency(value: number): string {
     return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 }
 
-export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead, playerLevel, playerXP, xpForNextLevel, isAdmin }: AppHeaderProps) {
+export function AppHeader({ money, stars, playerName, playerAvatar, setView, notifications, onNotificationsRead, playerLevel, playerXP, xpForNextLevel, isAdmin, isPresident }: AppHeaderProps) {
     const router = useRouter();
     const formattedMoney = useMemo(() => formatCurrency(money), [money]);
     const unreadCount = (notifications || []).filter(n => !n.read).length;
@@ -91,10 +93,13 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
 
         {/* Player Profile & Level */}
         <div className="flex items-center gap-2">
-          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 border-2 border-yellow-400">
-            <AvatarImage src={playerAvatar} data-ai-hint="player avatar" />
-            <AvatarFallback>{playerName.charAt(0)}</AvatarFallback>
-          </Avatar>
+           <div className="relative">
+              <Avatar className="h-7 w-7 sm:h-8 sm:w-8 border-2 border-yellow-400">
+                <AvatarImage src={playerAvatar} data-ai-hint="player avatar" />
+                <AvatarFallback>{playerName.charAt(0)}</AvatarFallback>
+              </Avatar>
+              {isPresident && <Crown className="absolute -top-2 -right-2 h-4 w-4 text-yellow-400" />}
+           </div>
           <div className="hidden sm:flex flex-col">
             <span className="font-semibold text-sm">{playerName}</span>
             <TooltipProvider>

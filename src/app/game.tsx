@@ -100,6 +100,12 @@ export function Game() {
   });
   const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
 
+  // Presidency state
+  const [president, setPresident] = React.useState<PlayerPublicData | null>(null);
+  const [candidates, setCandidates] = React.useState<any[]>([]);
+  const [electionState, setElectionState] = React.useState<'open' | 'closed'>('closed');
+  const [votes, setVotes] = React.useState<Record<string, number>>({});
+
 
   // Refs for Firebase paths
   const userRef = React.useMemo(() => user ? ref(database, `users/${user.uid}`) : null, [database, user]);
@@ -108,6 +114,7 @@ export function Game() {
   const contractsRef = React.useMemo(() => ref(database, 'contracts'), [database]);
   const marketSharesRef = React.useMemo(() => ref(database, 'marketShares'), [database]);
   const chatMetadataRef = React.useMemo(() => ref(database, 'chat-metadata'), [database]);
+  const electionRef = React.useMemo(() => ref(database, 'election'), [database]);
   
   const handleSetView = React.useCallback((newView: View) => {
     setView(newView);
@@ -211,6 +218,25 @@ export function Game() {
     }
   }, [viewedProfileUid, database, toast]);
 
+    // Listen for election changes
+  React.useEffect(() => {
+      if (!electionRef || !allPlayers) return;
+
+      const unsubscribe = onValue(electionRef, (snapshot) => {
+          const electionData = snapshot.val();
+          if (electionData) {
+              setElectionState(electionData.state || 'closed');
+              setCandidates(electionData.candidates || []);
+              setVotes(electionData.votes || {});
+              const presidentPlayer = allPlayers.find(p => p.uid === electionData.presidentUid);
+              setPresident(presidentPlayer || null);
+          } else {
+              setPresident(null);
+          }
+      });
+
+      return () => unsubscribe();
+  }, [electionRef, allPlayers]);
   
   // Listen for market changes
   React.useEffect(() => {
@@ -255,6 +281,16 @@ export function Game() {
     React.useEffect(() => {
     if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef) return;
     
+    const isPresident = president?.uid === gameState.uid;
+    // Determine the final role. Admin > President > Player
+    let finalRole: PlayerPublicData['role'] = 'player';
+    if (gameState.role === 'admin') {
+        finalRole = 'admin';
+    } else if (isPresident) {
+        finalRole = 'president';
+    }
+
+
     // This is the public-facing data for the leaderboard, profiles, etc.
     const publicData: PlayerPublicData = {
         uid: gameState.uid,
@@ -262,7 +298,7 @@ export function Game() {
         netWorth: gameState.netWorth,
         avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
         level: gameState.playerLevel,
-        role: gameState.role, // Crucially, sync the role here
+        role: finalRole
     };
 
     // Use a transaction to safely update the public player data and check the private data
@@ -271,12 +307,13 @@ export function Game() {
       return publicData;
     });
 
-    // Also ensure the private gameState is consistent
-    if (gameState.role !== publicData.role) {
-        setGameState(prev => prev ? ({ ...prev, role: publicData.role }) : null);
+     // Also ensure the private gameState is consistent
+    if (gameState.role !== 'admin' && gameState.role !== finalRole) {
+        setGameState(prev => prev ? ({ ...prev, role: finalRole }) : null);
     }
 
-  }, [gameState, playerPublicRef, user]);
+
+  }, [gameState, playerPublicRef, user, president]);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -592,7 +629,7 @@ export function Game() {
             read: false, 
             icon: 'production' 
          };
-         currentData.notifications = { ...(currentData.notifications || {}), [notifRef.key!]: newNotification };
+         currentData.notifications = { ...(currentData.notifications || {}), [newNotification.key!]: newNotification };
          
          return currentData;
      });
@@ -1132,7 +1169,7 @@ export function Game() {
     });
   }
   
-    const handleAdminSetRole = (uid: string, role: 'player' | 'admin') => {
+    const handleAdminSetRole = (uid: string, role: 'player' | 'admin' | 'president') => {
         if (!user || gameState?.role !== 'admin' || !uid) return;
         const targetUserRef = ref(database, `users/${uid}`);
         runTransaction(targetUserRef, (userData) => {
@@ -1147,6 +1184,98 @@ export function Game() {
             toast({ variant: 'destructive', title: 'Failed to Set Role' });
         });
     }
+
+  const handleAdminAppointPresident = (uid: string) => {
+    if (gameState?.role !== 'admin') return;
+    const updates: Record<string, any> = {};
+    updates[`/election/presidentUid`] = uid;
+    update(ref(database), updates);
+    toast({ title: "President Appointed", description: `Player ${uid} is now the President.` });
+  };
+  
+  const handleAdminRemovePresident = () => {
+    if (gameState?.role !== 'admin') return;
+     const updates: Record<string, any> = {};
+    updates[`/election/presidentUid`] = null;
+    update(ref(database), updates);
+    toast({ title: "President Removed" });
+  }
+
+  const handleAdminManageElection = (state: 'open' | 'closed') => {
+      if (gameState?.role !== 'admin' || !electionRef) return;
+      const updates: Record<string, any> = {};
+      updates[`/election/state`] = state;
+
+      if (state === 'closed') {
+          // Logic to tally votes and declare winner
+          const winnerId = Object.keys(votes).reduce((a, b) => votes[a] > votes[b] ? a : b, '');
+          if (winnerId) {
+            updates[`/election/presidentUid`] = winnerId;
+          }
+      } else {
+        // Clear previous election data when opening a new one
+        updates[`/election/candidates`] = null;
+        updates[`/election/votes`] = null;
+        updates[`/election/presidentUid`] = null;
+      }
+      update(ref(database), updates);
+  };
+  
+    const handleRunForPresidency = () => {
+        if (!user || !gameState) return;
+
+        const fee = 10000000;
+        if (gameState.money < fee) {
+            toast({ variant: "destructive", title: "Pesa haitoshi", description: "Unahitaji $10,000,000 kugombea." });
+            return;
+        }
+
+        const candidateRef = ref(database, `/election/candidates/${user.uid}`);
+        const userMoneyRef = ref(database, `/users/${user.uid}/money`);
+
+        runTransaction(userMoneyRef, (currentMoney) => {
+            if (currentMoney < fee) return;
+            return currentMoney - fee;
+        }).then(({ committed }) => {
+            if (committed) {
+                set(candidateRef, {
+                    uid: user.uid,
+                    username: gameState.username,
+                    avatar: gameState.avatarUrl,
+                    slogan: "Uchumi imara, maisha bora kwa wote!",
+                });
+                toast({ title: "Umefanikiwa!", description: "Sasa wewe ni mgombea urais!" });
+            } else {
+                toast({ variant: "destructive", title: "Pesa haitoshi" });
+            }
+        });
+    };
+    
+    const handleVote = (candidateUid: string) => {
+        if (!user || !gameState) return;
+        
+        const fee = 10000;
+         if (gameState.money < fee) {
+            toast({ variant: "destructive", title: "Pesa haitoshi", description: "Unahitaji $10,000 kupiga kura." });
+            return;
+        }
+
+        const voteRef = ref(database, `/election/votes/${candidateUid}`);
+        const userMoneyRef = ref(database, `/users/${user.uid}/money`);
+
+        runTransaction(userMoneyRef, (currentMoney) => {
+            if (currentMoney < fee) return;
+            return currentMoney - fee;
+        }).then(({ committed }) => {
+            if (committed) {
+                 runTransaction(voteRef, (currentVotes) => (currentVotes || 0) + 1);
+                 toast({ title: "Kura imepigwa!", description: `Umemchagua mgombea ${candidateUid}` });
+            } else {
+                toast({ variant: "destructive", title: "Pesa haitoshi" });
+            }
+        })
+    };
+
 
   const handleAcceptContract = async (contract: any) => {
     if (!user || !gameState || !userRef) return;
@@ -1635,6 +1764,8 @@ export function Game() {
         }
     }
 
+  const isPresident = president?.uid === user.uid;
+
   const renderView = () => {
     switch (view) {
       case 'dashboard':
@@ -1643,6 +1774,7 @@ export function Game() {
                     inventory={gameState.inventory || []} 
                     stars={gameState.stars}
                     playerRank={currentPlayerRank}
+                    isPresident={isPresident}
                     onBuild={handleBuild} 
                     onStartProduction={handleStartProduction} 
                     onStartSelling={handleStartSelling} 
@@ -1660,11 +1792,11 @@ export function Game() {
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} onVote={handleVote} president={president} candidates={candidates} electionState={electionState} votes={votes} currentUser={gameState} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
-          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} players={allPlayers || []} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={handlePublicRoomRead} />;
+          return <Chats user={{ uid: gameState.uid, username: gameState.username, avatarUrl: gameState.avatarUrl }} initialPrivateChatUid={initialPrivateChatUid} onChatOpened={handleChatOpened} players={allPlayers || []} chatMetadata={chatMetadata} unreadPublicChats={unreadPublicChats} onPublicRoomRead={handlePublicRoomRead} president={president} />;
       case 'accounting':
           return <Accounting 
                     transactions={Object.values(gameState.transactions || {}).sort((a,b) => b.timestamp - a.timestamp)} 
@@ -1675,7 +1807,7 @@ export function Game() {
                     cash={gameState.money}
                  />;
       case 'leaderboard':
-          return <Leaderboard onViewProfile={handleViewProfile} />;
+          return <Leaderboard onViewProfile={handleViewProfile} president={president} />;
       case 'profile':
           if (isViewingProfile && viewedProfileForDisplay) {
             return <PlayerProfile 
@@ -1687,9 +1819,10 @@ export function Game() {
                         viewerRole={gameState.role}
                         setView={setView}
                         onStartPrivateChat={handleStartPrivateChat}
+                        isPresident={viewedProfileData?.uid === president?.uid}
                     />;
         }
-        return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} />;
+        return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} isPresident={isPresident} />;
       case 'admin':
           if (gameState.role === 'admin') {
             return <AdminPanel 
@@ -1698,6 +1831,11 @@ export function Game() {
                         onAdminSendMoney={handleAdminSendMoney} 
                         onAdminSendStars={handleAdminSendStars} 
                         onAdminSetRole={handleAdminSetRole}
+                        onAdminAppointPresident={handleAdminAppointPresident}
+                        onAdminRemovePresident={handleAdminRemovePresident}
+                        onAdminManageElection={handleAdminManageElection}
+                        president={president}
+                        electionState={electionState}
                     />;
           }
           return null;
@@ -1720,6 +1858,7 @@ export function Game() {
         playerXP={gameState.playerXP} 
         xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} 
         isAdmin={gameState.role === 'admin'} 
+        isPresident={isPresident}
       />
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
@@ -1728,4 +1867,5 @@ export function Game() {
     </div>
   );
 }
+
 

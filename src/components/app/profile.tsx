@@ -58,7 +58,7 @@ export type ProfileData = ProfileDataForForm & {
   uid: string;
   status?: 'online' | 'offline';
   lastSeen?: Date;
-  role?: 'player' | 'admin';
+  role?: 'player' | 'admin' | 'president';
 };
 
 
@@ -77,9 +77,10 @@ interface PlayerProfileProps {
   metrics: PlayerMetrics;
   isViewOnly?: boolean;
   onBack?: () => void;
-  viewerRole?: 'player' | 'admin';
+  viewerRole?: 'player' | 'admin' | 'president';
   setView: (view: View) => void;
   onStartPrivateChat: (uid: string) => void;
+  isPresident?: boolean;
 }
 
 function InfoItem({ label, value, smallText = false }: { label: string; value: React.ReactNode, smallText?: boolean }) {
@@ -101,7 +102,7 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 }
 
 
-export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole, setView, onStartPrivateChat }: PlayerProfileProps) {
+export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole, setView, onStartPrivateChat, isPresident }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const { toast } = useToast();
 
@@ -218,7 +219,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         <div 
                           className={cn(
                             "relative", 
-                            wrapperClass,
+                            isPresident ? "p-1 rounded-md bg-gradient-to-tr from-blue-400 via-cyan-300 to-blue-500" : wrapperClass,
                             isEditing && "cursor-pointer hover:opacity-80 transition-opacity"
                           )}
                           onClick={() => isEditing && fileInputRef.current?.click()}
@@ -251,6 +252,12 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             </span>
                         <div className="flex items-center gap-2 flex-wrap">
                             <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
+                             
+                            {isPresident && (
+                               <Badge className="text-xs py-0.5 px-2.5 bg-blue-800/80 border-blue-600 text-blue-200">
+                                   MR PRESIDENT
+                               </Badge>
+                            )}
                             
                             {playerTier && (
                                 <Badge className={cn("text-xs py-0.5 px-2.5", playerTier.color)}>
@@ -265,7 +272,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             )}
                         </div>
                         <p className="text-muted-foreground">
-                           {currentProfile.role === 'admin' ? 'Administrator' : 'Sole trader'}
+                           {currentProfile.role === 'admin' ? 'Administrator' : currentProfile.role === 'president' ? 'President' : 'Sole trader'}
                         </p>
                          <div className='text-xs text-gray-500 font-mono flex items-center gap-2'>
                             <span>UID: {currentProfile.uid}</span>

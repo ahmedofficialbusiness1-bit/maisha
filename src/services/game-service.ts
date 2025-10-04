@@ -39,7 +39,7 @@ export type UserData = {
   playerXP: number;
   privateNotes: string;
   status: 'online' | 'offline';
-  role: 'player' | 'admin';
+  role: 'player' | 'admin' | 'president';
   lastSeen: number;
   lastPublicRead: Record<string, number>;
   companyProfile: CompanyProfile;
@@ -52,7 +52,7 @@ export type PlayerPublicData = {
     avatar: string;
     netWorth: number;
     level: number;
-    role: 'player' | 'admin';
+    role: 'player' | 'admin' | 'president';
 };
 
 
@@ -74,7 +74,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     ];
     
   let role: 'player' | 'admin' = 'player';
-  if (email === 'elonjazz89@gmail.com' || uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2') {
+  if (email === 'elonjazz89@gmail.com' || uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || uid === '7IHauUXBXjUhDJ9YUVVs97fwO9o1') {
     role = 'admin';
   }
   

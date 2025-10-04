@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -46,7 +47,7 @@ const currencySenderSchema = z.object({
 
 const setRoleFormSchema = z.object({
     targetUid: z.string().min(1, 'Target UID is required.'),
-    role: z.enum(['player', 'admin']),
+    role: z.enum(['player', 'admin', 'president']),
 });
 
 
@@ -55,7 +56,12 @@ interface AdminPanelProps {
     onAdminSendItem: (itemName: string, quantity: number, targetUid: string) => void;
     onAdminSendMoney: (amount: number, targetUid: string) => void;
     onAdminSendStars: (amount: number, targetUid: string) => void;
-    onAdminSetRole: (uid: string, role: 'player' | 'admin') => void;
+    onAdminSetRole: (uid: string, role: 'player' | 'admin' | 'president') => void;
+    onAdminAppointPresident: (uid: string) => void;
+    onAdminRemovePresident: () => void;
+    onAdminManageElection: (state: 'open' | 'closed') => void;
+    president: PlayerPublicData | null;
+    electionState: 'open' | 'closed';
 }
 
 function CommoditySimulator() {
@@ -326,7 +332,7 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdmi
     };
     const defaultRoleValues = {
         targetUid: '',
-        role: 'player' as 'player' | 'admin',
+        role: 'player' as 'player' | 'admin' | 'president',
     };
 
     // States for Item Sender
@@ -569,6 +575,7 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdmi
                                             <SelectContent>
                                                 <SelectItem value="player">Player</SelectItem>
                                                 <SelectItem value="admin">Admin</SelectItem>
+                                                <SelectItem value="president">President</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
@@ -684,7 +691,111 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdmi
     )
 }
 
-export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdminSetRole }: AdminPanelProps) {
+const appointPresidentSchema = z.object({
+    targetUid: z.string().min(1, 'UID is required'),
+})
+
+function PresidencyTools({ president, onAdminAppointPresident, onAdminRemovePresident, electionState, onAdminManageElection }: Pick<AdminPanelProps, 'president' | 'onAdminAppointPresident' | 'onAdminRemovePresident' | 'electionState' | 'onAdminManageElection'>) {
+    
+    const form = useForm<z.infer<typeof appointPresidentSchema>>({
+        resolver: zodResolver(appointPresidentSchema),
+        defaultValues: { targetUid: '' }
+    })
+    
+    const onAppointSubmit = (values: z.infer<typeof appointPresidentSchema>) => {
+        onAdminAppointPresident(values.targetUid);
+        form.reset();
+    }
+
+    return (
+        <div className="mt-6 space-y-6">
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Current President</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {president ? (
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Avatar className="h-12 w-12">
+                                    <AvatarImage src={president.avatar} alt={president.username} data-ai-hint="player avatar" />
+                                    <AvatarFallback>{president.username.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-bold text-lg">{president.username}</p>
+                                    <p className="text-sm text-gray-400 font-mono">{president.uid}</p>
+                                </div>
+                            </div>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive">Remove President</Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This will remove the current president from power. The seat will be vacant until a new president is elected or appointed.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={onAdminRemovePresident}>Continue</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
+                    ) : (
+                        <p className="text-gray-400">There is currently no president.</p>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Appoint President</CardTitle>
+                    <CardDescription>Directly appoint a player as president, bypassing elections.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onAppointSubmit)} className="flex items-end gap-4">
+                             <FormField
+                                control={form.control}
+                                name="targetUid"
+                                render={({ field }) => (
+                                    <FormItem className="flex-grow">
+                                        <FormLabel>Player UID</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Enter player UID to appoint" {...field} className="bg-gray-700 border-gray-600" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <Button type="submit">Appoint</Button>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
+            
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Election Control</CardTitle>
+                     <CardDescription>Manage the state of the presidential election.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex items-center gap-4">
+                    <p>Current State: <span className={cn("font-bold", electionState === 'open' ? 'text-green-400' : 'text-red-400')}>{electionState.toUpperCase()}</span></p>
+                    {electionState === 'closed' ? (
+                        <Button onClick={() => onAdminManageElection('open')} variant="secondary">Open Elections</Button>
+                    ) : (
+                         <Button onClick={() => onAdminManageElection('closed')} variant="destructive">Close Elections & Tally</Button>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
+export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdminSetRole, onAdminAppointPresident, onAdminRemovePresident, onAdminManageElection, president, electionState }: AdminPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -694,10 +805,11 @@ export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, o
       </div>
 
        <Tabs defaultValue="players" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-900/50">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-900/50">
             <TabsTrigger value="players">Player Management</TabsTrigger>
             <TabsTrigger value="economy">Economy Tools</TabsTrigger>
             <TabsTrigger value="tools">Game Tools</TabsTrigger>
+            <TabsTrigger value="presidency">Urais</TabsTrigger>
           </TabsList>
           <TabsContent value="players">
             <PlayerManager onViewProfile={onViewProfile} />
@@ -707,6 +819,9 @@ export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, o
           </TabsContent>
           <TabsContent value="tools">
              <GameTools onAdminSendItem={onAdminSendItem} onAdminSendMoney={onAdminSendMoney} onAdminSendStars={onAdminSendStars} onAdminSetRole={onAdminSetRole} />
+          </TabsContent>
+           <TabsContent value="presidency">
+             <PresidencyTools president={president} onAdminAppointPresident={onAdminAppointPresident} onAdminRemovePresident={onAdminRemovePresident} electionState={electionState} onAdminManageElection={onAdminManageElection}/>
           </TabsContent>
         </Tabs>
 

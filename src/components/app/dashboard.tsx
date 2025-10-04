@@ -656,6 +656,7 @@ export interface DashboardProps {
     inventory: InventoryItem[];
     stars: number;
     playerRank: number;
+    isPresident: boolean;
     onBuild: (slotIndex: number, building: BuildingType) => void;
     onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
     onStartSelling: (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => void;
@@ -676,6 +677,7 @@ export function Dashboard({
     inventory, 
     stars,
     playerRank,
+    isPresident,
     onBuild, 
     onStartProduction, 
     onStartSelling, 
@@ -1022,6 +1024,9 @@ export function Dashboard({
     const qualityUpgradeInfo = getQualityUpgradeInfo();
 
     const getSpecialMessage = () => {
+        if (isPresident) {
+            return { title: "You are the PRESIDENT!", description: "The fate of the economy is in your hands. Lead with wisdom." };
+        }
         if (playerRank <= 0) return null;
         switch (playerRank) {
             case 1:
@@ -1048,10 +1053,14 @@ export function Dashboard({
       </div>
 
       {specialMessage && (
-        <Alert variant="destructive" className="border-yellow-500/50 bg-yellow-900/40 text-yellow-200">
-             <AlertTriangle className="h-4 w-4 !text-yellow-300" />
-            <AlertTitle className="text-yellow-200">{specialMessage.title}</AlertTitle>
-            <AlertDescription className="text-yellow-300">
+        <Alert variant="destructive" className={cn(
+            isPresident 
+            ? "border-blue-500/50 bg-blue-900/40 text-blue-200" 
+            : "border-yellow-500/50 bg-yellow-900/40 text-yellow-200"
+        )}>
+             {isPresident ? <Crown className="h-4 w-4 !text-blue-300" /> : <AlertTriangle className="h-4 w-4 !text-yellow-300" />}
+            <AlertTitle className={isPresident ? "text-blue-200" : "text-yellow-200"}>{specialMessage.title}</AlertTitle>
+            <AlertDescription className={isPresident ? "text-blue-300" : "text-yellow-300"}>
                 {specialMessage.description}
             </AlertDescription>
         </Alert>

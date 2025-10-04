@@ -32,6 +32,8 @@ import {
 import { Separator } from '../ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Textarea } from '../ui/textarea';
+import type { PlayerPublicData } from '@/firebase/database/use-all-players';
+import type { UserData } from '@/services/game-service';
 
 
 export type PlayerListing = {
@@ -168,9 +170,16 @@ interface TradeMarketProps {
   onBuyFromMarket: (listing: PlayerListing, quantity: number) => void;
   playerName: string;
   marketShareListings: MarketShareListing[];
+  onRunForPresidency: () => void;
+  onVote: (candidateUid: string) => void;
+  president: PlayerPublicData | null;
+  candidates: any[];
+  electionState: 'open' | 'closed';
+  votes: Record<string, number>;
+  currentUser: UserData;
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName, marketShareListings }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName, marketShareListings, onRunForPresidency, onVote, president, candidates, electionState, votes, currentUser }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -632,6 +641,81 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             </Card>
         </div>
     );
+    
+    const renderPresidency = () => (
+         <div className="p-1 sm:p-2 md:p-4 lg:p-6 space-y-6">
+             <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Crown /> Urais</CardTitle>
+                    <CardDescription>Simamia siasa na uchumi wa taifa.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {president ? (
+                        <div className="flex flex-col items-center text-center p-4 bg-gray-900/50 rounded-lg">
+                            <p className="text-gray-400">Rais wa Sasa</p>
+                            <Avatar className="h-16 w-16 my-2 border-4 border-yellow-400">
+                                <AvatarImage src={president.avatar} alt={president.username} data-ai-hint="player avatar" />
+                                <AvatarFallback>{president.username.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <p className="font-bold text-xl">{president.username}</p>
+                        </div>
+                    ) : (
+                         <div className="flex flex-col items-center text-center p-4 bg-gray-900/50 rounded-lg">
+                             <p className="text-gray-400">Hakuna rais madarakani.</p>
+                         </div>
+                    )}
+                </CardContent>
+             </Card>
+
+              <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle>Uchaguzi</CardTitle>
+                    <CardDescription>
+                        {electionState === 'open' ? 'Uchaguzi unaendelea! Piga kura sasa.' : 'Hakuna uchaguzi unaoendelea.'}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {electionState === 'open' ? (
+                        <div className="space-y-4">
+                            {candidates.map((candidate: any) => (
+                                <Card key={candidate.uid} className="bg-gray-900/50 p-4">
+                                     <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-10 w-10">
+                                                <AvatarImage src={candidate.avatar} alt={candidate.username} data-ai-hint="player avatar" />
+                                                <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-bold">{candidate.username}</p>
+                                                <p className="text-xs italic text-gray-400">"{candidate.slogan}"</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="font-bold text-lg">{votes[candidate.uid] || 0}</p>
+                                            <p className="text-xs text-gray-400">Kura</p>
+                                        </div>
+                                    </div>
+                                    <Button size="sm" className="w-full mt-4" onClick={() => onVote(candidate.uid)}>Piga Kura ($10,000)</Button>
+                                </Card>
+                            ))}
+
+                            <Separator className="bg-gray-700" />
+                            <Button 
+                                className="w-full" 
+                                variant="outline" 
+                                onClick={onRunForPresidency}
+                                disabled={candidates.some(c => c.uid === currentUser.uid) || currentUser.money < 10000000}
+                            >
+                                {candidates.some(c => c.uid === currentUser.uid) ? "Tayari wewe ni mgombea" : "Gombea Urais ($10,000,000)"}
+                            </Button>
+                        </div>
+                    ) : (
+                        <p className="text-gray-400">Tafadhali subiri msimamizi afungue uchaguzi.</p>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    );
 
 
   return (
@@ -641,11 +725,12 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
       
         <Tabs defaultValue="commodities" className="w-full pt-4">
             <div className="px-4 sm:px-6">
-                <TabsList className="grid w-full grid-cols-4 bg-gray-800/80">
+                <TabsList className="grid w-full grid-cols-5 bg-gray-800/80">
                     <TabsTrigger value="commodities"><Package className='mr-2 h-4 w-4'/>Bidhaa</TabsTrigger>
                     <TabsTrigger value="stocks-ipo"><Landmark className='mr-2 h-4 w'/>Hisa (IPO)</TabsTrigger>
                     <TabsTrigger value="stock-exchange"><Briefcase className='mr-2 h-4 w'/>Soko la Hisa</TabsTrigger>
                     <TabsTrigger value="bonds"><FileText className='mr-2 h-4 w-4'/>Hatifungani</TabsTrigger>
+                    <TabsTrigger value="presidency"><Crown className='mr-2 h-4 w-4'/>Urais</TabsTrigger>
                 </TabsList>
             </div>
             <TabsContent value="commodities" className="mt-4">
@@ -659,6 +744,9 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             </TabsContent>
             <TabsContent value="bonds" className="mt-4">
                 {renderBondsMarket()}
+            </TabsContent>
+            <TabsContent value="presidency" className="mt-4">
+                {renderPresidency()}
             </TabsContent>
         </Tabs>
     </div>

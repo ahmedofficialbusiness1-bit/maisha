@@ -1,3 +1,4 @@
+
 'use client';
 import * as React from 'react';
 import { ref, onValue, query, getDatabase } from 'firebase/database';
@@ -8,7 +9,7 @@ export type PlayerPublicData = {
     netWorth: number;
     avatar: string;
     level: number;
-    role: 'player' | 'admin';
+    role: 'player' | 'admin' | 'president';
     lastSeen?: number;
 };
 
