@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -1457,35 +1456,36 @@ export function Game() {
 
 
 const handleAdminAppointPresident = (uid: string) => {
-    if (gameState?.role !== 'admin') return;
+    if (!user || gameState?.role !== 'admin' || !uid) return;
     const presidentRef = ref(database, 'election/president');
     set(presidentRef, uid);
     toast({ title: 'President Appointed', description: `Player ${uid} is now president.` });
 };
 
 const handleAdminRemovePresident = () => {
-    if (gameState?.role !== 'admin') return;
+    if (!user || gameState?.role !== 'admin') return;
     const presidentRef = ref(database, 'election/president');
     remove(presidentRef);
     toast({ title: 'President Removed' });
 };
 
 const handleAdminRemoveCandidate = (uid: string) => {
-    if (gameState?.role !== 'admin') return;
+    if (!user || gameState?.role !== 'admin' || !uid) return;
     const candidateRef = ref(database, `election/candidates/${uid}`);
     remove(candidateRef);
     toast({ title: 'Candidate Removed', description: `Player ${uid} has been removed from the election.` });
 };
 
 const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
-    if (gameState?.role !== 'admin') return;
+    if (!user || gameState?.role !== 'admin') return;
     
     const statusRef = ref(database, 'election/status');
+    const votesRef = ref(database, 'election/votes');
+    const candidatesRef = ref(database, 'election/candidates');
+
     set(statusRef, status);
     
     if (status === 'open') {
-        const votesRef = ref(database, 'election/votes');
-        const candidatesRef = ref(database, 'election/candidates');
         remove(votesRef);
         remove(candidatesRef);
         toast({ title: 'Election is Now OPEN', description: "Old votes and candidates have been cleared." });
