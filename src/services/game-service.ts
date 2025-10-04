@@ -38,7 +38,7 @@ export type UserData = {
   playerXP: number;
   privateNotes: string;
   status: 'online' | 'offline';
-  role: 'player' | 'admin';
+  role: 'player' | 'admin' | 'president';
   lastSeen: number;
   lastPublicRead: Record<string, number>;
   companyProfile: CompanyProfile;
@@ -71,6 +71,11 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
       ...Array(10).fill(emptySlot),
       ...Array(10).fill(lockedSlot)
     ];
+    
+  let role: 'player' | 'admin' = 'player';
+  if (uid === '7IHauUXBXjUhDJ9YUVVs97fwO9o1' || email === 'lamerckalbert@gmail.com') {
+    role = 'admin';
+  }
   
   return {
     uid,
@@ -93,7 +98,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     playerXP: 0,
     privateNotes: `Karibu kwenye wasifu wangu! Mimi ni mchezaji mpya kwenye Uchumi wa Afrika na nina matumaini ya kujenga himaya kubwa.`,
     status: 'online',
-    role: 'player',
+    role: role,
     lastSeen: Date.now(),
     lastPublicRead: { general: 0, trade: 0, help: 0 },
     companyProfile: {
