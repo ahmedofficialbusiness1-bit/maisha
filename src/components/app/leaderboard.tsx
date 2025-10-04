@@ -142,7 +142,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                           >
                               <CardContent className="p-3 flex items-center justify-between">
                                   <div className="flex items-center gap-4">
-                                      <div className="flex items-center gap-2 font-bold">
+                                      <div className="flex items-center gap-2 font-bold text-base">
                                           <span>{index + 1}</span>
                                       </div>
                                       <div className="flex items-center gap-3">
@@ -154,7 +154,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                                {index < 3 && <Crown className={cn("absolute -top-2.5 -right-2.5 h-5 w-5 rotate-[30deg]", crownClass)} />}
                                           </div>
                                           <div>
-                                              <p className="font-semibold text-white">{player.username}</p>
+                                              <p className="font-semibold text-white text-sm">{player.username}</p>
                                                <div className="flex items-center gap-1 mt-1">
                                                     <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
                                                         <tier.icon className="h-2.5 w-2.5 mr-1" />
@@ -170,7 +170,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                       </div>
                                   </div>
                                    <div className="text-right">
-                                      <p className="font-mono text-sm text-green-400">
+                                      <p className="font-mono text-xs text-green-400">
                                           ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                       </p>
                                        <p className="text-[10px] text-gray-400">Net Worth</p>
