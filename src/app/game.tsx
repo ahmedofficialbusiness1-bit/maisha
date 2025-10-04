@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -7,7 +5,7 @@ import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
-import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type MarketShareListing, type PresidentialCandidate, type ContractListing } from '@/componentsapp/trade-market';
+import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type MarketShareListing, type PresidentialCandidate, type ContractListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { buildingData } from '@/lib/building-data';
@@ -1858,10 +1856,3 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
     </div>
   );
 }
-
-    
-
-    
-
-    
-
