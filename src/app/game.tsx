@@ -7,7 +7,7 @@ import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
-import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type MarketShareListing, type PresidentialCandidate, type ContractListing } from '@/components/app/trade-market';
+import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type MarketShareListing, type PresidentialCandidate, type ContractListing } from '@/componentsapp/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { buildingData } from '@/lib/building-data';
@@ -114,6 +114,7 @@ export function Game() {
   const marketSharesRef = React.useMemo(() => ref(database, 'marketShares'), [database]);
   const chatMetadataRef = React.useMemo(() => ref(database, 'chat-metadata'), [database]);
   const electionRef = React.useMemo(() => ref(database, 'election'), [database]);
+  const electionCandidatesRef = React.useMemo(() => ref(database, 'election/candidates'), [database]);
   const playerVoteRef = React.useMemo(() => user ? ref(database, `election/votes/${user.uid}`) : null, [database, user]);
 
   
@@ -259,38 +260,44 @@ export function Game() {
     return () => unsubscribe();
   }, [marketSharesRef]);
 
-  // Listen for election changes
+  // Listen for election changes (President and Status)
   React.useEffect(() => {
     if (!electionRef) return;
-    const unsubscribe = onValue(electionRef, (snapshot) => {
-        const electionData = snapshot.val();
-        if (electionData) {
-            // Candidates
-            const candidatesData = electionData.candidates;
-            const candidates: PresidentialCandidate[] = candidatesData 
-                ? Object.keys(candidatesData).map(uid => ({ ...candidatesData[uid], uid })) 
-                : [];
-            setPresidentialCandidates(candidates);
+    const presidentRef = ref(database, 'election/president');
+    const statusRef = ref(database, 'election/status');
 
-            // President
-            const presidentUid = electionData.president;
-            if (presidentUid && allPlayers) {
-                const presidentData = allPlayers.find(p => p.uid === presidentUid);
-                setPresident(presidentData || null);
-            } else {
-                setPresident(null);
-            }
-            
-            // Status
-            setElectionStatus(electionData.status || 'closed');
-        } else {
-            setPresidentialCandidates([]);
-            setPresident(null);
-            setElectionStatus('closed');
-        }
+    const unsubPresident = onValue(presidentRef, (snapshot) => {
+      const presidentUid = snapshot.val();
+      if (presidentUid && allPlayers) {
+        const presidentData = allPlayers.find(p => p.uid === presidentUid);
+        setPresident(presidentData || null);
+      } else {
+        setPresident(null);
+      }
+    });
+
+    const unsubStatus = onValue(statusRef, (snapshot) => {
+      setElectionStatus(snapshot.val() || 'closed');
+    });
+
+    return () => {
+      unsubPresident();
+      unsubStatus();
+    };
+  }, [electionRef, allPlayers, database]);
+
+  // Listen for candidates changes
+  React.useEffect(() => {
+    if (!electionCandidatesRef) return;
+    const unsubscribe = onValue(electionCandidatesRef, (snapshot) => {
+      const candidatesData = snapshot.val();
+      const candidates: PresidentialCandidate[] = candidatesData
+        ? Object.keys(candidatesData).map(uid => ({ ...candidatesData[uid], uid }))
+        : [];
+      setPresidentialCandidates(candidates);
     });
     return () => unsubscribe();
-  }, [electionRef, allPlayers]);
+  }, [electionCandidatesRef]);
   
   // Listen for player's vote
   React.useEffect(() => {
