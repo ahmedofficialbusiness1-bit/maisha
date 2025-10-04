@@ -252,7 +252,7 @@ export function Game() {
 
   // Update public player data (RTDB) whenever critical info changes
   React.useEffect(() => {
-    if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef || !userRef) return;
+    if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef) return;
     
     const publicData: PlayerPublicData = {
         uid: gameState.uid,
@@ -260,12 +260,12 @@ export function Game() {
         netWorth: gameState.netWorth,
         avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
         level: gameState.playerLevel,
-        role: gameState.role, // Directly use the role from private game state
+        role: gameState.role,
     };
 
     set(playerPublicRef, publicData);
 
-  }, [gameState, playerPublicRef, user, userRef, database]);
+  }, [gameState, playerPublicRef, user]);
 
 
   const getXpForNextLevel = (level: number) => {
