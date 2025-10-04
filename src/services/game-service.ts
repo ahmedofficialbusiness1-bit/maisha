@@ -1,3 +1,4 @@
+
 import { DatabaseReference, set } from 'firebase/database';
 import type { PlayerStock } from '@/app/game';
 
@@ -73,7 +74,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     ];
     
   let role: 'player' | 'admin' = 'player';
-  if (uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || uid === '7IHauUXBXjUhDJ9YUVVs97fwO9o1') {
+  if (email === 'elonjazz89@gmail.com') {
     role = 'admin';
   }
   
