@@ -24,7 +24,7 @@
     },
     "chat": {
       "$chatRoomId": {
-        ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.startsWith(auth.uid) || $chatRoomId.endsWith(auth.uid))",
+        ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.contains(auth.uid))",
         ".write": "auth != null"
       }
     },
