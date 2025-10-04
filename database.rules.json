@@ -39,10 +39,7 @@
     "election": {
       ".read": "auth != null",
       "candidates": {
-        ".write": "auth != null",
-        "$uid": {
-           ".validate": "!data.exists() || data.child('uid').val() === $uid"
-        }
+        ".write": "auth != null"
       },
       "votes": {
          ".write": "auth != null"

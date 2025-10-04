@@ -44,6 +44,10 @@ const currencySenderSchema = z.object({
     targetUid: z.string().min(1, "Target UID is required."),
 });
 
+const presidencyFormSchema = z.object({
+    targetUid: z.string().min(1, "UID ya mchezaji inahitajika."),
+});
+
 
 interface AdminPanelProps {
     onViewProfile: (playerId: string) => void;
@@ -600,6 +604,26 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
 }
 
 function PresidencyTools() {
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = React.useState(false);
+    
+    const form = useForm<z.infer<typeof presidencyFormSchema>>({
+        resolver: zodResolver(presidencyFormSchema),
+        defaultValues: { targetUid: '' },
+    });
+    
+    const onSubmit = (values: z.infer<typeof presidencyFormSchema>) => {
+        setIsLoading(true);
+        console.log("Appointing president with UID:", values.targetUid);
+        // Here you would call a function to set the president in Firebase
+        // e.g., onAppointPresident(values.targetUid);
+        setTimeout(() => {
+             toast({ title: "Rais Amateuliwa!", description: `Mchezaji ${values.targetUid} sasa ndiye rais.`});
+             setIsLoading(false);
+             form.reset();
+        }, 1000);
+    }
+
     return (
         <div className="mt-6">
             <Card className="bg-gray-800/60 border-gray-700">
@@ -608,7 +632,27 @@ function PresidencyTools() {
                     <CardDescription>Simamia mzunguko wa uchaguzi, teua marais, na ubadilishe sera.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-gray-400">Zana za urais zinakuja hivi karibuni...</p>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-w-md">
+                            <FormField
+                                control={form.control}
+                                name="targetUid"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Teua Rais Mpya (kwa UID)</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="Weka UID ya mchezaji" {...field} className="bg-gray-700 border-gray-600" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Mteue Rais
+                            </Button>
+                        </form>
+                    </Form>
                 </CardContent>
             </Card>
         </div>
