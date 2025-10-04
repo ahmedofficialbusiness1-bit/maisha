@@ -258,10 +258,10 @@ export function Game() {
   React.useEffect(() => {
     if (!electionCandidatesRef) return;
     const unsubscribe = onValue(electionCandidatesRef, (snapshot) => {
-        const candidates: PresidentialCandidate[] = [];
-        snapshot.forEach(childSnapshot => {
-            candidates.push(childSnapshot.val() as PresidentialCandidate);
-        });
+        const candidatesData = snapshot.val();
+        const candidates: PresidentialCandidate[] = candidatesData 
+            ? Object.keys(candidatesData).map(uid => ({ ...candidatesData[uid], uid })) 
+            : [];
         setPresidentialCandidates(candidates);
     });
     return () => unsubscribe();
@@ -1759,3 +1759,4 @@ export function Game() {
     
 
     
+
