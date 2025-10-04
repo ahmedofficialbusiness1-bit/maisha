@@ -286,7 +286,7 @@ export function Game() {
 
   // Listen for candidates changes
   React.useEffect(() => {
-    if (!electionCandidatesRef) return;
+    if (!electionCandidatesRef || !allPlayers) return;
     const unsubscribe = onValue(electionCandidatesRef, (snapshot) => {
       const candidatesData = snapshot.val();
       const candidates: PresidentialCandidate[] = candidatesData
@@ -299,7 +299,7 @@ export function Game() {
   
   // Listen for player's vote
   React.useEffect(() => {
-    if (!playerVoteRef) return;
+    if (!playerVoteRef || !allPlayers) return;
     const unsubscribe = onValue(playerVoteRef, (snapshot) => {
         setPlayerVote(snapshot.val());
     });
@@ -311,11 +311,15 @@ export function Game() {
   React.useEffect(() => {
     if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef || !userRef) return;
     
-    let currentRole = gameState.role || 'player';
-    if (president?.uid === gameState.uid) {
-        currentRole = 'president';
-    } else if (gameState.role === 'president') {
-        currentRole = 'player'; // Demote if no longer president
+    // An admin who is president should retain the 'admin' role to keep their panels
+    // For non-admins, their role is updated to 'president' or back to 'player'
+    let finalRole = gameState.role;
+    if (gameState.role !== 'admin') {
+        if (president?.uid === gameState.uid) {
+            finalRole = 'president';
+        } else if (gameState.role === 'president') {
+            finalRole = 'player'; // Demote if no longer president
+        }
     }
     
     const publicData: PlayerPublicData = {
@@ -324,15 +328,16 @@ export function Game() {
         netWorth: gameState.netWorth,
         avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
         level: gameState.playerLevel,
-        role: currentRole
+        role: finalRole
     };
 
     set(playerPublicRef, publicData);
     
-    if (gameState.role !== currentRole) {
+    // Sync back to private user data if the role changed
+    if (gameState.role !== finalRole) {
         runTransaction(userRef, (currentData) => {
             if (currentData) {
-                currentData.role = currentRole;
+                currentData.role = finalRole;
             }
             return currentData;
         });
