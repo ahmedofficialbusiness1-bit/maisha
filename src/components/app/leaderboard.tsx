@@ -112,7 +112,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                                     <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                                 </Avatar>
                                                 {index < 3 && !isPresident && <Crown className={cn("absolute -top-3 -right-3 h-6 w-6 rotate-[30deg]", crownClass)} />}
-                                                {isPresident && <Crown className={cn("absolute -top-3 -right-3 h-6 w-6 rotate-[30deg] text-red-400")} />}
+                                                {isPresident && <Crown className={cn("absolute -top-3 -right-2 h-6 w-6 text-red-400 [filter:drop-shadow(0_0_4px_theme(colors.red.400))]",)} />}
                                             </div>
                                             <div className='flex flex-col items-start'>
                                                 <span className="font-semibold text-white">{player.username}</span>
@@ -170,7 +170,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                                   <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                               </Avatar>
                                                {index < 3 && !isPresident && <Crown className={cn("absolute -top-2.5 -right-2.5 h-5 w-5 rotate-[30deg]", crownClass)} />}
-                                               {isPresident && <Crown className={cn("absolute -top-2.5 -right-2.5 h-5 w-5 rotate-[30deg] text-red-400")} />}
+                                               {isPresident && <Crown className={cn("absolute -top-2.5 -right-2 h-5 w-5 text-red-400 [filter:drop-shadow(0_0_3px_theme(colors.red.400))]",)} />}
                                           </div>
                                           <div>
                                               <p className="font-normal text-sm text-white">{player.username}</p>
@@ -215,5 +215,6 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
     </div>
   );
 }
+
 
 

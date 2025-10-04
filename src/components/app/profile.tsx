@@ -238,7 +238,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                                 <Crown className={cn("absolute -top-3 -right-3 h-7 w-7 rotate-[30deg]", crownClass)} />
                             )}
                             {isPresident && (
-                                <Crown className={cn("absolute -top-3 -right-3 h-7 w-7 rotate-[30deg] text-red-400")} />
+                                <Crown className={cn("absolute -top-3 -right-2 h-7 w-7 text-red-400 [filter:drop-shadow(0_0_4px_theme(colors.red.400))]",)} />
                             )}
                         </div>
                         <div className={cn(
@@ -414,5 +414,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     </div>
   );
 }
+
 
 
