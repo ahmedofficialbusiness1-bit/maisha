@@ -1025,7 +1025,7 @@ export function Dashboard({
 
     const getSpecialMessage = () => {
         if (isPresident) {
-            return { title: "You are the President!", description: "You hold the highest office. Lead with wisdom and strength." };
+            return { title: "You are the President!", description: "You hold the highest office. Lead with wisdom and strength.", isPresident: true };
         }
         if (playerRank <= 0) return null;
         switch (playerRank) {
@@ -1053,10 +1053,10 @@ export function Dashboard({
       </div>
 
       {specialMessage && (
-        <Alert variant="destructive" className={cn(isPresident ? "border-blue-500/50 bg-blue-900/40 text-blue-200" : "border-yellow-500/50 bg-yellow-900/40 text-yellow-200")}>
-             {isPresident ? <Crown className="h-4 w-4 !text-blue-300" /> : <AlertTriangle className="h-4 w-4 !text-yellow-300" />}
-            <AlertTitle className={cn(isPresident ? "text-blue-200" : "text-yellow-200")}>{specialMessage.title}</AlertTitle>
-            <AlertDescription className={cn(isPresident ? "text-blue-300" : "text-yellow-300")}>
+        <Alert variant="destructive" className={cn(specialMessage.isPresident ? "border-blue-500/50 bg-blue-900/40 text-blue-200" : "border-yellow-500/50 bg-yellow-900/40 text-yellow-200")}>
+             {specialMessage.isPresident ? <Crown className="h-4 w-4 !text-blue-300" /> : <AlertTriangle className="h-4 w-4 !text-yellow-300" />}
+            <AlertTitle className={cn(specialMessage.isPresident ? "text-blue-200" : "text-yellow-200")}>{specialMessage.title}</AlertTitle>
+            <AlertDescription className={cn(specialMessage.isPresident ? "text-blue-300" : "text-yellow-300")}>
                 {specialMessage.description}
             </AlertDescription>
         </Alert>
