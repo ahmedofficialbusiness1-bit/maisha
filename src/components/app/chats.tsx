@@ -1,9 +1,10 @@
+
 'use client';
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Bot, Users, User, ArrowLeft, Loader2, Hash, CandlestickChart, LifeBuoy } from 'lucide-react';
+import { Send, Bot, Users, User, ArrowLeft, Loader2, Hash, CandlestickChart, LifeBuoy, Crown } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -31,6 +32,7 @@ type ChatMessage = {
     text: string;
     timestamp: number;
     rankTitle?: string | null;
+    isPresident?: boolean;
 };
 
 export type ChatParticipantInfo = {
@@ -56,7 +58,7 @@ const publicRooms: { id: PublicChatRoomId, name: string, icon: React.ReactNode }
 
 type UserChat = {
     chatId: string;
-    otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'>;
+    otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'> & { rankTitle?: string | null, isPresident?: boolean };
     lastMessage: string;
     timestamp: number;
     isUnread: boolean;
@@ -69,7 +71,7 @@ type SelectedChat = {
 } | {
     type: 'private';
     id: string; // Chat ID
-    otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'> & { rankTitle?: string | null }
+    otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'> & { rankTitle?: string | null, isPresident?: boolean }
 };
 
 interface ChatsProps {
@@ -104,10 +106,11 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
 
                     const rank = sortedPlayers.findIndex(p => p.uid === otherPlayerId);
                     const rankTitle = getRankTitle(rank + 1);
+                    const isPresident = otherPlayerInfo.role === 'president';
 
                     chats.push({
                         chatId,
-                        otherPlayer: { uid: otherPlayerInfo.uid, username: otherPlayerInfo.username, avatar: otherPlayerInfo.avatar, rankTitle },
+                        otherPlayer: { uid: otherPlayerInfo.uid, username: otherPlayerInfo.username, avatar: otherPlayerInfo.avatar, rankTitle, isPresident },
                         lastMessage: metadata.lastMessageText || '',
                         timestamp: metadata.lastMessageTimestamp || 0,
                         isUnread,
@@ -126,12 +129,13 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
             if (otherPlayer) {
                 const rank = sortedPlayers.findIndex(p => p.uid === initialPrivateChatUid);
                 const rankTitle = getRankTitle(rank + 1);
+                const isPresident = otherPlayer.role === 'president';
                 const chatId = [user.uid, otherPlayer.uid].sort().join('-');
                 
                 setSelectedChat({
                     type: 'private',
                     id: chatId,
-                    otherPlayer: { uid: otherPlayer.uid, username: otherPlayer.username, avatar: otherPlayer.avatar, rankTitle }
+                    otherPlayer: { uid: otherPlayer.uid, username: otherPlayer.username, avatar: otherPlayer.avatar, rankTitle, isPresident }
                 });
                 setMobileView('chat_window');
                 onChatOpened();
@@ -199,6 +203,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
                                             </Avatar>
                                         }
                                         rankTitle={chat.otherPlayer.rankTitle}
+                                        isPresident={chat.otherPlayer.isPresident}
                                     />
                                 ))}
                             </div>
@@ -230,7 +235,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
     );
 }
 
-function ChatItem({ name, lastMessage, isActive, isUnread, onClick, avatar, rankTitle }: { name: string, lastMessage?: string, isActive: boolean, isUnread: boolean, onClick: () => void, avatar: React.ReactNode, rankTitle?: string | null }) {
+function ChatItem({ name, lastMessage, isActive, isUnread, onClick, avatar, rankTitle, isPresident }: { name: string, lastMessage?: string, isActive: boolean, isUnread: boolean, onClick: () => void, avatar: React.ReactNode, rankTitle?: string | null, isPresident?: boolean }) {
     return (
         <button
             onClick={onClick}
@@ -244,7 +249,12 @@ function ChatItem({ name, lastMessage, isActive, isUnread, onClick, avatar, rank
             <div className="flex-grow overflow-hidden">
                 <div className="flex items-center gap-2">
                     <p className={cn('font-semibold truncate', isUnread && !isActive ? 'text-white' : 'text-gray-200')}>{name}</p>
-                    {rankTitle && (
+                    {isPresident && (
+                        <Badge className="text-[9px] py-0 px-1.5 h-auto bg-yellow-500 border-yellow-400 text-black">
+                            <Crown className="h-2.5 w-2.5 mr-1" /> RAIS
+                        </Badge>
+                    )}
+                    {rankTitle && !isPresident && (
                         <Badge className="text-[9px] py-0 px-1.5 h-auto bg-indigo-800/80 border-indigo-600 text-indigo-200">{rankTitle}</Badge>
                     )}
                 </div>
@@ -261,6 +271,7 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
     const [newMessage, setNewMessage] = React.useState('');
     const scrollAreaRef = React.useRef<HTMLDivElement>(null);
     const sortedPlayers = React.useMemo(() => [...players].sort((a,b) => b.netWorth - a.netWorth), [players]);
+    const playerMap = React.useMemo(() => new Map(players.map(p => [p.uid, p])), [players]);
 
     const messagesRef = React.useMemo(() =>
         database ? query(ref(database, `chat/${chat.id}`), orderByChild('timestamp'), limitToLast(100)) : null
@@ -273,9 +284,11 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
             const messageData: ChatMessage[] = [];
             snapshot.forEach((child) => {
                 const msg = child.val();
+                const senderInfo = playerMap.get(msg.uid);
                 const senderRank = sortedPlayers.findIndex(p => p.uid === msg.uid);
                 const rankTitle = getRankTitle(senderRank + 1);
-                messageData.push({ id: child.key!, ...msg, rankTitle });
+                const isPresident = senderInfo?.role === 'president';
+                messageData.push({ id: child.key!, ...msg, rankTitle, isPresident });
             });
             setMessages(messageData);
 
@@ -286,7 +299,7 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
         });
 
         return () => unsubscribe();
-    }, [messagesRef, database, user.uid, chat, sortedPlayers]);
+    }, [messagesRef, database, user.uid, chat, sortedPlayers, playerMap]);
 
     React.useEffect(() => {
         if (scrollAreaRef.current) {
@@ -345,6 +358,7 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
     
     const chatName = chat.type === 'public' ? `# ${chat.name}` : chat.otherPlayer.username;
     const chatRankTitle = chat.type === 'private' ? chat.otherPlayer.rankTitle : null;
+    const isChattingWithPresident = chat.type === 'private' && chat.otherPlayer.isPresident;
 
     return (
         <>
@@ -354,7 +368,12 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
                 </Button>
                 <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold">{chatName}</h3>
-                     {chatRankTitle && (
+                     {isChattingWithPresident && (
+                        <Badge className="text-xs py-0.5 px-2 bg-yellow-500 border-yellow-400 text-black">
+                             <Crown className="h-3 w-3 mr-1" /> RAIS
+                        </Badge>
+                     )}
+                     {chatRankTitle && !isChattingWithPresident && (
                         <Badge className="text-xs py-0.5 px-2 bg-indigo-800/80 border-indigo-600 text-indigo-200">{chatRankTitle}</Badge>
                     )}
                 </div>
@@ -370,7 +389,12 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
                             <div className="flex flex-col gap-1 w-full max-w-[320px]">
                                 <div className={cn("flex items-center gap-2", msg.uid === user.uid ? "justify-end flex-row-reverse" : "justify-start")}>
                                      <span className="text-sm font-semibold">{msg.username}</span>
-                                      {msg.rankTitle && (
+                                     {msg.isPresident && (
+                                        <Badge className="text-[9px] py-0 px-1 h-auto bg-yellow-500 border-yellow-400 text-black">
+                                            <Crown className="h-2.5 w-2.5 mr-1" /> RAIS
+                                        </Badge>
+                                     )}
+                                      {msg.rankTitle && !msg.isPresident && (
                                          <Badge className="text-[9px] py-0 px-1 h-auto bg-indigo-800/60 border-indigo-700 text-indigo-300">{msg.rankTitle}</Badge>
                                       )}
                                       <span className="text-xs text-gray-400">
@@ -412,3 +436,4 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
 }
 
     
+
