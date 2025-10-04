@@ -265,7 +265,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             )}
                         </div>
                         <p className="text-muted-foreground">
-                            {currentProfile.role === 'admin' ? 'Administrator' : 'Sole trader'}
+                           {currentProfile.role === 'admin' ? 'Administrator' : 'Sole trader'}
                         </p>
                          <div className='text-xs text-gray-500 font-mono flex items-center gap-2'>
                             <span>UID: {currentProfile.uid}</span>
@@ -410,3 +410,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
 
 
 
+
+
+    
