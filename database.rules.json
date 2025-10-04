@@ -46,6 +46,9 @@
       },
       "president": {
          ".write": "auth != null && root.child('players').child(auth.uid).child('role').val() === 'admin'"
+      },
+      "status": {
+        ".write": "auth != null && root.child('players').child(auth.uid).child('role').val() === 'admin'"
       }
     }
   }

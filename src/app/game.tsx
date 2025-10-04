@@ -7,7 +7,7 @@ import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
-import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type MarketShareListing, type PresidentialCandidate } from '@/components/app/trade-market';
+import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type MarketShareListing, type PresidentialCandidate, type ContractListing } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { buildingData } from '@/lib/building-data';
@@ -613,7 +613,7 @@ export function Game() {
             read: false, 
             icon: 'production' 
          };
-         currentData.notifications = { ...(currentData.notifications || {}), [newNotifRef.key!]: newNotification };
+         currentData.notifications = { ...(currentData.notifications || {}), [notifRef.key!]: newNotification };
          
          return currentData;
      });
@@ -1367,6 +1367,34 @@ export function Game() {
     });
 };
 
+const handleAdminAppointPresident = (uid: string) => {
+    if (gameState?.role !== 'admin') return;
+    const presidentRef = ref(database, 'election/president');
+    set(presidentRef, uid);
+    toast({ title: 'President Appointed', description: `Player ${uid} is now president.` });
+};
+
+const handleAdminRemovePresident = () => {
+    if (gameState?.role !== 'admin') return;
+    const presidentRef = ref(database, 'election/president');
+    remove(presidentRef);
+    toast({ title: 'President Removed' });
+};
+
+const handleAdminRemoveCandidate = (uid: string) => {
+    if (gameState?.role !== 'admin') return;
+    const candidateRef = ref(database, `election/candidates/${uid}`);
+    remove(candidateRef);
+    toast({ title: 'Candidate Removed', description: `Player ${uid} has been removed from the election.` });
+};
+
+const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
+    if (gameState?.role !== 'admin') return;
+    const statusRef = ref(database, 'election/status');
+    set(statusRef, status);
+    toast({ title: `Election Status: ${status.toUpperCase()}` });
+};
+
 
   // Game loop for processing finished activities
   React.useEffect(() => {
@@ -1735,7 +1763,7 @@ export function Game() {
         }
         return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} />;
       case 'admin':
-          return <AdminPanel onViewProfile={handleViewProfile} onAdminSendItem={handleAdminSendItem} onAdminSendMoney={handleAdminSendMoney} onAdminSendStars={handleAdminSendStars} />;
+          return <AdminPanel onViewProfile={handleViewProfile} onAdminSendItem={handleAdminSendItem} onAdminSendMoney={handleAdminSendMoney} onAdminSendStars={handleAdminSendStars} onAdminAppointPresident={handleAdminAppointPresident} onAdminRemovePresident={handleAdminRemovePresident} presidentialCandidates={presidentialCandidates} onAdminRemoveCandidate={handleAdminRemoveCandidate} onAdminSetElectionStatus={handleAdminSetElectionStatus} />;
       default:
         return null;
     }
@@ -1757,6 +1785,7 @@ export function Game() {
     
 
     
+
 
 
 

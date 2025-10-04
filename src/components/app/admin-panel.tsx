@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { simulateCommodityPrice, type SimulateCommodityPriceInput } from '@/ai/flows/commodity-price-simulation';
-import { Check, ChevronsUpDown, CircleDollarSign, Crown, Gift, Loader2, Star, Users, Wifi, WifiOff } from 'lucide-react';
+import { Check, ChevronsUpDown, CircleDollarSign, Crown, Gift, Loader2, Star, Users, Wifi, WifiOff, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -23,6 +23,8 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
+import type { PresidentialCandidate } from './trade-market';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 
 
 const simulationFormSchema = z.object({
@@ -54,6 +56,11 @@ interface AdminPanelProps {
     onAdminSendItem: (itemName: string, quantity: number, targetUid: string) => void;
     onAdminSendMoney: (amount: number, targetUid: string) => void;
     onAdminSendStars: (amount: number, targetUid: string) => void;
+    onAdminAppointPresident: (uid: string) => void;
+    onAdminRemovePresident: () => void;
+    onAdminRemoveCandidate: (uid: string) => void;
+    onAdminSetElectionStatus: (status: 'open' | 'closed') => void;
+    presidentialCandidates: PresidentialCandidate[];
 }
 
 function CommoditySimulator() {
@@ -603,64 +610,150 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
     )
 }
 
-function PresidencyTools() {
+function PresidencyTools({ onAdminAppointPresident, onAdminRemovePresident, presidentialCandidates, onAdminRemoveCandidate, onAdminSetElectionStatus }: Pick<AdminPanelProps, 'onAdminAppointPresident' | 'onAdminRemovePresident' | 'presidentialCandidates' | 'onAdminRemoveCandidate' | 'onAdminSetElectionStatus'>) {
     const { toast } = useToast();
-    const [isLoading, setIsLoading] = React.useState(false);
+    const [appointLoading, setAppointLoading] = React.useState(false);
+    const [removeLoading, setRemoveLoading] = React.useState(false);
     
-    const form = useForm<z.infer<typeof presidencyFormSchema>>({
+    const appointForm = useForm<z.infer<typeof presidencyFormSchema>>({
+        resolver: zodResolver(presidencyFormSchema),
+        defaultValues: { targetUid: '' },
+    });
+
+    const removeForm = useForm<z.infer<typeof presidencyFormSchema>>({
         resolver: zodResolver(presidencyFormSchema),
         defaultValues: { targetUid: '' },
     });
     
-    const onSubmit = (values: z.infer<typeof presidencyFormSchema>) => {
-        setIsLoading(true);
-        console.log("Appointing president with UID:", values.targetUid);
-        // Here you would call a function to set the president in Firebase
-        // e.g., onAppointPresident(values.targetUid);
-        setTimeout(() => {
-             toast({ title: "Rais Amateuliwa!", description: `Mchezaji ${values.targetUid} sasa ndiye rais.`});
-             setIsLoading(false);
-             form.reset();
-        }, 1000);
+    const onAppointSubmit = (values: z.infer<typeof presidencyFormSchema>) => {
+        setAppointLoading(true);
+        try {
+            onAdminAppointPresident(values.targetUid);
+            toast({ title: "Rais Amateuliwa!", description: `Mchezaji ${values.targetUid} sasa ndiye rais.`});
+            appointForm.reset();
+        } finally {
+            setAppointLoading(false);
+        }
+    }
+    
+    const onRemoveSubmit = () => {
+        setRemoveLoading(true);
+        try {
+            onAdminRemovePresident();
+            toast({ title: "Rais Ameondolewa!", description: `Uongozi umekuwa wazi.`});
+        } finally {
+            setRemoveLoading(false);
+        }
     }
 
+
     return (
-        <div className="mt-6">
-            <Card className="bg-gray-800/60 border-gray-700">
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Candidates List */}
+            <Card className="lg:col-span-1 bg-gray-800/60 border-gray-700">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-3"><Crown className="text-yellow-400"/>Usimamizi wa Urais</CardTitle>
-                    <CardDescription>Simamia mzunguko wa uchaguzi, teua marais, na ubadilishe sera.</CardDescription>
+                    <CardTitle>Orodha ya Wagombea</CardTitle>
+                    <CardDescription>Ona na usimamie wagombea wote.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-w-md">
-                            <FormField
-                                control={form.control}
-                                name="targetUid"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Teua Rais Mpya (kwa UID)</FormLabel>
-                                    <FormControl>
-                                    <Input placeholder="Weka UID ya mchezaji" {...field} className="bg-gray-700 border-gray-600" />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
-                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Mteue Rais
-                            </Button>
-                        </form>
-                    </Form>
+                    <ScrollArea className="h-96">
+                        <div className="space-y-2 pr-2">
+                        {presidentialCandidates.length > 0 ? presidentialCandidates.map(candidate => (
+                             <div key={candidate.uid} className="flex items-center justify-between p-2 bg-gray-900/50 rounded-md">
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={candidate.avatar} alt={candidate.username} />
+                                        <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-sm font-semibold">{candidate.username}</span>
+                                </div>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button size="icon" variant="destructive" className="h-7 w-7">
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Ondoa Mgombea?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Una uhakika unataka kumwondoa {candidate.username} kwenye orodha ya wagombea? Kitendo hiki hakiwezi kutenduliwa.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Ghairi</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => onAdminRemoveCandidate(candidate.uid)}>Ondoa</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+                        )) : (
+                            <p className="text-sm text-center text-gray-500 py-4">Hakuna wagombea kwa sasa.</p>
+                        )}
+                        </div>
+                    </ScrollArea>
                 </CardContent>
             </Card>
+
+            {/* Management Tools */}
+            <div className="lg:col-span-2 space-y-6">
+                <Card className="bg-gray-800/60 border-gray-700">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3"><Crown className="text-yellow-400"/>Usimamizi wa Urais</CardTitle>
+                        <CardDescription>Simamia mzunguko wa uchaguzi, teua marais, na ubadilishe sera.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                         {/* Appoint President */}
+                        <Form {...appointForm}>
+                            <form onSubmit={appointForm.handleSubmit(onAppointSubmit)} className="space-y-4">
+                                <FormField
+                                    control={appointForm.control}
+                                    name="targetUid"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Teua Rais Mpya (kwa UID)</FormLabel>
+                                        <FormControl>
+                                        <Input placeholder="Weka UID ya mchezaji" {...field} className="bg-gray-700 border-gray-600" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={appointLoading}>
+                                    {appointLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Mteue Rais
+                                </Button>
+                            </form>
+                        </Form>
+
+                        {/* Remove President */}
+                        <Button variant="destructive" className="w-full" onClick={onRemoveSubmit} disabled={removeLoading}>
+                             {removeLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Mvunjie Urais
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                 <Card className="bg-gray-800/60 border-gray-700">
+                    <CardHeader>
+                        <CardTitle>Hali ya Uchaguzi</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex gap-4">
+                         <Button className="w-full" variant="secondary" onClick={() => onAdminSetElectionStatus('open')}>
+                           Fungua Dirisha la Ugombea
+                        </Button>
+                         <Button className="w-full" variant="destructive" onClick={() => onAdminSetElectionStatus('closed')}>
+                           Funga Dirisha la Ugombea
+                        </Button>
+                    </CardContent>
+                 </Card>
+            </div>
         </div>
     )
 }
 
 
-export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, onAdminSendStars }: AdminPanelProps) {
+export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdminAppointPresident, onAdminRemovePresident, onAdminRemoveCandidate, onAdminSetElectionStatus, presidentialCandidates }: AdminPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -686,7 +779,7 @@ export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, o
              <GameTools onAdminSendItem={onAdminSendItem} onAdminSendMoney={onAdminSendMoney} onAdminSendStars={onAdminSendStars} />
           </TabsContent>
           <TabsContent value="presidency">
-             <PresidencyTools />
+             <PresidencyTools onAdminAppointPresident={onAdminAppointPresident} onAdminRemovePresident={onAdminRemovePresident} presidentialCandidates={presidentialCandidates} onAdminRemoveCandidate={onAdminRemoveCandidate} onAdminSetElectionStatus={onAdminSetElectionStatus} />
           </TabsContent>
         </Tabs>
 
