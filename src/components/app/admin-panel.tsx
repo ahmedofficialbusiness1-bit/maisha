@@ -25,6 +25,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import type { PresidentialCandidate } from './trade-market';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 
 const simulationFormSchema = z.object({
@@ -50,6 +51,11 @@ const presidencyFormSchema = z.object({
     targetUid: z.string().min(1, "UID ya mchezaji inahitajika."),
 });
 
+const setRoleFormSchema = z.object({
+    targetUid: z.string().min(1, 'Target UID is required.'),
+    role: z.enum(['player', 'admin']),
+});
+
 
 interface AdminPanelProps {
     onViewProfile: (playerId: string) => void;
@@ -60,6 +66,7 @@ interface AdminPanelProps {
     onAdminRemovePresident: () => void;
     onAdminRemoveCandidate: (uid: string) => void;
     onAdminSetElectionStatus: (status: 'open' | 'closed') => void;
+    onAdminSetRole: (uid: string, role: 'player' | 'admin') => void;
     presidentialCandidates: PresidentialCandidate[];
     president: PlayerPublicData | null;
 }
@@ -318,7 +325,7 @@ function PlayerManager({ onViewProfile }: Pick<AdminPanelProps, 'onViewProfile'>
     )
 }
 
-function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick<AdminPanelProps, 'onAdminSendItem' | 'onAdminSendMoney' | 'onAdminSendStars'>) {
+function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdminSetRole }: Pick<AdminPanelProps, 'onAdminSendItem' | 'onAdminSendMoney' | 'onAdminSendStars' | 'onAdminSetRole'>) {
     const { toast } = useToast();
     
     const defaultItemValues = {
@@ -329,6 +336,10 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
     const defaultCurrencyValues = {
         amount: 0,
         targetUid: '',
+    };
+    const defaultRoleValues = {
+        targetUid: '',
+        role: 'player' as 'player' | 'admin',
     };
 
     // States for Item Sender
@@ -351,6 +362,13 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
     const starsForm = useForm<z.infer<typeof currencySenderSchema>>({
         resolver: zodResolver(currencySenderSchema),
         defaultValues: defaultCurrencyValues,
+    });
+    
+    // States for Role Setter
+    const [isRoleLoading, setIsRoleLoading] = React.useState(false);
+    const roleForm = useForm<z.infer<typeof setRoleFormSchema>>({
+        resolver: zodResolver(setRoleFormSchema),
+        defaultValues: defaultRoleValues,
     });
 
     const onSendItemSubmit = (values: z.infer<typeof itemSenderFormSchema>) => {
@@ -398,148 +416,146 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
         }
     };
     
+     const onSetRoleSubmit = (values: z.infer<typeof setRoleFormSchema>) => {
+        setIsRoleLoading(true);
+        try {
+            onAdminSetRole(values.targetUid, values.role);
+            roleForm.reset(defaultRoleValues);
+        } catch (error) {
+             console.error("Failed to set role:", error);
+        } finally {
+            setIsRoleLoading(false);
+        }
+    };
+
+    
     const items = encyclopediaData;
 
     return (
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="bg-gray-800/60 border-gray-700">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Gift /> Admin Item Sender
-                    </CardTitle>
-                    <CardDescription>
-                        Send any item as a free contract.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form {...itemForm}>
-                        <form onSubmit={itemForm.handleSubmit(onSendItemSubmit)} className="space-y-6">
-                            <FormField
-                                control={itemForm.control}
-                                name="itemName"
-                                render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Item</FormLabel>
-                                    <Popover open={isItemPopoverOpen} onOpenChange={setIsItemPopoverOpen}>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                        <Button
-                                            variant="outline"
-                                            role="combobox"
-                                            className={cn(
-                                            "w-full justify-between",
-                                            !field.value && "text-muted-foreground"
-                                            )}
-                                        >
-                                            {field.value
-                                            ? items.find(
-                                                (item) => item.name === field.value
-                                                )?.name
-                                            : "Select item"}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[--radix-popover-content-available-height] p-0">
-                                        <Command>
-                                            <CommandInput placeholder="Search item..." />
-                                            <CommandList>
-                                                <CommandEmpty>No item found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {items.map((item) => (
-                                                    <CommandItem
-                                                        value={item.name}
-                                                        key={item.id}
-                                                        onSelect={() => {
-                                                            itemForm.setValue("itemName", item.name)
-                                                            setIsItemPopoverOpen(false)
-                                                        }}
-                                                    >
-                                                        <Check
-                                                        className={cn(
-                                                            "mr-2 h-4 w-4",
-                                                            item.name === field.value
-                                                            ? "opacity-100"
-                                                            : "opacity-0"
-                                                        )}
-                                                        />
-                                                        {item.name}
-                                                    </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+            <div className="space-y-6">
+                <Card className="bg-gray-800/60 border-gray-700">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Gift /> Admin Item Sender
+                        </CardTitle>
+                        <CardDescription>
+                            Send any item as a free contract.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Form {...itemForm}>
+                            <form onSubmit={itemForm.handleSubmit(onSendItemSubmit)} className="space-y-6">
+                                <FormField
+                                    control={itemForm.control}
+                                    name="itemName"
+                                    render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel>Item</FormLabel>
+                                        <Popover open={isItemPopoverOpen} onOpenChange={setIsItemPopoverOpen}>
+                                        <PopoverTrigger asChild>
+                                            <FormControl>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                className={cn(
+                                                "w-full justify-between",
+                                                !field.value && "text-muted-foreground"
+                                                )}
+                                            >
+                                                {field.value
+                                                ? items.find(
+                                                    (item) => item.name === field.value
+                                                    )?.name
+                                                : "Select item"}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                            </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[--radix-popover-content-available-height] p-0">
+                                            <Command>
+                                                <CommandInput placeholder="Search item..." />
+                                                <CommandList>
+                                                    <CommandEmpty>No item found.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {items.map((item) => (
+                                                        <CommandItem
+                                                            value={item.name}
+                                                            key={item.id}
+                                                            onSelect={() => {
+                                                                itemForm.setValue("itemName", item.name)
+                                                                setIsItemPopoverOpen(false)
+                                                            }}
+                                                        >
+                                                            <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                item.name === field.value
+                                                                ? "opacity-100"
+                                                                : "opacity-0"
+                                                            )}
+                                                            />
+                                                            {item.name}
+                                                        </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                        </Popover>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
 
-                             <FormField
-                                control={itemForm.control}
-                                name="quantity"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Quantity</FormLabel>
-                                    <FormControl>
-                                    <Input type="number" placeholder="100" {...field} className="bg-gray-700 border-gray-600" />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={itemForm.control}
-                                name="targetUid"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Target Player UID</FormLabel>
-                                    <FormControl>
-                                    <Input placeholder="Enter player UID" {...field} className="bg-gray-700 border-gray-600" />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                            
-                            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isItemLoading}>
-                                {isItemLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Send Item Contract
-                            </Button>
-                        </form>
-                    </Form>
-                </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/60 border-gray-700">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <CircleDollarSign /> Send Money
-                    </CardTitle>
-                    <CardDescription>
-                        Directly add money to a player's account.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form {...moneyForm}>
-                        <form onSubmit={moneyForm.handleSubmit(onSendMoneySubmit)} className="space-y-6">
-                            <FormField
-                                control={moneyForm.control}
-                                name="amount"
-                                render={({ field }) => (
+                                <FormField
+                                    control={itemForm.control}
+                                    name="quantity"
+                                    render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Amount</FormLabel>
+                                        <FormLabel>Quantity</FormLabel>
                                         <FormControl>
-                                            <Input type="number" placeholder="10000" {...field} className="bg-gray-700 border-gray-600" />
+                                        <Input type="number" placeholder="100" {...field} className="bg-gray-700 border-gray-600" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
-                                )}
-                            />
+                                    )}
+                                />
+
+                                <FormField
+                                    control={itemForm.control}
+                                    name="targetUid"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Target Player UID</FormLabel>
+                                        <FormControl>
+                                        <Input placeholder="Enter player UID" {...field} className="bg-gray-700 border-gray-600" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                
+                                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isItemLoading}>
+                                    {isItemLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Send Item Contract
+                                </Button>
+                            </form>
+                        </Form>
+                    </CardContent>
+                </Card>
+
+                 <Card className="bg-gray-800/60 border-gray-700">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <Users /> Set Player Role
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                         <Form {...roleForm}>
+                        <form onSubmit={roleForm.handleSubmit(onSetRoleSubmit)} className="space-y-6">
                             <FormField
-                                control={moneyForm.control}
+                                control={roleForm.control}
                                 name="targetUid"
                                 render={({ field }) => (
                                     <FormItem>
@@ -551,62 +567,132 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
                                     </FormItem>
                                 )}
                             />
-                            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isMoneyLoading}>
-                                {isMoneyLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Send Money
-                            </Button>
-                        </form>
-                    </Form>
-                </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/60 border-gray-700">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Star /> Send Stars
-                    </CardTitle>
-                    <CardDescription>
-                        Directly add Star Boosts to a player's account.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form {...starsForm}>
-                        <form onSubmit={starsForm.handleSubmit(onSendStarsSubmit)} className="space-y-6">
                              <FormField
-                                control={starsForm.control}
-                                name="amount"
+                                control={roleForm.control}
+                                name="role"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Amount</FormLabel>
-                                        <FormControl>
-                                            <Input type="number" placeholder="100" {...field} className="bg-gray-700 border-gray-600" />
-                                        </FormControl>
+                                        <FormLabel>Role</FormLabel>
+                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger className="bg-gray-700 border-gray-600">
+                                                    <SelectValue placeholder="Select a role" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="player">Player</SelectItem>
+                                                <SelectItem value="admin">Admin</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={starsForm.control}
-                                name="targetUid"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Target Player UID</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Enter player UID" {...field} className="bg-gray-700 border-gray-600" />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <Button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-700" disabled={isStarsLoading}>
-                                {isStarsLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Send Stars
+                            <Button type="submit" className="w-full" disabled={isRoleLoading}>
+                                {isRoleLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Set Role
                             </Button>
                         </form>
                     </Form>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            </div>
 
+            <div className="space-y-6">
+                <Card className="bg-gray-800/60 border-gray-700">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <CircleDollarSign /> Send Money
+                        </CardTitle>
+                        <CardDescription>
+                            Directly add money to a player's account.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Form {...moneyForm}>
+                            <form onSubmit={moneyForm.handleSubmit(onSendMoneySubmit)} className="space-y-6">
+                                <FormField
+                                    control={moneyForm.control}
+                                    name="amount"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Amount</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" placeholder="10000" {...field} className="bg-gray-700 border-gray-600" />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={moneyForm.control}
+                                    name="targetUid"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Target Player UID</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Enter player UID" {...field} className="bg-gray-700 border-gray-600" />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isMoneyLoading}>
+                                    {isMoneyLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Send Money
+                                </Button>
+                            </form>
+                        </Form>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gray-800/60 border-gray-700">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Star /> Send Stars
+                        </CardTitle>
+                        <CardDescription>
+                            Directly add Star Boosts to a player's account.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Form {...starsForm}>
+                            <form onSubmit={starsForm.handleSubmit(onSendStarsSubmit)} className="space-y-6">
+                                <FormField
+                                    control={starsForm.control}
+                                    name="amount"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Amount</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" placeholder="100" {...field} className="bg-gray-700 border-gray-600" />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={starsForm.control}
+                                    name="targetUid"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Target Player UID</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Enter player UID" {...field} className="bg-gray-700 border-gray-600" />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-700" disabled={isStarsLoading}>
+                                    {isStarsLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Send Stars
+                                </Button>
+                            </form>
+                        </Form>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     )
 }
@@ -801,7 +887,7 @@ function PresidencyTools({ onAdminAppointPresident, onAdminRemovePresident, pres
 }
 
 
-export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdminAppointPresident, onAdminRemovePresident, onAdminRemoveCandidate, onAdminSetElectionStatus, presidentialCandidates, president }: AdminPanelProps) {
+export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdminAppointPresident, onAdminRemovePresident, onAdminRemoveCandidate, onAdminSetElectionStatus, onAdminSetRole, presidentialCandidates, president }: AdminPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -824,7 +910,7 @@ export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, o
              <CommoditySimulator />
           </TabsContent>
           <TabsContent value="tools">
-             <GameTools onAdminSendItem={onAdminSendItem} onAdminSendMoney={onAdminSendMoney} onAdminSendStars={onAdminSendStars} />
+             <GameTools onAdminSendItem={onAdminSendItem} onAdminSendMoney={onAdminSendMoney} onAdminSendStars={onAdminSendStars} onAdminSetRole={onAdminSetRole} />
           </TabsContent>
           <TabsContent value="presidency">
              <PresidencyTools 

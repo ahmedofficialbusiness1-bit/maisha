@@ -1201,6 +1201,22 @@ export function Game() {
         toast({ variant: 'destructive', title: 'Failed to Send Stars' });
     });
   }
+  
+    const handleAdminSetRole = (uid: string, role: 'player' | 'admin') => {
+        if (!user || gameState?.role !== 'admin' || !uid) return;
+        const targetUserRef = ref(database, `users/${uid}`);
+        runTransaction(targetUserRef, (userData) => {
+            if (userData) {
+                userData.role = role;
+            }
+            return userData;
+        }).then(() => {
+            toast({ title: "Role Updated!", description: `Player ${uid} is now a(n) ${role}.`});
+        }).catch((error) => {
+            console.error("Failed to set role:", error);
+            toast({ variant: 'destructive', title: 'Failed to Set Role' });
+        });
+    }
 
   const handleAcceptContract = async (contract: ContractListing) => {
     if (!user || !gameState || !userRef) return;
@@ -1857,6 +1873,7 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
                     presidentialCandidates={presidentialCandidates} 
                     onAdminRemoveCandidate={handleAdminRemoveCandidate} 
                     onAdminSetElectionStatus={handleAdminSetElectionStatus}
+                    onAdminSetRole={handleAdminSetRole}
                     president={president}
                  />;
       default:
@@ -1866,7 +1883,7 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
-      <AppHeader money={gameState.money} stars={gameState.stars} setView={handleSetView} playerName={gameState.username} playerAvatar={gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={Object.values(gameState.notifications || {})} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin'} />
+      <AppHeader money={gameState.money} stars={gameState.stars} setView={handleSetView} playerName={gameState.username} playerAvatar={gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={Object.values(gameState.notifications || {})} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin' || (gameState.role === 'president' && gameState.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2')} />
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
       </main>
@@ -1874,5 +1891,3 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
     </div>
   );
 }
-
-    
