@@ -289,10 +289,12 @@ export function Game() {
     if (!electionCandidatesRef || !allPlayers) return;
     const unsubscribe = onValue(electionCandidatesRef, (snapshot) => {
       const candidatesData = snapshot.val();
-      const candidates: PresidentialCandidate[] = candidatesData
-        ? Object.keys(candidatesData).map(uid => ({ ...candidatesData[uid], uid }))
-        : [];
-      setPresidentialCandidates(candidates);
+      if (candidatesData) {
+        const candidates: PresidentialCandidate[] = Object.keys(candidatesData).map(uid => ({ ...candidatesData[uid], uid }));
+        setPresidentialCandidates(candidates);
+      } else {
+        setPresidentialCandidates([]); // Set to empty array if no candidates
+      }
     });
     return () => unsubscribe();
   }, [electionCandidatesRef, allPlayers]);
@@ -1462,11 +1464,12 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
     if (gameState?.role !== 'admin') return;
     
     const statusRef = ref(database, 'election/status');
+    const votesRef = ref(database, 'election/votes');
+    const candidatesRef = ref(database, 'election/candidates');
+    
     set(statusRef, status);
     
     if (status === 'open') {
-        const votesRef = ref(database, 'election/votes');
-        const candidatesRef = ref(database, 'election/candidates');
         remove(votesRef);
         remove(candidatesRef);
         toast({ title: 'Election is Now OPEN', description: "Old votes and candidates have been cleared." });
