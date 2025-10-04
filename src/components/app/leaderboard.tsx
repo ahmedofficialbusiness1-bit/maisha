@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -10,6 +11,14 @@ import { Button } from '../ui/button';
 import { getPlayerTier, getRankTitle } from '@/lib/player-tiers';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
+
+const formatNetWorth = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+        notation: 'compact',
+        compactDisplay: 'short',
+    }).format(value);
+};
+
 
 export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: string) => void }) {
   const { players, loading } = useAllPlayers();
@@ -119,7 +128,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                         </Button>
                                     </TableCell>
                                     <TableCell className="text-right font-mono text-lg text-green-400 p-2 sm:p-4">
-                                        ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                        ${formatNetWorth(player.netWorth)}
                                     </TableCell>
                                 </TableRow>
                             )
@@ -171,7 +180,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                   </div>
                                    <div className="text-right">
                                       <p className="font-mono text-xs text-green-400">
-                                          ${player.netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                          ${formatNetWorth(player.netWorth)}
                                       </p>
                                        <p className="text-[10px] text-gray-400">Net Worth</p>
                                   </div>
