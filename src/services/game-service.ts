@@ -74,7 +74,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     ];
     
   let role: 'player' | 'admin' = 'player';
-  if (email === 'elonjazz89@gmail.com') {
+  if (email === 'elonjazz89@gmail.com' || uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2') {
     role = 'admin';
   }
   
