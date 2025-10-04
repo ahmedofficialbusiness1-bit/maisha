@@ -260,22 +260,10 @@ export function Game() {
         netWorth: gameState.netWorth,
         avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
         level: gameState.playerLevel,
-        role: gameState.role,
+        role: gameState.role, // Directly use the role from private game state
     };
 
-    // This logic ensures an admin always appears as an admin publicly
-    // unless they are also the president, in which case that takes precedence.
-    let finalRole: PlayerPublicData['role'] = 'player';
-    if (gameState.role === 'admin') {
-        finalRole = 'admin';
-    } 
-
-    const finalPublicData = {
-      ...publicData,
-      role: finalRole,
-    };
-
-    set(playerPublicRef, finalPublicData);
+    set(playerPublicRef, publicData);
 
   }, [gameState, playerPublicRef, user, userRef, database]);
 
