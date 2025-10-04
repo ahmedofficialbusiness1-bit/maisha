@@ -613,14 +613,8 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
 function PresidencyTools({ onAdminAppointPresident, onAdminRemovePresident, presidentialCandidates, onAdminRemoveCandidate, onAdminSetElectionStatus }: Pick<AdminPanelProps, 'onAdminAppointPresident' | 'onAdminRemovePresident' | 'presidentialCandidates' | 'onAdminRemoveCandidate' | 'onAdminSetElectionStatus'>) {
     const { toast } = useToast();
     const [appointLoading, setAppointLoading] = React.useState(false);
-    const [removeLoading, setRemoveLoading] = React.useState(false);
     
     const appointForm = useForm<z.infer<typeof presidencyFormSchema>>({
-        resolver: zodResolver(presidencyFormSchema),
-        defaultValues: { targetUid: '' },
-    });
-
-    const removeForm = useForm<z.infer<typeof presidencyFormSchema>>({
         resolver: zodResolver(presidencyFormSchema),
         defaultValues: { targetUid: '' },
     });
@@ -633,16 +627,6 @@ function PresidencyTools({ onAdminAppointPresident, onAdminRemovePresident, pres
             appointForm.reset();
         } finally {
             setAppointLoading(false);
-        }
-    }
-    
-    const onRemoveSubmit = () => {
-        setRemoveLoading(true);
-        try {
-            onAdminRemovePresident();
-            toast({ title: "Rais Ameondolewa!", description: `Uongozi umekuwa wazi.`});
-        } finally {
-            setRemoveLoading(false);
         }
     }
 
@@ -726,11 +710,27 @@ function PresidencyTools({ onAdminAppointPresident, onAdminRemovePresident, pres
                             </form>
                         </Form>
 
-                        {/* Remove President */}
-                        <Button variant="destructive" className="w-full" onClick={onRemoveSubmit} disabled={removeLoading}>
-                             {removeLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Mvunjie Urais
-                        </Button>
+                         {/* Remove President */}
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" className="w-full">
+                                    Mvunjie Urais
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Ondoa Rais?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Una uhakika unataka kumwondoa rais aliyepo madarakani? Hii itaweka kiti wazi hadi uchaguzi ujao au hadi admin ateue mwingine.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Ghairi</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => onAdminRemovePresident()}>Thibitisha Kuondoa</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+
                     </CardContent>
                 </Card>
 

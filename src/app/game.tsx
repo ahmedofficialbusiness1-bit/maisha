@@ -1786,6 +1786,3 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
 
     
 
-
-
-

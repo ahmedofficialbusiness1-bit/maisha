@@ -39,7 +39,7 @@
     "election": {
       ".read": "auth != null",
       "candidates": {
-        ".write": "auth != null"
+        ".write": "auth != null && root.child('players').child(auth.uid).child('role').val() === 'admin' || newData.parent().child(auth.uid).exists() === false"
       },
       "votes": {
          ".write": "auth != null"
