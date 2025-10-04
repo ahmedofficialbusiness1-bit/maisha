@@ -1381,8 +1381,7 @@ export function Game() {
     }).then(({ committed }) => {
         if (committed) {
             const candidateRef = ref(database, `election/candidates/${gameState.uid}`);
-            const candidateData: PresidentialCandidate = {
-                uid: gameState.uid,
+            const candidateData: Omit<PresidentialCandidate, 'uid'> = {
                 username: gameState.username,
                 avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
                 votes: 0,
@@ -1792,7 +1791,18 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
         }
         return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} />;
       case 'admin':
-          return <AdminPanel onViewProfile={handleViewProfile} onAdminSendItem={handleAdminSendItem} onAdminSendMoney={handleAdminSendMoney} onAdminSendStars={handleAdminSendStars} onAdminAppointPresident={handleAdminAppointPresident} onAdminRemovePresident={handleAdminRemovePresident} presidentialCandidates={presidentialCandidates} onAdminRemoveCandidate={handleAdminRemoveCandidate} onAdminSetElectionStatus={handleAdminSetElectionStatus} />;
+          return <AdminPanel 
+                    onViewProfile={handleViewProfile} 
+                    onAdminSendItem={handleAdminSendItem} 
+                    onAdminSendMoney={handleAdminSendMoney} 
+                    onAdminSendStars={handleAdminSendStars} 
+                    onAdminAppointPresident={handleAdminAppointPresident} 
+                    onAdminRemovePresident={handleAdminRemovePresident} 
+                    presidentialCandidates={presidentialCandidates} 
+                    onAdminRemoveCandidate={handleAdminRemoveCandidate} 
+                    onAdminSetElectionStatus={handleAdminSetElectionStatus}
+                    president={president}
+                 />;
       default:
         return null;
     }
@@ -1814,4 +1824,3 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
     
 
     
-

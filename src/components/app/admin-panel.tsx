@@ -61,6 +61,7 @@ interface AdminPanelProps {
     onAdminRemoveCandidate: (uid: string) => void;
     onAdminSetElectionStatus: (status: 'open' | 'closed') => void;
     presidentialCandidates: PresidentialCandidate[];
+    president: PlayerPublicData | null;
 }
 
 function CommoditySimulator() {
@@ -610,7 +611,7 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
     )
 }
 
-function PresidencyTools({ onAdminAppointPresident, onAdminRemovePresident, presidentialCandidates, onAdminRemoveCandidate, onAdminSetElectionStatus }: Pick<AdminPanelProps, 'onAdminAppointPresident' | 'onAdminRemovePresident' | 'presidentialCandidates' | 'onAdminRemoveCandidate' | 'onAdminSetElectionStatus'>) {
+function PresidencyTools({ onAdminAppointPresident, onAdminRemovePresident, presidentialCandidates, onAdminRemoveCandidate, onAdminSetElectionStatus, president }: Pick<AdminPanelProps, 'onAdminAppointPresident' | 'onAdminRemovePresident' | 'presidentialCandidates' | 'onAdminRemoveCandidate' | 'onAdminSetElectionStatus' | 'president'>) {
     const { toast } = useToast();
     const [appointLoading, setAppointLoading] = React.useState(false);
     
@@ -633,51 +634,77 @@ function PresidencyTools({ onAdminAppointPresident, onAdminRemovePresident, pres
 
     return (
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Candidates List */}
-            <Card className="lg:col-span-1 bg-gray-800/60 border-gray-700">
-                <CardHeader>
-                    <CardTitle>Orodha ya Wagombea</CardTitle>
-                    <CardDescription>Ona na usimamie wagombea wote.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ScrollArea className="h-96">
-                        <div className="space-y-2 pr-2">
-                        {presidentialCandidates.length > 0 ? presidentialCandidates.map(candidate => (
-                             <div key={candidate.uid} className="flex items-center justify-between p-2 bg-gray-900/50 rounded-md">
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarImage src={candidate.avatar} alt={candidate.username} />
-                                        <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <span className="text-sm font-semibold">{candidate.username}</span>
+            
+            <div className="lg:col-span-1 space-y-6">
+                <Card className="bg-gray-800/60 border-gray-700">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3">
+                            <Crown className="text-yellow-400" /> Rais wa Sasa
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {president ? (
+                            <div className="flex items-center gap-4">
+                                <Avatar className="h-12 w-12 border-2 border-yellow-300">
+                                    <AvatarImage src={president.avatar} alt={president.username} />
+                                    <AvatarFallback>{president.username.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-bold">{president.username}</p>
+                                    <p className="text-xs text-gray-400 font-mono">{president.uid}</p>
                                 </div>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button size="icon" variant="destructive" className="h-7 w-7">
-                                            <X className="h-4 w-4" />
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Ondoa Mgombea?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Una uhakika unataka kumwondoa {candidate.username} kwenye orodha ya wagombea? Kitendo hiki hakiwezi kutenduliwa.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Ghairi</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => onAdminRemoveCandidate(candidate.uid)}>Ondoa</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
                             </div>
-                        )) : (
-                            <p className="text-sm text-center text-gray-500 py-4">Hakuna wagombea kwa sasa.</p>
+                        ) : (
+                            <p className="text-sm text-gray-400">Hakuna rais aliyechaguliwa.</p>
                         )}
-                        </div>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gray-800/60 border-gray-700">
+                    <CardHeader>
+                        <CardTitle>Orodha ya Wagombea</CardTitle>
+                        <CardDescription>Ona na usimamie wagombea wote.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ScrollArea className="h-96">
+                            <div className="space-y-2 pr-2">
+                            {presidentialCandidates.length > 0 ? presidentialCandidates.map(candidate => (
+                                <div key={candidate.uid} className="flex items-center justify-between p-2 bg-gray-900/50 rounded-md">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={candidate.avatar} alt={candidate.username} />
+                                            <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-sm font-semibold">{candidate.username}</span>
+                                    </div>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button size="icon" variant="destructive" className="h-7 w-7">
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Ondoa Mgombea?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Una uhakika unataka kumwondoa {candidate.username} kwenye orodha ya wagombea? Kitendo hiki hakiwezi kutenduliwa.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Ghairi</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => onAdminRemoveCandidate(candidate.uid)}>Ondoa</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
+                            )) : (
+                                <p className="text-sm text-center text-gray-500 py-4">Hakuna wagombea kwa sasa.</p>
+                            )}
+                            </div>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            </div>
 
             {/* Management Tools */}
             <div className="lg:col-span-2 space-y-6">
@@ -753,7 +780,7 @@ function PresidencyTools({ onAdminAppointPresident, onAdminRemovePresident, pres
 }
 
 
-export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdminAppointPresident, onAdminRemovePresident, onAdminRemoveCandidate, onAdminSetElectionStatus, presidentialCandidates }: AdminPanelProps) {
+export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdminAppointPresident, onAdminRemovePresident, onAdminRemoveCandidate, onAdminSetElectionStatus, presidentialCandidates, president }: AdminPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -779,7 +806,14 @@ export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, o
              <GameTools onAdminSendItem={onAdminSendItem} onAdminSendMoney={onAdminSendMoney} onAdminSendStars={onAdminSendStars} />
           </TabsContent>
           <TabsContent value="presidency">
-             <PresidencyTools onAdminAppointPresident={onAdminAppointPresident} onAdminRemovePresident={onAdminRemovePresident} presidentialCandidates={presidentialCandidates} onAdminRemoveCandidate={onAdminRemoveCandidate} onAdminSetElectionStatus={onAdminSetElectionStatus} />
+             <PresidencyTools 
+                onAdminAppointPresident={onAdminAppointPresident} 
+                onAdminRemovePresident={onAdminRemovePresident} 
+                presidentialCandidates={presidentialCandidates} 
+                onAdminRemoveCandidate={onAdminRemoveCandidate} 
+                onAdminSetElectionStatus={onAdminSetElectionStatus}
+                president={president}
+              />
           </TabsContent>
         </Tabs>
 
