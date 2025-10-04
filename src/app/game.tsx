@@ -304,7 +304,7 @@ export function Game() {
         setPlayerVote(snapshot.val());
     });
     return () => unsubscribe();
-  }, [playerVoteRef]);
+  }, [playerVoteRef, allPlayers]);
 
 
   // Update public player data (RTDB) whenever critical info changes
