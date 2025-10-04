@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -250,8 +251,8 @@ function ChatItem({ name, lastMessage, isActive, isUnread, onClick, avatar, rank
                 <div className="flex items-center gap-2">
                     <p className={cn('font-semibold truncate', isUnread && !isActive ? 'text-white' : 'text-gray-200')}>{name}</p>
                     {isPresident && (
-                        <Badge className="text-[9px] py-0 px-1.5 h-auto bg-yellow-500 border-yellow-400 text-black">
-                            <Crown className="h-2.5 w-2.5 mr-1" /> RAIS
+                        <Badge className="text-[9px] py-0 px-1.5 h-auto bg-red-600 border-red-400 text-white">
+                            <Crown className="h-2.5 w-2.5 mr-1" /> MR PRESIDENT
                         </Badge>
                     )}
                     {rankTitle && !isPresident && (
@@ -369,8 +370,8 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
                 <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold">{chatName}</h3>
                      {isChattingWithPresident && (
-                        <Badge className="text-xs py-0.5 px-2 bg-yellow-500 border-yellow-400 text-black">
-                             <Crown className="h-3 w-3 mr-1" /> RAIS
+                        <Badge className="text-xs py-0.5 px-2 bg-red-600 border-red-400 text-white">
+                             <Crown className="h-3 w-3 mr-1" /> MR PRESIDENT
                         </Badge>
                      )}
                      {chatRankTitle && !isChattingWithPresident && (
@@ -390,8 +391,8 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
                                 <div className={cn("flex items-center gap-2", msg.uid === user.uid ? "justify-end flex-row-reverse" : "justify-start")}>
                                      <span className="text-sm font-semibold">{msg.username}</span>
                                      {msg.isPresident && (
-                                        <Badge className="text-[9px] py-0 px-1 h-auto bg-yellow-500 border-yellow-400 text-black">
-                                            <Crown className="h-2.5 w-2.5 mr-1" /> RAIS
+                                        <Badge className="text-[9px] py-0 px-1 h-auto bg-red-600 border-red-400 text-white">
+                                            <Crown className="h-2.5 w-2.5 mr-1" /> MR PRESIDENT
                                         </Badge>
                                      )}
                                       {msg.rankTitle && !msg.isPresident && (
@@ -436,4 +437,5 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
 }
 
     
+
 

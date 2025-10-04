@@ -220,7 +220,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                           className={cn(
                             "relative", 
                             wrapperClass, 
-                            isPresident && "p-1 rounded-md bg-gradient-to-tr from-yellow-400 via-amber-300 to-yellow-500",
+                            isPresident && "p-1 rounded-md bg-gradient-to-tr from-red-500 via-red-400 to-red-600 shadow-lg shadow-red-500/50",
                             isEditing && "cursor-pointer hover:opacity-80 transition-opacity"
                           )}
                           onClick={() => isEditing && fileInputRef.current?.click()}
@@ -236,6 +236,9 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             )}
                              {(rankNumber > 0 && rankNumber <= 3) && !isPresident && (
                                 <Crown className={cn("absolute -top-3 -right-3 h-7 w-7 rotate-[30deg]", crownClass)} />
+                            )}
+                            {isPresident && (
+                                <Crown className={cn("absolute -top-3 -right-3 h-7 w-7 rotate-[30deg] text-red-400")} />
                             )}
                         </div>
                         <div className={cn(
@@ -254,8 +257,8 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         <div className="flex items-center gap-2 flex-wrap">
                             <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
                              {isPresident && (
-                                <Badge className="text-xs py-0.5 px-2.5 bg-yellow-500 border-yellow-400 text-black">
-                                    <Crown className="h-3 w-3 mr-1" /> RAIS
+                                <Badge className="text-xs py-0.5 px-2.5 bg-red-600 border-red-400 text-white">
+                                    <Crown className="h-3 w-3 mr-1" /> MR PRESIDENT
                                 </Badge>
                             )}
                             {playerTier && (
@@ -411,4 +414,5 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     </div>
   );
 }
+
 
