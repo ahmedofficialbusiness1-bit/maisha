@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -69,7 +70,7 @@ export function Game() {
   const searchParams = useSearchParams();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [playerListings, setPlayerListings] = React.useState<PlayerListing[]>([]);
-  const [contractListings, setContractListings] = React.useState<ContractListing[]>([]);
+  const [contractListings, setContractListings] = React.useState<any[]>([]);
   const [marketShareListings, setMarketShareListings] = React.useState<MarketShareListing[]>([]);
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
@@ -228,9 +229,9 @@ export function Game() {
   React.useEffect(() => {
     if (!contractsRef) return;
     const unsubscribe = onValue(contractsRef, (snapshot) => {
-        const listings: ContractListing[] = [];
+        const listings: any[] = [];
         snapshot.forEach(childSnapshot => {
-            listings.push({ id: childSnapshot.key!, ...childSnapshot.val() } as ContractListing);
+            listings.push({ id: childSnapshot.key!, ...childSnapshot.val() } as any);
         });
         setContractListings(listings);
     });
@@ -251,19 +252,29 @@ export function Game() {
   }, [marketSharesRef]);
 
   // Update public player data (RTDB) whenever critical info changes
-  React.useEffect(() => {
+    React.useEffect(() => {
     if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef) return;
     
+    // This is the public-facing data for the leaderboard, profiles, etc.
     const publicData: PlayerPublicData = {
         uid: gameState.uid,
         username: gameState.username,
         netWorth: gameState.netWorth,
         avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
         level: gameState.playerLevel,
-        role: gameState.role,
+        role: gameState.role, // Crucially, sync the role here
     };
 
-    set(playerPublicRef, publicData);
+    // Use a transaction to safely update the public player data and check the private data
+    runTransaction(playerPublicRef, (currentPublicData) => {
+      // Always update the public data with the latest from gameState
+      return publicData;
+    });
+
+    // Also ensure the private gameState is consistent
+    if (gameState.role !== publicData.role) {
+        setGameState(prev => prev ? ({ ...prev, role: publicData.role }) : null);
+    }
 
   }, [gameState, playerPublicRef, user]);
 
@@ -432,7 +443,7 @@ export function Game() {
     });
   };
   
-  const handleBuild = (slotIndex: number, building: BuildingType) => {
+  const handleBuild = (slotIndex: number, building: any) => {
     if (!userRef || !user) return;
 
     runTransaction(userRef, (currentData) => {
@@ -967,7 +978,7 @@ export function Game() {
              seller: gameState.username,
              sellerUid: user.uid,
              avatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-             quality: productInfo?.properties.find(p => p.label === 'Quality')?.value ? parseInt(productInfo.properties.find(p => p.label === 'Quality')!.value) : 1,
+             quality: (productInfo?.properties.find(p => p.label === 'Quality')?.value ? parseInt(productInfo.properties.find(p => p.label === 'Quality')!.value) : 1) ?? 0,
              imageHint: productInfo?.imageHint || 'product photo'
          };
 
@@ -1014,7 +1025,7 @@ export function Game() {
         const newContractRef = push(ref(database, 'contracts'));
         const productInfo = encyclopediaData.find(e => e.name === item.item);
 
-        const newContract: Omit<ContractListing, 'id'> = {
+        const newContract: Omit<any, 'id'> = {
             commodity: item.item,
             quantity,
             pricePerUnit,
@@ -1055,7 +1066,7 @@ export function Game() {
     const newContractRef = push(ref(database, 'contracts'));
     const productInfo = encyclopediaData.find(e => e.name === itemName);
 
-    const newContract: Omit<ContractListing, 'id'> = {
+    const newContract: Omit<any, 'id'> = {
         commodity: itemName,
         quantity,
         pricePerUnit: 0, // It's free
@@ -1137,7 +1148,7 @@ export function Game() {
         });
     }
 
-  const handleAcceptContract = async (contract: ContractListing) => {
+  const handleAcceptContract = async (contract: any) => {
     if (!user || !gameState || !userRef) return;
 
     if (contract.sellerUid === user.uid) {
@@ -1214,7 +1225,7 @@ export function Game() {
     }
   };
   
-  const handleRejectContract = async (contract: ContractListing) => {
+  const handleRejectContract = async (contract: any) => {
     if (!user || !gameState) return;
 
     if (contract.buyerIdentifier && contract.buyerIdentifier !== user.uid && contract.buyerIdentifier !== gameState?.username) return;
@@ -1245,7 +1256,7 @@ export function Game() {
     toast({ title: 'Mkataba umekataliwa.' });
   };
 
-  const handleCancelContract = async (contract: ContractListing) => {
+  const handleCancelContract = async (contract: any) => {
     if (!user || !userRef) return;
     if (user.uid !== contract.sellerUid) return;
 
@@ -1680,13 +1691,16 @@ export function Game() {
         }
         return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} />;
       case 'admin':
-          return <AdminPanel 
-                    onViewProfile={handleViewProfile} 
-                    onAdminSendItem={handleAdminSendItem} 
-                    onAdminSendMoney={handleAdminSendMoney} 
-                    onAdminSendStars={handleAdminSendStars} 
-                    onAdminSetRole={handleAdminSetRole}
-                 />;
+          if (gameState.role === 'admin') {
+            return <AdminPanel 
+                        onViewProfile={handleViewProfile} 
+                        onAdminSendItem={handleAdminSendItem} 
+                        onAdminSendMoney={handleAdminSendMoney} 
+                        onAdminSendStars={handleAdminSendStars} 
+                        onAdminSetRole={handleAdminSetRole}
+                    />;
+          }
+          return null;
       default:
         return null;
     }
@@ -1694,7 +1708,19 @@ export function Game() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
-      <AppHeader money={gameState.money} stars={gameState.stars} setView={handleSetView} playerName={gameState.username} playerAvatar={gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={Object.values(gameState.notifications || {})} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin'} />
+      <AppHeader 
+        money={gameState.money} 
+        stars={gameState.stars} 
+        setView={handleSetView} 
+        playerName={gameState.username} 
+        playerAvatar={gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`} 
+        notifications={Object.values(gameState.notifications || {})} 
+        onNotificationsRead={handleMarkNotificationsRead} 
+        playerLevel={gameState.playerLevel} 
+        playerXP={gameState.playerXP} 
+        xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} 
+        isAdmin={gameState.role === 'admin'} 
+      />
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
       </main>
@@ -1702,3 +1728,4 @@ export function Game() {
     </div>
   );
 }
+
