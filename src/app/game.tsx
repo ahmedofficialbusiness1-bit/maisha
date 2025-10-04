@@ -1131,7 +1131,7 @@ export function Game() {
   }
 
   const handleAdminSendItem = (itemName: string, quantity: number, targetUid: string) => {
-    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2')) return;
+    if (!user || gameState?.role !== 'admin') return;
 
     const newContractRef = push(ref(database, 'contracts'));
     const productInfo = encyclopediaData.find(e => e.name === itemName);
@@ -1157,7 +1157,7 @@ export function Game() {
   };
 
   const handleAdminSendMoney = (amount: number, targetUid: string) => {
-    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || amount <= 0 || !targetUid) return;
+    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
 
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -1182,7 +1182,7 @@ export function Game() {
   }
 
   const handleAdminSendStars = (amount: number, targetUid: string) => {
-    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || amount <= 0 || !targetUid) return;
+    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
     
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -1203,7 +1203,7 @@ export function Game() {
   }
   
     const handleAdminSetRole = (uid: string, role: 'player' | 'admin') => {
-        if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || !uid) return;
+        if (!user || gameState?.role !== 'admin' || !uid) return;
         const targetUserRef = ref(database, `users/${uid}`);
         runTransaction(targetUserRef, (userData) => {
             if (userData) {
@@ -1457,28 +1457,28 @@ export function Game() {
 
 
 const handleAdminAppointPresident = (uid: string) => {
-    if (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') return;
+    if (gameState?.role !== 'admin') return;
     const presidentRef = ref(database, 'election/president');
     set(presidentRef, uid);
     toast({ title: 'President Appointed', description: `Player ${uid} is now president.` });
 };
 
 const handleAdminRemovePresident = () => {
-    if (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') return;
+    if (gameState?.role !== 'admin') return;
     const presidentRef = ref(database, 'election/president');
     remove(presidentRef);
     toast({ title: 'President Removed' });
 };
 
 const handleAdminRemoveCandidate = (uid: string) => {
-    if (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') return;
+    if (gameState?.role !== 'admin') return;
     const candidateRef = ref(database, `election/candidates/${uid}`);
     remove(candidateRef);
     toast({ title: 'Candidate Removed', description: `Player ${uid} has been removed from the election.` });
 };
 
 const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
-    if (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') return;
+    if (gameState?.role !== 'admin') return;
     
     const statusRef = ref(database, 'election/status');
     set(statusRef, status);
@@ -1883,7 +1883,7 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
-      <AppHeader money={gameState.money} stars={gameState.stars} setView={handleSetView} playerName={gameState.username} playerAvatar={gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={Object.values(gameState.notifications || {})} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin' || (gameState.role === 'president' && gameState.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2')} />
+      <AppHeader money={gameState.money} stars={gameState.stars} setView={handleSetView} playerName={gameState.username} playerAvatar={gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`} notifications={Object.values(gameState.notifications || {})} onNotificationsRead={handleMarkNotificationsRead} playerLevel={gameState.playerLevel} playerXP={gameState.playerXP} xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} isAdmin={gameState.role === 'admin'} />
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
       </main>
