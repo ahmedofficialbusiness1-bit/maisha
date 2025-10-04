@@ -27,9 +27,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Separator } from '../ui/separator';
 import type { PlayerPublicData } from '@/firebase/database/use-all-players';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Textarea } from '../ui/textarea';
 
 
 export type PlayerListing = {
@@ -110,6 +113,7 @@ export type PresidentialCandidate = {
   username: string;
   avatar: string;
   votes: number;
+  policies: string;
 }
 
 function PriceTicker({ inventory }: { inventory: InventoryItem[] }) {
@@ -173,7 +177,7 @@ interface TradeMarketProps {
   onBuyFromMarket: (listing: PlayerListing, quantity: number) => void;
   playerName: string;
   marketShareListings: MarketShareListing[];
-  onRunForPresidency: () => void;
+  onRunForPresidency: (policies: string) => void;
   presidentialCandidates: PresidentialCandidate[];
   president: PlayerPublicData | null;
   electionStatus: 'open' | 'closed';
@@ -191,6 +195,10 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
   const [isBuyDialogOpen, setIsBuyDialogOpen] = React.useState(false);
   const [buyQuantity, setBuyQuantity] = React.useState(0);
   const [selectedListing, setSelectedListing] = React.useState<PlayerListing | null>(null);
+  
+  const [isCandidacyDialogOpen, setIsCandidacyDialogOpen] = React.useState(false);
+  const [policies, setPolicies] = React.useState('');
+
 
   const handleOpenBuyStockDialog = (stock: (StockListing & { sharesAvailable: number })) => {
     setSelectedStock(stock);
@@ -230,6 +238,14 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
     if (selectedListing && buyQuantity > 0) {
         onBuyFromMarket(selectedListing, buyQuantity);
         setIsBuyDialogOpen(false);
+    }
+  }
+
+  const handleConfirmCandidacy = () => {
+    if(policies.trim()) {
+        onRunForPresidency(policies);
+        setIsCandidacyDialogOpen(false);
+        setPolicies('');
     }
   }
 
@@ -675,27 +691,68 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                 <CardContent>
                      <div className="space-y-3">
                         <h4 className="font-semibold">Wagombea Waliojitokeza:</h4>
-                        <div className="space-y-2">
-                             {presidentialCandidates.map((candidate) => (
-                                <div key={candidate.uid} className="flex items-center justify-between p-2 bg-gray-900/50 rounded-md">
-                                    <div className="flex items-center gap-3">
-                                        <Avatar className="h-8 w-8">
-                                            <AvatarImage src={candidate.avatar} alt={candidate.username} />
-                                            <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <span>{candidate.username}</span>
+                        <Accordion type="single" collapsible className="w-full">
+                            {presidentialCandidates.length > 0 ? presidentialCandidates.map((candidate) => (
+                                <AccordionItem value={candidate.uid} key={candidate.uid} className='border-b-0'>
+                                    <div  className="flex items-center justify-between p-2 bg-gray-900/50 rounded-t-md">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src={candidate.avatar} alt={candidate.username} />
+                                                <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <span className='font-semibold'>{candidate.username}</span>
+                                        </div>
+                                        <div className='flex items-center gap-2'>
+                                            <Button size="sm" variant="outline">Piga Kura</Button>
+                                             <AccordionTrigger className='p-2 hover:bg-gray-700 rounded-md [&[data-state=open]>svg]:text-blue-400'>
+                                                <span className='sr-only'>Fungua Sera</span>
+                                            </AccordionTrigger>
+                                        </div>
                                     </div>
-                                    <Button size="sm" variant="outline">Piga Kura</Button>
-                                </div>
-                            ))}
-                            {presidentialCandidates.length === 0 && (
+                                    <AccordionContent className='p-4 bg-gray-800/60 rounded-b-md text-sm whitespace-pre-wrap'>
+                                       {candidate.policies || <p className='italic text-gray-500'>Hakuna sera zilizoainishwa.</p>}
+                                    </AccordionContent>
+                                </AccordionItem>
+                            )) : (
                                 <p className='text-sm text-center text-gray-400 py-4'>Hakuna aliyejitokeza kugombea bado.</p>
                             )}
-                        </div>
+                        </Accordion>
                         <Separator className="bg-gray-600 my-3"/>
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={onRunForPresidency} disabled={electionStatus === 'closed'}>
-                           <span className='flex items-center gap-2'>Gombea Urais <span className='font-bold flex items-center'>(10,000 <Star className='h-4 w-4 ml-1'/>)</span></span>
-                        </Button>
+                        <Dialog open={isCandidacyDialogOpen} onOpenChange={setIsCandidacyDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button className="w-full bg-blue-600 hover:bg-blue-700" disabled={electionStatus === 'closed'}>
+                                <span className='flex items-center gap-2'>Gombea Urais <span className='font-bold flex items-center'>(10,000 <Star className='h-4 w-4 ml-1'/>)</span></span>
+                                </Button>
+                            </DialogTrigger>
+                             <DialogContent className="bg-gray-900 border-gray-700 text-white">
+                                <DialogHeader>
+                                <DialogTitle>Tangaza Sera Zako</DialogTitle>
+                                <DialogDescription>
+                                    Andika sera na ahadi zako kwa wananchi. Hii itawasaidia wapiga kura kufanya maamuzi. Unahitaji nyota 10,000 ili kuwasilisha fomu.
+                                </DialogDescription>
+                                </DialogHeader>
+                                <div className="py-4">
+                                    <Label htmlFor="policies" className="mb-2">Sera zako</Label>
+                                    <Textarea 
+                                        id="policies"
+                                        placeholder="Mfano: Nitapunguza kodi kwa 2%, nitaongeza ruzuku kwa wakulima..."
+                                        value={policies}
+                                        onChange={(e) => setPolicies(e.target.value)}
+                                        className="min-h-[150px] bg-gray-800 border-gray-600"
+                                    />
+                                </div>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setIsCandidacyDialogOpen(false)}>Ghairi</Button>
+                                    <Button 
+                                        className="bg-blue-600 hover:bg-blue-700" 
+                                        onClick={handleConfirmCandidacy}
+                                        disabled={!policies.trim()}
+                                    >
+                                        Thibitisha Ugombea
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                      </div>
                 </CardContent>
             </Card>

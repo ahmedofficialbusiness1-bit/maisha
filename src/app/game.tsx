@@ -1354,7 +1354,7 @@ export function Game() {
     });
   }, [companyData, userRef, gameState, user, database]);
   
-  const handleRunForPresidency = () => {
+  const handleRunForPresidency = (policies: string) => {
     if (!userRef || !gameState || electionStatus === 'closed') {
         toast({ variant: 'destructive', title: 'Dirisha la Ugombea Limefungwa', description: 'Huwezi kugombea kwa sasa, subiri dirisha lifunguliwe.'});
         return;
@@ -1385,6 +1385,7 @@ export function Game() {
                 username: gameState.username,
                 avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
                 votes: 0,
+                policies: policies,
             };
             set(candidateRef, candidateData);
             toast({ title: 'Umefanikiwa Kugombea!', description: 'Jina lako sasa lipo kwenye orodha ya wagombea urais.' });
@@ -1824,3 +1825,4 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
     
 
     
+
