@@ -74,8 +74,9 @@ export function Game() {
   const [contractListings, setContractListings] = React.useState<ContractListing[]>([]);
   const [marketShareListings, setMarketShareListings] = React.useState<MarketShareListing[]>([]);
   const [presidentialCandidates, setPresidentialCandidates] = React.useState<PresidentialCandidate[]>([]);
-    const [president, setPresident] = React.useState<PlayerPublicData | null>(null);
-    const [electionStatus, setElectionStatus] = React.useState<'open' | 'closed'>('closed');
+  const [president, setPresident] = React.useState<PlayerPublicData | null>(null);
+  const [electionStatus, setElectionStatus] = React.useState<'open' | 'closed'>('closed');
+  const [playerVote, setPlayerVote] = React.useState<string | null>(null); // Stores UID of candidate voted for
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
@@ -113,6 +114,7 @@ export function Game() {
   const marketSharesRef = React.useMemo(() => ref(database, 'marketShares'), [database]);
   const chatMetadataRef = React.useMemo(() => ref(database, 'chat-metadata'), [database]);
   const electionRef = React.useMemo(() => ref(database, 'election'), [database]);
+  const playerVoteRef = React.useMemo(() => user ? ref(database, `election/votes/${user.uid}`) : null, [database, user]);
 
   
   const handleSetView = React.useCallback((newView: View) => {
@@ -288,7 +290,16 @@ export function Game() {
         }
     });
     return () => unsubscribe();
-}, [electionRef, allPlayers]);
+  }, [electionRef, allPlayers]);
+  
+  // Listen for player's vote
+  React.useEffect(() => {
+    if (!playerVoteRef) return;
+    const unsubscribe = onValue(playerVoteRef, (snapshot) => {
+        setPlayerVote(snapshot.val());
+    });
+    return () => unsubscribe();
+  }, [playerVoteRef]);
 
 
   // Update public player data (RTDB) whenever critical info changes
@@ -1393,7 +1404,28 @@ export function Game() {
              toast({ variant: 'destructive', title: 'Imeshindikana', description: `Huna nyota ${cost.toLocaleString()} za kutosha.`});
         }
     });
-};
+  };
+
+  const handleVote = (candidateUid: string) => {
+    if (!user || playerVote || electionStatus === 'closed') {
+        toast({ variant: 'destructive', title: 'Huwezi Kupiga Kura', description: playerVote ? 'Umeshapiga kura tayari.' : 'Uchaguzi umefungwa.' });
+        return;
+    }
+    
+    const userVoteRef = ref(database, `election/votes/${user.uid}`);
+    const candidateVotesRef = ref(database, `election/candidates/${candidateUid}/votes`);
+
+    runTransaction(candidateVotesRef, (currentVotes) => {
+        return (currentVotes || 0) + 1;
+    }).then(() => {
+        set(userVoteRef, candidateUid);
+        toast({ title: 'Kura Imepigwa!', description: 'Asante kwa kupiga kura.' });
+    }).catch((error) => {
+        console.error('Vote failed:', error);
+        toast({ variant: 'destructive', title: 'Kura Imeshindikana', description: 'Tafadhali jaribu tena.' });
+    });
+  };
+
 
 const handleAdminAppointPresident = (uid: string) => {
     if (gameState?.role !== 'admin') return;
@@ -1761,7 +1793,7 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} presidentialCandidates={presidentialCandidates} president={president} electionStatus={electionStatus} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} presidentialCandidates={presidentialCandidates} president={president} electionStatus={electionStatus} onVote={handleVote} playerVote={playerVote} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':

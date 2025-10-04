@@ -181,9 +181,11 @@ interface TradeMarketProps {
   presidentialCandidates: PresidentialCandidate[];
   president: PlayerPublicData | null;
   electionStatus: 'open' | 'closed';
+  onVote: (candidateUid: string) => void;
+  playerVote: string | null;
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName, marketShareListings, onRunForPresidency, presidentialCandidates, president, electionStatus }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName, marketShareListings, onRunForPresidency, presidentialCandidates, president, electionStatus, onVote, playerVote }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -703,7 +705,14 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                             <span className='font-semibold'>{candidate.username}</span>
                                         </div>
                                         <div className='flex items-center gap-2'>
-                                            <Button size="sm" variant="outline">Piga Kura</Button>
+                                            <Button 
+                                                size="sm" 
+                                                variant={playerVote === candidate.uid ? "secondary" : "outline"}
+                                                onClick={() => onVote(candidate.uid)}
+                                                disabled={!!playerVote || electionStatus === 'closed'}
+                                            >
+                                                {playerVote === candidate.uid ? "Umepiga Kura" : `Piga Kura (${candidate.votes})`}
+                                            </Button>
                                              <AccordionTrigger className='p-2 hover:bg-gray-700 rounded-md [&[data-state=open]>svg]:text-blue-400'>
                                                 <span className='sr-only'>Fungua Sera</span>
                                             </AccordionTrigger>

@@ -45,7 +45,11 @@
         }
       },
       "votes": {
-         ".write": "auth != null"
+         ".read": "auth != null",
+         "$uid": {
+           ".write": "auth != null && auth.uid === $uid && !data.exists()",
+           ".validate": "newData.isString()"
+         }
       },
       "president": {
          ".write": "auth != null && root.child('players').child(auth.uid).child('role').val() === 'admin'"
