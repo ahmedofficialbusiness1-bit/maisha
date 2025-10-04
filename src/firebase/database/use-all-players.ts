@@ -1,6 +1,6 @@
 'use client';
 import * as React from 'react';
-import { ref, onValue, query, orderByChild, getDatabase } from 'firebase/database';
+import { ref, onValue, query, getDatabase } from 'firebase/database';
 
 export type PlayerPublicData = {
     uid: string;
@@ -26,7 +26,9 @@ export function useAllPlayers() {
     }
 
     setLoading(true);
-    const playersRef = query(ref(database, 'players'), orderByChild('username'));
+    // Removed orderByChild('username') as it can cause the query to return null 
+    // if any player record is missing the username field.
+    const playersRef = query(ref(database, 'players'));
 
     const unsubscribe = onValue(playersRef, (snapshot) => {
         const playersData = snapshot.val() || {};
