@@ -95,7 +95,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                             const tier = getPlayerTier(player.netWorth);
                             const { wrapperClass, crownClass } = getRankStyles(index);
                             const rankTitle = getRankTitle(index + 1);
-                            const isPresident = player.role === 'president';
+                            
                             return (
                                 <TableRow 
                                   key={player.uid} 
@@ -106,27 +106,21 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                     </TableCell>
                                     <TableCell className="p-2 sm:p-4">
                                         <Button variant="ghost" className="flex items-center gap-3 p-0 h-auto hover:bg-transparent" onClick={() => onViewProfile(player.uid)}>
-                                            <div className={cn("relative", isPresident ? "p-1 rounded-full bg-gradient-to-tr from-red-500 via-red-400 to-red-600 shadow-lg shadow-red-500/50" : wrapperClass)}>
+                                            <div className={cn("relative", wrapperClass)}>
                                                 <Avatar className='h-12 w-12 border-2 border-gray-900'>
                                                     <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                                     <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                                 </Avatar>
-                                                {index < 3 && !isPresident && <Crown className={cn("absolute -top-3 -right-3 h-6 w-6 rotate-[30deg]", crownClass)} />}
-                                                {isPresident && <Crown className={cn("absolute -top-3 -right-2 h-6 w-6 text-red-400 [filter:drop-shadow(0_0_4px_theme(colors.red.400))]",)} />}
+                                                {index < 3 && <Crown className={cn("absolute -top-3 -right-3 h-6 w-6 rotate-[30deg]", crownClass)} />}
                                             </div>
                                             <div className='flex flex-col items-start'>
                                                 <span className="font-semibold text-white">{player.username}</span>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    {isPresident && (
-                                                        <Badge className="text-[10px] py-0 px-1.5 h-auto bg-red-600 border-red-400 text-white">
-                                                            <Crown className="h-2.5 w-2.5 mr-1" /> MR PRESIDENT
-                                                        </Badge>
-                                                    )}
                                                     <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
                                                         <tier.icon className="h-2.5 w-2.5 mr-1" />
                                                         {tier.name}
                                                     </Badge>
-                                                    {rankTitle && !isPresident && (
+                                                    {rankTitle && (
                                                         <Badge className="text-[10px] py-0 px-1.5 h-auto bg-indigo-800/80 border-indigo-600 text-indigo-200">
                                                             {rankTitle}
                                                         </Badge>
@@ -151,7 +145,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                       const tier = getPlayerTier(player.netWorth);
                       const { wrapperClass, crownClass } = getRankStyles(index);
                       const rankTitle = getRankTitle(index + 1);
-                      const isPresident = player.role === 'president';
+                      
                       return (
                           <Card 
                             key={player.uid} 
@@ -164,27 +158,21 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
                                           <span>{index + 1}</span>
                                       </div>
                                       <div className="flex items-center gap-3">
-                                          <div className={cn("relative", isPresident ? "p-0.5 rounded-full bg-gradient-to-tr from-red-500 via-red-400 to-red-600 shadow-lg shadow-red-500/40" : wrapperClass)}>
+                                          <div className={cn("relative", wrapperClass)}>
                                               <Avatar className='h-10 w-10 border-2 border-gray-800'>
                                                   <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                                   <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                               </Avatar>
-                                               {index < 3 && !isPresident && <Crown className={cn("absolute -top-2.5 -right-2.5 h-5 w-5 rotate-[30deg]", crownClass)} />}
-                                               {isPresident && <Crown className={cn("absolute -top-2.5 -right-2 h-5 w-5 text-red-400 [filter:drop-shadow(0_0_3px_theme(colors.red.400))]",)} />}
+                                               {index < 3 && <Crown className={cn("absolute -top-2.5 -right-2.5 h-5 w-5 rotate-[30deg]", crownClass)} />}
                                           </div>
                                           <div>
                                               <p className="font-normal text-sm text-white">{player.username}</p>
                                                <div className="flex items-center gap-1 mt-1 flex-wrap">
-                                                    {isPresident && (
-                                                        <Badge className="text-[10px] py-0 px-1.5 h-auto bg-red-600 border-red-400 text-white">
-                                                            <Crown className="h-2.5 w-2.5 mr-1" /> MR PRESIDENT
-                                                        </Badge>
-                                                    )}
                                                     <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
                                                         <tier.icon className="h-2.5 w-2.5 mr-1" />
                                                         {tier.name}
                                                     </Badge>
-                                                     {rankTitle && !isPresident && (
+                                                     {rankTitle && (
                                                         <Badge className="text-[10px] py-0 px-1.5 h-auto bg-indigo-800/80 border-indigo-600 text-indigo-200">
                                                             {rankTitle}
                                                         </Badge>
@@ -215,6 +203,7 @@ export function Leaderboard({ onViewProfile }: { onViewProfile: (playerId: strin
     </div>
   );
 }
+
 
 
 

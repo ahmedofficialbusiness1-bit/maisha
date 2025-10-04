@@ -1632,7 +1632,6 @@ export function Game() {
                     inventory={gameState.inventory || []} 
                     stars={gameState.stars}
                     playerRank={currentPlayerRank}
-                    isPresident={false}
                     onBuild={handleBuild} 
                     onStartProduction={handleStartProduction} 
                     onStartSelling={handleStartSelling} 

@@ -58,7 +58,7 @@ export type ProfileData = ProfileDataForForm & {
   uid: string;
   status?: 'online' | 'offline';
   lastSeen?: Date;
-  role?: 'player' | 'admin' | 'president';
+  role?: 'player' | 'admin';
 };
 
 
@@ -77,7 +77,7 @@ interface PlayerProfileProps {
   metrics: PlayerMetrics;
   isViewOnly?: boolean;
   onBack?: () => void;
-  viewerRole?: 'player' | 'admin' | 'president';
+  viewerRole?: 'player' | 'admin';
   setView: (view: View) => void;
   onStartPrivateChat: (uid: string) => void;
 }
@@ -189,8 +189,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
 
   const { wrapperClass, crownClass } = getRankStyles(rankNumber);
   const rankTitle = getRankTitle(rankNumber);
-  const isPresident = currentProfile.role === 'president';
-
+  
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -219,8 +218,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         <div 
                           className={cn(
                             "relative", 
-                            wrapperClass, 
-                            isPresident && "p-1 rounded-md bg-gradient-to-tr from-red-500 via-red-400 to-red-600 shadow-lg shadow-red-500/50",
+                            wrapperClass,
                             isEditing && "cursor-pointer hover:opacity-80 transition-opacity"
                           )}
                           onClick={() => isEditing && fileInputRef.current?.click()}
@@ -234,11 +232,8 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                                     <Upload className="h-6 w-6 text-white" />
                                 </div>
                             )}
-                             {(rankNumber > 0 && rankNumber <= 3) && !isPresident && (
+                             {(rankNumber > 0 && rankNumber <= 3) && (
                                 <Crown className={cn("absolute -top-3 -right-3 h-7 w-7 rotate-[30deg]", crownClass)} />
-                            )}
-                            {isPresident && (
-                                <Crown className={cn("absolute -top-3 -right-2 h-7 w-7 text-red-400 [filter:drop-shadow(0_0_4px_theme(colors.red.400))]",)} />
                             )}
                         </div>
                         <div className={cn(
@@ -256,25 +251,21 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             </span>
                         <div className="flex items-center gap-2 flex-wrap">
                             <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
-                             {isPresident && (
-                                <Badge className="text-xs py-0.5 px-2.5 bg-red-600 border-red-400 text-white">
-                                    <Crown className="h-3 w-3 mr-1" /> MR PRESIDENT
-                                </Badge>
-                            )}
+                            
                             {playerTier && (
                                 <Badge className={cn("text-xs py-0.5 px-2.5", playerTier.color)}>
                                     <playerTier.icon className="h-3 w-3 mr-1" />
                                     {playerTier.name}
                                 </Badge>
                             )}
-                             {rankTitle && !isPresident && (
+                             {rankTitle && (
                                 <Badge className="text-xs py-0.5 px-2.5 bg-indigo-800/80 border-indigo-600 text-indigo-200">
                                     {rankTitle}
                                 </Badge>
                             )}
                         </div>
                         <p className="text-muted-foreground">
-                            {currentProfile.role === 'admin' ? 'Administrator' : currentProfile.role === 'president' ? 'President of the Republic' : 'Sole trader'}
+                            {currentProfile.role === 'admin' ? 'Administrator' : 'Sole trader'}
                         </p>
                          <div className='text-xs text-gray-500 font-mono flex items-center gap-2'>
                             <span>UID: {currentProfile.uid}</span>
@@ -414,6 +405,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     </div>
   );
 }
+
 
 
 

@@ -33,7 +33,6 @@ type ChatMessage = {
     text: string;
     timestamp: number;
     rankTitle?: string | null;
-    isPresident?: boolean;
 };
 
 export type ChatParticipantInfo = {
@@ -59,7 +58,7 @@ const publicRooms: { id: PublicChatRoomId, name: string, icon: React.ReactNode }
 
 type UserChat = {
     chatId: string;
-    otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'> & { rankTitle?: string | null, isPresident?: boolean };
+    otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'> & { rankTitle?: string | null };
     lastMessage: string;
     timestamp: number;
     isUnread: boolean;
@@ -72,7 +71,7 @@ type SelectedChat = {
 } | {
     type: 'private';
     id: string; // Chat ID
-    otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'> & { rankTitle?: string | null, isPresident?: boolean }
+    otherPlayer: Omit<ChatParticipantInfo, 'lastReadTimestamp'> & { rankTitle?: string | null }
 };
 
 interface ChatsProps {
@@ -107,11 +106,10 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
 
                     const rank = sortedPlayers.findIndex(p => p.uid === otherPlayerId);
                     const rankTitle = getRankTitle(rank + 1);
-                    const isPresident = otherPlayerInfo.role === 'president';
-
+                    
                     chats.push({
                         chatId,
-                        otherPlayer: { uid: otherPlayerInfo.uid, username: otherPlayerInfo.username, avatar: otherPlayerInfo.avatar, rankTitle, isPresident },
+                        otherPlayer: { uid: otherPlayerInfo.uid, username: otherPlayerInfo.username, avatar: otherPlayerInfo.avatar, rankTitle },
                         lastMessage: metadata.lastMessageText || '',
                         timestamp: metadata.lastMessageTimestamp || 0,
                         isUnread,
@@ -130,13 +128,12 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
             if (otherPlayer) {
                 const rank = sortedPlayers.findIndex(p => p.uid === initialPrivateChatUid);
                 const rankTitle = getRankTitle(rank + 1);
-                const isPresident = otherPlayer.role === 'president';
                 const chatId = [user.uid, otherPlayer.uid].sort().join('-');
                 
                 setSelectedChat({
                     type: 'private',
                     id: chatId,
-                    otherPlayer: { uid: otherPlayer.uid, username: otherPlayer.username, avatar: otherPlayer.avatar, rankTitle, isPresident }
+                    otherPlayer: { uid: otherPlayer.uid, username: otherPlayer.username, avatar: otherPlayer.avatar, rankTitle }
                 });
                 setMobileView('chat_window');
                 onChatOpened();
@@ -204,7 +201,6 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
                                             </Avatar>
                                         }
                                         rankTitle={chat.otherPlayer.rankTitle}
-                                        isPresident={chat.otherPlayer.isPresident}
                                     />
                                 ))}
                             </div>
@@ -236,7 +232,7 @@ export function Chats({ user, initialPrivateChatUid, onChatOpened, chatMetadata,
     );
 }
 
-function ChatItem({ name, lastMessage, isActive, isUnread, onClick, avatar, rankTitle, isPresident }: { name: string, lastMessage?: string, isActive: boolean, isUnread: boolean, onClick: () => void, avatar: React.ReactNode, rankTitle?: string | null, isPresident?: boolean }) {
+function ChatItem({ name, lastMessage, isActive, isUnread, onClick, avatar, rankTitle }: { name: string, lastMessage?: string, isActive: boolean, isUnread: boolean, onClick: () => void, avatar: React.ReactNode, rankTitle?: string | null }) {
     return (
         <button
             onClick={onClick}
@@ -250,12 +246,8 @@ function ChatItem({ name, lastMessage, isActive, isUnread, onClick, avatar, rank
             <div className="flex-grow overflow-hidden">
                 <div className="flex items-center gap-2">
                     <p className={cn('font-semibold truncate', isUnread && !isActive ? 'text-white' : 'text-gray-200')}>{name}</p>
-                    {isPresident && (
-                        <Badge className="text-[9px] py-0 px-1.5 h-auto bg-red-600 border-red-400 text-white">
-                            <Crown className="h-2.5 w-2.5 mr-1" /> MR PRESIDENT
-                        </Badge>
-                    )}
-                    {rankTitle && !isPresident && (
+                    
+                    {rankTitle && (
                         <Badge className="text-[9px] py-0 px-1.5 h-auto bg-indigo-800/80 border-indigo-600 text-indigo-200">{rankTitle}</Badge>
                     )}
                 </div>
@@ -288,8 +280,8 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
                 const senderInfo = playerMap.get(msg.uid);
                 const senderRank = sortedPlayers.findIndex(p => p.uid === msg.uid);
                 const rankTitle = getRankTitle(senderRank + 1);
-                const isPresident = senderInfo?.role === 'president';
-                messageData.push({ id: child.key!, ...msg, rankTitle, isPresident });
+                
+                messageData.push({ id: child.key!, ...msg, rankTitle });
             });
             setMessages(messageData);
 
@@ -359,7 +351,7 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
     
     const chatName = chat.type === 'public' ? `# ${chat.name}` : chat.otherPlayer.username;
     const chatRankTitle = chat.type === 'private' ? chat.otherPlayer.rankTitle : null;
-    const isChattingWithPresident = chat.type === 'private' && chat.otherPlayer.isPresident;
+    
 
     return (
         <>
@@ -369,12 +361,8 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
                 </Button>
                 <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold">{chatName}</h3>
-                     {isChattingWithPresident && (
-                        <Badge className="text-xs py-0.5 px-2 bg-red-600 border-red-400 text-white">
-                             <Crown className="h-3 w-3 mr-1" /> MR PRESIDENT
-                        </Badge>
-                     )}
-                     {chatRankTitle && !isChattingWithPresident && (
+                     
+                     {chatRankTitle && (
                         <Badge className="text-xs py-0.5 px-2 bg-indigo-800/80 border-indigo-600 text-indigo-200">{chatRankTitle}</Badge>
                     )}
                 </div>
@@ -390,12 +378,8 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
                             <div className="flex flex-col gap-1 w-full max-w-[320px]">
                                 <div className={cn("flex items-center gap-2", msg.uid === user.uid ? "justify-end flex-row-reverse" : "justify-start")}>
                                      <span className="text-sm font-semibold">{msg.username}</span>
-                                     {msg.isPresident && (
-                                        <Badge className="text-[9px] py-0 px-1 h-auto bg-red-600 border-red-400 text-white">
-                                            <Crown className="h-2.5 w-2.5 mr-1" /> MR PRESIDENT
-                                        </Badge>
-                                     )}
-                                      {msg.rankTitle && !msg.isPresident && (
+                                     
+                                      {msg.rankTitle && (
                                          <Badge className="text-[9px] py-0 px-1 h-auto bg-indigo-800/60 border-indigo-700 text-indigo-300">{msg.rankTitle}</Badge>
                                       )}
                                       <span className="text-xs text-gray-400">
@@ -437,5 +421,6 @@ function ChatWindow({ user, chat, onBack, players }: { user: AuthenticatedUser, 
 }
 
     
+
 
 
