@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { simulateCommodityPrice, type SimulateCommodityPriceInput } from '@/ai/flows/commodity-price-simulation';
-import { Check, ChevronsUpDown, CircleDollarSign, Gift, Loader2, Star, Users, Wifi, WifiOff } from 'lucide-react';
+import { Check, ChevronsUpDown, CircleDollarSign, Crown, Gift, Loader2, Star, Users, Wifi, WifiOff } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -599,6 +599,22 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars }: Pick
     )
 }
 
+function PresidencyTools() {
+    return (
+        <div className="mt-6">
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-3"><Crown className="text-yellow-400"/>Usimamizi wa Urais</CardTitle>
+                    <CardDescription>Simamia mzunguko wa uchaguzi, teua marais, na ubadilishe sera.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-gray-400">Zana za urais zinakuja hivi karibuni...</p>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
 
 export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, onAdminSendStars }: AdminPanelProps) {
 
@@ -610,10 +626,11 @@ export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, o
       </div>
 
        <Tabs defaultValue="players" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-900/50">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-900/50">
             <TabsTrigger value="players">Player Management</TabsTrigger>
             <TabsTrigger value="economy">Economy Tools</TabsTrigger>
             <TabsTrigger value="tools">Game Tools</TabsTrigger>
+            <TabsTrigger value="presidency">Urais</TabsTrigger>
           </TabsList>
           <TabsContent value="players">
             <PlayerManager onViewProfile={onViewProfile} />
@@ -623,6 +640,9 @@ export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, o
           </TabsContent>
           <TabsContent value="tools">
              <GameTools onAdminSendItem={onAdminSendItem} onAdminSendMoney={onAdminSendMoney} onAdminSendStars={onAdminSendStars} />
+          </TabsContent>
+          <TabsContent value="presidency">
+             <PresidencyTools />
           </TabsContent>
         </Tabs>
 
