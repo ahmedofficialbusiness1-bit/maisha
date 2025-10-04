@@ -295,7 +295,7 @@ export function Game() {
       setPresidentialCandidates(candidates);
     });
     return () => unsubscribe();
-  }, [electionCandidatesRef]);
+  }, [electionCandidatesRef, allPlayers]);
   
   // Listen for player's vote
   React.useEffect(() => {
@@ -338,7 +338,7 @@ export function Game() {
         });
     }
 
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, userRef, database, president, gameState?.role]);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, gameState?.role, playerPublicRef, user, userRef, database, president]);
 
 
   const getXpForNextLevel = (level: number) => {
