@@ -212,5 +212,3 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
     </header>
   );
 }
-
-    
