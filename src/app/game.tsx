@@ -260,12 +260,24 @@ export function Game() {
         netWorth: gameState.netWorth,
         avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
         level: gameState.playerLevel,
-        role: gameState.role
+        role: gameState.role,
     };
 
-    set(playerPublicRef, publicData);
+    // This logic ensures an admin always appears as an admin publicly
+    // unless they are also the president, in which case that takes precedence.
+    let finalRole: PlayerPublicData['role'] = 'player';
+    if (gameState.role === 'admin') {
+        finalRole = 'admin';
+    } 
 
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, gameState?.role, playerPublicRef, user, userRef, database]);
+    const finalPublicData = {
+      ...publicData,
+      role: finalRole,
+    };
+
+    set(playerPublicRef, finalPublicData);
+
+  }, [gameState, playerPublicRef, user, userRef, database]);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -1050,7 +1062,7 @@ export function Game() {
   }
 
   const handleAdminSendItem = (itemName: string, quantity: number, targetUid: string) => {
-    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2')) return;
+    if (!user || gameState?.role !== 'admin') return;
 
     const newContractRef = push(ref(database, 'contracts'));
     const productInfo = encyclopediaData.find(e => e.name === itemName);
@@ -1076,7 +1088,7 @@ export function Game() {
   };
 
   const handleAdminSendMoney = (amount: number, targetUid: string) => {
-    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || amount <= 0 || !targetUid) return;
+    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
 
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -1101,7 +1113,7 @@ export function Game() {
   }
 
   const handleAdminSendStars = (amount: number, targetUid: string) => {
-    if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || amount <= 0 || !targetUid) return;
+    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
     
     const targetUserRef = ref(database, `users/${targetUid}`);
     runTransaction(targetUserRef, (userData) => {
@@ -1122,7 +1134,7 @@ export function Game() {
   }
   
     const handleAdminSetRole = (uid: string, role: 'player' | 'admin') => {
-        if (!user || (gameState?.role !== 'admin' && gameState?.uid !== 'nfw3CtiEyBWZkXCnh7wderFbFFA2') || !uid) return;
+        if (!user || gameState?.role !== 'admin' || !uid) return;
         const targetUserRef = ref(database, `users/${uid}`);
         runTransaction(targetUserRef, (userData) => {
             if (userData) {
