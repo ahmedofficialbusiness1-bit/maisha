@@ -322,7 +322,7 @@ export function Game() {
         });
     }
 
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, userRef, database, president, gameState.role]);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, userRef, database, president, gameState?.role]);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -1381,7 +1381,7 @@ export function Game() {
     }).then(({ committed }) => {
         if (committed) {
             const candidateRef = ref(database, `election/candidates/${gameState.uid}`);
-            const candidateData = {
+            const candidateData: PresidentialCandidate = {
                 uid: gameState.uid,
                 username: gameState.username,
                 avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
@@ -1814,3 +1814,4 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
     
 
     
+
