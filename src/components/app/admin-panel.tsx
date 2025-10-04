@@ -677,25 +677,46 @@ function PresidencyTools({ onAdminAppointPresident, onAdminRemovePresident, pres
                                         </Avatar>
                                         <span className="text-sm font-semibold">{candidate.username}</span>
                                     </div>
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button size="icon" variant="destructive" className="h-7 w-7">
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Ondoa Mgombea?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    Una uhakika unataka kumwondoa {candidate.username} kwenye orodha ya wagombea? Kitendo hiki hakiwezi kutenduliwa.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Ghairi</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => onAdminRemoveCandidate(candidate.uid)}>Ondoa</AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                                    <div className="flex items-center gap-2">
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button size="icon" variant="ghost" className="h-7 w-7 text-green-400 hover:bg-green-500/10 hover:text-green-300">
+                                                    <Crown className="h-4 w-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Mteue Rais?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Una uhakika unataka kumteua {candidate.username} kuwa Rais? Hii itamfanya kuwa kiongozi mkuu mara moja.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Ghairi</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => onAdminAppointPresident(candidate.uid)} className="bg-green-600 hover:bg-green-700">Idhinisha</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button size="icon" variant="destructive" className="h-7 w-7">
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Ondoa Mgombea?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Una uhakika unataka kumwondoa {candidate.username} kwenye orodha ya wagombea? Kitendo hiki hakiwezi kutenduliwa.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Ghairi</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => onAdminRemoveCandidate(candidate.uid)}>Ondoa</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </div>
                                 </div>
                             )) : (
                                 <p className="text-sm text-center text-gray-500 py-4">Hakuna wagombea kwa sasa.</p>
@@ -740,7 +761,7 @@ function PresidencyTools({ onAdminAppointPresident, onAdminRemovePresident, pres
                          {/* Remove President */}
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button variant="destructive" className="w-full">
+                                <Button variant="destructive" className="w-full" disabled={!president}>
                                     Mvunjie Urais
                                 </Button>
                             </AlertDialogTrigger>
