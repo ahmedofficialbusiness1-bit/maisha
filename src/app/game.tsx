@@ -1412,7 +1412,7 @@ export function Game() {
   };
 
   const handleVote = (candidateUid: string) => {
-    if (!user || playerVote || electionStatus === 'closed') {
+    if (!user || playerVote || electionStatus !== 'open') {
         toast({ variant: 'destructive', title: 'Huwezi Kupiga Kura', description: playerVote ? 'Umeshapiga kura tayari.' : 'Uchaguzi umefungwa.' });
         return;
     }
@@ -1455,9 +1455,21 @@ const handleAdminRemoveCandidate = (uid: string) => {
 
 const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
     if (gameState?.role !== 'admin') return;
+    
     const statusRef = ref(database, 'election/status');
+    const votesRef = ref(database, 'election/votes');
+    const candidatesRef = ref(database, 'election/candidates');
+
     set(statusRef, status);
-    toast({ title: `Election Status: ${status.toUpperCase()}` });
+    
+    // If opening a new election, clear all old votes and candidates for a fresh start
+    if (status === 'open') {
+        remove(votesRef);
+        remove(candidatesRef);
+        toast({ title: 'Election is Now OPEN', description: "Old votes and candidates have been cleared." });
+    } else {
+        toast({ title: `Election Status: ${status.toUpperCase()}` });
+    }
 };
 
 

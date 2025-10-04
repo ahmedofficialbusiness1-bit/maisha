@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark, FileSignature, Building, Crown, Package, Briefcase, Star } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark, FileSignature, Building, Crown, Package, Briefcase, Star, AlertCircle } from 'lucide-react';
 import type { InventoryItem } from './inventory';
 import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
 import { cn } from '@/lib/utils';
@@ -709,9 +709,10 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                                 size="sm" 
                                                 variant={playerVote === candidate.uid ? "secondary" : "outline"}
                                                 onClick={() => onVote(candidate.uid)}
-                                                disabled={!!playerVote || electionStatus === 'closed'}
+                                                disabled={!!playerVote || electionStatus !== 'open'}
+                                                className="w-28"
                                             >
-                                                {playerVote === candidate.uid ? "Umepiga Kura" : `Piga Kura (${candidate.votes})`}
+                                                {playerVote === candidate.uid ? "Umepiga Kura" : `Piga Kura (${candidate.votes || 0})`}
                                             </Button>
                                              <AccordionTrigger className='p-2 hover:bg-gray-700 rounded-md [&[data-state=open]>svg]:text-blue-400'>
                                                 <span className='sr-only'>Fungua Sera</span>
@@ -730,7 +731,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         <Dialog open={isCandidacyDialogOpen} onOpenChange={setIsCandidacyDialogOpen}>
                             <DialogTrigger asChild>
                                 <Button className="w-full bg-blue-600 hover:bg-blue-700" disabled={electionStatus === 'closed'}>
-                                <span className='flex items-center gap-2'>Gombea Urais <span className='font-bold flex items-center'>(10,000 <Star className='h-4 w-4 ml-1'/>)</span></span>
+                                    <span className='flex items-center gap-2'>Gombea Urais <span className='font-bold flex items-center'>(10,000 <Star className='h-4 w-4 ml-1'/>)</span></span>
                                 </Button>
                             </DialogTrigger>
                              <DialogContent className="bg-gray-900 border-gray-700 text-white">
@@ -762,6 +763,12 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
+                         {electionStatus === 'closed' && (
+                            <div className='text-center text-sm text-yellow-400 p-2 bg-yellow-900/30 rounded-md flex items-center justify-center gap-2'>
+                                <AlertCircle className='h-4 w-4'/>
+                                Dirisha la ugombea limefungwa kwa sasa.
+                            </div>
+                        )}
                      </div>
                 </CardContent>
             </Card>
