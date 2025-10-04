@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Separator } from '../ui/separator';
+import type { PlayerPublicData } from '@/firebase/database/use-all-players';
 
 
 export type PlayerListing = {
@@ -174,9 +175,11 @@ interface TradeMarketProps {
   marketShareListings: MarketShareListing[];
   onRunForPresidency: () => void;
   presidentialCandidates: PresidentialCandidate[];
+  president: PlayerPublicData | null;
+  electionStatus: 'open' | 'closed';
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName, marketShareListings, onRunForPresidency, presidentialCandidates }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName, marketShareListings, onRunForPresidency, presidentialCandidates, president, electionStatus }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -633,15 +636,21 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                 <CardTitle className="flex items-center gap-3"><Crown className="text-yellow-400" /> Uongozi wa Sasa</CardTitle>
             </CardHeader>
             <CardContent className="flex items-center gap-4">
-                <Avatar className="h-16 w-16 border-4 border-yellow-400">
-                    <AvatarImage src="https://picsum.photos/seed/president/100/100" alt="President" />
-                    <AvatarFallback>P</AvatarFallback>
-                </Avatar>
-                <div>
-                    <h3 className="text-xl font-bold">Rais Mchezaji Mfano</h3>
-                    <p className="text-sm text-gray-400">Muda wa uongozi umebaki: Siku 25</p>
-                    <p className="text-sm text-gray-300 mt-1">Sera: Kodi ya 5% kwenye mauzo, Ruzuku kwa wakulima wa mahindi.</p>
-                </div>
+                 {president ? (
+                    <>
+                        <Avatar className="h-16 w-16 border-4 border-yellow-400">
+                            <AvatarImage src={president.avatar} alt={president.username} />
+                            <AvatarFallback>{president.username.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <h3 className="text-xl font-bold">{president.username}</h3>
+                            <p className="text-sm text-gray-400">Muda wa uongozi umebaki: Siku 25</p>
+                            <p className="text-sm text-gray-300 mt-1">Sera: Kodi ya 5% kwenye mauzo, Ruzuku kwa wakulima wa mahindi.</p>
+                        </div>
+                    </>
+                ) : (
+                     <p className="text-gray-400">Hakuna Rais aliyechaguliwa kwa sasa.</p>
+                )}
             </CardContent>
         </Card>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -657,7 +666,11 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             <Card className="lg:col-span-2 bg-gray-800/60 border-gray-700">
                 <CardHeader>
                     <CardTitle>Uchaguzi Ujao</CardTitle>
-                    <CardDescription>Uchaguzi unafanyika kila baada ya siku 30. Usajili unafunguliwa siku 7 kabla.</CardDescription>
+                    <CardDescription>
+                        {electionStatus === 'open' 
+                            ? "Dirisha la ugombea liko wazi! Jisajili sasa." 
+                            : "Dirisha la ugombea limefungwa. Subiri uchaguzi ujao."}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                      <div className="space-y-3">
@@ -680,7 +693,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                             )}
                         </div>
                         <Separator className="bg-gray-600 my-3"/>
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={onRunForPresidency}>
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={onRunForPresidency} disabled={electionStatus === 'closed'}>
                            <span className='flex items-center gap-2'>Gombea Urais <span className='font-bold flex items-center'>(10,000 <Star className='h-4 w-4 ml-1'/>)</span></span>
                         </Button>
                      </div>

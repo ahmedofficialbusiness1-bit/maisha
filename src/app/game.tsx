@@ -74,6 +74,8 @@ export function Game() {
   const [contractListings, setContractListings] = React.useState<ContractListing[]>([]);
   const [marketShareListings, setMarketShareListings] = React.useState<MarketShareListing[]>([]);
   const [presidentialCandidates, setPresidentialCandidates] = React.useState<PresidentialCandidate[]>([]);
+    const [president, setPresident] = React.useState<PlayerPublicData | null>(null);
+    const [electionStatus, setElectionStatus] = React.useState<'open' | 'closed'>('closed');
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
@@ -110,7 +112,7 @@ export function Game() {
   const contractsRef = React.useMemo(() => ref(database, 'contracts'), [database]);
   const marketSharesRef = React.useMemo(() => ref(database, 'marketShares'), [database]);
   const chatMetadataRef = React.useMemo(() => ref(database, 'chat-metadata'), [database]);
-  const electionCandidatesRef = React.useMemo(() => ref(database, 'election/candidates'), [database]);
+  const electionRef = React.useMemo(() => ref(database, 'election'), [database]);
 
   
   const handleSetView = React.useCallback((newView: View) => {
@@ -255,27 +257,51 @@ export function Game() {
     return () => unsubscribe();
   }, [marketSharesRef]);
 
-  // Listen for presidential candidates
+  // Listen for election changes
   React.useEffect(() => {
-    if (!electionCandidatesRef) return;
-    const unsubscribe = onValue(electionCandidatesRef, (snapshot) => {
-        const candidatesData = snapshot.val();
-        const candidates: PresidentialCandidate[] = candidatesData 
-            ? Object.keys(candidatesData).map(uid => ({ ...candidatesData[uid], uid })) 
-            : [];
-        setPresidentialCandidates(candidates);
+    if (!electionRef) return;
+    const unsubscribe = onValue(electionRef, (snapshot) => {
+        const electionData = snapshot.val();
+        if (electionData) {
+            // Candidates
+            const candidatesData = electionData.candidates;
+            const candidates: PresidentialCandidate[] = candidatesData 
+                ? Object.keys(candidatesData).map(uid => ({ ...candidatesData[uid], uid })) 
+                : [];
+            setPresidentialCandidates(candidates);
+
+            // President
+            const presidentUid = electionData.president;
+            if (presidentUid && allPlayers) {
+                const presidentData = allPlayers.find(p => p.uid === presidentUid);
+                setPresident(presidentData || null);
+            } else {
+                setPresident(null);
+            }
+            
+            // Status
+            setElectionStatus(electionData.status || 'closed');
+        } else {
+            setPresidentialCandidates([]);
+            setPresident(null);
+            setElectionStatus('closed');
+        }
     });
     return () => unsubscribe();
-}, [electionCandidatesRef]);
+}, [electionRef, allPlayers]);
 
 
   // Update public player data (RTDB) whenever critical info changes
   React.useEffect(() => {
     if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef || !userRef) return;
     
-    // Determine role - this could be more complex later
-    const currentRole = gameState.role || 'player';
-
+    let currentRole = gameState.role || 'player';
+    if (president?.uid === gameState.uid) {
+        currentRole = 'president';
+    } else if (gameState.role === 'president') {
+        currentRole = 'player'; // Demote if no longer president
+    }
+    
     const publicData: PlayerPublicData = {
         uid: gameState.uid,
         username: gameState.username,
@@ -287,7 +313,6 @@ export function Game() {
 
     set(playerPublicRef, publicData);
     
-    // Update local game state if role changed (this should be a transaction)
     if (gameState.role !== currentRole) {
         runTransaction(userRef, (currentData) => {
             if (currentData) {
@@ -297,7 +322,7 @@ export function Game() {
         });
     }
 
-  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, userRef, database, gameState?.role]);
+  }, [gameState?.uid, gameState?.username, gameState?.netWorth, gameState?.playerLevel, gameState?.avatarUrl, playerPublicRef, user, userRef, database, president, gameState.role]);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -1330,7 +1355,10 @@ export function Game() {
   }, [companyData, userRef, gameState, user, database]);
   
   const handleRunForPresidency = () => {
-    if (!userRef || !gameState) return;
+    if (!userRef || !gameState || electionStatus === 'closed') {
+        toast({ variant: 'destructive', title: 'Dirisha la Ugombea Limefungwa', description: 'Huwezi kugombea kwa sasa, subiri dirisha lifunguliwe.'});
+        return;
+    }
 
     const cost = 10000;
     if (gameState.stars < cost) {
@@ -1353,7 +1381,7 @@ export function Game() {
     }).then(({ committed }) => {
         if (committed) {
             const candidateRef = ref(database, `election/candidates/${gameState.uid}`);
-            const candidateData: PresidentialCandidate = {
+            const candidateData = {
                 uid: gameState.uid,
                 username: gameState.username,
                 avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
@@ -1715,6 +1743,7 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
                     inventory={gameState.inventory || []} 
                     stars={gameState.stars}
                     playerRank={currentPlayerRank}
+                    isPresident={president?.uid === user.uid}
                     onBuild={handleBuild} 
                     onStartProduction={handleStartProduction} 
                     onStartSelling={handleStartSelling} 
@@ -1732,7 +1761,7 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} presidentialCandidates={presidentialCandidates} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} presidentialCandidates={presidentialCandidates} president={president} electionStatus={electionStatus} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
@@ -1785,4 +1814,3 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
     
 
     
-

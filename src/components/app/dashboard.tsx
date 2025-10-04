@@ -20,7 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane, Rocket, ShieldCheck, Search, Store, ShoppingCart, Lock, Award, AlertTriangle } from 'lucide-react';
+import { Factory, Leaf, PlusCircle, Settings, Clock, CheckCircle, Gem, Hammer, Mountain, Droplets, Zap, ToyBrick, Star, Trash2, ChevronsUp, Tractor, Drumstick, Beef, GlassWater, Utensils, Wheat, ArrowLeft, Users, Wrench, FileText, ScrollText, Shirt, Building2, Watch, Glasses, FlaskConical, CircleDollarSign, Monitor, Tablet, Smartphone, Laptop, Cpu, Battery, MemoryStick, Tv, Ship, Car, Bike, Plane, Rocket, ShieldCheck, Search, Store, ShoppingCart, Lock, Award, AlertTriangle, Crown } from 'lucide-react';
 import type { Recipe } from '@/lib/recipe-data';
 import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
@@ -656,6 +656,7 @@ export interface DashboardProps {
     inventory: InventoryItem[];
     stars: number;
     playerRank: number;
+    isPresident: boolean;
     onBuild: (slotIndex: number, building: BuildingType) => void;
     onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
     onStartSelling: (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => void;
@@ -676,6 +677,7 @@ export function Dashboard({
     inventory, 
     stars,
     playerRank,
+    isPresident,
     onBuild, 
     onStartProduction, 
     onStartSelling, 
@@ -1022,6 +1024,9 @@ export function Dashboard({
     const qualityUpgradeInfo = getQualityUpgradeInfo();
 
     const getSpecialMessage = () => {
+        if (isPresident) {
+            return { title: "You are the President!", description: "You hold the highest office. Lead with wisdom and strength." };
+        }
         if (playerRank <= 0) return null;
         switch (playerRank) {
             case 1:
@@ -1048,10 +1053,10 @@ export function Dashboard({
       </div>
 
       {specialMessage && (
-        <Alert variant="destructive" className="border-yellow-500/50 bg-yellow-900/40 text-yellow-200">
-            <AlertTriangle className="h-4 w-4 !text-yellow-300" />
-            <AlertTitle className="text-yellow-200">{specialMessage.title}</AlertTitle>
-            <AlertDescription className="text-yellow-300">
+        <Alert variant="destructive" className={cn(isPresident ? "border-blue-500/50 bg-blue-900/40 text-blue-200" : "border-yellow-500/50 bg-yellow-900/40 text-yellow-200")}>
+             {isPresident ? <Crown className="h-4 w-4 !text-blue-300" /> : <AlertTriangle className="h-4 w-4 !text-yellow-300" />}
+            <AlertTitle className={cn(isPresident ? "text-blue-200" : "text-yellow-200")}>{specialMessage.title}</AlertTitle>
+            <AlertDescription className={cn(isPresident ? "text-blue-300" : "text-yellow-300")}>
                 {specialMessage.description}
             </AlertDescription>
         </Alert>
@@ -1630,5 +1635,3 @@ const formatTime = (ms: number) => {
     
 
     
-
-
