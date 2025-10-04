@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark, FileSignature, Building, Crown, Package, Briefcase } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, ShieldCheck, Search, FileText, LandPlot, Landmark, FileSignature, Building, Crown, Package, Briefcase, Star } from 'lucide-react';
 import type { InventoryItem } from './inventory';
 import { encyclopediaData, type EncyclopediaEntry } from '@/lib/encyclopedia-data';
 import { cn } from '@/lib/utils';
@@ -104,6 +104,13 @@ export type BondListing = {
     imageHint: string;
 };
 
+export type PresidentialCandidate = {
+  uid: string;
+  username: string;
+  avatar: string;
+  votes: number;
+}
+
 function PriceTicker({ inventory }: { inventory: InventoryItem[] }) {
   const tickerItems = React.useMemo(() => {
     const allMarketItems = encyclopediaData.filter(item => item.category !== 'Utafiti' && item.category !== 'Documents' && !item.name.endsWith('Mashine'));
@@ -165,9 +172,11 @@ interface TradeMarketProps {
   onBuyFromMarket: (listing: PlayerListing, quantity: number) => void;
   playerName: string;
   marketShareListings: MarketShareListing[];
+  onRunForPresidency: () => void;
+  presidentialCandidates: PresidentialCandidate[];
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName, marketShareListings }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName, marketShareListings, onRunForPresidency, presidentialCandidates }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -654,22 +663,25 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                      <div className="space-y-3">
                         <h4 className="font-semibold">Wagombea Waliojitokeza:</h4>
                         <div className="space-y-2">
-                             {['Mgombea A', 'Mgombea B', 'Mgombea C'].map((candidate, index) => (
-                                <div key={index} className="flex items-center justify-between p-2 bg-gray-900/50 rounded-md">
+                             {presidentialCandidates.map((candidate) => (
+                                <div key={candidate.uid} className="flex items-center justify-between p-2 bg-gray-900/50 rounded-md">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-8 w-8">
-                                            <AvatarImage src={`https://picsum.photos/seed/${candidate}/40/40`} alt={candidate} />
-                                            <AvatarFallback>{candidate.charAt(0)}</AvatarFallback>
+                                            <AvatarImage src={candidate.avatar} alt={candidate.username} />
+                                            <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
                                         </Avatar>
-                                        <span>{candidate}</span>
+                                        <span>{candidate.username}</span>
                                     </div>
                                     <Button size="sm" variant="outline">Piga Kura</Button>
                                 </div>
                             ))}
+                            {presidentialCandidates.length === 0 && (
+                                <p className='text-sm text-center text-gray-400 py-4'>Hakuna aliyejitokeza kugombea bado.</p>
+                            )}
                         </div>
                         <Separator className="bg-gray-600 my-3"/>
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                            Gombea Urais
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={onRunForPresidency}>
+                           <span className='flex items-center gap-2'>Gombea Urais <span className='font-bold flex items-center'>(10,000 <Star className='h-4 w-4 ml-1'/>)</span></span>
                         </Button>
                      </div>
                 </CardContent>

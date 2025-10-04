@@ -6,7 +6,7 @@ import { AppHeader } from '@/components/app/header';
 import { AppFooter } from '@/components/app/footer';
 import { Dashboard, type BuildingSlot } from '@/components/app/dashboard';
 import { Inventory, type InventoryItem } from '@/components/app/inventory';
-import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type MarketShareListing } from '@/components/app/trade-market';
+import { TradeMarket, type PlayerListing, type StockListing, type BondListing, type MarketShareListing, type PresidentialCandidate } from '@/components/app/trade-market';
 import { Encyclopedia } from '@/components/app/encyclopedia';
 import type { Recipe } from '@/lib/recipe-data';
 import { buildingData } from '@/lib/building-data';
@@ -72,6 +72,7 @@ export function Game() {
   const [playerListings, setPlayerListings] = React.useState<PlayerListing[]>([]);
   const [contractListings, setContractListings] = React.useState<ContractListing[]>([]);
   const [marketShareListings, setMarketShareListings] = React.useState<MarketShareListing[]>([]);
+  const [presidentialCandidates, setPresidentialCandidates] = React.useState<PresidentialCandidate[]>([]);
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
@@ -108,6 +109,7 @@ export function Game() {
   const contractsRef = React.useMemo(() => ref(database, 'contracts'), [database]);
   const marketSharesRef = React.useMemo(() => ref(database, 'marketShares'), [database]);
   const chatMetadataRef = React.useMemo(() => ref(database, 'chat-metadata'), [database]);
+  const electionCandidatesRef = React.useMemo(() => ref(database, 'election/candidates'), [database]);
 
   
   const handleSetView = React.useCallback((newView: View) => {
@@ -251,6 +253,19 @@ export function Game() {
     });
     return () => unsubscribe();
   }, [marketSharesRef]);
+
+  // Listen for presidential candidates
+  React.useEffect(() => {
+    if (!electionCandidatesRef) return;
+    const unsubscribe = onValue(electionCandidatesRef, (snapshot) => {
+        const candidates: PresidentialCandidate[] = [];
+        snapshot.forEach(childSnapshot => {
+            candidates.push(childSnapshot.val() as PresidentialCandidate);
+        });
+        setPresidentialCandidates(candidates);
+    });
+    return () => unsubscribe();
+}, [electionCandidatesRef]);
 
 
   // Update public player data (RTDB) whenever critical info changes
@@ -1313,6 +1328,46 @@ export function Game() {
     });
   }, [companyData, userRef, gameState, user, database]);
   
+  const handleRunForPresidency = () => {
+    if (!userRef || !gameState || !allPlayers) return;
+
+    const cost = 10000;
+    if (gameState.stars < cost) {
+        toast({ variant: 'destructive', title: 'Nyota Hazitoshi', description: `Unahitaji nyota ${cost.toLocaleString()} kununua fomu ya urais.`});
+        return;
+    }
+    
+    const isAlreadyCandidate = presidentialCandidates.some(c => c.uid === gameState.uid);
+    if (isAlreadyCandidate) {
+        toast({ variant: 'destructive', title: 'Tayari Wewe ni Mgombea', description: 'Huwezi kugombea mara mbili katika uchaguzi mmoja.' });
+        return;
+    }
+
+    runTransaction(userRef, (currentData) => {
+        if (currentData && currentData.stars >= cost) {
+            currentData.stars -= cost;
+            return currentData;
+        }
+        return; // Abort
+    }).then(({ committed }) => {
+        if (committed) {
+            const playerPublicData = allPlayers.find(p => p.uid === gameState.uid);
+            if (playerPublicData) {
+                const candidateRef = ref(database, `election/candidates/${gameState.uid}`);
+                const candidateData: PresidentialCandidate = {
+                    uid: playerPublicData.uid,
+                    username: playerPublicData.username,
+                    avatar: playerPublicData.avatar,
+                    votes: 0,
+                };
+                set(candidateRef, candidateData);
+                toast({ title: 'Umefanikiwa Kugombea!', description: 'Jina lako sasa lipo kwenye orodha ya wagombea urais.' });
+            }
+        } else {
+             toast({ variant: 'destructive', title: 'Imeshindikana', description: `Huna nyota ${cost.toLocaleString()} za kutosha.`});
+        }
+    });
+};
 
 
   // Game loop for processing finished activities
@@ -1651,7 +1706,7 @@ export function Game() {
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} presidentialCandidates={presidentialCandidates} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':

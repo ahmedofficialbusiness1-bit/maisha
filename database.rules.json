@@ -35,6 +35,21 @@
     "marketShares": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+    "election": {
+      ".read": "auth != null",
+      "candidates": {
+        ".write": "auth != null",
+        "$uid": {
+           ".validate": "!data.exists() || data.child('uid').val() === $uid"
+        }
+      },
+      "votes": {
+         ".write": "auth != null"
+      },
+      "president": {
+         ".write": "auth != null && root.child('players').child(auth.uid).child('role').val() === 'admin'"
+      }
     }
   }
 }
