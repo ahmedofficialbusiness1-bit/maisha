@@ -38,7 +38,7 @@ export type UserData = {
   playerXP: number;
   privateNotes: string;
   status: 'online' | 'offline';
-  role: 'player' | 'admin' | 'president';
+  role: 'player' | 'admin';
   lastSeen: number;
   lastPublicRead: Record<string, number>;
   companyProfile: CompanyProfile;
@@ -73,7 +73,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     ];
     
   let role: 'player' | 'admin' = 'player';
-  if (uid === '7IHauUXBXjUhDJ9YUVVs97fwO9o1' || email === 'lamerckalbert@gmail.com') {
+  if (uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || uid === '7IHauUXBXjUhDJ9YUVVs97fwO9o1') {
     role = 'admin';
   }
   

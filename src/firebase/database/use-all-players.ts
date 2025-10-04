@@ -8,7 +8,7 @@ export type PlayerPublicData = {
     netWorth: number;
     avatar: string;
     level: number;
-    role: 'player' | 'admin' | 'president';
+    role: 'player' | 'admin';
     lastSeen?: number;
 };
 

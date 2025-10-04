@@ -30,7 +30,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Separator } from '../ui/separator';
-import type { PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Textarea } from '../ui/textarea';
 
@@ -108,14 +107,6 @@ export type BondListing = {
     imageHint: string;
 };
 
-export type PresidentialCandidate = {
-  uid: string;
-  username: string;
-  avatar: string;
-  votes: number;
-  policies: string;
-}
-
 function PriceTicker({ inventory }: { inventory: InventoryItem[] }) {
   const tickerItems = React.useMemo(() => {
     const allMarketItems = encyclopediaData.filter(item => item.category !== 'Utafiti' && item.category !== 'Documents' && !item.name.endsWith('Mashine'));
@@ -177,15 +168,9 @@ interface TradeMarketProps {
   onBuyFromMarket: (listing: PlayerListing, quantity: number) => void;
   playerName: string;
   marketShareListings: MarketShareListing[];
-  onRunForPresidency: (policies: string) => void;
-  presidentialCandidates: PresidentialCandidate[];
-  president: PlayerPublicData | null;
-  electionStatus: 'open' | 'closed';
-  onVote: (candidateUid: string) => void;
-  playerVote: string | null;
 }
 
-export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName, marketShareListings, onRunForPresidency, presidentialCandidates, president, electionStatus, onVote, playerVote }: TradeMarketProps) {
+export function TradeMarket({ playerListings, stockListings, bondListings, inventory, onBuyStock, onBuyFromMarket, playerName, marketShareListings }: TradeMarketProps) {
   const [viewMode, setViewMode] = React.useState<'list' | 'exchange'>('list');
   const [selectedProduct, setSelectedProduct] = React.useState<EncyclopediaEntry | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -198,10 +183,6 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
   const [buyQuantity, setBuyQuantity] = React.useState(0);
   const [selectedListing, setSelectedListing] = React.useState<PlayerListing | null>(null);
   
-  const [isCandidacyDialogOpen, setIsCandidacyDialogOpen] = React.useState(false);
-  const [policies, setPolicies] = React.useState('');
-
-
   const handleOpenBuyStockDialog = (stock: (StockListing & { sharesAvailable: number })) => {
     setSelectedStock(stock);
     setBuyStockQuantity(1);
@@ -242,15 +223,6 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
         setIsBuyDialogOpen(false);
     }
   }
-
-  const handleConfirmCandidacy = () => {
-    if(policies.trim()) {
-        onRunForPresidency(policies);
-        setIsCandidacyDialogOpen(false);
-        setPolicies('');
-    }
-  }
-
 
   const filteredCategories = React.useMemo(() => {
     if (!searchTerm) {
@@ -646,135 +618,6 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             </Card>
         </div>
     );
-    
-    const renderPresidencyMarket = () => (
-    <div className="p-1 sm:p-2 md:p-4 lg:p-6 space-y-6">
-        <Card className="bg-gray-800/60 border-gray-700">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-3"><Crown className="text-yellow-400" /> Uongozi wa Sasa</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center gap-4">
-                 {president ? (
-                    <>
-                        <Avatar className="h-16 w-16 border-4 border-yellow-400">
-                            <AvatarImage src={president.avatar} alt={president.username} />
-                            <AvatarFallback>{president.username.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <h3 className="text-xl font-bold">{president.username}</h3>
-                            <p className="text-sm text-gray-400">Muda wa uongozi umebaki: Siku 25</p>
-                            <p className="text-sm text-gray-300 mt-1">Sera: Kodi ya 5% kwenye mauzo, Ruzuku kwa wakulima wa mahindi.</p>
-                        </div>
-                    </>
-                ) : (
-                     <p className="text-gray-400">Hakuna Rais aliyechaguliwa kwa sasa.</p>
-                )}
-            </CardContent>
-        </Card>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-1 bg-gray-800/60 border-gray-700">
-                <CardHeader>
-                    <CardTitle>Hazina ya Taifa</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-3xl font-bold text-green-400">$1,234,567.89</p>
-                    <p className="text-sm text-gray-400 mt-2">Kiwango cha kodi cha sasa: <span className="font-bold">5%</span></p>
-                </CardContent>
-            </Card>
-            <Card className="lg:col-span-2 bg-gray-800/60 border-gray-700">
-                <CardHeader>
-                    <CardTitle>Uchaguzi Ujao</CardTitle>
-                    <CardDescription>
-                        {electionStatus === 'open' 
-                            ? "Dirisha la ugombea liko wazi! Jisajili sasa." 
-                            : "Dirisha la ugombea limefungwa. Subiri uchaguzi ujao."}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                     <div className="space-y-3">
-                        <h4 className="font-semibold">Wagombea Waliojitokeza:</h4>
-                        <Accordion type="single" collapsible className="w-full">
-                            {presidentialCandidates.length > 0 ? presidentialCandidates.map((candidate) => (
-                                <AccordionItem value={candidate.uid} key={candidate.uid} className='border-b-0'>
-                                    <div  className="flex items-center justify-between p-2 bg-gray-900/50 rounded-t-md">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage src={candidate.avatar} alt={candidate.username} />
-                                                <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <span className='font-semibold'>{candidate.username}</span>
-                                        </div>
-                                        <div className='flex items-center gap-2'>
-                                            <Button 
-                                                size="sm" 
-                                                variant={playerVote === candidate.uid ? "secondary" : "outline"}
-                                                onClick={() => onVote(candidate.uid)}
-                                                disabled={!!playerVote || electionStatus !== 'open'}
-                                                className="w-28"
-                                            >
-                                                {playerVote === candidate.uid ? "Umepiga Kura" : `Piga Kura (${candidate.votes || 0})`}
-                                            </Button>
-                                             <AccordionTrigger className='p-2 hover:bg-gray-700 rounded-md [&[data-state=open]>svg]:text-blue-400'>
-                                                <span className='sr-only'>Fungua Sera</span>
-                                            </AccordionTrigger>
-                                        </div>
-                                    </div>
-                                    <AccordionContent className='p-4 bg-gray-800/60 rounded-b-md text-sm whitespace-pre-wrap'>
-                                       {candidate.policies || <p className='italic text-gray-500'>Hakuna sera zilizoainishwa.</p>}
-                                    </AccordionContent>
-                                </AccordionItem>
-                            )) : (
-                                <p className='text-sm text-center text-gray-400 py-4'>Hakuna aliyejitokeza kugombea bado.</p>
-                            )}
-                        </Accordion>
-                        <Separator className="bg-gray-600 my-3"/>
-                        <Dialog open={isCandidacyDialogOpen} onOpenChange={setIsCandidacyDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button className="w-full bg-blue-600 hover:bg-blue-700" disabled={electionStatus === 'closed'}>
-                                    <span className='flex items-center gap-2'>Gombea Urais <span className='font-bold flex items-center'>(10,000 <Star className='h-4 w-4 ml-1'/>)</span></span>
-                                </Button>
-                            </DialogTrigger>
-                             <DialogContent className="bg-gray-900 border-gray-700 text-white">
-                                <DialogHeader>
-                                <DialogTitle>Tangaza Sera Zako</DialogTitle>
-                                <DialogDescription>
-                                    Andika sera na ahadi zako kwa wananchi. Hii itawasaidia wapiga kura kufanya maamuzi. Unahitaji nyota 10,000 ili kuwasilisha fomu.
-                                </DialogDescription>
-                                </DialogHeader>
-                                <div className="py-4">
-                                    <Label htmlFor="policies" className="mb-2">Sera zako</Label>
-                                    <Textarea 
-                                        id="policies"
-                                        placeholder="Mfano: Nitapunguza kodi kwa 2%, nitaongeza ruzuku kwa wakulima..."
-                                        value={policies}
-                                        onChange={(e) => setPolicies(e.target.value)}
-                                        className="min-h-[150px] bg-gray-800 border-gray-600"
-                                    />
-                                </div>
-                                <DialogFooter>
-                                    <Button variant="outline" onClick={() => setIsCandidacyDialogOpen(false)}>Ghairi</Button>
-                                    <Button 
-                                        className="bg-blue-600 hover:bg-blue-700" 
-                                        onClick={handleConfirmCandidacy}
-                                        disabled={!policies.trim()}
-                                    >
-                                        Thibitisha Ugombea
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                         {electionStatus === 'closed' && (
-                            <div className='text-center text-sm text-yellow-400 p-2 bg-yellow-900/30 rounded-md flex items-center justify-center gap-2'>
-                                <AlertCircle className='h-4 w-4'/>
-                                Dirisha la ugombea limefungwa kwa sasa.
-                            </div>
-                        )}
-                     </div>
-                </CardContent>
-            </Card>
-        </div>
-    </div>
-    );
 
     const renderStockExchange = () => (
          <div className="p-1 sm:p-2 md:p-4 lg:p-6">
@@ -798,12 +641,11 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
       
         <Tabs defaultValue="commodities" className="w-full pt-4">
             <div className="px-4 sm:px-6">
-                <TabsList className="grid w-full grid-cols-5 bg-gray-800/80">
+                <TabsList className="grid w-full grid-cols-4 bg-gray-800/80">
                     <TabsTrigger value="commodities"><Package className='mr-2 h-4 w-4'/>Bidhaa</TabsTrigger>
                     <TabsTrigger value="stocks-ipo"><Landmark className='mr-2 h-4 w'/>Hisa (IPO)</TabsTrigger>
                     <TabsTrigger value="stock-exchange"><Briefcase className='mr-2 h-4 w'/>Soko la Hisa</TabsTrigger>
                     <TabsTrigger value="bonds"><FileText className='mr-2 h-4 w-4'/>Hatifungani</TabsTrigger>
-                    <TabsTrigger value="presidency"><Crown className='mr-2 h-4 w-4'/>Urais</TabsTrigger>
                 </TabsList>
             </div>
             <TabsContent value="commodities" className="mt-4">
@@ -817,9 +659,6 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
             </TabsContent>
             <TabsContent value="bonds" className="mt-4">
                 {renderBondsMarket()}
-            </TabsContent>
-             <TabsContent value="presidency" className="mt-4">
-                {renderPresidencyMarket()}
             </TabsContent>
         </Tabs>
     </div>

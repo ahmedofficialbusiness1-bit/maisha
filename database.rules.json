@@ -35,29 +35,6 @@
     "marketShares": {
       ".read": "auth != null",
       ".write": "auth != null"
-    },
-    "election": {
-      ".read": "auth != null",
-      "candidates": {
-        ".read": "auth != null",
-        ".write": "auth != null",
-        "$uid": {
-            ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')"
-        }
-      },
-      "votes": {
-         ".read": "auth != null",
-         "$uid": {
-           ".write": "auth != null && auth.uid === $uid && !data.exists()",
-           ".validate": "newData.isString()"
-         }
-      },
-      "president": {
-         ".write": "auth != null && root.child('players').child(auth.uid).child('role').val() === 'admin'"
-      },
-      "status": {
-        ".write": "auth != null && root.child('players').child(auth.uid).child('role').val() === 'admin'"
-      }
     }
   }
 }
