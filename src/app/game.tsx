@@ -613,7 +613,7 @@ export function Game() {
             read: false, 
             icon: 'production' 
          };
-         currentData.notifications = { ...(currentData.notifications || {}), [notifRef.key!]: newNotification };
+         currentData.notifications = { ...(currentData.notifications || {}), [newNotifRef.key!]: newNotification };
          
          return currentData;
      });
@@ -1330,7 +1330,7 @@ export function Game() {
   }, [companyData, userRef, gameState, user, database]);
   
   const handleRunForPresidency = () => {
-    if (!userRef || !gameState || !allPlayers) return;
+    if (!userRef || !gameState) return;
 
     const cost = 10000;
     if (gameState.stars < cost) {
@@ -1352,18 +1352,15 @@ export function Game() {
         return; // Abort
     }).then(({ committed }) => {
         if (committed) {
-            const playerPublicData = allPlayers.find(p => p.uid === gameState.uid);
-            if (playerPublicData) {
-                const candidateRef = ref(database, `election/candidates/${gameState.uid}`);
-                const candidateData: PresidentialCandidate = {
-                    uid: playerPublicData.uid,
-                    username: playerPublicData.username,
-                    avatar: playerPublicData.avatar,
-                    votes: 0,
-                };
-                set(candidateRef, candidateData);
-                toast({ title: 'Umefanikiwa Kugombea!', description: 'Jina lako sasa lipo kwenye orodha ya wagombea urais.' });
-            }
+            const candidateRef = ref(database, `election/candidates/${gameState.uid}`);
+            const candidateData: PresidentialCandidate = {
+                uid: gameState.uid,
+                username: gameState.username,
+                avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
+                votes: 0,
+            };
+            set(candidateRef, candidateData);
+            toast({ title: 'Umefanikiwa Kugombea!', description: 'Jina lako sasa lipo kwenye orodha ya wagombea urais.' });
         } else {
              toast({ variant: 'destructive', title: 'Imeshindikana', description: `Huna nyota ${cost.toLocaleString()} za kutosha.`});
         }
@@ -1760,5 +1757,6 @@ export function Game() {
     
 
     
+
 
 
