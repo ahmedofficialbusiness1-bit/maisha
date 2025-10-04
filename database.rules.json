@@ -39,6 +39,7 @@
     "election": {
       ".read": "auth != null",
       "candidates": {
+        ".read": "auth != null",
         ".write": "auth != null",
         "$uid": {
             ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')"
