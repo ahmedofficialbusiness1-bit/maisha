@@ -1457,13 +1457,11 @@ const handleAdminSetElectionStatus = (status: 'open' | 'closed') => {
     if (gameState?.role !== 'admin') return;
     
     const statusRef = ref(database, 'election/status');
-    const votesRef = ref(database, 'election/votes');
-    const candidatesRef = ref(database, 'election/candidates');
-
     set(statusRef, status);
     
-    // If opening a new election, clear all old votes and candidates for a fresh start
     if (status === 'open') {
+        const votesRef = ref(database, 'election/votes');
+        const candidatesRef = ref(database, 'election/candidates');
         remove(votesRef);
         remove(candidatesRef);
         toast({ title: 'Election is Now OPEN', description: "Old votes and candidates have been cleared." });
