@@ -46,11 +46,6 @@ const currencySenderSchema = z.object({
     targetUid: z.string().min(1, "Target UID is required."),
 });
 
-const setRoleFormSchema = z.object({
-    targetUid: z.string().min(1, 'Target UID is required.'),
-    role: z.enum(['player', 'admin', 'president']),
-});
-
 
 interface AdminPanelProps {
     onViewProfile: (playerId: string) => void;
@@ -325,10 +320,6 @@ function GameTools() {
         amount: 0,
         targetUid: '',
     };
-    const defaultRoleValues = {
-        targetUid: '',
-        role: 'player' as 'player' | 'admin' | 'president',
-    };
 
     // States for Item Sender
     const [isItemLoading, setIsItemLoading] = React.useState(false);
@@ -350,13 +341,6 @@ function GameTools() {
     const starsForm = useForm<z.infer<typeof currencySenderSchema>>({
         resolver: zodResolver(currencySenderSchema),
         defaultValues: defaultCurrencyValues,
-    });
-    
-    // States for Role Setter
-    const [isRoleLoading, setIsRoleLoading] = React.useState(false);
-    const roleForm = useForm<z.infer<typeof setRoleFormSchema>>({
-        resolver: zodResolver(setRoleFormSchema),
-        defaultValues: defaultRoleValues,
     });
 
   const onAdminSendItem = (itemName: string, quantity: number, targetUid: string) => {
@@ -403,26 +387,6 @@ function GameTools() {
       toast({ title: 'Stars Sent', description: `Sent ${amount} stars to user ${targetUid}.`});
   }
   
-  const onAdminAppointPresident = (uid: string) => {
-    const updates: Record<string, any> = {};
-    updates[`/election/presidentUid`] = uid;
-    update(ref(database), updates);
-  };
-
-  const onAdminSetRole = (targetUid: string, role: 'player' | 'admin' | 'president') => {
-      const targetUserRef = ref(database, `users/${targetUid}`);
-      runTransaction(targetUserRef, (userData) => {
-          if (userData) {
-              userData.role = role;
-          }
-          return userData;
-      });
-       if (role === 'president') {
-        onAdminAppointPresident(targetUid);
-      }
-      toast({ title: 'Role Set', description: `User ${targetUid} is now a(n) ${role}.`});
-  }
-
     const onSendItemSubmit = (values: z.infer<typeof itemSenderFormSchema>) => {
         setIsItemLoading(true);
         try {
@@ -463,19 +427,6 @@ function GameTools() {
             setIsStarsLoading(false);
         }
     };
-    
-     const onSetRoleSubmit = (values: z.infer<typeof setRoleFormSchema>) => {
-        setIsRoleLoading(true);
-        try {
-            onAdminSetRole(values.targetUid, values.role);
-            roleForm.reset(defaultRoleValues);
-        } catch (error) {
-             console.error("Failed to set role:", error);
-        } finally {
-            setIsRoleLoading(false);
-        }
-    };
-
     
     const items = encyclopediaData;
 
@@ -592,59 +543,6 @@ function GameTools() {
                         </Form>
                     </CardContent>
                 </Card>
-
-                 <Card className="bg-gray-800/60 border-gray-700">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                           <Users /> Set Player Role
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                         <Form {...roleForm}>
-                        <form onSubmit={roleForm.handleSubmit(onSetRoleSubmit)} className="space-y-6">
-                            <FormField
-                                control={roleForm.control}
-                                name="targetUid"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Target Player UID</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Enter player UID" {...field} className="bg-gray-700 border-gray-600" />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={roleForm.control}
-                                name="role"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Role</FormLabel>
-                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger className="bg-gray-700 border-gray-600">
-                                                    <SelectValue placeholder="Select a role" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="player">Player</SelectItem>
-                                                <SelectItem value="admin">Admin</SelectItem>
-                                                <SelectItem value="president">President</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <Button type="submit" className="w-full" disabled={isRoleLoading}>
-                                {isRoleLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Set Role
-                            </Button>
-                        </form>
-                    </Form>
-                    </CardContent>
-                </Card>
             </div>
 
             <div className="space-y-6">
@@ -756,10 +654,24 @@ function PresidencyTools({ president, electionState }: Pick<AdminPanelProps, 'pr
     const onAdminAppointPresident = (uid: string) => {
         const updates: Record<string, any> = {};
         updates[`/election/presidentUid`] = uid;
+        runTransaction(ref(database, `users/${uid}`), (userData) => {
+          if (userData) {
+              userData.role = 'president';
+          }
+          return userData;
+        });
         update(ref(database), updates);
     };
 
     const onAdminRemovePresident = () => {
+        if(president) {
+            runTransaction(ref(database, `users/${president.uid}`), (userData) => {
+                if(userData) {
+                    userData.role = 'player';
+                }
+                return userData;
+            });
+        }
         update(ref(database), { '/election/presidentUid': null });
     };
 
