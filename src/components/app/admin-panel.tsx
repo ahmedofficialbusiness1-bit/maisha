@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -22,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { getDatabase, ref, set, push, runTransaction, update } from 'firebase/database';
 
@@ -366,6 +367,11 @@ function GameTools() {
   };
 
   const onAdminSendMoney = (amount: number, targetUid: string) => {
+      if (!targetUid || typeof targetUid !== 'string' || targetUid.includes('Error')) {
+          console.error("Invalid targetUid for onAdminSendMoney:", targetUid);
+          toast({ variant: 'destructive', title: 'Invalid UID', description: 'Cannot send money to an invalid user UID.' });
+          return;
+      }
       const targetUserRef = ref(database, `users/${targetUid}`);
       runTransaction(targetUserRef, (userData) => {
           if (userData) {
@@ -377,6 +383,11 @@ function GameTools() {
   }
 
   const onAdminSendStars = (amount: number, targetUid: string) => {
+      if (!targetUid || typeof targetUid !== 'string' || targetUid.includes('Error')) {
+          console.error("Invalid targetUid for onAdminSendStars:", targetUid);
+          toast({ variant: 'destructive', title: 'Invalid UID', description: 'Cannot send stars to an invalid user UID.' });
+          return;
+      }
       const targetUserRef = ref(database, `users/${targetUid}`);
       runTransaction(targetUserRef, (userData) => {
           if (userData) {
