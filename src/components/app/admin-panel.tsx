@@ -26,6 +26,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { getDatabase, ref, set, push, runTransaction, update } from 'firebase/database';
+import type { Notification, Transaction } from '@/app/game';
 
 
 const simulationFormSchema = z.object({
@@ -45,6 +46,7 @@ const itemSenderFormSchema = z.object({
 const currencySenderSchema = z.object({
     amount: z.coerce.number().min(1, "Amount must be greater than 0."),
     targetUid: z.string().min(1, "Target UID is required."),
+    reason: z.string().optional(),
 });
 
 
@@ -320,6 +322,7 @@ function GameTools() {
     const defaultCurrencyValues = {
         amount: 0,
         targetUid: '',
+        reason: '',
     };
 
     // States for Item Sender
@@ -366,7 +369,7 @@ function GameTools() {
     toast({ title: 'Item Sent', description: `Sent a contract for ${quantity}x ${itemName} to user ${targetUid}.`});
   };
 
-  const onAdminSendMoney = (amount: number, targetUid: string) => {
+  const onAdminSendMoney = (amount: number, targetUid: string, reason: string) => {
       if (!targetUid || typeof targetUid !== 'string' || targetUid.includes('Error')) {
           console.error("Invalid targetUid for onAdminSendMoney:", targetUid);
           toast({ variant: 'destructive', title: 'Invalid UID', description: 'Cannot send money to an invalid user UID.' });
@@ -376,13 +379,32 @@ function GameTools() {
       runTransaction(targetUserRef, (userData) => {
           if (userData) {
               userData.money += amount;
+              const notifRef = push(ref(database, `users/${targetUid}/notifications`));
+              const newNotification: Notification = { 
+                  id: notifRef.key!, 
+                  message: reason ? `You received a gift of $${amount.toLocaleString()}! Reason: ${reason}` : `You received a gift of $${amount.toLocaleString()}!`,
+                  timestamp: Date.now(),
+                  read: false, 
+                  icon: 'purchase'
+              };
+              userData.notifications = { ...(userData.notifications || {}), [newNotification.id]: newNotification };
+              
+              const transRef = push(ref(database, `users/${targetUid}/transactions`));
+              const newTransaction: Transaction = {
+                   id: transRef.key!,
+                   type: 'income',
+                   amount,
+                   description: `Zawadi kutoka kwa Admin: ${reason || 'Gift from Admin'}`,
+                   timestamp: Date.now()
+              };
+               userData.transactions = { ...(userData.transactions || {}), [newTransaction.id]: newTransaction };
           }
           return userData;
       });
-      toast({ title: 'Money Sent', description: `Sent $${amount} to user ${targetUid}.`});
+      toast({ title: 'Money Sent', description: `Sent $${amount.toLocaleString()} to user ${targetUid}.`});
   }
 
-  const onAdminSendStars = (amount: number, targetUid: string) => {
+  const onAdminSendStars = (amount: number, targetUid: string, reason: string) => {
       if (!targetUid || typeof targetUid !== 'string' || targetUid.includes('Error')) {
           console.error("Invalid targetUid for onAdminSendStars:", targetUid);
           toast({ variant: 'destructive', title: 'Invalid UID', description: 'Cannot send stars to an invalid user UID.' });
@@ -392,10 +414,19 @@ function GameTools() {
       runTransaction(targetUserRef, (userData) => {
           if (userData) {
               userData.stars += amount;
+              const notifRef = push(ref(database, `users/${targetUid}/notifications`));
+              const newNotification: Notification = { 
+                  id: notifRef.key!, 
+                  message: reason ? `You received a gift of ${amount.toLocaleString()} stars! Reason: ${reason}` : `You received a gift of ${amount.toLocaleString()} stars!`,
+                  timestamp: Date.now(),
+                  read: false, 
+                  icon: 'purchase'
+              };
+              userData.notifications = { ...(userData.notifications || {}), [newNotification.id]: newNotification };
           }
           return userData;
       });
-      toast({ title: 'Stars Sent', description: `Sent ${amount} stars to user ${targetUid}.`});
+      toast({ title: 'Stars Sent', description: `Sent ${amount.toLocaleString()} stars to user ${targetUid}.`});
   }
   
     const onSendItemSubmit = (values: z.infer<typeof itemSenderFormSchema>) => {
@@ -418,7 +449,7 @@ function GameTools() {
     const onSendMoneySubmit = (values: z.infer<typeof currencySenderSchema>) => {
         setIsMoneyLoading(true);
         try {
-            onAdminSendMoney(values.amount, values.targetUid);
+            onAdminSendMoney(values.amount, values.targetUid, values.reason || 'Gift from Admin');
             moneyForm.reset(defaultCurrencyValues);
         } catch (error) {
             console.error("Failed to send money:", error);
@@ -430,7 +461,7 @@ function GameTools() {
     const onSendStarsSubmit = (values: z.infer<typeof currencySenderSchema>) => {
         setIsStarsLoading(true);
         try {
-             onAdminSendStars(values.amount, values.targetUid);
+             onAdminSendStars(values.amount, values.targetUid, values.reason || 'Gift from Admin');
             starsForm.reset(defaultCurrencyValues);
         } catch (error) {
              console.error("Failed to send stars:", error);
@@ -595,6 +626,19 @@ function GameTools() {
                                         </FormItem>
                                     )}
                                 />
+                                <FormField
+                                    control={moneyForm.control}
+                                    name="reason"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Sababu (Ujumbe wa Zawadi)</FormLabel>
+                                            <FormControl>
+                                                <Textarea placeholder="e.g., Hongera kwa kufikia Level 10!" {...field} className="bg-gray-700 border-gray-600"/>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                                 <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isMoneyLoading}>
                                     {isMoneyLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Send Money
@@ -637,6 +681,19 @@ function GameTools() {
                                             <FormLabel>Target Player UID</FormLabel>
                                             <FormControl>
                                                 <Input placeholder="Enter player UID" {...field} className="bg-gray-700 border-gray-600" />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                 <FormField
+                                    control={starsForm.control}
+                                    name="reason"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Sababu (Ujumbe wa Zawadi)</FormLabel>
+                                            <FormControl>
+                                                <Textarea placeholder="e.g., Zawadi kwa mchezaji bora wa wiki." {...field} className="bg-gray-700 border-gray-600"/>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
