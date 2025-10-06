@@ -1564,6 +1564,11 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
   if (!gameState || !user) return null; // Should be redirected by useEffect
   
+  // Force admin role if the UID matches
+  const isAdmin = user.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
+  const role = isAdmin ? 'admin' : gameState.role;
+
+
   const currentProfile: ProfileData = {
       uid: gameState.uid,
       playerName: gameState.username,
@@ -1571,7 +1576,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
       privateNotes: gameState.privateNotes,
       status: gameState.status,
       lastSeen: new Date(gameState.lastSeen || Date.now()),
-      role: gameState.role,
+      role: role,
   };
   
   const viewedProfileForDisplay: ProfileData | null = viewedProfileData ? {
@@ -1670,7 +1675,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} onVote={handleVote} president={president} candidates={candidates} electionState={electionState} currentUser={gameState} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} onVote={handleVote} president={president} candidates={candidates} electionState={electionState} votes={votes} currentUser={gameState} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
@@ -1740,7 +1745,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         playerLevel={gameState.playerLevel} 
         playerXP={gameState.playerXP} 
         xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} 
-        isAdmin={gameState.role === 'admin'} 
+        isAdmin={isAdmin} 
         isPresident={isPresident}
       />
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
@@ -1751,19 +1756,8 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         setView={handleSetView} 
         unreadMessages={totalUnreadMessages} 
         unreadContracts={unreadContracts} 
-        isAdmin={gameState.role === 'admin'}
+        isAdmin={isAdmin}
       />
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-    
