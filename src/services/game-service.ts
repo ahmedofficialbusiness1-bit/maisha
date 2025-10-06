@@ -73,8 +73,8 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
       ...Array(10).fill(lockedSlot)
     ];
     
-  let role: 'player' | 'admin' = 'player';
-  if (email === 'elonjazz89@gmail.com' || uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || uid === '7IHauUXBXjUhDJ9YUVVs97fwO9o1') {
+  let role: 'player' | 'admin' | 'president' = 'player';
+  if (email === 'elonjazz89@gmail.com' || uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2') {
     role = 'admin';
   }
   
