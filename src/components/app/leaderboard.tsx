@@ -112,16 +112,14 @@ export function Leaderboard({ onViewProfile, president }: { onViewProfile: (play
                                                     <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                                     <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                                 </Avatar>
+                                                {isCurrentPresident && player.role !== 'admin' && (
+                                                    <Crown className="absolute -top-3 -right-3 h-6 w-6 rotate-[30deg] text-red-500 [filter:drop-shadow(0_0_4px_rgb(255,80,80))]" />
+                                                )}
                                                 {index < 3 && !isCurrentPresident && <Crown className={cn("absolute -top-3 -right-3 h-6 w-6 rotate-[30deg]", crownClass)} />}
                                             </div>
                                             <div className='flex flex-col items-start'>
                                                 <span className="font-semibold text-white">{player.username}</span>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    {isCurrentPresident && player.role !== 'admin' && (
-                                                        <Badge className="text-[10px] py-0 px-1.5 h-auto bg-red-800/80 border-red-600 text-red-200">
-                                                            MR PRESIDENT
-                                                        </Badge>
-                                                    )}
                                                     <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
                                                         <tier.icon className="h-2.5 w-2.5 mr-1" />
                                                         {tier.name}
@@ -170,16 +168,14 @@ export function Leaderboard({ onViewProfile, president }: { onViewProfile: (play
                                                   <AvatarImage src={player.avatar} alt={player.username} data-ai-hint="player avatar" />
                                                   <AvatarFallback>{player.username.charAt(0)}</AvatarFallback>
                                               </Avatar>
+                                                {isCurrentPresident && player.role !== 'admin' && (
+                                                    <Crown className="absolute -top-2.5 -right-2.5 h-5 w-5 rotate-[30deg] text-red-500 [filter:drop-shadow(0_0_4px_rgb(255,80,80))]" />
+                                                )}
                                                {index < 3 && !isCurrentPresident && <Crown className={cn("absolute -top-2.5 -right-2.5 h-5 w-5 rotate-[30deg]", crownClass)} />}
                                           </div>
                                           <div>
                                               <p className="font-normal text-sm text-white">{player.username}</p>
                                                <div className="flex items-center gap-1 mt-1 flex-wrap">
-                                                    {isCurrentPresident && player.role !== 'admin' && (
-                                                        <Badge className="text-[10px] py-0 px-1.5 h-auto bg-red-800/80 border-red-600 text-red-200">
-                                                            MR PRESIDENT
-                                                        </Badge>
-                                                    )}
                                                     <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
                                                         <tier.icon className="h-2.5 w-2.5 mr-1" />
                                                         {tier.name}
@@ -215,6 +211,7 @@ export function Leaderboard({ onViewProfile, president }: { onViewProfile: (play
     </div>
   );
 }
+
 
 
 

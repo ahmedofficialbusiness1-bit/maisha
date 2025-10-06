@@ -234,9 +234,6 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                                     <Upload className="h-6 w-6 text-white" />
                                 </div>
                             )}
-                             {(rankNumber > 0 && rankNumber <= 3 && !isPresident) && (
-                                <Crown className={cn("absolute -top-3 -right-3 h-7 w-7 rotate-[30deg]", crownClass)} />
-                            )}
                         </div>
                         <div className={cn(
                             "absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-gray-800",
@@ -255,9 +252,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
                              
                             {isPresident && currentProfile.role !== 'admin' && (
-                               <Badge className="text-xs py-0.5 px-2.5 bg-red-800/80 border-red-600 text-red-200">
-                                   MR PRESIDENT
-                               </Badge>
+                               <Crown className="h-6 w-6 text-red-500 [filter:drop-shadow(0_0_4px_rgb(255,80,80))]" />
                             )}
                             
                             {playerTier && (
