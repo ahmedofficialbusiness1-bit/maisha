@@ -430,7 +430,7 @@ function GameTools() {
     const onSendStarsSubmit = (values: z.infer<typeof currencySenderSchema>) => {
         setIsStarsLoading(true);
         try {
-            onAdminSendStars(values.amount, values.targetUid);
+             onAdminSendStars(values.amount, values.targetUid);
             starsForm.reset(defaultCurrencyValues);
         } catch (error) {
              console.error("Failed to send stars:", error);
@@ -821,3 +821,5 @@ export function AdminPanel({ onViewProfile, president, electionState }: AdminPan
     </div>
   );
 }
+
+    
