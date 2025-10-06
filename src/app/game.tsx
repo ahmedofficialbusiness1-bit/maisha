@@ -74,7 +74,7 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
-  const [toast] = useToast();
+  const { toast } = useToast();
   
   // State for viewing other players' profiles
   const [viewedProfileUid, setViewedProfileUid] = React.useState<string | null>(null);
@@ -287,22 +287,13 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
   React.useEffect(() => {
     if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef) return;
     
-    // Prioritize 'admin' role. If user is admin, their public role is always 'admin'.
-    // Otherwise, check if they are president.
-    let finalRole: 'player' | 'admin' | 'president' = 'player';
-    if (gameState.role === 'admin') {
-        finalRole = 'admin';
-    } else if (president?.uid === gameState.uid) {
-        finalRole = 'president';
-    }
-  
     const publicData: PlayerPublicData = {
         uid: gameState.uid,
         username: gameState.username,
         netWorth: gameState.netWorth,
         avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
         level: gameState.playerLevel,
-        role: finalRole,
+        role: gameState.role,
     };
 
     runTransaction(playerPublicRef, (currentPublicData) => {
@@ -1804,6 +1795,7 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
     </div>
   );
 }
+
 
 
 
