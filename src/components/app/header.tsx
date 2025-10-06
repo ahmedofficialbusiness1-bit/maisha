@@ -192,16 +192,10 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                  <DropdownMenuLabel>Management</DropdownMenuLabel>
                 <DropdownMenuSeparator className='bg-gray-600'/>
                 {isAdmin && (
-                    <>
-                        <DropdownMenuItem onSelect={() => router.push('/admin')}>
-                            <Shield className="mr-2 h-4 w-4" />
-                            <span>Admin Panel</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => { /* Office logic here */ }}>
-                            <Briefcase className="mr-2 h-4 w-4" />
-                            <span>Ofisi</span>
-                        </DropdownMenuItem>
-                    </>
+                    <DropdownMenuItem onSelect={() => router.push('/admin')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin Panel</span>
+                    </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onSelect={() => setView('accounting')}>
                     <LineChart className="mr-2 h-4 w-4" />

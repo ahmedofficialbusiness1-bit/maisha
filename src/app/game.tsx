@@ -30,7 +30,7 @@ export type PlayerStock = {
     shares: number;
 }
 
-export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting' | 'profile' | 'leaderboard' | 'admin';
+export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting' | 'profile' | 'leaderboard' | 'admin' | 'office';
 
 export type Notification = {
     id: string;
@@ -1791,10 +1791,17 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
       <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         {renderView()}
       </main>
-      <AppFooter activeView={view} setView={handleSetView} unreadMessages={totalUnreadMessages} unreadContracts={unreadContracts} />
+      <AppFooter 
+        activeView={view} 
+        setView={handleSetView} 
+        unreadMessages={totalUnreadMessages} 
+        unreadContracts={unreadContracts} 
+        isAdmin={gameState.role === 'admin'}
+      />
     </div>
   );
 }
+
 
 
 

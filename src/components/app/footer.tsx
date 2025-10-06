@@ -11,6 +11,7 @@ import {
   MessageSquare,
   LayoutDashboard,
   Trophy,
+  Briefcase,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,14 +21,16 @@ interface AppFooterProps {
   setView: (view: View) => void;
   unreadMessages: number;
   unreadContracts: number;
+  isAdmin: boolean;
 }
 
-export function AppFooter({ activeView, setView, unreadMessages, unreadContracts }: AppFooterProps) {
+export function AppFooter({ activeView, setView, unreadMessages, unreadContracts, isAdmin }: AppFooterProps) {
   const navItems = [
     {
       view: 'dashboard' as View,
       label: 'Dashboard',
       icon: <LayoutDashboard className="h-5 w-5" />,
+      adminOnly: false,
     },
     {
       view: 'inventory' as View,
@@ -42,16 +45,19 @@ export function AppFooter({ activeView, setView, unreadMessages, unreadContracts
           )}
         </div>
       ),
+      adminOnly: false,
     },
     {
       view: 'market' as View,
       label: 'Market',
       icon: <CandlestickChart className="h-5 w-5" />,
+      adminOnly: false,
     },
     {
       view: 'leaderboard' as View,
       label: 'Wanaoongoza',
       icon: <Trophy className="h-5 w-5" />,
+      adminOnly: false,
     },
     {
       view: 'chats' as View,
@@ -66,12 +72,24 @@ export function AppFooter({ activeView, setView, unreadMessages, unreadContracts
           )}
         </div>
       ),
+      adminOnly: false,
+    },
+     {
+      view: 'office' as View,
+      label: 'Ofisi',
+      icon: <Briefcase className="h-5 w-5" />,
+      adminOnly: true,
     }
   ];
 
+  const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
+
   return (
-    <footer className="sticky bottom-0 z-10 grid grid-cols-5 items-center justify-around border-t bg-gray-900/95 py-1 px-2 backdrop-blur-sm">
-      {navItems.map((item) => (
+    <footer className={cn(
+        "sticky bottom-0 z-10 grid items-center justify-around border-t bg-gray-900/95 py-1 px-2 backdrop-blur-sm",
+        `grid-cols-${visibleNavItems.length}`
+      )}>
+      {visibleNavItems.map((item) => (
         <Button
             key={item.view}
             variant="ghost"
