@@ -1,6 +1,7 @@
-
 {
   "rules": {
+    ".read": false,
+    ".write": false,
     "users": {
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')",
@@ -11,7 +12,7 @@
       ".read": "auth != null",
       ".indexOn": ["netWorth", "username"],
       "$uid": {
-        ".write": "auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin'"
+        ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')"
       }
     },
     "market": {
