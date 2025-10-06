@@ -21,7 +21,8 @@ export default function DashboardPage() {
       return;
     }
 
-    // Redirect admin users to the admin page.
+    // Redirect admin users to the admin page. This is a failsafe.
+    // The primary entry for admin should be the /admin route.
     const userRef = ref(getDatabase(), `users/${user.uid}`);
     const unsubscribe = onValue(userRef, (snapshot) => {
       if (snapshot.exists()) {

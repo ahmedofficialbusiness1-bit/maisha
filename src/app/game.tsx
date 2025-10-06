@@ -63,7 +63,7 @@ const getPriceWithQuality = (itemName: string, quality: number) => {
 };
 
 
-export function Game({ initialProfileViewId }: { initialProfileViewId: string | null }) {
+export function Game({ initialProfileViewId, forceAdminView = false }: { initialProfileViewId: string | null, forceAdminView?: boolean }) {
   const { user, loading: userLoading } = useUser();
   const database = getDatabase();
   const router = useRouter();
@@ -72,7 +72,7 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
   const [contractListings, setContractListings] = React.useState<any[]>([]);
   const [marketShareListings, setMarketShareListings] = React.useState<MarketShareListing[]>([]);
   const [gameStateLoading, setGameStateLoading] = React.useState(true);
-  const [view, setView] = React.useState<View>('dashboard');
+  const [view, setView] = React.useState<View>(forceAdminView ? 'admin' : 'dashboard');
   const [companyData, setCompanyData] = React.useState<StockListing[]>(initialCompanyData);
   const { toast } = useToast();
   
@@ -287,13 +287,16 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
   React.useEffect(() => {
     if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef) return;
     
+    // Admin role is supreme and should not be overridden by presidency
+    const finalRole = gameState.role === 'admin' ? 'admin' : (president?.uid === gameState.uid ? 'president' : 'player');
+
     const publicData: PlayerPublicData = {
         uid: gameState.uid,
         username: gameState.username,
         netWorth: gameState.netWorth,
         avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
         level: gameState.playerLevel,
-        role: gameState.role,
+        role: finalRole,
     };
 
     runTransaction(playerPublicRef, (currentPublicData) => {
@@ -616,7 +619,7 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
             read: false, 
             icon: 'production' 
          };
-         currentData.notifications = { ...(currentData.notifications || {}), [newNotification.key!]: newNotification };
+         currentData.notifications = { ...(currentData.notifications || {}), [newNotification.id]: newNotification };
          
          return currentData;
      });
@@ -1572,130 +1575,6 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
     }
 
   const isPresident = president?.uid === user.uid;
-    const handleAdminAction = (action: Function) => (...args: any[]) => {
-    if (gameState?.role !== 'admin') return;
-    action(...args);
-  };
-  
-  const handleAdminAppointPresident = (uid: string) => {
-    if (gameState?.role !== 'admin') return;
-    const updates: Record<string, any> = {};
-    updates[`/election/presidentUid`] = uid;
-    update(ref(database), updates);
-  };
-
-  const handleAdminRemovePresident = () => {
-    if (gameState?.role !== 'admin') return;
-    update(ref(database), { '/election/presidentUid': null });
-  };
-  
-  const handleAdminManageElection = (state: 'open' | 'closed') => {
-      if (gameState?.role !== 'admin') return;
-      update(ref(database), { '/election/state': state });
-  };
-
-  const handleAdminSendItem = (itemName: string, quantity: number, targetUid: string) => {
-    const newContractRef = push(ref(database, 'contracts'));
-    const productInfo = encyclopediaData.find(e => e.name === itemName);
-
-    const newContract: Omit<any, 'id'> = {
-        commodity: itemName,
-        quantity,
-        pricePerUnit: 0, // Free
-        sellerUid: 'admin-system',
-        sellerName: 'Game Master',
-        sellerAvatar: 'https://picsum.photos/seed/admin/40/40',
-        status: 'open',
-        createdAt: Date.now(),
-        expiresAt: Date.now() + 5 * 24 * 60 * 60 * 1000,
-        buyerIdentifier: targetUid,
-        imageHint: productInfo?.imageHint || 'gift box'
-    };
-
-    set(newContractRef, newContract);
-    toast({ title: 'Item Sent', description: `Sent a contract for ${quantity}x ${itemName} to user ${targetUid}.`});
-  };
-
-  const handleAdminSendMoney = (amount: number, targetUid: string) => {
-      const targetUserRef = ref(database, `users/${targetUid}`);
-      runTransaction(targetUserRef, (userData) => {
-          if (userData) {
-              userData.money += amount;
-          }
-          return userData;
-      });
-      toast({ title: 'Money Sent', description: `Sent $${amount} to user ${targetUid}.`});
-  }
-
-  const handleAdminSendStars = (amount: number, targetUid: string) => {
-      const targetUserRef = ref(database, `users/${targetUid}`);
-      runTransaction(targetUserRef, (userData) => {
-          if (userData) {
-              userData.stars += amount;
-          }
-          return userData;
-      });
-      toast({ title: 'Stars Sent', description: `Sent ${amount} stars to user ${targetUid}.`});
-  }
-
-  const handleAdminSetRole = (targetUid: string, role: 'player' | 'admin' | 'president') => {
-      const targetUserRef = ref(database, `users/${targetUid}`);
-      runTransaction(targetUserRef, (userData) => {
-          if (userData) {
-              userData.role = role;
-          }
-          return userData;
-      });
-       if (role === 'president') {
-        handleAdminAppointPresident(targetUid);
-      }
-      toast({ title: 'Role Set', description: `User ${targetUid} is now a(n) ${role}.`});
-  }
-  
-  const handleRunForPresidency = () => {
-    if (gameState.money < 10_000_000) {
-        toast({variant: 'destructive', title: 'Pesa Hazitoshi', description: 'Unahitaji $10,000,000 kugombea urais.'});
-        return;
-    }
-
-    const candidateRef = ref(database, `election/candidates/${user.uid}`);
-    set(candidateRef, {
-        uid: user.uid,
-        username: gameState.username,
-        avatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-        slogan: 'Uongozi Bora, Uchumi Imara!'
-    });
-    
-    runTransaction(userRef, (currentData) => {
-        if(currentData) {
-            currentData.money -= 10_000_000;
-        }
-        return currentData;
-    });
-
-    toast({title: 'Umefanikiwa Kujisajili', description: 'Sasa wewe ni mgombea urais!'});
-  };
-
-  const handleVote = (candidateUid: string) => {
-    if (gameState.money < 10_000) {
-        toast({variant: 'destructive', title: 'Pesa Hazitoshi', description: 'Unahitaji $10,000 kupiga kura.'});
-        return;
-    }
-    
-    const voteRef = ref(database, `election/votes/${candidateUid}`);
-    runTransaction(voteRef, (currentVotes) => {
-        return (currentVotes || 0) + 1;
-    });
-    
-    runTransaction(userRef, (currentData) => {
-        if(currentData) {
-            currentData.money -= 10_000;
-        }
-        return currentData;
-    });
-    
-    toast({title: 'Kura Yako Imehesabiwa', description: `Umemchagua mgombea.`});
-  }
 
   const renderView = () => {
     switch (view) {
@@ -1723,7 +1602,7 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} onVote={handleVote} president={president} candidates={candidates} electionState={electionState} votes={votes} currentUser={gameState} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} onVote={handleVote} president={president} candidates={candidates} electionState={electionState} currentUser={gameState} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
@@ -1755,18 +1634,26 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
         }
         return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} isPresident={isPresident} />;
       case 'admin':
+        // This view is now handled by the /admin page route for better separation.
+        // It renders the full Game component with a forced view.
         return <AdminPanel
                   onViewProfile={handleViewProfile}
-                  onAdminSendItem={handleAdminAction(handleAdminSendItem)}
-                  onAdminSendMoney={handleAdminAction(handleAdminSendMoney)}
-                  onAdminSendStars={handleAdminAction(handleAdminSendStars)}
-                  onAdminSetRole={handleAdminAction(handleAdminSetRole)}
-                  onAdminAppointPresident={handleAdminAction(handleAdminAppointPresident)}
-                  onAdminRemovePresident={handleAdminAction(handleAdminRemovePresident)}
-                  onAdminManageElection={handleAdminAction(handleAdminManageElection)}
                   president={president}
                   electionState={electionState}
                 />;
+      case 'office':
+        // Placeholder for the "Ofisi" view
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Ofisi ya Rais</CardTitle>
+                    <CardDescription>Zana za kusimamia nchi (zinakuja hivi karibuni).</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p>Coming Soon...</p>
+                </CardContent>
+            </Card>
+        );
       default:
         return null;
     }
@@ -1801,6 +1688,7 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
     </div>
   );
 }
+
 
 
 

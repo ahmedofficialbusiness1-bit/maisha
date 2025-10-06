@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   Trophy,
   Briefcase,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -75,9 +76,9 @@ export function AppFooter({ activeView, setView, unreadMessages, unreadContracts
       adminOnly: false,
     },
      {
-      view: 'office' as View,
-      label: 'Ofisi',
-      icon: <Briefcase className="h-5 w-5" />,
+      view: 'admin' as View,
+      label: 'Admin',
+      icon: <Shield className="h-5 w-5" />,
       adminOnly: true,
     }
   ];

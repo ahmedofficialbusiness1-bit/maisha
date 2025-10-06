@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useFormState } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { simulateCommodityPrice, type SimulateCommodityPriceInput } from '@/ai/flows/commodity-price-simulation';
-import { Check, ChevronsUpDown, CircleDollarSign, Crown, Gift, Loader2, Star, Users, Wifi, WifiOff, X } from 'lucide-react';
+import { simulateCommodityPrice } from '@/ai/flows/commodity-price-simulation';
+import { Check, ChevronsUpDown, CircleDollarSign, Crown, Gift, Loader2, Star, Users, Wifi, WifiOff } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -24,6 +24,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { getDatabase, ref, set, push, runTransaction, update } from 'firebase/database';
 
 
 const simulationFormSchema = z.object({
@@ -53,13 +54,6 @@ const setRoleFormSchema = z.object({
 
 interface AdminPanelProps {
     onViewProfile: (playerId: string) => void;
-    onAdminSendItem: (itemName: string, quantity: number, targetUid: string) => void;
-    onAdminSendMoney: (amount: number, targetUid: string) => void;
-    onAdminSendStars: (amount: number, targetUid: string) => void;
-    onAdminSetRole: (uid: string, role: 'player' | 'admin' | 'president') => void;
-    onAdminAppointPresident: (uid: string) => void;
-    onAdminRemovePresident: () => void;
-    onAdminManageElection: (state: 'open' | 'closed') => void;
     president: PlayerPublicData | null;
     electionState: 'open' | 'closed';
 }
@@ -318,8 +312,9 @@ function PlayerManager({ onViewProfile }: Pick<AdminPanelProps, 'onViewProfile'>
     )
 }
 
-function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdminSetRole }: Pick<AdminPanelProps, 'onAdminSendItem' | 'onAdminSendMoney' | 'onAdminSendStars' | 'onAdminSetRole'>) {
+function GameTools() {
     const { toast } = useToast();
+    const database = getDatabase();
     
     const defaultItemValues = {
         itemName: '',
@@ -364,14 +359,74 @@ function GameTools({ onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdmi
         defaultValues: defaultRoleValues,
     });
 
+  const onAdminSendItem = (itemName: string, quantity: number, targetUid: string) => {
+    const newContractRef = push(ref(database, 'contracts'));
+    const productInfo = encyclopediaData.find(e => e.name === itemName);
+
+    const newContract: Omit<any, 'id'> = {
+        commodity: itemName,
+        quantity,
+        pricePerUnit: 0, // Free
+        sellerUid: 'admin-system',
+        sellerName: 'Game Master',
+        sellerAvatar: 'https://picsum.photos/seed/admin/40/40',
+        status: 'open',
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 5 * 24 * 60 * 60 * 1000,
+        buyerIdentifier: targetUid,
+        imageHint: productInfo?.imageHint || 'gift box'
+    };
+
+    set(newContractRef, newContract);
+    toast({ title: 'Item Sent', description: `Sent a contract for ${quantity}x ${itemName} to user ${targetUid}.`});
+  };
+
+  const onAdminSendMoney = (amount: number, targetUid: string) => {
+      const targetUserRef = ref(database, `users/${targetUid}`);
+      runTransaction(targetUserRef, (userData) => {
+          if (userData) {
+              userData.money += amount;
+          }
+          return userData;
+      });
+      toast({ title: 'Money Sent', description: `Sent $${amount} to user ${targetUid}.`});
+  }
+
+  const onAdminSendStars = (amount: number, targetUid: string) => {
+      const targetUserRef = ref(database, `users/${targetUid}`);
+      runTransaction(targetUserRef, (userData) => {
+          if (userData) {
+              userData.stars += amount;
+          }
+          return userData;
+      });
+      toast({ title: 'Stars Sent', description: `Sent ${amount} stars to user ${targetUid}.`});
+  }
+  
+  const onAdminAppointPresident = (uid: string) => {
+    const updates: Record<string, any> = {};
+    updates[`/election/presidentUid`] = uid;
+    update(ref(database), updates);
+  };
+
+  const onAdminSetRole = (targetUid: string, role: 'player' | 'admin' | 'president') => {
+      const targetUserRef = ref(database, `users/${targetUid}`);
+      runTransaction(targetUserRef, (userData) => {
+          if (userData) {
+              userData.role = role;
+          }
+          return userData;
+      });
+       if (role === 'president') {
+        onAdminAppointPresident(targetUid);
+      }
+      toast({ title: 'Role Set', description: `User ${targetUid} is now a(n) ${role}.`});
+  }
+
     const onSendItemSubmit = (values: z.infer<typeof itemSenderFormSchema>) => {
         setIsItemLoading(true);
         try {
             onAdminSendItem(values.itemName, values.quantity, values.targetUid);
-            toast({
-                title: "Items Sent!",
-                description: `Sent ${values.quantity}x ${values.itemName} to player ${values.targetUid}.`,
-            });
             itemForm.reset(defaultItemValues);
         } catch (error) {
             console.error("Failed to send item:", error);
@@ -695,8 +750,23 @@ const appointPresidentSchema = z.object({
     targetUid: z.string().min(1, 'UID is required'),
 })
 
-function PresidencyTools({ president, onAdminAppointPresident, onAdminRemovePresident, electionState, onAdminManageElection }: Pick<AdminPanelProps, 'president' | 'onAdminAppointPresident' | 'onAdminRemovePresident' | 'electionState' | 'onAdminManageElection'>) {
+function PresidencyTools({ president, electionState }: Pick<AdminPanelProps, 'president' | 'electionState'>) {
+    const database = getDatabase();
     
+    const onAdminAppointPresident = (uid: string) => {
+        const updates: Record<string, any> = {};
+        updates[`/election/presidentUid`] = uid;
+        update(ref(database), updates);
+    };
+
+    const onAdminRemovePresident = () => {
+        update(ref(database), { '/election/presidentUid': null });
+    };
+
+    const onAdminManageElection = (state: 'open' | 'closed') => {
+        update(ref(database), { '/election/state': state });
+    };
+
     const form = useForm<z.infer<typeof appointPresidentSchema>>({
         resolver: zodResolver(appointPresidentSchema),
         defaultValues: { targetUid: '' }
@@ -795,7 +865,7 @@ function PresidencyTools({ president, onAdminAppointPresident, onAdminRemovePres
     )
 }
 
-export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, onAdminSendStars, onAdminSetRole, onAdminAppointPresident, onAdminRemovePresident, onAdminManageElection, president, electionState }: AdminPanelProps) {
+export function AdminPanel({ onViewProfile, president, electionState }: AdminPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -818,10 +888,10 @@ export function AdminPanel({ onViewProfile, onAdminSendItem, onAdminSendMoney, o
              <CommoditySimulator />
           </TabsContent>
           <TabsContent value="tools">
-             <GameTools onAdminSendItem={onAdminSendItem} onAdminSendMoney={onAdminSendMoney} onAdminSendStars={onAdminSendStars} onAdminSetRole={onAdminSetRole} />
+             <GameTools />
           </TabsContent>
            <TabsContent value="presidency">
-             <PresidencyTools president={president} onAdminAppointPresident={onAdminAppointPresident} onAdminRemovePresident={onAdminRemovePresident} electionState={electionState} onAdminManageElection={onAdminManageElection}/>
+             <PresidencyTools president={president} electionState={electionState}/>
           </TabsContent>
         </Tabs>
 
