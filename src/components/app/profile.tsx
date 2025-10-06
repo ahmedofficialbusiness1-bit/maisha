@@ -220,7 +220,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         <div 
                           className={cn(
                             "relative", 
-                            isPresident && currentProfile.role !== 'admin' ? "p-1 rounded-md bg-gradient-to-tr from-blue-400 via-cyan-300 to-blue-500" : wrapperClass,
+                            isPresident && currentProfile.role !== 'admin' ? "p-1 rounded-md bg-gradient-to-tr from-red-400 via-rose-500 to-red-600 shadow-lg shadow-red-500/30" : wrapperClass,
                             isEditing && "cursor-pointer hover:opacity-80 transition-opacity"
                           )}
                           onClick={() => isEditing && fileInputRef.current?.click()}
@@ -234,7 +234,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                                     <Upload className="h-6 w-6 text-white" />
                                 </div>
                             )}
-                             {(rankNumber > 0 && rankNumber <= 3) && (
+                             {(rankNumber > 0 && rankNumber <= 3 && !isPresident) && (
                                 <Crown className={cn("absolute -top-3 -right-3 h-7 w-7 rotate-[30deg]", crownClass)} />
                             )}
                         </div>
@@ -255,7 +255,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
                              
                             {isPresident && currentProfile.role !== 'admin' && (
-                               <Badge className="text-xs py-0.5 px-2.5 bg-blue-800/80 border-blue-600 text-blue-200">
+                               <Badge className="text-xs py-0.5 px-2.5 bg-red-800/80 border-red-600 text-red-200">
                                    MR PRESIDENT
                                </Badge>
                             )}

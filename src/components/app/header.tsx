@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -93,11 +94,16 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
         {/* Player Profile & Level */}
         <div className="flex items-center gap-2">
            <div className="relative">
-              <Avatar className="h-7 w-7 sm:h-8 sm:w-8 border-2 border-yellow-400">
-                <AvatarImage src={playerAvatar} data-ai-hint="player avatar" />
-                <AvatarFallback>{playerName.charAt(0)}</AvatarFallback>
+              <Avatar className={cn(
+                "h-7 w-7 sm:h-8 sm:w-8 border-2",
+                isPresident ? "border-transparent" : "border-yellow-400"
+              )}>
+                <div className={cn(isPresident && "p-0.5 rounded-full bg-gradient-to-tr from-red-400 via-rose-500 to-red-600 shadow-lg shadow-red-500/30")}>
+                    <AvatarImage src={playerAvatar} alt={playerName} data-ai-hint="player avatar" />
+                    <AvatarFallback>{playerName.charAt(0)}</AvatarFallback>
+                </div>
               </Avatar>
-              {isPresident && <Crown className="absolute -top-2 -right-2 h-4 w-4 text-yellow-400" />}
+              {isPresident && <Crown className="absolute -top-2 -right-2 h-4 w-4 text-red-500 [filter:drop-shadow(0_0_3px_rgb(255,50,50))]" />}
            </div>
           <div className="hidden sm:flex flex-col">
             <span className="font-semibold text-sm">{playerName}</span>
