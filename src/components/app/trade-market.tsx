@@ -704,9 +704,9 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                 className="w-full" 
                                 variant="outline" 
                                 onClick={onRunForPresidency}
-                                disabled={candidates.some(c => c.uid === currentUser.uid) || currentUser.money < 10000000}
+                                disabled={candidates.some(c => c.uid === currentUser.uid) || currentUser.stars < 10000}
                             >
-                                {candidates.some(c => c.uid === currentUser.uid) ? "Tayari wewe ni mgombea" : "Gombea Urais ($10,000,000)"}
+                                {candidates.some(c => c.uid === currentUser.uid) ? "Tayari wewe ni mgombea" : "Gombea Urais (Nyota 10,000)"}
                             </Button>
                         </div>
                     ) : (
