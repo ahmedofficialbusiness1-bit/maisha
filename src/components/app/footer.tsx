@@ -88,7 +88,7 @@ export function AppFooter({ activeView, setView, unreadMessages, unreadContracts
   return (
     <footer className={cn(
         "sticky bottom-0 z-10 grid items-center justify-around border-t bg-gray-900/95 py-1 px-2 backdrop-blur-sm",
-        `grid-cols-${visibleNavItems.length}`
+        isAdmin ? 'grid-cols-6' : 'grid-cols-5'
       )}>
       {visibleNavItems.map((item) => (
         <Button
