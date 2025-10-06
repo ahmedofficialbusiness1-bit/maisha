@@ -1474,9 +1474,9 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
   const handleRunForPresidency = React.useCallback(() => {
       if (!user || !gameState || !electionRef) return;
-      const cost = 10000000;
-      if (gameState.money < cost) {
-          toast({ variant: 'destructive', title: 'Pesa Hazitoshi', description: `Unahitaji $${cost.toLocaleString()} kugombea urais.`});
+      const cost = 10000; // New cost in Star Boosts
+      if (gameState.stars < cost) {
+          toast({ variant: 'destructive', title: 'Nyota Hazitoshi', description: `Unahitaji nyota ${cost.toLocaleString()} kugombea urais.`});
           return;
       }
       
@@ -1487,8 +1487,8 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
       }
 
       runTransaction(userRef, (currentData) => {
-          if (currentData && currentData.money >= cost) {
-              currentData.money -= cost;
+          if (currentData && currentData.stars >= cost) {
+              currentData.stars -= cost;
               return currentData;
           }
           return;
@@ -1508,7 +1508,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                   toast({ title: 'Umefanikiwa Kujisajili!', description: 'Sasa wewe ni mgombea wa urais.'});
               }
           } else {
-              toast({ variant: 'destructive', title: 'Pesa Hazitoshi'});
+              toast({ variant: 'destructive', title: 'Nyota Hazitoshi'});
           }
       });
   }, [user, gameState, electionRef, candidates, database, toast, userRef]);
