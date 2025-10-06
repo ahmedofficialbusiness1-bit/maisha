@@ -15,10 +15,10 @@ import { useUser } from '@/firebase';
 import { signInWithEmail, signUpWithEmail, sendPasswordReset } from '@/firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldCheck } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
-import { getDatabase, ref, set, get, runTransaction } from 'firebase/database';
+import { getDatabase, ref, set, get } from 'firebase/database';
 
 
 const formSchema = z.object({
@@ -39,6 +39,7 @@ function LoginComponent() {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isResettingPassword, setIsResettingPassword] = React.useState(false);
     const [isResetDialogOpen, setIsResetDialogOpen] = React.useState(false);
+    const [isAdmin, setIsAdmin] = React.useState(false);
     const database = getDatabase();
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -53,32 +54,28 @@ function LoginComponent() {
         resolver: zodResolver(passwordResetSchema),
         defaultValues: { email: '' },
     });
+    
+    const handleSuccessfulLogin = async (user: any) => {
+        const userRef = ref(database, `users/${user.uid}`);
+        const snapshot = await get(userRef);
+
+        if (snapshot.exists()) {
+            const data = snapshot.val() as UserData;
+            if (data.role === 'admin') {
+                setIsAdmin(true); // Show admin-specific UI
+            } else {
+                router.push('/dashboard'); // Redirect regular users
+            }
+        } else {
+             // New user - this case is handled by signup logic, but as a fallback:
+            router.push('/dashboard');
+        }
+    };
+
 
     React.useEffect(() => {
         if (!userLoading && user) {
-            // Check if user data exists, if so, check for companyProfile
-            const userRef = ref(database, `users/${user.uid}`);
-            get(userRef).then((snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val() as UserData;
-                    if (!data.companyProfile) {
-                        runTransaction(userRef, (currentData) => {
-                            if (currentData && !currentData.companyProfile) {
-                                const initial = getInitialUserData(user.uid, currentData.username, null);
-                                currentData.companyProfile = initial.companyProfile;
-                            }
-                            return currentData;
-                        }).then(() => {
-                            router.push('/dashboard');
-                        });
-                    } else {
-                        router.push('/dashboard');
-                    }
-                } else {
-                    // This case should be handled by the signup logic, but as a fallback:
-                     router.push('/dashboard');
-                }
-            });
+            handleSuccessfulLogin(user);
         }
     }, [user, userLoading, router, database]);
 
@@ -86,7 +83,8 @@ function LoginComponent() {
         setIsSubmitting(true);
         try {
             if (isLoginView) {
-                await signInWithEmail(values.email, values.password);
+                const userCredential = await signInWithEmail(values.email, values.password);
+                // The useEffect will now handle the redirection/UI change
             } else {
                 const newUser = await signUpWithEmail(values.email, values.password);
                 if (newUser) {
@@ -103,9 +101,9 @@ function LoginComponent() {
                         level: initialData.playerLevel,
                         role: initialData.role
                     });
+                     router.push('/dashboard'); // New users go to dashboard
                 }
             }
-            // The useEffect will handle redirect on successful login/signup
         } catch (error) {
             let title = 'Kosa Limetokea';
             let description = 'Imeshindikana kuingia/kujisajili. Tafadhali jaribu tena.';
@@ -165,7 +163,7 @@ function LoginComponent() {
     }
 
 
-    if (userLoading || user) {
+    if (userLoading || (user && !isAdmin)) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -179,96 +177,115 @@ function LoginComponent() {
             <div className="absolute inset-0 -z-10 bg-black/60"></div>
             
             <Card className="w-full max-w-md bg-gray-800/80 border-gray-700 backdrop-blur-sm">
-                <CardHeader>
-                    <CardTitle className="text-2xl">{isLoginView ? 'Karibu Tena!' : 'Tengeneza Akaunti'}</CardTitle>
-                    <CardDescription>{isLoginView ? 'Ingiza taarifa zako ili uendelee.' : 'Jaza fomu ili kuanza safari yako.'}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Barua Pepe</FormLabel>
-                                        <FormControl>
-                                            <Input type="email" placeholder="jina@mfano.com" {...field} className="bg-gray-700 border-gray-600"/>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Nenosiri</FormLabel>
-                                        <FormControl>
-                                            <Input type="password" placeholder="********" {...field} className="bg-gray-700 border-gray-600"/>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                             {isLoginView && (
-                                <div className="text-right">
-                                    <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="link" className="text-blue-400 px-0">
-                                                Umesahau nenosiri?
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="bg-gray-900 border-gray-700 text-white">
-                                            <DialogHeader>
-                                                <DialogTitle>Weka Upya Nenosiri</DialogTitle>
-                                                <DialogDescription>
-                                                    Ingiza barua pepe yako. Utatumiwa link ya kuweka upya nenosiri.
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <Form {...resetForm}>
-                                                <form onSubmit={resetForm.handleSubmit(onPasswordReset)} className="space-y-4">
-                                                    <FormField
-                                                        control={resetForm.control}
-                                                        name="email"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Barua Pepe</FormLabel>
-                                                                <FormControl>
-                                                                    <Input type="email" placeholder="jina@mfano.com" {...field} className="bg-gray-800 border-gray-600"/>
-                                                                </FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                    <DialogFooter>
-                                                        <Button type="submit" className="w-full" disabled={isResettingPassword}>
-                                                             {isResettingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                            Tuma Barua Pepe
-                                                        </Button>
-                                                    </DialogFooter>
-                                                </form>
-                                            </Form>
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
-                            )}
-                            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {isLoginView ? 'Ingia' : 'Jisajili'}
+                {isAdmin ? (
+                    <>
+                        <CardHeader className="text-center">
+                            <div className="flex justify-center">
+                               <ShieldCheck className="h-12 w-12 text-green-400" />
+                            </div>
+                            <CardTitle className="text-2xl">Uthibitisho Umekamilika</CardTitle>
+                            <CardDescription>Karibu Kwenye Paneli ya Utawala.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <Button onClick={() => router.push('/admin')} className="w-full bg-green-600 hover:bg-green-700">
+                                Endelea Kwenye Paneli
                             </Button>
-                        </form>
-                    </Form>
-                </CardContent>
-                 <div className="p-6 pt-0 text-center">
-                    <p className="text-sm text-gray-400">
-                        {isLoginView ? "Huna akaunti?" : "Tayari una akaunti?"}
-                        <Button variant="link" className="text-blue-400 pl-2" onClick={() => setIsLoginView(!isLoginView)}>
-                             {isLoginView ? "Jisajili hapa" : "Ingia hapa"}
-                        </Button>
-                    </p>
-                </div>
+                        </CardContent>
+                    </>
+                ) : (
+                    <>
+                    <CardHeader>
+                        <CardTitle className="text-2xl">{isLoginView ? 'Karibu Tena!' : 'Tengeneza Akaunti'}</CardTitle>
+                        <CardDescription>{isLoginView ? 'Ingiza taarifa zako ili uendelee.' : 'Jaza fomu ili kuanza safari yako.'}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                <FormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Barua Pepe</FormLabel>
+                                            <FormControl>
+                                                <Input type="email" placeholder="jina@mfano.com" {...field} className="bg-gray-700 border-gray-600"/>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Nenosiri</FormLabel>
+                                            <FormControl>
+                                                <Input type="password" placeholder="********" {...field} className="bg-gray-700 border-gray-600"/>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                {isLoginView && (
+                                    <div className="text-right">
+                                        <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button variant="link" className="text-blue-400 px-0">
+                                                    Umesahau nenosiri?
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="bg-gray-900 border-gray-700 text-white">
+                                                <DialogHeader>
+                                                    <DialogTitle>Weka Upya Nenosiri</DialogTitle>
+                                                    <DialogDescription>
+                                                        Ingiza barua pepe yako. Utatumiwa link ya kuweka upya nenosiri.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <Form {...resetForm}>
+                                                    <form onSubmit={resetForm.handleSubmit(onPasswordReset)} className="space-y-4">
+                                                        <FormField
+                                                            control={resetForm.control}
+                                                            name="email"
+                                                            render={({ field }) => (
+                                                                <FormItem>
+                                                                    <FormLabel>Barua Pepe</FormLabel>
+                                                                    <FormControl>
+                                                                        <Input type="email" placeholder="jina@mfano.com" {...field} className="bg-gray-800 border-gray-600"/>
+                                                                    </FormControl>
+                                                                    <FormMessage />
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                        <DialogFooter>
+                                                            <Button type="submit" className="w-full" disabled={isResettingPassword}>
+                                                                {isResettingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                                Tuma Barua Pepe
+                                                            </Button>
+                                                        </DialogFooter>
+                                                    </form>
+                                                </Form>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
+                                )}
+                                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+                                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    {isLoginView ? 'Ingia' : 'Jisajili'}
+                                </Button>
+                            </form>
+                        </Form>
+                    </CardContent>
+                    <div className="p-6 pt-0 text-center">
+                        <p className="text-sm text-gray-400">
+                            {isLoginView ? "Huna akaunti?" : "Tayari una akaunti?"}
+                            <Button variant="link" className="text-blue-400 pl-2" onClick={() => setIsLoginView(!isLoginView)}>
+                                {isLoginView ? "Jisajili hapa" : "Ingia hapa"}
+                            </Button>
+                        </p>
+                    </div>
+                    </>
+                )}
             </Card>
 
             <div className="text-center max-w-4xl mx-auto mt-12">
@@ -290,3 +307,5 @@ export default function LoginPage() {
         </FirebaseClientProvider>
     );
 }
+
+    
