@@ -6,7 +6,7 @@
     "users": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin'"
+        ".write": "auth.uid === $uid || auth.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2'"
       }
     },
     "players": {

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { Game } from '@/app/game';
 import { Loader2 } from 'lucide-react';
-import { getDatabase, ref, onValue } from 'firebase/database';
 import type { UserData } from '@/services/game-service';
 
 
@@ -25,27 +24,10 @@ export default function AdminDashboardPage() {
     // Hardcoded check for the specific admin UID
     if (user.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2') {
         setIsAuthorizedAdmin(true);
-        return;
+    } else {
+        setIsAuthorizedAdmin(false);
+        router.replace('/dashboard'); // Not an admin, kick them out
     }
-
-    // Fallback to check the role in the database
-    const userRef = ref(getDatabase(), `users/${user.uid}`);
-    const unsubscribe = onValue(userRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const userData = snapshot.val() as UserData;
-        if (userData.role === 'admin') {
-           setIsAuthorizedAdmin(true);
-        } else {
-           setIsAuthorizedAdmin(false);
-           router.replace('/dashboard'); // Not an admin, kick them out
-        }
-      } else {
-         setIsAuthorizedAdmin(false);
-         router.replace('/dashboard'); // User profile doesn't exist
-      }
-    });
-
-    return () => unsubscribe();
   }, [user, userLoading, router]);
 
   if (userLoading || isAuthorizedAdmin === null) {
