@@ -286,11 +286,14 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
   // Update public player data (RTDB) whenever critical info changes
   React.useEffect(() => {
     if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef) return;
-
-    // Prioritize 'admin' role over 'president'
-    let finalRole = gameState.role;
-    if (finalRole !== 'admin') {
-      finalRole = president?.uid === gameState.uid ? 'president' : 'player';
+    
+    // Prioritize 'admin' role. If user is admin, their public role is always 'admin'.
+    // Otherwise, check if they are president.
+    let finalRole: 'player' | 'admin' | 'president' = 'player';
+    if (gameState.role === 'admin') {
+        finalRole = 'admin';
+    } else if (president?.uid === gameState.uid) {
+        finalRole = 'president';
     }
   
     const publicData: PlayerPublicData = {
@@ -1801,6 +1804,7 @@ export function Game({ initialProfileViewId }: { initialProfileViewId: string | 
     </div>
   );
 }
+
 
 
 

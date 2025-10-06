@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -191,6 +190,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
   const { wrapperClass, crownClass } = getRankStyles(rankNumber);
   const rankTitle = getRankTitle(rankNumber);
   
+  const displayRole = currentProfile.role === 'admin' ? 'Administrator' : isPresident ? 'President' : 'Sole trader';
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -272,7 +272,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             )}
                         </div>
                         <p className="text-muted-foreground">
-                           {currentProfile.role === 'admin' ? 'Administrator' : currentProfile.role === 'president' ? 'President' : 'Sole trader'}
+                           {displayRole}
                         </p>
                          <div className='text-xs text-gray-500 font-mono flex items-center gap-2'>
                             <span>UID: {currentProfile.uid}</span>
