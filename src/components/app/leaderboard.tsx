@@ -120,6 +120,12 @@ export function Leaderboard({ onViewProfile, president }: { onViewProfile: (play
                                             <div className='flex flex-col items-start'>
                                                 <span className="font-semibold text-white">{player.username}</span>
                                                 <div className="flex items-center gap-2 mt-1">
+                                                    {isCurrentPresident && (
+                                                        <Badge className="text-xs py-0.5 px-2 bg-red-800/80 border-red-600 text-red-200">
+                                                            <Crown className="h-3 w-3 mr-1" />
+                                                            THE PRESIDENT
+                                                        </Badge>
+                                                    )}
                                                     <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
                                                         <tier.icon className="h-2.5 w-2.5 mr-1" />
                                                         {tier.name}
@@ -176,6 +182,12 @@ export function Leaderboard({ onViewProfile, president }: { onViewProfile: (play
                                           <div>
                                               <p className="font-normal text-sm text-white">{player.username}</p>
                                                <div className="flex items-center gap-1 mt-1 flex-wrap">
+                                                    {isCurrentPresident && (
+                                                        <Badge className="text-xs py-0.5 px-2 bg-red-800/80 border-red-600 text-red-200">
+                                                            <Crown className="h-3 w-3 mr-1" />
+                                                            THE PRESIDENT
+                                                        </Badge>
+                                                    )}
                                                     <Badge className={cn("text-[10px] py-0 px-1.5 h-auto", tier.color)}>
                                                         <tier.icon className="h-2.5 w-2.5 mr-1" />
                                                         {tier.name}
@@ -211,11 +223,3 @@ export function Leaderboard({ onViewProfile, president }: { onViewProfile: (play
     </div>
   );
 }
-
-
-
-
-
-
-
-
