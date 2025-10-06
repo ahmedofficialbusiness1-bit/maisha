@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award, Shield, BookOpen, LineChart, Crown } from 'lucide-react';
+import { Bell, Menu, Star, Coins, Scale, User, CheckCheck, Hammer, CircleDollarSign, Tractor, LogOut, Award, Shield, BookOpen, LineChart, Crown, Briefcase } from 'lucide-react';
 import { useMemo } from 'react';
 import type { View } from '@/app/game';
 import {
@@ -192,10 +192,16 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
                  <DropdownMenuLabel>Management</DropdownMenuLabel>
                 <DropdownMenuSeparator className='bg-gray-600'/>
                 {isAdmin && (
-                    <DropdownMenuItem onSelect={() => router.push('/admin')}>
-                        <Shield className="mr-2 h-4 w-4" />
-                        <span>Admin Panel</span>
-                    </DropdownMenuItem>
+                    <>
+                        <DropdownMenuItem onSelect={() => router.push('/admin')}>
+                            <Shield className="mr-2 h-4 w-4" />
+                            <span>Admin Panel</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => { /* Office logic here */ }}>
+                            <Briefcase className="mr-2 h-4 w-4" />
+                            <span>Ofisi</span>
+                        </DropdownMenuItem>
+                    </>
                 )}
                 <DropdownMenuItem onSelect={() => setView('accounting')}>
                     <LineChart className="mr-2 h-4 w-4" />
