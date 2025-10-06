@@ -21,7 +21,7 @@ export default function DashboardPage() {
       return;
     }
 
-    // Check user role and redirect if admin
+    // Redirect admin users to the admin page.
     const userRef = ref(getDatabase(), `users/${user.uid}`);
     const unsubscribe = onValue(userRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -44,7 +44,7 @@ export default function DashboardPage() {
         </div>
     );
   }
-
+  
   // The Game component will handle the initial null state before game state is loaded
   return <Game initialProfileViewId={profileId} />;
 }
