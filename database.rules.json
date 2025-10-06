@@ -13,7 +13,7 @@
       ".read": "auth != null",
       ".indexOn": ["netWorth", "username"],
       "$uid": {
-        ".write": "auth != null"
+        ".write": "auth != null && (auth.uid === $uid || auth.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2')"
       }
     },
     "market": {
@@ -40,7 +40,7 @@
     },
     "election": {
         ".read": "auth != null",
-        ".write": "auth != null && root.child('players').child(auth.uid).child('role').val() === 'admin'"
+        ".write": "auth.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2'"
     }
   }
 }
