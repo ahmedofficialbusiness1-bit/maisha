@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -28,15 +29,14 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    const userRef = ref(getDatabase(), `users/${user.uid}`);
-    
-    // Force admin status for specific UID
+    // Force admin status for specific UID for testing purposes
     if (user.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2') {
-        const adminData = getInitialUserData(user.uid, user.displayName, user.email);
+        const adminData = getInitialUserData(user.uid, user.displayName || 'Admin', user.email);
         adminData.role = 'admin';
         setGameState(adminData);
         setLoading(false);
     } else {
+        const userRef = ref(getDatabase(), `users/${user.uid}`);
         const unsubscribeUser = onValue(userRef, (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.val() as UserData;
