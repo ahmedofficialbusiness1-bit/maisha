@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -1758,6 +1759,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         unreadMessages={totalUnreadMessages} 
         unreadContracts={unreadContracts} 
         isAdmin={isAdmin}
+        isPresident={isPresident}
       />
     </div>
   );

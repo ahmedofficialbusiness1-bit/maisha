@@ -23,15 +23,17 @@ interface AppFooterProps {
   unreadMessages: number;
   unreadContracts: number;
   isAdmin: boolean;
+  isPresident: boolean;
 }
 
-export function AppFooter({ activeView, setView, unreadMessages, unreadContracts, isAdmin }: AppFooterProps) {
-  const navItems: { view: View; label: string; icon: React.ReactNode; adminOnly: boolean }[] = [
+export function AppFooter({ activeView, setView, unreadMessages, unreadContracts, isAdmin, isPresident }: AppFooterProps) {
+  const navItems: { view: View; label: string; icon: React.ReactNode; adminOnly: boolean, presidentOnly: boolean }[] = [
     {
       view: 'dashboard',
       label: 'Dashboard',
       icon: <LayoutDashboard className="h-5 w-5" />,
       adminOnly: false,
+      presidentOnly: false,
     },
     {
       view: 'inventory',
@@ -47,18 +49,21 @@ export function AppFooter({ activeView, setView, unreadMessages, unreadContracts
         </div>
       ),
       adminOnly: false,
+      presidentOnly: false,
     },
     {
       view: 'market',
       label: 'Market',
       icon: <CandlestickChart className="h-5 w-5" />,
       adminOnly: false,
+      presidentOnly: false,
     },
     {
       view: 'leaderboard',
       label: 'Wanaoongoza',
       icon: <Trophy className="h-5 w-5" />,
       adminOnly: false,
+      presidentOnly: false,
     },
     {
       view: 'chats',
@@ -74,21 +79,34 @@ export function AppFooter({ activeView, setView, unreadMessages, unreadContracts
         </div>
       ),
       adminOnly: false,
+      presidentOnly: false,
+    },
+    {
+      view: 'office',
+      label: 'Ofisi',
+      icon: <Briefcase className="h-5 w-5" />,
+      adminOnly: false,
+      presidentOnly: true,
     },
      {
       view: 'admin',
       label: 'Admin',
       icon: <Shield className="h-5 w-5" />,
       adminOnly: true,
+      presidentOnly: false,
     }
   ];
 
-  const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
+  const visibleNavItems = navItems.filter(item => {
+    if (item.adminOnly) return isAdmin;
+    if (item.presidentOnly) return isPresident;
+    return true;
+  });
 
   return (
     <footer className={cn(
         "sticky bottom-0 z-10 grid items-center justify-around border-t bg-gray-900/95 py-1 px-2 backdrop-blur-sm",
-        isAdmin ? "grid-cols-6" : "grid-cols-5"
+        `grid-cols-${visibleNavItems.length}`
       )}>
       {visibleNavItems.map((item) => (
         <Button

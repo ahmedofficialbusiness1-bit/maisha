@@ -191,12 +191,6 @@ export function AppHeader({ money, stars, playerName, playerAvatar, setView, not
             <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white">
                  <DropdownMenuLabel>Management</DropdownMenuLabel>
                 <DropdownMenuSeparator className='bg-gray-600'/>
-                {isAdmin && (
-                    <DropdownMenuItem onSelect={() => router.push('/admin')}>
-                        <Shield className="mr-2 h-4 w-4" />
-                        <span>Admin Panel</span>
-                    </DropdownMenuItem>
-                )}
                 <DropdownMenuItem onSelect={() => setView('accounting')}>
                     <LineChart className="mr-2 h-4 w-4" />
                     <span>Ripoti ya Kifedha</span>
