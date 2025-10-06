@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -98,16 +97,25 @@ export function AppFooter({ activeView, setView, unreadMessages, unreadContracts
   ];
 
   const visibleNavItems = navItems.filter(item => {
-    if (item.adminOnly) return isAdmin;
-    if (item.presidentOnly) return isPresident;
+    if (item.adminOnly && !isAdmin) return false;
+    if (item.presidentOnly && !isPresident) return false;
     return true;
   });
+
+  // This is a TailwindCSS "JIT" safeguard.
+  // We need to declare the full class names somewhere in the code so that the Just-In-Time compiler
+  // can see them and generate the corresponding CSS. We can't dynamically build them with string interpolation.
+  // We make them invisible and non-interactive so they don't affect the layout.
+  const jitSafeguard = (
+      <div className="hidden grid-cols-1 grid-cols-2 grid-cols-3 grid-cols-4 grid-cols-5 grid-cols-6 grid-cols-7"></div>
+  );
 
   return (
     <footer className={cn(
         "sticky bottom-0 z-10 grid items-center justify-around border-t bg-gray-900/95 py-1 px-2 backdrop-blur-sm",
         `grid-cols-${visibleNavItems.length}`
       )}>
+      {jitSafeguard}
       {visibleNavItems.map((item) => (
         <Button
             key={item.view}

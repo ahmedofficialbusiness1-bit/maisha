@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -1565,13 +1563,15 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
   if (!gameState || !user) return null; // Should be redirected by useEffect
   
-  const isAdmin = user.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
-  let role = isAdmin ? 'admin' : gameState.role;
+  const isAdmin = user.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2' || gameState.role === 'admin';
+  const isPresident = president?.uid === user.uid;
 
-  if (user.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2') {
+  let role: 'player' | 'admin' | 'president' = 'player';
+  if (isAdmin) {
     role = 'admin';
+  } else if (isPresident) {
+    role = 'president';
   }
-
 
   const currentProfile: ProfileData = {
       uid: gameState.uid,
@@ -1651,7 +1651,6 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         }
     }
 
-  const isPresident = president?.uid === user.uid;
 
   const renderView = () => {
     switch (view) {
@@ -1679,7 +1678,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} onVote={handleVote} president={president} candidates={candidates} electionState={electionState} currentUser={gameState} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} onVote={handleVote} president={president} candidates={candidates} electionState={electionState} votes={votes} currentUser={gameState} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
