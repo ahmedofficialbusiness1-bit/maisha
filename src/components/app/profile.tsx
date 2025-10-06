@@ -219,7 +219,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         <div 
                           className={cn(
                             "relative", 
-                            isPresident ? "p-1 rounded-md bg-gradient-to-tr from-blue-400 via-cyan-300 to-blue-500" : wrapperClass,
+                            isPresident && currentProfile.role !== 'admin' ? "p-1 rounded-md bg-gradient-to-tr from-blue-400 via-cyan-300 to-blue-500" : wrapperClass,
                             isEditing && "cursor-pointer hover:opacity-80 transition-opacity"
                           )}
                           onClick={() => isEditing && fileInputRef.current?.click()}
@@ -253,7 +253,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                         <div className="flex items-center gap-2 flex-wrap">
                             <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
                              
-                            {isPresident && (
+                            {isPresident && currentProfile.role !== 'admin' && (
                                <Badge className="text-xs py-0.5 px-2.5 bg-blue-800/80 border-blue-600 text-blue-200">
                                    MR PRESIDENT
                                </Badge>

@@ -3,11 +3,12 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { getDatabase, ref, onValue, update } from 'firebase/database';
 import type { UserData } from '@/services/game-service';
 import { AdminPanel } from '@/components/app/admin-panel';
 import { Loader2 } from 'lucide-react';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
+import { getInitialUserData } from '@/services/game-service';
 
 export default function AdminDashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -28,20 +29,30 @@ export default function AdminDashboardPage() {
     }
 
     const userRef = ref(getDatabase(), `users/${user.uid}`);
-    const unsubscribeUser = onValue(userRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val() as UserData;
-        if (data.role !== 'admin') {
-          router.replace('/dashboard'); // Not an admin, kick them out
-        } else {
-          setGameState(data);
-          setLoading(false);
-        }
-      } else {
-        // User data doesn't exist, they can't be an admin
-        router.replace('/login');
-      }
-    });
+    
+    // Force admin status for specific UID
+    if (user.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2') {
+        const adminData = getInitialUserData(user.uid, user.displayName, user.email);
+        adminData.role = 'admin';
+        setGameState(adminData);
+        setLoading(false);
+    } else {
+        const unsubscribeUser = onValue(userRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.val() as UserData;
+            if (data.role !== 'admin') {
+              router.replace('/dashboard'); // Not an admin, kick them out
+            } else {
+              setGameState(data);
+              setLoading(false);
+            }
+          } else {
+            // User data doesn't exist, they can't be an admin
+            router.replace('/login');
+          }
+        });
+        return () => unsubscribeUser();
+    }
     
     const electionRef = ref(database, 'election');
     const unsubscribeElection = onValue(electionRef, (snapshot) => {
@@ -57,7 +68,7 @@ export default function AdminDashboardPage() {
 
 
     return () => {
-      unsubscribeUser();
+      // No need for user unsubscribe here as it's handled in the else block
       unsubscribeElection();
     };
   }, [user, userLoading, router, database, allPlayers]);
@@ -76,7 +87,17 @@ export default function AdminDashboardPage() {
     if (gameState?.role !== 'admin') return;
     const updates: Record<string, any> = {};
     updates[`/election/presidentUid`] = uid;
-    onValue(ref(database), updates);
+    update(ref(database), updates);
+  };
+  
+  const handleAdminRemovePresident = () => {
+    if (gameState?.role !== 'admin') return;
+    update(ref(database), { '/election/presidentUid': null });
+  };
+  
+  const handleAdminManageElection = (state: 'open' | 'closed') => {
+      if (gameState?.role !== 'admin') return;
+      update(ref(database), { '/election/state': state });
   };
 
   if (loading || userLoading || !gameState || !allPlayers) {
@@ -96,8 +117,8 @@ export default function AdminDashboardPage() {
         onAdminSendStars={() => {}}
         onAdminSetRole={() => {}}
         onAdminAppointPresident={handleAdminAppointPresident}
-        onAdminRemovePresident={() => {}}
-        onAdminManageElection={() => {}}
+        onAdminRemovePresident={handleAdminRemovePresident}
+        onAdminManageElection={handleAdminManageElection}
         president={president}
         electionState={electionState}
       />
