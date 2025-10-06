@@ -253,9 +253,12 @@ function ChatItem({ name, lastMessage, isActive, isUnread, onClick, avatar, rank
                 <div className="flex items-center gap-2">
                     <p className={cn('font-semibold truncate', isUnread && !isActive ? 'text-white' : 'text-gray-200')}>{name}</p>
                     {isPresident && (
-                        <Crown className="h-4 w-4 text-red-500 [filter:drop-shadow(0_0_2px_rgb(255,80,80))]" />
+                        <Badge className="text-[9px] py-0 px-1.5 h-auto bg-red-800/80 border-red-600 text-red-200">
+                            <Crown className="h-2.5 w-2.5 mr-1" />
+                            President
+                        </Badge>
                     )}
-                    {rankTitle && (
+                    {rankTitle && !isPresident && (
                         <Badge className="text-[9px] py-0 px-1.5 h-auto bg-indigo-800/80 border-indigo-600 text-indigo-200">{rankTitle}</Badge>
                     )}
                 </div>
@@ -372,9 +375,12 @@ function ChatWindow({ user, chat, onBack, players, president }: { user: Authenti
                 <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold">{chatName}</h3>
                      {isPresident && (
-                        <Crown className="h-5 w-5 text-red-500 [filter:drop-shadow(0_0_3px_rgb(255,80,80))]" />
+                         <Badge className="text-xs py-0.5 px-2 bg-red-800/80 border-red-600 text-red-200">
+                             <Crown className="h-3 w-3 mr-1" />
+                             President
+                         </Badge>
                      )}
-                     {chatRankTitle && (
+                     {chatRankTitle && !isPresident && (
                         <Badge className="text-xs py-0.5 px-2 bg-indigo-800/80 border-indigo-600 text-indigo-200">{chatRankTitle}</Badge>
                     )}
                 </div>
@@ -391,9 +397,12 @@ function ChatWindow({ user, chat, onBack, players, president }: { user: Authenti
                                 <div className={cn("flex items-center gap-2", msg.uid === user.uid ? "justify-end flex-row-reverse" : "justify-start")}>
                                      <span className="text-sm font-semibold">{msg.username}</span>
                                      {msg.isPresident && (
-                                         <Crown className="h-4 w-4 text-red-500 [filter:drop-shadow(0_0_2px_rgb(255,80,80))]" />
+                                         <Badge className="text-[9px] py-0 px-1.5 h-auto bg-red-800/80 border-red-600 text-red-200">
+                                            <Crown className="h-2.5 w-2.5 mr-1" />
+                                            President
+                                        </Badge>
                                      )}
-                                      {msg.rankTitle && (
+                                      {msg.rankTitle && !msg.isPresident && (
                                          <Badge className="text-[9px] py-0 px-1 h-auto bg-indigo-800/60 border-indigo-700 text-indigo-300">{msg.rankTitle}</Badge>
                                       )}
                                       <span className="text-xs text-gray-400">
@@ -435,6 +444,7 @@ function ChatWindow({ user, chat, onBack, players, president }: { user: Authenti
 }
 
     
+
 
 
 

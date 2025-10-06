@@ -252,7 +252,10 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             <h1 className="text-2xl font-bold tracking-tight">{isEditing ? form.watch('playerName') : currentProfile.playerName}</h1>
                              
                             {isPresident && currentProfile.role !== 'admin' && (
-                               <Crown className="h-6 w-6 text-red-500 [filter:drop-shadow(0_0_4px_rgb(255,80,80))]" />
+                               <Badge className="text-xs py-0.5 px-2.5 bg-red-800/80 border-red-600 text-red-200">
+                                   <Crown className="h-3 w-3 mr-1" />
+                                   MR PRESIDENT
+                               </Badge>
                             )}
                             
                             {playerTier && (
