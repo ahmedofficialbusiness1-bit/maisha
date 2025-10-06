@@ -1515,15 +1515,15 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
   const handleVote = React.useCallback((candidateUid: string) => {
       if (!user || !gameState || !electionRef) return;
-      const cost = 10000;
-      if (gameState.money < cost) {
-          toast({ variant: 'destructive', title: 'Pesa Hazitoshi', description: `Unahitaji $${cost.toLocaleString()} kupiga kura.`});
+      const cost = 100; // Cost in stars
+      if (gameState.stars < cost) {
+          toast({ variant: 'destructive', title: 'Nyota Hazitoshi', description: `Unahitaji nyota ${cost.toLocaleString()} kupiga kura.`});
           return;
       }
 
       runTransaction(userRef, (currentData) => {
-          if (currentData && currentData.money >= cost) {
-              currentData.money -= cost;
+          if (currentData && currentData.stars >= cost) {
+              currentData.stars -= cost;
               return currentData;
           }
           return;
@@ -1533,7 +1533,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
               runTransaction(voteRef, (currentVotes) => (currentVotes || 0) + 1);
               toast({ title: 'Kura Imepigwa!', description: 'Asante kwa kushiriki katika demokrasia.'});
           } else {
-              toast({ variant: 'destructive', title: 'Pesa Hazitoshi'});
+              toast({ variant: 'destructive', title: 'Nyota Hazitoshi'});
           }
       });
   }, [user, gameState, electionRef, database, toast, userRef]);

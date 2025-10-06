@@ -695,7 +695,9 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                             <p className="text-xs text-gray-400">Kura</p>
                                         </div>
                                     </div>
-                                    <Button size="sm" className="w-full mt-4" onClick={() => onVote(candidate.uid)}>Piga Kura ($10,000)</Button>
+                                    <Button size="sm" className="w-full mt-4" onClick={() => onVote(candidate.uid)} disabled={currentUser.stars < 100}>
+                                      Piga Kura (Nyota {100})
+                                    </Button>
                                 </Card>
                             ))}
 
