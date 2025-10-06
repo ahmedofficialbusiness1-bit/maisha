@@ -1,0 +1,46 @@
+
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      }
+    },
+    "players": {
+      ".read": "auth != null",
+      ".indexOn": ["netWorth", "username"],
+      "$uid": {
+        ".write": "auth != null"
+      }
+    },
+    "market": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "contracts": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "chat": {
+      "$chatRoomId": {
+        ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.contains(auth.uid))",
+        ".write": "auth != null"
+      }
+    },
+    "chat-metadata": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+    },
+    "marketShares": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "election": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('players').child(auth.uid).child('role').val() === 'admin'"
+    }
+  }
+}
