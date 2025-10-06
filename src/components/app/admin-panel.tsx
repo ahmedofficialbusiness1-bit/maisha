@@ -453,6 +453,7 @@ function GameTools() {
             moneyForm.reset(defaultCurrencyValues);
         } catch (error) {
             console.error("Failed to send money:", error);
+            toast({ variant: 'destructive', title: 'Failed to Send Money' });
         } finally {
             setIsMoneyLoading(false);
         }
@@ -465,6 +466,7 @@ function GameTools() {
             starsForm.reset(defaultCurrencyValues);
         } catch (error) {
              console.error("Failed to send stars:", error);
+             toast({ variant: 'destructive', title: 'Failed to Send Stars' });
         } finally {
             setIsStarsLoading(false);
         }
@@ -878,5 +880,7 @@ export function AdminPanel({ onViewProfile, president, electionState }: AdminPan
     </div>
   );
 }
+
+    
 
     
