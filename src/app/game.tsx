@@ -24,6 +24,7 @@ import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, upda
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { recipes } from '@/lib/recipe-data';
 import { AdminPanel } from '@/components/app/admin-panel';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export type PlayerStock = {
     ticker: string;
@@ -1472,6 +1473,73 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   }, [contractListings, user, gameState]);
 
 
+  const handleRunForPresidency = React.useCallback(() => {
+      if (!user || !gameState || !electionRef) return;
+      const cost = 10000000;
+      if (gameState.money < cost) {
+          toast({ variant: 'destructive', title: 'Pesa Hazitoshi', description: `Unahitaji $${cost.toLocaleString()} kugombea urais.`});
+          return;
+      }
+      
+      const isAlreadyCandidate = candidates.some(c => c.uid === user.uid);
+      if (isAlreadyCandidate) {
+          toast({ variant: 'destructive', title: 'Tayari wewe ni mgombea.'});
+          return;
+      }
+
+      runTransaction(userRef, (currentData) => {
+          if (currentData && currentData.money >= cost) {
+              currentData.money -= cost;
+              return currentData;
+          }
+          return;
+      }).then(({ committed }) => {
+          if (committed) {
+              const slogan = prompt("Andika kauli mbiu yako ya uchaguzi:");
+              if (slogan) {
+                  const candidateData = {
+                      uid: user.uid,
+                      username: gameState.username,
+                      avatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
+                      slogan: slogan,
+                  };
+                  const candidatesRef = ref(database, 'election/candidates');
+                  const newCandidates = [...candidates, candidateData];
+                  set(candidatesRef, newCandidates);
+                  toast({ title: 'Umefanikiwa Kujisajili!', description: 'Sasa wewe ni mgombea wa urais.'});
+              }
+          } else {
+              toast({ variant: 'destructive', title: 'Pesa Hazitoshi'});
+          }
+      });
+  }, [user, gameState, electionRef, candidates, database, toast, userRef]);
+
+  const handleVote = React.useCallback((candidateUid: string) => {
+      if (!user || !gameState || !electionRef) return;
+      const cost = 10000;
+      if (gameState.money < cost) {
+          toast({ variant: 'destructive', title: 'Pesa Hazitoshi', description: `Unahitaji $${cost.toLocaleString()} kupiga kura.`});
+          return;
+      }
+
+      runTransaction(userRef, (currentData) => {
+          if (currentData && currentData.money >= cost) {
+              currentData.money -= cost;
+              return currentData;
+          }
+          return;
+      }).then(({ committed }) => {
+          if (committed) {
+              const voteRef = ref(database, `election/votes/${candidateUid}`);
+              runTransaction(voteRef, (currentVotes) => (currentVotes || 0) + 1);
+              toast({ title: 'Kura Imepigwa!', description: 'Asante kwa kushiriki katika demokrasia.'});
+          } else {
+              toast({ variant: 'destructive', title: 'Pesa Hazitoshi'});
+          }
+      });
+  }, [user, gameState, electionRef, database, toast, userRef]);
+
+
   if (userLoading || gameStateLoading || !allPlayers) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-900 text-white">
@@ -1696,3 +1764,6 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
 
 
+
+
+    
