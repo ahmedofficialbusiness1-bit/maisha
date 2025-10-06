@@ -14,13 +14,12 @@ import { Chats, type ChatMetadata } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
 import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
 import { Leaderboard } from '@/components/app/leaderboard';
-import { AdminPanel } from '@/components/app/admin-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
 import { useUser } from '@/firebase';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, update } from 'firebase/database';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { recipes } from '@/lib/recipe-data';
@@ -30,7 +29,7 @@ export type PlayerStock = {
     shares: number;
 }
 
-export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting' | 'profile' | 'leaderboard' | 'admin';
+export type View = 'dashboard' | 'inventory' | 'market' | 'chats' | 'encyclopedia' | 'accounting' | 'profile' | 'leaderboard';
 
 export type Notification = {
     id: string;
@@ -63,11 +62,10 @@ const getPriceWithQuality = (itemName: string, quality: number) => {
 };
 
 
-export function Game() {
+export function Game({ initialProfileViewId }: { initialProfileViewId: string | null }) {
   const { user, loading: userLoading } = useUser();
   const database = getDatabase();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [gameState, setGameState] = React.useState<UserData | null>(null);
   const [playerListings, setPlayerListings] = React.useState<PlayerListing[]>([]);
   const [contractListings, setContractListings] = React.useState<any[]>([]);
@@ -125,6 +123,13 @@ export function Game() {
         setInitialPrivateChatUid(null);
     }
   }, []);
+  
+    React.useEffect(() => {
+        if (initialProfileViewId) {
+            handleViewProfile(initialProfileViewId);
+        }
+    }, [initialProfileViewId]);
+
 
   // Periodically update lastSeen to keep user online
   React.useEffect(() => {
@@ -280,40 +285,21 @@ export function Game() {
   // Update public player data (RTDB) whenever critical info changes
     React.useEffect(() => {
     if (!gameState || !gameState.uid || !gameState.username || !user || !playerPublicRef) return;
-    
-    const isPresident = president?.uid === gameState.uid;
-    // Determine the final role. Admin > President > Player
-    let finalRole: PlayerPublicData['role'] = 'player';
-    if (gameState.role === 'admin') {
-        finalRole = 'admin';
-    } else if (isPresident) {
-        finalRole = 'president';
-    }
 
-
-    // This is the public-facing data for the leaderboard, profiles, etc.
     const publicData: PlayerPublicData = {
         uid: gameState.uid,
         username: gameState.username,
         netWorth: gameState.netWorth,
         avatar: gameState.avatarUrl || `https://picsum.photos/seed/${gameState.uid}/40/40`,
         level: gameState.playerLevel,
-        role: finalRole
+        role: gameState.role,
     };
 
-    // Use a transaction to safely update the public player data and check the private data
     runTransaction(playerPublicRef, (currentPublicData) => {
-      // Always update the public data with the latest from gameState
       return publicData;
     });
 
-     // Also ensure the private gameState is consistent
-    if (gameState.role !== 'admin' && gameState.role !== finalRole) {
-        setGameState(prev => prev ? ({ ...prev, role: finalRole }) : null);
-    }
-
-
-  }, [gameState, playerPublicRef, user, president]);
+  }, [gameState, playerPublicRef, user]);
 
 
   const getXpForNextLevel = (level: number) => {
@@ -1097,186 +1083,6 @@ export function Game() {
     });
   }
 
-  const handleAdminSendItem = (itemName: string, quantity: number, targetUid: string) => {
-    if (!user || gameState?.role !== 'admin') return;
-
-    const newContractRef = push(ref(database, 'contracts'));
-    const productInfo = encyclopediaData.find(e => e.name === itemName);
-
-    const newContract: Omit<any, 'id'> = {
-        commodity: itemName,
-        quantity,
-        pricePerUnit: 0, // It's free
-        sellerUid: 'admin-system',
-        sellerName: 'System Admin',
-        sellerAvatar: `https://picsum.photos/seed/admin/40/40`,
-        status: 'open',
-        createdAt: Date.now(),
-        expiresAt: Date.now() + 5 * 24 * 60 * 60 * 1000, // 5 days expiry
-        buyerIdentifier: targetUid,
-        imageHint: productInfo?.imageHint || 'product photo'
-    };
-
-    set(newContractRef, newContract).catch(error => {
-        console.error("Failed to create admin contract:", error);
-        toast({ variant: 'destructive', title: 'Failed to Create Admin Contract' });
-    });
-  };
-
-  const handleAdminSendMoney = (amount: number, targetUid: string) => {
-    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
-
-    const targetUserRef = ref(database, `users/${targetUid}`);
-    runTransaction(targetUserRef, (userData) => {
-        if (userData) {
-            userData.money += amount;
-
-            const transRef = push(ref(database, `users/${targetUid}/transactions`));
-            const newTransaction: Transaction = { id: transRef.key!, type: 'income', amount: amount, description: `Admin Gift: Money`, timestamp: Date.now() };
-            userData.transactions = { ...userData.transactions, [newTransaction.id]: newTransaction };
-            
-            const notifRef = push(ref(database, `users/${targetUid}/notifications`));
-            const newNotification: Notification = { id: notifRef.key!, message: `You received $${amount.toLocaleString()} from an Admin.`, timestamp: Date.now(), read: false, icon: 'purchase' };
-            userData.notifications = { ...userData.notifications, [newNotification.id]: newNotification };
-        }
-        return userData;
-    }).then(() => {
-        toast({ title: "Money Sent!", description: `Sent $${amount.toLocaleString()} to player ${targetUid}`});
-    }).catch((error) => {
-        console.error("Failed to send money:", error);
-        toast({ variant: 'destructive', title: 'Failed to Send Money' });
-    });
-  }
-
-  const handleAdminSendStars = (amount: number, targetUid: string) => {
-    if (!user || gameState?.role !== 'admin' || amount <= 0 || !targetUid) return;
-    
-    const targetUserRef = ref(database, `users/${targetUid}`);
-    runTransaction(targetUserRef, (userData) => {
-        if (userData) {
-            userData.stars += amount;
-
-            const notifRef = push(ref(database, `users/${targetUid}/notifications`));
-            const newNotification: Notification = { id: notifRef.key!, message: `You received ${amount.toLocaleString()} Stars from an Admin.`, timestamp: Date.now(), read: false, icon: 'purchase' };
-            userData.notifications = { ...userData.notifications, [newNotification.id]: newNotification };
-        }
-        return userData;
-    }).then(() => {
-        toast({ title: "Stars Sent!", description: `Sent ${amount.toLocaleString()} Stars to player ${targetUid}`});
-    }).catch((error) => {
-        console.error("Failed to send stars:", error);
-        toast({ variant: 'destructive', title: 'Failed to Send Stars' });
-    });
-  }
-  
-    const handleAdminSetRole = (uid: string, role: 'player' | 'admin' | 'president') => {
-        if (!user || gameState?.role !== 'admin' || !uid) return;
-        const targetUserRef = ref(database, `users/${uid}`);
-        runTransaction(targetUserRef, (userData) => {
-            if (userData) {
-                userData.role = role;
-            }
-            return userData;
-        }).then(() => {
-            toast({ title: "Role Updated!", description: `Player ${uid} is now a(n) ${role}.`});
-        }).catch((error) => {
-            console.error("Failed to set role:", error);
-            toast({ variant: 'destructive', title: 'Failed to Set Role' });
-        });
-    }
-
-  const handleAdminAppointPresident = (uid: string) => {
-    if (gameState?.role !== 'admin') return;
-    const updates: Record<string, any> = {};
-    updates[`/election/presidentUid`] = uid;
-    update(ref(database), updates);
-    toast({ title: "President Appointed", description: `Player ${uid} is now the President.` });
-  };
-  
-  const handleAdminRemovePresident = () => {
-    if (gameState?.role !== 'admin') return;
-     const updates: Record<string, any> = {};
-    updates[`/election/presidentUid`] = null;
-    update(ref(database), updates);
-    toast({ title: "President Removed" });
-  }
-
-  const handleAdminManageElection = (state: 'open' | 'closed') => {
-      if (gameState?.role !== 'admin' || !electionRef) return;
-      const updates: Record<string, any> = {};
-      updates[`/election/state`] = state;
-
-      if (state === 'closed') {
-          // Logic to tally votes and declare winner
-          const winnerId = Object.keys(votes).reduce((a, b) => votes[a] > votes[b] ? a : b, '');
-          if (winnerId) {
-            updates[`/election/presidentUid`] = winnerId;
-          }
-      } else {
-        // Clear previous election data when opening a new one
-        updates[`/election/candidates`] = null;
-        updates[`/election/votes`] = null;
-        updates[`/election/presidentUid`] = null;
-      }
-      update(ref(database), updates);
-  };
-  
-    const handleRunForPresidency = () => {
-        if (!user || !gameState) return;
-
-        const fee = 10000000;
-        if (gameState.money < fee) {
-            toast({ variant: "destructive", title: "Pesa haitoshi", description: "Unahitaji $10,000,000 kugombea." });
-            return;
-        }
-
-        const candidateRef = ref(database, `/election/candidates/${user.uid}`);
-        const userMoneyRef = ref(database, `/users/${user.uid}/money`);
-
-        runTransaction(userMoneyRef, (currentMoney) => {
-            if (currentMoney < fee) return;
-            return currentMoney - fee;
-        }).then(({ committed }) => {
-            if (committed) {
-                set(candidateRef, {
-                    uid: user.uid,
-                    username: gameState.username,
-                    avatar: gameState.avatarUrl,
-                    slogan: "Uchumi imara, maisha bora kwa wote!",
-                });
-                toast({ title: "Umefanikiwa!", description: "Sasa wewe ni mgombea urais!" });
-            } else {
-                toast({ variant: "destructive", title: "Pesa haitoshi" });
-            }
-        });
-    };
-    
-    const handleVote = (candidateUid: string) => {
-        if (!user || !gameState) return;
-        
-        const fee = 10000;
-         if (gameState.money < fee) {
-            toast({ variant: "destructive", title: "Pesa haitoshi", description: "Unahitaji $10,000 kupiga kura." });
-            return;
-        }
-
-        const voteRef = ref(database, `/election/votes/${candidateUid}`);
-        const userMoneyRef = ref(database, `/users/${user.uid}/money`);
-
-        runTransaction(userMoneyRef, (currentMoney) => {
-            if (currentMoney < fee) return;
-            return currentMoney - fee;
-        }).then(({ committed }) => {
-            if (committed) {
-                 runTransaction(voteRef, (currentVotes) => (currentVotes || 0) + 1);
-                 toast({ title: "Kura imepigwa!", description: `Umemchagua mgombea ${candidateUid}` });
-            } else {
-                toast({ variant: "destructive", title: "Pesa haitoshi" });
-            }
-        })
-    };
-
-
   const handleAcceptContract = async (contract: any) => {
     if (!user || !gameState || !userRef) return;
 
@@ -1792,7 +1598,7 @@ export function Game() {
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} onVote={handleVote} president={president} candidates={candidates} electionState={electionState} votes={votes} currentUser={gameState} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={()=>{}} onVote={()=>{}} president={president} candidates={candidates} electionState={electionState} votes={votes} currentUser={gameState} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
@@ -1823,22 +1629,6 @@ export function Game() {
                     />;
         }
         return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} isPresident={isPresident} />;
-      case 'admin':
-          if (gameState.role === 'admin') {
-            return <AdminPanel 
-                        onViewProfile={handleViewProfile} 
-                        onAdminSendItem={handleAdminSendItem} 
-                        onAdminSendMoney={handleAdminSendMoney} 
-                        onAdminSendStars={handleAdminSendStars} 
-                        onAdminSetRole={handleAdminSetRole}
-                        onAdminAppointPresident={handleAdminAppointPresident}
-                        onAdminRemovePresident={handleAdminRemovePresident}
-                        onAdminManageElection={handleAdminManageElection}
-                        president={president}
-                        electionState={electionState}
-                    />;
-          }
-          return null;
       default:
         return null;
     }
@@ -1867,5 +1657,6 @@ export function Game() {
     </div>
   );
 }
+
 
 
