@@ -26,15 +26,15 @@ interface AppFooterProps {
 }
 
 export function AppFooter({ activeView, setView, unreadMessages, unreadContracts, isAdmin }: AppFooterProps) {
-  const navItems = [
+  const navItems: { view: View; label: string; icon: React.ReactNode; adminOnly: boolean }[] = [
     {
-      view: 'dashboard' as View,
+      view: 'dashboard',
       label: 'Dashboard',
       icon: <LayoutDashboard className="h-5 w-5" />,
       adminOnly: false,
     },
     {
-      view: 'inventory' as View,
+      view: 'inventory',
       label: 'Inventory',
       icon: (
         <div className="relative">
@@ -49,19 +49,19 @@ export function AppFooter({ activeView, setView, unreadMessages, unreadContracts
       adminOnly: false,
     },
     {
-      view: 'market' as View,
+      view: 'market',
       label: 'Market',
       icon: <CandlestickChart className="h-5 w-5" />,
       adminOnly: false,
     },
     {
-      view: 'leaderboard' as View,
+      view: 'leaderboard',
       label: 'Wanaoongoza',
       icon: <Trophy className="h-5 w-5" />,
       adminOnly: false,
     },
     {
-      view: 'chats' as View,
+      view: 'chats',
       label: 'Chats',
       icon: (
         <div className="relative">
@@ -76,9 +76,9 @@ export function AppFooter({ activeView, setView, unreadMessages, unreadContracts
       adminOnly: false,
     },
      {
-      view: 'admin' as View,
-      label: 'Admin',
-      icon: <Shield className="h-5 w-5" />,
+      view: 'office',
+      label: 'Ofisi',
+      icon: <Briefcase className="h-5 w-5" />,
       adminOnly: true,
     }
   ];
