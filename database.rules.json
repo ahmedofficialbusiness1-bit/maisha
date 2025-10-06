@@ -11,7 +11,7 @@
       ".read": "auth != null",
       ".indexOn": ["netWorth", "username"],
       "$uid": {
-        ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')"
+        ".write": "auth != null"
       }
     },
     "market": {
@@ -24,7 +24,7 @@
     },
     "chat": {
       "$chatRoomId": {
-        ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.contains(auth.uid))",
+        ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.includes(auth.uid))",
         ".write": "auth != null"
       }
     },
