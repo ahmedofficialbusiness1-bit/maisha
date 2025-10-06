@@ -1564,9 +1564,12 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
   if (!gameState || !user) return null; // Should be redirected by useEffect
   
-  // Force admin role if the UID matches
   const isAdmin = user.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2';
-  const role = isAdmin ? 'admin' : gameState.role;
+  let role = isAdmin ? 'admin' : gameState.role;
+
+  if (user.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2') {
+    role = 'admin';
+  }
 
 
   const currentProfile: ProfileData = {
@@ -1675,7 +1678,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
       case 'inventory':
         return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
       case 'market':
-        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} onVote={handleVote} president={president} candidates={candidates} electionState={electionState} votes={votes} currentUser={gameState} />;
+        return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} onVote={handleVote} president={president} candidates={candidates} electionState={electionState} currentUser={gameState} />;
       case 'encyclopedia':
         return <Encyclopedia />;
       case 'chats':
@@ -1707,8 +1710,6 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         }
         return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} isPresident={isPresident} />;
       case 'admin':
-        // This view is now handled by the /admin page route for better separation.
-        // It renders the full Game component with a forced view.
         return <AdminPanel
                   onViewProfile={handleViewProfile}
                   president={president}
