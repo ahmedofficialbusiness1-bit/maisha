@@ -232,7 +232,12 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
           const electionData = snapshot.val();
           if (electionData) {
               setElectionState(electionData.state || 'closed');
-              setCandidates(electionData.candidates || []);
+               const candidatesData = electionData.candidates || {};
+                const candidatesList = Object.keys(candidatesData).map(key => ({
+                    ...candidatesData[key],
+                    id: key,
+                }));
+              setCandidates(candidatesList || []);
               setVotes(electionData.votes || {});
               const presidentPlayer = allPlayers.find(p => p.uid === electionData.presidentUid);
               setPresident(presidentPlayer || null);
@@ -1503,8 +1508,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                       slogan: slogan,
                   };
                   const candidatesRef = ref(database, 'election/candidates');
-                  const newCandidates = [...candidates, candidateData];
-                  set(candidatesRef, newCandidates);
+                  push(candidatesRef, candidateData);
                   toast({ title: 'Umefanikiwa Kujisajili!', description: 'Sasa wewe ni mgombea wa urais.'});
               }
           } else {
