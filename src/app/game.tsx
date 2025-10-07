@@ -234,8 +234,8 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
               setElectionState(electionData.state || 'closed');
                const candidatesData = electionData.candidates || {};
                 const candidatesList = Object.keys(candidatesData).map(key => ({
-                    ...candidatesData[key],
                     id: key,
+                    ...candidatesData[key]
                 }));
               setCandidates(candidatesList || []);
               setVotes(electionData.votes || {});
@@ -1499,18 +1499,15 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
           return;
       }).then(({ committed }) => {
           if (committed) {
-              const slogan = prompt("Andika kauli mbiu yako ya uchaguzi:");
-              if (slogan) {
-                  const candidateData = {
-                      uid: user.uid,
-                      username: gameState.username,
-                      avatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-                      slogan: slogan,
-                  };
-                  const candidatesRef = ref(database, 'election/candidates');
-                  push(candidatesRef, candidateData);
-                  toast({ title: 'Umefanikiwa Kujisajili!', description: 'Sasa wewe ni mgombea wa urais.'});
-              }
+              const candidateData = {
+                  uid: user.uid,
+                  username: gameState.username,
+                  avatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
+                  slogan: "Nitaongoza kwa Haki na Maendeleo!",
+              };
+              const candidatesRef = ref(database, 'election/candidates');
+              push(candidatesRef, candidateData);
+              toast({ title: 'Umefanikiwa Kujisajili!', description: 'Sasa wewe ni mgombea wa urais.'});
           } else {
               toast({ variant: 'destructive', title: 'Nyota Hazitoshi'});
           }
