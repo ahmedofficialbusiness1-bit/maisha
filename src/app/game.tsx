@@ -79,7 +79,6 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   // State for viewing other players' profiles
   const [viewedProfileUid, setViewedProfileUid] = React.useState<string | null>(null);
   const [viewedProfileData, setViewedProfileData] = React.useState<UserData | null>(null);
-  const [isViewingProfile, setIsViewingProfile] = React.useState(false);
   
   // State for opening private chat from profile
   const [initialPrivateChatUid, setInitialPrivateChatUid] = React.useState<string | null>(null);
@@ -212,7 +211,6 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         get(profileUserRef).then((snapshot) => {
             if (snapshot.exists()) {
                 setViewedProfileData(snapshot.val() as UserData);
-                setIsViewingProfile(true); // Explicitly set the viewing state
             } else {
                 toast({ variant: 'destructive', title: 'Error', description: 'Could not find player profile.' });
                 setViewedProfileUid(null);
@@ -220,7 +218,6 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         });
     } else {
         setViewedProfileData(null);
-        setIsViewingProfile(false);
     }
   }, [viewedProfileUid, database, toast]);
 
@@ -1696,7 +1693,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
       case 'leaderboard':
           return <Leaderboard onViewProfile={handleViewProfile} president={president} />;
       case 'profile':
-          if (isViewingProfile && viewedProfileForDisplay) {
+          if (viewedProfileForDisplay) {
             return <PlayerProfile 
                         currentProfile={viewedProfileForDisplay} 
                         metrics={getMetricsForProfile(viewedProfileData)}
