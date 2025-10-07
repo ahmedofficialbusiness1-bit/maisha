@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -1033,9 +1034,8 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   };
 
   const handleCreateContract = (item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => {
-    if (!user || !gameState || !userRef || quantity <= 0 || pricePerUnit <= 0) return;
+    if (!user || !gameState || !userRef || !allPlayers) return;
     
-    // Optimistically deduct items via transaction
     runTransaction(userRef, (currentData) => {
         if (!currentData) return;
         const itemIndex = currentData.inventory.findIndex((i: InventoryItem) => i.item === item.item);
@@ -1048,7 +1048,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         return currentData;
     }).then(transactionResult => {
         if (!transactionResult.committed) {
-            return; // Aborted due to insufficient items
+            return;
         }
 
         const newContractRef = push(ref(database, 'contracts'));
@@ -1063,17 +1063,37 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             sellerAvatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
             status: 'open',
             createdAt: Date.now(),
-            expiresAt: Date.now() + 5 * 24 * 60 * 60 * 1000, // 5 days expiry
+            expiresAt: Date.now() + 5 * 24 * 60 * 60 * 1000, 
             buyerIdentifier: targetIdentifier,
             imageHint: productInfo?.imageHint || 'product photo'
         };
 
         set(newContractRef, newContract).then(() => {
             toast({ title: 'Contract Created', description: `Your contract for ${item.item} has been posted.` });
+
+            if (targetIdentifier && allPlayers) {
+                const targetPlayer = allPlayers.find(p => p.username.toLowerCase() === targetIdentifier.toLowerCase() || p.uid === targetIdentifier);
+                if (targetPlayer) {
+                    const targetUserRef = ref(database, `users/${targetPlayer.uid}`);
+                    runTransaction(targetUserRef, (targetData) => {
+                        if (targetData) {
+                            const notifRef = push(ref(database, `users/${targetPlayer.uid}/notifications`));
+                            const newNotification: Notification = { 
+                                id: notifRef.key!,
+                                message: `You have received a new contract from ${gameState.username} for ${quantity}x ${item.item}.`,
+                                timestamp: Date.now(),
+                                read: false,
+                                icon: 'purchase'
+                            };
+                            targetData.notifications = { ...(targetData.notifications || {}), [newNotification.id]: newNotification };
+                        }
+                        return targetData;
+                    });
+                }
+            }
         }).catch(error => {
             console.error("Failed to create contract:", error);
             toast({ variant: 'destructive', title: 'Failed to Create Contract' });
-            // Re-add items to inventory on failure
             runTransaction(userRef, (currentData) => {
                 if(currentData) {
                     const itemIndex = currentData.inventory.findIndex((i: InventoryItem) => i.item === item.item);
