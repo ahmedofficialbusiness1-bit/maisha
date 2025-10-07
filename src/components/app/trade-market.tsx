@@ -653,7 +653,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                     {president ? (
                         <div className="flex flex-col items-center text-center p-4 bg-gray-900/50 rounded-lg">
                             <p className="text-gray-400">Rais wa Sasa</p>
-                            <Avatar className="h-16 w-16 my-2 border-4 border-yellow-400">
+                            <Avatar className="h-16 w-16 my-2 border-4 border-red-500">
                                 <AvatarImage src={president.avatar} alt={president.username} data-ai-hint="player avatar" />
                                 <AvatarFallback>{president.username.charAt(0)}</AvatarFallback>
                             </Avatar>
@@ -677,29 +677,33 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                 <CardContent>
                     {electionState === 'open' ? (
                         <div className="space-y-4">
-                            {candidates.map((candidate: any) => (
-                                <Card key={candidate.uid} className="bg-gray-900/50 p-4">
-                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-10 w-10">
-                                                <AvatarImage src={candidate.avatar} alt={candidate.username} data-ai-hint="player avatar" />
-                                                <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="font-bold">{candidate.username}</p>
-                                                <p className="text-xs italic text-gray-400">"{candidate.slogan}"</p>
+                            {candidates && candidates.length > 0 ? (
+                                candidates.map((candidate: any) => (
+                                    <Card key={candidate.uid} className="bg-gray-900/50 p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className="h-10 w-10">
+                                                    <AvatarImage src={candidate.avatar} alt={candidate.username} data-ai-hint="player avatar" />
+                                                    <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <p className="font-bold">{candidate.username}</p>
+                                                    <p className="text-xs italic text-gray-400">"{candidate.slogan}"</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-bold text-lg">{votes[candidate.uid] || 0}</p>
+                                                <p className="text-xs text-gray-400">Kura</p>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="font-bold text-lg">{votes[candidate.uid] || 0}</p>
-                                            <p className="text-xs text-gray-400">Kura</p>
-                                        </div>
-                                    </div>
-                                    <Button size="sm" className="w-full mt-4" onClick={() => onVote(candidate.uid)} disabled={currentUser.stars < 100}>
-                                      Piga Kura (Nyota {100})
-                                    </Button>
-                                </Card>
-                            ))}
+                                        <Button size="sm" className="w-full mt-4" onClick={() => onVote(candidate.uid)} disabled={currentUser.stars < 100}>
+                                        Piga Kura (Nyota 100)
+                                        </Button>
+                                    </Card>
+                                ))
+                            ) : (
+                                <p className="text-center text-gray-400">Hakuna wagombea waliojisajili bado.</p>
+                            )}
 
                             <Separator className="bg-gray-700" />
                             <Button 
