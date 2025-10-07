@@ -5,7 +5,7 @@
     ".write": false,
     "users": {
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')",
+        ".read": "auth != null",
         ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')"
       }
     },
@@ -21,10 +21,8 @@
       ".write": "auth != null"
     },
     "contracts": {
-      "$contractId": {
-        ".read": "auth != null && (data.child('sellerUid').val() === auth.uid || data.child('buyerUid').val() === auth.uid || (data.child('buyerIdentifier').val() != null && data.child('buyerIdentifier').val() === auth.uid) || (data.child('buyerIdentifier').val() == null) || root.child('players').child(auth.uid).child('role').val() === 'admin')",
-        ".write": "auth != null && ((!data.exists() && newData.child('sellerUid').val() === auth.uid) || (data.exists() && data.child('sellerUid').val() === auth.uid) || (data.exists() && !newData.exists()) || root.child('players').child(auth.uid).child('role').val() === 'admin')"
-      }
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "chat": {
       "$chatRoomId": {
