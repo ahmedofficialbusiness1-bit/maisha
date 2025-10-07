@@ -39,8 +39,20 @@
       ".write": "auth != null"
     },
     "election": {
-        ".read": "auth != null",
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "state": {
         ".write": "auth.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2'"
+      },
+      "presidentUid": {
+        ".write": "auth.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2'"
+      },
+      "candidates": {
+        ".write": "auth != null"
+      },
+      "votes": {
+        ".write": "auth != null"
+      }
     }
   }
 }
