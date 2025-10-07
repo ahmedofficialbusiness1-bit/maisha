@@ -54,6 +54,7 @@ interface AdminPanelProps {
     onViewProfile: (playerId: string) => void;
     president: PlayerPublicData | null;
     electionState: 'open' | 'closed';
+    candidates: any[];
 }
 
 function CommoditySimulator() {
@@ -718,7 +719,7 @@ const appointPresidentSchema = z.object({
     targetUid: z.string().min(1, 'UID is required'),
 })
 
-function PresidencyTools({ president, electionState }: Pick<AdminPanelProps, 'president' | 'electionState'>) {
+function PresidencyTools({ president, electionState, candidates }: Pick<AdminPanelProps, 'president' | 'electionState' | 'candidates'>) {
     const database = getDatabase();
     
     const onAdminAppointPresident = (uid: string) => {
@@ -804,6 +805,33 @@ function PresidencyTools({ president, electionState }: Pick<AdminPanelProps, 'pr
 
             <Card className="bg-gray-800/60 border-gray-700">
                 <CardHeader>
+                    <CardTitle>Wagombea wa Urais</CardTitle>
+                    <CardDescription>Ona orodha ya wachezaji wanaogombea urais.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {candidates && candidates.length > 0 ? (
+                        <div className="space-y-3">
+                            {candidates.map((candidate: any) => (
+                                <div key={candidate.uid} className="flex items-center gap-3 p-2 rounded-md bg-gray-900/50">
+                                    <Avatar className="h-10 w-10">
+                                        <AvatarImage src={candidate.avatar} alt={candidate.username} data-ai-hint="player avatar" />
+                                        <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-semibold">{candidate.username}</p>
+                                        <p className="text-xs italic text-gray-400">"{candidate.slogan}"</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500">Hakuna wagombea kwa sasa.</p>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
                     <CardTitle>Appoint President</CardTitle>
                     <CardDescription>Directly appoint a player as president, bypassing elections.</CardDescription>
                 </CardHeader>
@@ -847,7 +875,7 @@ function PresidencyTools({ president, electionState }: Pick<AdminPanelProps, 'pr
     )
 }
 
-export function AdminPanel({ onViewProfile, president, electionState }: AdminPanelProps) {
+export function AdminPanel({ onViewProfile, president, electionState, candidates }: AdminPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -873,7 +901,7 @@ export function AdminPanel({ onViewProfile, president, electionState }: AdminPan
              <GameTools />
           </TabsContent>
            <TabsContent value="presidency">
-             <PresidencyTools president={president} electionState={electionState}/>
+             <PresidencyTools president={president} electionState={electionState} candidates={candidates}/>
           </TabsContent>
         </Tabs>
 

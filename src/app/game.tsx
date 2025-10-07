@@ -1714,6 +1714,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                   onViewProfile={handleViewProfile}
                   president={president}
                   electionState={electionState}
+                  candidates={candidates}
                 />;
       case 'office':
         // Placeholder for the "Ofisi" view
