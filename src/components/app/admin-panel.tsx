@@ -812,7 +812,7 @@ function PresidencyTools({ president, electionState, candidates }: Pick<AdminPan
                     {candidates && candidates.length > 0 ? (
                         <div className="space-y-3">
                             {candidates.map((candidate: any) => (
-                                <div key={candidate.uid} className="flex items-center gap-3 p-2 rounded-md bg-gray-900/50">
+                                <div key={candidate.id} className="flex items-center gap-3 p-2 rounded-md bg-gray-900/50">
                                     <Avatar className="h-10 w-10">
                                         <AvatarImage src={candidate.avatar} alt={candidate.username} data-ai-hint="player avatar" />
                                         <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
@@ -908,7 +908,3 @@ export function AdminPanel({ onViewProfile, president, electionState, candidates
     </div>
   );
 }
-
-    
-
-    

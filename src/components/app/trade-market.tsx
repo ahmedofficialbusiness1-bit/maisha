@@ -679,7 +679,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                         <div className="space-y-4">
                             {candidates && candidates.length > 0 ? (
                                 candidates.map((candidate: any) => (
-                                    <Card key={candidate.uid} className="bg-gray-900/50 p-4">
+                                    <Card key={candidate.id} className="bg-gray-900/50 p-4">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <Avatar className="h-10 w-10">
@@ -692,8 +692,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="font-bold text-lg">{votes[candidate.uid] || 0}</p>
-                                                <p className="text-xs text-gray-400">Kura</p>
+                                                <p className="font-bold text-lg">{votes[candidate.uid] || 0} Kura</p>
                                             </div>
                                         </div>
                                         <Button size="sm" className="w-full mt-4" onClick={() => onVote(candidate.uid)} disabled={currentUser.stars < 100}>
