@@ -22,9 +22,7 @@
     },
     "contracts": {
       ".read": "auth != null",
-      "$contractId": {
-        ".write": "auth != null && (newData.exists() && !data.exists() && newData.child('sellerUid').val() === auth.uid) || (data.child('sellerUid').val() === auth.uid) || (!newData.exists() && data.exists())"
-      }
+      ".write": "auth != null"
     },
     "chat": {
       "$chatRoomId": {
