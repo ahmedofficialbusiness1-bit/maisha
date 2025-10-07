@@ -40,7 +40,7 @@
     },
     "election": {
       ".read": "auth != null",
-      ".write": "auth != null",
+      ".write": "auth.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2'",
       "state": {
         ".write": "auth.uid === 'nfw3CtiEyBWZkXCnh7wderFbFFA2'"
       },
