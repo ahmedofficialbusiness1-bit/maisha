@@ -25,7 +25,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { getDatabase, ref, set, push, runTransaction, update } from 'firebase/database';
+import { getDatabase, ref, set, push, runTransaction, update, get } from 'firebase/database';
 import type { Notification, Transaction } from '@/app/game';
 
 
@@ -370,63 +370,79 @@ function GameTools() {
     toast({ title: 'Item Sent', description: `Sent a contract for ${quantity}x ${itemName} to user ${targetUid}.`});
   };
 
-  const onAdminSendMoney = (amount: number, targetUid: string, reason: string) => {
+  const onAdminSendMoney = async (amount: number, targetUid: string, reason: string) => {
       if (!targetUid || typeof targetUid !== 'string' || targetUid.includes('Error')) {
-          console.error("Invalid targetUid for onAdminSendMoney:", targetUid);
-          toast({ variant: 'destructive', title: 'Invalid UID', description: 'Cannot send money to an invalid user UID.' });
+          toast({ variant: 'destructive', title: 'Invalid UID' });
           return;
       }
-      const targetUserRef = ref(database, `users/${targetUid}`);
-      runTransaction(targetUserRef, (userData) => {
-          if (userData) {
-              userData.money += amount;
-              const notifRef = push(ref(database, `users/${targetUid}/notifications`));
-              const newNotification: Notification = { 
-                  id: notifRef.key!, 
-                  message: reason ? `You received a gift of $${amount.toLocaleString()}! Reason: ${reason}` : `You received a gift of $${amount.toLocaleString()}!`,
-                  timestamp: Date.now(),
-                  read: false, 
-                  icon: 'purchase'
-              };
-              userData.notifications = { ...(userData.notifications || {}), [newNotification.id]: newNotification };
-              
-              const transRef = push(ref(database, `users/${targetUid}/transactions`));
-              const newTransaction: Transaction = {
-                   id: transRef.key!,
-                   type: 'income',
-                   amount,
-                   description: `Zawadi kutoka kwa Admin: ${reason || 'Gift from Admin'}`,
-                   timestamp: Date.now()
-              };
-               userData.transactions = { ...(userData.transactions || {}), [newTransaction.id]: newTransaction };
-          }
-          return userData;
-      });
+      
+      const userRef = ref(database, `users/${targetUid}`);
+      const snapshot = await get(userRef);
+      if (!snapshot.exists()) {
+          toast({ variant: 'destructive', title: 'User Not Found' });
+          return;
+      }
+
+      const userData = snapshot.val();
+      const updates: Record<string, any> = {};
+
+      const newMoney = (userData.money || 0) + amount;
+      updates['money'] = newMoney;
+      
+      const notifRefKey = push(ref(database, `users/${targetUid}/notifications`)).key!;
+      const newNotification: Notification = { 
+          id: notifRefKey, 
+          message: reason ? `You received a gift of $${amount.toLocaleString()}! Reason: ${reason}` : `You received a gift of $${amount.toLocaleString()}!`,
+          timestamp: Date.now(),
+          read: false, 
+          icon: 'purchase'
+      };
+      updates[`notifications/${notifRefKey}`] = newNotification;
+      
+      const transRefKey = push(ref(database, `users/${targetUid}/transactions`)).key!;
+      const newTransaction: Transaction = {
+           id: transRefKey,
+           type: 'income',
+           amount,
+           description: `Zawadi kutoka kwa Admin: ${reason || 'Gift from Admin'}`,
+           timestamp: Date.now()
+      };
+      updates[`transactions/${transRefKey}`] = newTransaction;
+
+      await update(userRef, updates);
       toast({ title: 'Money Sent', description: `Sent $${amount.toLocaleString()} to user ${targetUid}.`});
   }
 
-  const onAdminSendStars = (amount: number, targetUid: string, reason: string) => {
+  const onAdminSendStars = async (amount: number, targetUid: string, reason: string) => {
       if (!targetUid || typeof targetUid !== 'string' || targetUid.includes('Error')) {
-          console.error("Invalid targetUid for onAdminSendStars:", targetUid);
-          toast({ variant: 'destructive', title: 'Invalid UID', description: 'Cannot send stars to an invalid user UID.' });
+          toast({ variant: 'destructive', title: 'Invalid UID' });
           return;
       }
-      const targetUserRef = ref(database, `users/${targetUid}`);
-      runTransaction(targetUserRef, (userData) => {
-          if (userData) {
-              userData.stars += amount;
-              const notifRef = push(ref(database, `users/${targetUid}/notifications`));
-              const newNotification: Notification = { 
-                  id: notifRef.key!, 
-                  message: reason ? `You received a gift of ${amount.toLocaleString()} stars! Reason: ${reason}` : `You received a gift of ${amount.toLocaleString()} stars!`,
-                  timestamp: Date.now(),
-                  read: false, 
-                  icon: 'purchase'
-              };
-              userData.notifications = { ...(userData.notifications || {}), [newNotification.id]: newNotification };
-          }
-          return userData;
-      });
+
+      const userRef = ref(database, `users/${targetUid}`);
+      const snapshot = await get(userRef);
+      if (!snapshot.exists()) {
+          toast({ variant: 'destructive', title: 'User Not Found' });
+          return;
+      }
+
+      const userData = snapshot.val();
+      const updates: Record<string, any> = {};
+
+      const newStars = (userData.stars || 0) + amount;
+      updates['stars'] = newStars;
+
+      const notifRefKey = push(ref(database, `users/${targetUid}/notifications`)).key!;
+      const newNotification: Notification = { 
+          id: notifRefKey, 
+          message: reason ? `You received a gift of ${amount.toLocaleString()} stars! Reason: ${reason}` : `You received a gift of ${amount.toLocaleString()} stars!`,
+          timestamp: Date.now(),
+          read: false, 
+          icon: 'purchase'
+      };
+      updates[`notifications/${notifRefKey}`] = newNotification;
+
+      await update(userRef, updates);
       toast({ title: 'Stars Sent', description: `Sent ${amount.toLocaleString()} stars to user ${targetUid}.`});
   }
   
