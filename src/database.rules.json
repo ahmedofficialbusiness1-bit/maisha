@@ -5,8 +5,9 @@
     ".write": false,
     "users": {
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')",
-        ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')"
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".validate": "(auth.uid === $uid && (newData.child('username').val() === data.child('username').val() || newData.child('username').isString()) || root.child('players').child(auth.uid).child('role').val() === 'admin') || (newData.child('money').isNumber() && newData.child('transactions').exists() && newData.child('notifications').exists())"
       }
     },
     "players": {
