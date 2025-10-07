@@ -38,8 +38,19 @@
       ".write": "auth != null"
     },
     "election": {
-        ".read": "auth != null",
-        ".write": "auth != null && root.child('players').child(auth.uid).child('role').val() === 'admin'"
+      ".read": "auth != null",
+      "state": {
+        ".write": "root.child('players').child(auth.uid).child('role').val() === 'admin'"
+      },
+      "presidentUid": {
+        ".write": "root.child('players').child(auth.uid).child('role').val() === 'admin'"
+      },
+      "candidates": {
+        ".write": "auth != null"
+      },
+      "votes": {
+        ".write": "auth != null"
+      }
     }
   }
 }
