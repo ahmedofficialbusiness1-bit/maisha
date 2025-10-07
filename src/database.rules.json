@@ -24,7 +24,7 @@
       ".read": "auth != null",
       "$contractId": {
         // Allow write if user is creating a new contract, is the seller, or is the intended buyer
-        ".write": "auth != null && (!data.exists() || data.child('sellerUid').val() === auth.uid || (data.child('buyerIdentifier').val() != null && (data.child('buyerIdentifier').val() === auth.uid || data.child('buyerIdentifier').val() === root.child('users').child(auth.uid).child('username').val())))"
+        ".write": "auth != null && (!data.exists() || data.child('sellerUid').val() === auth.uid || (data.child('buyerIdentifier').val() != null && (data.child('buyerIdentifier').val() === auth.uid || data.child('buyerIdentifier').val() === root.child('users').child(auth.uid).child('username').val())) || (data.child('buyerIdentifier').val() == null))"
       }
     },
     "chat": {
