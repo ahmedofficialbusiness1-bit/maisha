@@ -1,4 +1,5 @@
 
+
 import { DatabaseReference, set } from 'firebase/database';
 import type { PlayerStock } from '@/app/game';
 
@@ -35,6 +36,7 @@ export type UserData = {
   playerStocks: PlayerStock[];
   transactions: Record<string, any>;
   notifications: Record<string, any>;
+  payouts?: Record<string, { amount: number; description: string; timestamp: number }>; // For system-mediated payouts
   playerLevel: number;
   playerXP: number;
   privateNotes: string;
@@ -95,6 +97,7 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
     playerStocks: [],
     transactions: {},
     notifications: {},
+    payouts: {},
     playerLevel: 1,
     playerXP: 0,
     privateNotes: `Karibu kwenye wasifu wangu! Mimi ni mchezaji mpya kwenye Uchumi wa Afrika na nina matumaini ya kujenga himaya kubwa.`,

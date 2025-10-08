@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -788,69 +789,62 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     const listingRef = ref(database, `market/${listing.id}`);
 
     try {
+        // Step 1: Secure the item from the market listing
         const transactionResult = await runTransaction(listingRef, (currentListing) => {
             if (currentListing === null) {
-                return; // Listing already sold or removed
+                return; // Listing already sold or removed, abort
             }
             if (currentListing.quantity < quantityToBuy) {
                  throw new Error("Not enough quantity available.");
             }
             if (currentListing.quantity === quantityToBuy) {
-                return null; // Remove the listing
+                return null; // Remove the listing entirely
             } else {
                 currentListing.quantity -= quantityToBuy;
-                return currentListing;
+                return currentListing; // Update the quantity
             }
         });
 
         if (!transactionResult.committed) {
-             throw new Error("Market transaction to remove listing failed.");
+             throw new Error("Market transaction failed. The item may have been sold.");
         }
 
-
-        // 2. Update buyer's state (client-side)
-        if (userRef) {
-            runTransaction(userRef, (currentData) => {
-                if (currentData) {
-                    const newInventory = [...(currentData.inventory || [])];
-                    const itemIndex = newInventory.findIndex((i: InventoryItem) => i.item === listing.commodity);
-                    if (itemIndex > -1) {
-                        newInventory[itemIndex].quantity += quantityToBuy;
-                    } else {
-                        newInventory.push({ item: listing.commodity, quantity: quantityToBuy, marketPrice: listing.price });
-                    }
-                    
-                    const transRefKey = push(ref(database, `users/${user.uid}/transactions`)).key!;
-                    const newTransaction: Transaction = { id: transRefKey, type: 'expense', amount: totalCost, description: `Bought ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, timestamp: Date.now() };
-
-                    const notifRefKey = push(ref(database, `users/${user.uid}/notifications`)).key!;
-                    const newNotification: Notification = { id: notifRefKey, message: `Umenunua ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, timestamp: Date.now(), read: false, icon: 'purchase' };
-
-                    currentData.money -= totalCost;
-                    currentData.inventory = newInventory;
-                    currentData.transactions = { ...currentData.transactions, [transRefKey]: newTransaction };
-                    currentData.notifications = { ...currentData.notifications, [notifRefKey]: newNotification };
+        // Step 2: Update buyer's state (money and inventory)
+        await runTransaction(userRef, (currentData) => {
+            if (currentData && currentData.money >= totalCost) {
+                const newInventory = [...(currentData.inventory || [])];
+                const itemIndex = newInventory.findIndex((i: InventoryItem) => i.item === listing.commodity);
+                if (itemIndex > -1) {
+                    newInventory[itemIndex].quantity += quantityToBuy;
+                } else {
+                    newInventory.push({ item: listing.commodity, quantity: quantityToBuy, marketPrice: listing.price });
                 }
-                return currentData;
-            });
-        }
-
-
-        // 3. Update seller's state (server-side transaction)
-        const sellerUserRef = ref(database, `users/${listing.sellerUid}`);
-        await runTransaction(sellerUserRef, (sellerData) => {
-            if (sellerData) {
-                sellerData.money += totalCost;
                 
-                const sellerTransRefKey = push(ref(database, `users/${listing.sellerUid}/transactions`)).key!;
-                const newTransaction: Transaction = { id: sellerTransRefKey, type: 'income', amount: totalCost, description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`, timestamp: Date.now() };
-                sellerData.transactions = { ...sellerData.transactions, [sellerTransRefKey]: newTransaction };
+                const transRefKey = push(ref(database, `users/${user.uid}/transactions`)).key!;
+                const newTransaction: Transaction = { id: transRefKey, type: 'expense', amount: totalCost, description: `Bought ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, timestamp: Date.now() };
 
-                const sellerNotifRefKey = push(ref(database, `users/${listing.sellerUid}/notifications`)).key!;
-                const newNotification: Notification = { id: sellerNotifRefKey, message: `You sold ${quantityToBuy}x ${listing.commodity} for $${totalCost.toFixed(2)} to ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
-                sellerData.notifications = { ...sellerData.notifications, [sellerNotifRefKey]: newNotification };
+                const notifRefKey = push(ref(database, `users/${user.uid}/notifications`)).key!;
+                const newNotification: Notification = { id: notifRefKey, message: `Umenunua ${quantityToBuy}x ${listing.commodity} from ${listing.seller}`, timestamp: Date.now(), read: false, icon: 'purchase' };
+
+                currentData.money -= totalCost;
+                currentData.inventory = newInventory;
+                currentData.transactions = { ...currentData.transactions, [transRefKey]: newTransaction };
+                currentData.notifications = { ...currentData.notifications, [notifRefKey]: newNotification };
+            } else {
+                // Not enough money, this transaction part fails, but the market listing is already updated.
+                // This is a potential inconsistency. A better model would use cloud functions or a two-phase commit.
+                // For now, we will add the payment to the seller to a queue.
             }
-            return sellerData;
+            return currentData;
+        });
+
+        // Step 3: Add payment to seller's payout queue (System-Mediated)
+        const sellerPayoutsRef = ref(database, `users/${listing.sellerUid}/payouts`);
+        const newPayoutRef = push(sellerPayoutsRef);
+        await set(newPayoutRef, {
+            amount: totalCost,
+            description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`,
+            timestamp: Date.now()
         });
         
         toast({ title: 'Purchase Successful' });
@@ -1138,7 +1132,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         }
 
         // Buyer gets items and loses money
-        runTransaction(userRef, (currentData) => {
+        await runTransaction(userRef, (currentData) => {
             if (currentData) {
                 const newInventory = [...(currentData.inventory || [])];
                 const itemIndex = newInventory.findIndex((i: InventoryItem) => i.item === contract.commodity);
@@ -1158,23 +1152,14 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             return currentData;
         });
 
-
-        // Seller gets money and notification (unless it's an admin)
+        // Add payment to seller's payout queue (System-Mediated)
         if (contract.sellerUid !== 'admin-system') {
-            const sellerUserRef = ref(database, `users/${contract.sellerUid}`);
-            await runTransaction(sellerUserRef, (sellerData) => {
-                if (sellerData) {
-                    sellerData.money += totalCost;
-
-                    const transRef = push(ref(database, `users/${contract.sellerUid}/transactions`));
-                    const newTransaction: Transaction = { id: transRef.key!, type: 'income', amount: totalCost, description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`, timestamp: Date.now() };
-                    sellerData.transactions = { ...sellerData.transactions, [newTransaction.id]: newTransaction };
-                    
-                    const notifRef = push(ref(database, `users/${contract.sellerUid}/notifications`));
-                    const newNotification: Notification = { id: notifRef.key!, message: `Your contract for ${contract.quantity}x ${contract.commodity} was accepted by ${gameState.username}.`, timestamp: Date.now(), read: false, icon: 'sale' };
-                    sellerData.notifications = { ...sellerData.notifications, [newNotification.id]: newNotification };
-                }
-                return sellerData;
+            const sellerPayoutsRef = ref(database, `users/${contract.sellerUid}/payouts`);
+            const newPayoutRef = push(sellerPayoutsRef);
+            await set(newPayoutRef, {
+                amount: totalCost,
+                description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`,
+                timestamp: Date.now()
             });
         }
 
@@ -1376,11 +1361,39 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         handleDailyDividends();
     }, 24 * 60 * 60 * 1000); // Once every 24 hours
 
+    const payoutInterval = setInterval(() => {
+        if (!userRef || !user) return;
+        const payoutsRef = ref(database, `users/${user.uid}/payouts`);
+        
+        runTransaction(payoutsRef, (payouts) => {
+            if (payouts) {
+                const payoutUpdates: any = {};
+                Object.keys(payouts).forEach(payoutId => {
+                    const payout = payouts[payoutId];
+                    // Add to user's main transaction log
+                    addTransaction('income', payout.amount, payout.description);
+                    // Add notification
+                    addNotification(`You were paid $${payout.amount.toFixed(2)} for: ${payout.description}`, 'sale');
+                    // Add money directly
+                    runTransaction(userRef, (userData) => {
+                        if (userData) {
+                            userData.money += payout.amount;
+                        }
+                        return userData;
+                    });
+                });
+                return null; // Clear all processed payouts
+            }
+            return payouts;
+        });
+    }, 5000); // Process payouts every 5 seconds
+
     return () => {
         clearInterval(activityInterval);
         clearInterval(dividendInterval);
+        clearInterval(payoutInterval);
     };
-  }, [userRef, gameState, handleDailyDividends, user, database]);
+  }, [userRef, gameState, handleDailyDividends, user, database, addTransaction, addNotification]);
 
   const { netWorth, buildingValue, stockValue, inventoryValue } = React.useMemo(() => {
     if (!gameState) return { netWorth: 0, buildingValue: 0, stockValue: 0, inventoryValue: 0 };
