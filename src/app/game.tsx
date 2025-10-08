@@ -1168,7 +1168,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   }, [database, user, gameState, userRef, toast]);
   
   const handleRejectContract = React.useCallback(async (contract: any) => {
-    if (!user || !gameState) return;
+    if (!user || !gameState || !userRef) return;
 
     if (contract.buyerIdentifier && contract.buyerIdentifier !== user.uid && contract.buyerIdentifier !== gameState?.username) return;
 
@@ -1196,7 +1196,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     }
 
     toast({ title: 'Mkataba umekataliwa.' });
-  }, [database, user, gameState, toast]);
+  }, [database, user, gameState, toast, userRef]);
 
   const handleCancelContract = React.useCallback(async (contract: any) => {
     if (!user || !userRef) return;
@@ -1791,3 +1791,5 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     </div>
   );
 }
+
+    
