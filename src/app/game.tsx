@@ -830,18 +830,14 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                 currentData.inventory = newInventory;
                 currentData.transactions = { ...currentData.transactions, [transRefKey]: newTransaction };
                 currentData.notifications = { ...currentData.notifications, [notifRefKey]: newNotification };
-            } else {
-                // Not enough money, this transaction part fails, but the market listing is already updated.
-                // This is a potential inconsistency. A better model would use cloud functions or a two-phase commit.
-                // For now, we will add the payment to the seller to a queue.
             }
             return currentData;
         });
 
         // Step 3: Add payment to seller's payout queue (System-Mediated)
-        const sellerPayoutsRef = ref(database, `users/${listing.sellerUid}/payouts`);
-        const newPayoutRef = push(sellerPayoutsRef);
-        await set(newPayoutRef, {
+        const sellerUserRef = ref(database, `users/${listing.sellerUid}`);
+        const sellerPayoutsRef = push(ref(sellerUserRef, 'payouts'));
+        await set(sellerPayoutsRef, {
             amount: totalCost,
             description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`,
             timestamp: Date.now()
@@ -1154,8 +1150,8 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
         // Add payment to seller's payout queue (System-Mediated)
         if (contract.sellerUid !== 'admin-system') {
-            const sellerPayoutsRef = ref(database, `users/${contract.sellerUid}/payouts`);
-            const newPayoutRef = push(sellerPayoutsRef);
+            const sellerUserRef = ref(database, `users/${contract.sellerUid}`);
+            const newPayoutRef = push(ref(sellerUserRef, 'payouts'));
             await set(newPayoutRef, {
                 amount: totalCost,
                 description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`,
@@ -1776,7 +1772,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         notifications={Object.values(gameState.notifications || {})} 
         onNotificationsRead={handleMarkNotificationsRead} 
         playerLevel={gameState.playerLevel} 
-        playerXP={gameState.playerXP} 
+        playerXP={playerXP} 
         xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} 
         isAdmin={isAdmin} 
         isPresident={isPresident}
