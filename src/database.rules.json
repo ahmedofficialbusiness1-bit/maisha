@@ -6,7 +6,7 @@
     "users": {
       "$uid": {
         ".read": "auth != null",
-        ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')"
+        ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin' || newData.child('payouts').exists())"
       }
     },
     "players": {
