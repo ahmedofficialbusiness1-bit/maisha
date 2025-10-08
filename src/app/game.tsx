@@ -810,7 +810,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         }
 
         // Step 2: Update buyer's state (money and inventory)
-        await runTransaction(userRef, (currentData) => {
+        await runTransaction(userRef!, (currentData) => {
             if (currentData && currentData.money >= totalCost) {
                 const newInventory = [...(currentData.inventory || [])];
                 const itemIndex = newInventory.findIndex((i: InventoryItem) => i.item === listing.commodity);
@@ -1023,7 +1023,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
      });
   };
 
-  const handleCreateContract = (item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => {
+  const handleCreateContract = React.useCallback((item: InventoryItem, quantity: number, pricePerUnit: number, targetIdentifier: string) => {
     if (!user || !gameState || !userRef || !allPlayers) return;
     
     runTransaction(userRef, (currentData) => {
@@ -1097,9 +1097,9 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             });
         });
     });
-  }
+  }, [database, user, gameState, userRef, allPlayers, toast]);
 
-  const handleAcceptContract = async (contract: any) => {
+  const handleAcceptContract = React.useCallback(async (contract: any) => {
     if (!user || !gameState || !userRef) return;
 
     if (contract.sellerUid === user.uid) {
@@ -1165,9 +1165,9 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         console.error("Contract acceptance failed:", error);
         toast({ variant: 'destructive', title: 'Contract Failed', description: error.message || 'The contract could not be completed.' });
     }
-  };
+  }, [database, user, gameState, userRef, toast]);
   
-  const handleRejectContract = async (contract: any) => {
+  const handleRejectContract = React.useCallback(async (contract: any) => {
     if (!user || !gameState) return;
 
     if (contract.buyerIdentifier && contract.buyerIdentifier !== user.uid && contract.buyerIdentifier !== gameState?.username) return;
@@ -1196,9 +1196,9 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     }
 
     toast({ title: 'Mkataba umekataliwa.' });
-  };
+  }, [database, user, gameState, toast]);
 
-  const handleCancelContract = async (contract: any) => {
+  const handleCancelContract = React.useCallback(async (contract: any) => {
     if (!user || !userRef) return;
     if (user.uid !== contract.sellerUid) return;
 
@@ -1221,7 +1221,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     });
 
     toast({ title: 'Mkataba umeghairiwa.' });
-  };
+  }, [database, user, userRef, toast]);
 
   const handleDailyDividends = React.useCallback(() => {
     if (!userRef || !gameState || !user) return;
