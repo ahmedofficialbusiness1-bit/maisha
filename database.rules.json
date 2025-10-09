@@ -1,28 +1,29 @@
-
 {
   "rules": {
-    ".read": false,
-    ".write": false,
     "users": {
       "$uid": {
-        ".read": "auth != null",
-        ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin')"
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
     },
-    "players": {
-      ".read": "auth != null",
-      ".indexOn": ["netWorth", "username"],
-      "$uid": {
-        ".write": "auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin'"
+    "contracts": {
+      "$contractId": {
+        ".read": "auth != null && (data.child('senderId').val() === auth.uid || data.child('receiverId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && ((newData.child('senderId').val() === auth.uid) || (data.child('receiverId').val() === auth.uid) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
     },
     "market": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "$itemId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (newData.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
     },
-    "contracts": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+    "players": {
+        ".read": "auth != null",
+        ".indexOn": ["netWorth", "username"],
+        "$uid": {
+            ".write": "auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin'"
+        }
     },
     "chat": {
       "$chatRoomId": {
@@ -52,6 +53,8 @@
       "votes": {
         ".write": "auth != null"
       }
-    }
+    },
+    ".read": "auth != null",
+    ".write": "auth != null"
   }
 }
