@@ -18,14 +18,14 @@ import { Leaderboard } from '@/components/app/leaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
-import { getInitialUserData, saveUserData, type UserData } from '@/services/game-service';
+import { getInitialUserData, saveUserData, type EconomyData, type NationalOrder, type TreasuryData, type UserData } from '@/services/game-service';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, update } from 'firebase/database';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { recipes } from '@/lib/recipe-data';
 import { AdminPanel } from '@/components/app/admin-panel';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PresidentOfficePanel } from '@/components/app/president-office-panel';
 
 export type PlayerStock = {
     ticker: string;
@@ -100,6 +100,12 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   });
   const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
 
+  // Government/Economy state
+  const [treasury, setTreasury] = React.useState<TreasuryData | null>(null);
+  const [economy, setEconomy] = React.useState<EconomyData | null>(null);
+  const [officialPrices, setOfficialPrices] = React.useState<Record<string, number>>({});
+  const [nationalOrders, setNationalOrders] = React.useState<Record<string, NationalOrder>>({});
+  
   // Presidency state
   const [president, setPresident] = React.useState<PlayerPublicData | null>(null);
   const [candidates, setCandidates] = React.useState<any[]>([]);
@@ -115,7 +121,12 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   const marketSharesRef = React.useMemo(() => ref(database, 'marketShares'), [database]);
   const chatMetadataRef = React.useMemo(() => ref(database, 'chat-metadata'), [database]);
   const electionRef = React.useMemo(() => ref(database, 'election'), [database]);
-  
+  const treasuryRef = React.useMemo(() => ref(database, 'treasury'), [database]);
+  const economyRef = React.useMemo(() => ref(database, 'economy'), [database]);
+  const officialPricesRef = React.useMemo(() => ref(database, 'officialPrices'), [database]);
+  const nationalOrdersRef = React.useMemo(() => ref(database, 'nationalOrders'), [database]);
+
+
   const handleSetView = React.useCallback((newView: View) => {
     setView(newView);
     if (newView !== 'profile') {
@@ -204,6 +215,21 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         });
         return () => unsubscribe();
     }, [chatMetadataRef]);
+
+    // Listen for government/economy data changes
+    React.useEffect(() => {
+        const unsubTreasury = onValue(treasuryRef, (snap) => setTreasury(snap.val()));
+        const unsubEconomy = onValue(economyRef, (snap) => setEconomy(snap.val()));
+        const unsubPrices = onValue(officialPricesRef, (snap) => setOfficialPrices(snap.val()));
+        const unsubOrders = onValue(nationalOrdersRef, (snap) => setNationalOrders(snap.val()));
+
+        return () => {
+            unsubTreasury();
+            unsubEconomy();
+            unsubPrices();
+            unsubOrders();
+        };
+    }, [treasuryRef, economyRef, officialPricesRef, nationalOrdersRef]);
 
 
   // Effect to fetch data for a viewed profile
@@ -364,7 +390,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     });
   }
 
-  const handleUpdateProfile = (data: ProfileData) => {
+  const handleUpdateProfile = (data: ProfileDataForForm) => {
     if (!allPlayers || !gameState || !userRef || !marketRef || !user) return;
   
     const newName = data.playerName;
@@ -1817,15 +1843,12 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                 />;
       case 'office':
         return (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Ofisi ya Rais</CardTitle>
-                    <CardDescription>Zana za kusimamia nchi (zinakuja hivi karibuni).</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <p>Coming Soon...</p>
-                </CardContent>
-            </Card>
+            <PresidentOfficePanel 
+                treasury={treasury}
+                economy={economy}
+                officialPrices={officialPrices}
+                nationalOrders={nationalOrders}
+            />
         );
       default:
         return null;

@@ -59,6 +59,41 @@ export type PlayerPublicData = {
     role: 'player' | 'admin' | 'president';
 };
 
+// --- Government & Economy Data ---
+export type TreasuryData = {
+  balance: number;
+  lastUpdated: number;
+};
+
+export type EconomyData = {
+  taxRate: number;
+  updatedBy: string; // President's UID
+  lastChange: number;
+};
+
+export type NationalOrder = {
+  orderId: string;
+  product: string;
+  quantityRequired: number;
+  quantityDelivered: number;
+  reward: number;
+  status: 'open' | 'completed' | 'cancelled';
+  winner: string | null; // UID of the winner
+  proposer: string; // President's UID
+  approvedBy: string | null; // Admin's UID
+  isApproved: boolean;
+};
+
+export type Subsidy = {
+  sector: string;
+  amount: number;
+  distributed: boolean;
+  timestamp: number;
+  proposer: string; // President's UID
+  approvedBy: string | null; // Admin's UID
+  isApproved: boolean;
+};
+
 
 // Function to get initial user data
 export const getInitialUserData = (uid: string, displayName: string | null, email: string | null): UserData => {
