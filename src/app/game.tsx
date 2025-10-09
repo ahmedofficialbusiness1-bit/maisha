@@ -774,7 +774,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
 
   const handleBuyFromMarket = async (listing: PlayerListing, quantityToBuy: number) => {
-    if (!user || !gameState) return;
+    if (!user || !gameState || !database) return;
     if (listing.sellerUid === user.uid) {
         toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot buy your own items.' });
         return;
@@ -852,7 +852,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   };
   
  const handleBuyStock = React.useCallback((stock: StockListing, quantity: number) => {
-    if (!userRef || quantity <= 0 || !user) return;
+    if (!userRef || quantity <= 0 || !user || !database) return;
     
     runTransaction(userRef, currentData => {
         if (!currentData) return;
@@ -885,7 +885,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
 
  const handleSellStock = React.useCallback((ticker: string, shares: number) => {
-    if (!userRef || shares <= 0 || !user) return;
+    if (!userRef || shares <= 0 || !user || !database) return;
     
     const stockInfo = companyData.find(s => s.ticker === ticker);
     if (!stockInfo) return;
@@ -921,7 +921,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   }, [userRef, companyData, user, database]);
 
   const handleIssueShares = (sharesToSell: number, pricePerShare: number) => {
-      if (!userRef || !gameState || !netWorth) return;
+      if (!userRef || !gameState || !netWorth || !database) return;
        // IPO Conditions Check
         if (netWorth < 1000000) {
             toast({ variant: 'destructive', title: 'Thamani ya Kampuni Haitoshi', description: `Unahitaji thamani ya angalau $1,000,000. Thamani yako sasa ni $${netWorth.toLocaleString()}.`});
@@ -1100,7 +1100,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   }, [database, user, gameState, userRef, allPlayers, toast]);
 
   const handleAcceptContract = React.useCallback(async (contract: any) => {
-    if (!user || !gameState || !userRef) return;
+    if (!user || !gameState || !userRef || !database) return;
 
     if (contract.sellerUid === user.uid) {
         toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot accept your own contract.' });
@@ -1503,7 +1503,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   }, [contractListings, user, gameState]);
 
 
-  const handleRunForPresidency = React.useCallback(() => {
+  const handleRunForPresidency = React.useCallback((slogan: string) => {
       if (!user || !gameState || !electionRef) return;
       const cost = 10000; // New cost in Star Boosts
       if (gameState.stars < cost) {
@@ -1529,10 +1529,10 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                   uid: user.uid,
                   username: gameState.username,
                   avatar: gameState.avatarUrl || `https://picsum.photos/seed/${user.uid}/40/40`,
-                  slogan: "Nitaongoza kwa Haki na Maendeleo!",
+                  slogan: slogan || "Nitaongoza kwa Haki na Maendeleo!",
               };
-              const candidatesRef = ref(database, 'election/candidates');
-              push(candidatesRef, candidateData);
+              const candidatesRef = ref(database, `election/candidates/${user.uid}`);
+              set(candidatesRef, candidateData);
               toast({ title: 'Umefanikiwa Kujisajili!', description: 'Sasa wewe ni mgombea wa urais.'});
           } else {
               toast({ variant: 'destructive', title: 'Nyota Hazitoshi'});

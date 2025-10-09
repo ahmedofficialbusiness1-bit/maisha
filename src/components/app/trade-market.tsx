@@ -170,7 +170,7 @@ interface TradeMarketProps {
   onBuyFromMarket: (listing: PlayerListing, quantity: number) => void;
   playerName: string;
   marketShareListings: MarketShareListing[];
-  onRunForPresidency: () => void;
+  onRunForPresidency: (slogan: string) => void;
   onVote: (candidateUid: string) => void;
   president: PlayerPublicData | null;
   candidates: any[];
@@ -191,6 +191,9 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
   const [isBuyDialogOpen, setIsBuyDialogOpen] = React.useState(false);
   const [buyQuantity, setBuyQuantity] = React.useState(0);
   const [selectedListing, setSelectedListing] = React.useState<PlayerListing | null>(null);
+
+  const [isRunForPresidencyOpen, setIsRunForPresidencyOpen] = React.useState(false);
+  const [slogan, setSlogan] = React.useState('Nitaongoza kwa Haki na Maendeleo!');
   
   const handleOpenBuyStockDialog = (stock: (StockListing & { sharesAvailable: number })) => {
     setSelectedStock(stock);
@@ -231,6 +234,11 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
         onBuyFromMarket(selectedListing, buyQuantity);
         setIsBuyDialogOpen(false);
     }
+  }
+
+  const handleConfirmRunForPresidency = () => {
+    onRunForPresidency(slogan);
+    setIsRunForPresidencyOpen(false);
   }
 
   const filteredCategories = React.useMemo(() => {
@@ -705,14 +713,39 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                             )}
 
                             <Separator className="bg-gray-700" />
-                            <Button 
-                                className="w-full" 
-                                variant="outline" 
-                                onClick={onRunForPresidency}
-                                disabled={candidates.some(c => c.uid === currentUser.uid) || currentUser.stars < 10000}
-                            >
-                                {candidates.some(c => c.uid === currentUser.uid) ? "Tayari wewe ni mgombea" : "Gombea Urais (Nyota 10,000)"}
-                            </Button>
+                             <Dialog open={isRunForPresidencyOpen} onOpenChange={setIsRunForPresidencyOpen}>
+                                <DialogTrigger asChild>
+                                     <Button 
+                                        className="w-full" 
+                                        variant="outline"
+                                        disabled={candidates.some(c => c.uid === currentUser.uid) || currentUser.stars < 10000}
+                                    >
+                                        {candidates.some(c => c.uid === currentUser.uid) ? "Tayari wewe ni mgombea" : "Gombea Urais (Nyota 10,000)"}
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-gray-900 border-gray-700 text-white">
+                                    <DialogHeader>
+                                        <DialogTitle>Gombea Urais</DialogTitle>
+                                        <DialogDescription>
+                                            Andika sera zako na uthibitishe kugombea. Hii itakugharimu Nyota 10,000.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="py-4">
+                                        <Label htmlFor="slogan">Sera / Kauli Mbiu</Label>
+                                        <Textarea 
+                                            id="slogan"
+                                            value={slogan}
+                                            onChange={(e) => setSlogan(e.target.value)}
+                                            className="mt-2 bg-gray-800 border-gray-600"
+                                            placeholder="Nitaongoza kwa Haki na Maendeleo!"
+                                        />
+                                    </div>
+                                    <DialogFooter>
+                                        <Button variant="ghost" onClick={() => setIsRunForPresidencyOpen(false)}>Ghairi</Button>
+                                        <Button onClick={handleConfirmRunForPresidency}>Thibitisha Kugombea</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                         </div>
                     ) : (
                         <p className="text-gray-400">Tafadhali subiri msimamizi afungue uchaguzi.</p>
