@@ -7,6 +7,87 @@ export type BuildingConfig = {
     upgradeCost: (level: number) => { name: string; quantity: number }[];
 };
 
+export const sectors = [
+    'Kilimo', // Agriculture
+    'Ujenzi', // Construction
+    'Madini', // Mining
+    'Nishati', // Energy
+    'Mavazi na Vito', // Apparel & Jewelry
+    'Electroniki', // Electronics
+    'Usafiri', // Transportation
+    'Anga', // Aerospace
+    'Utafiti', // Research
+];
+
+export const buildingToSectorMap: Record<string, string> = {
+    'duka_kuu': 'Kilimo',
+    'duka_la_ujenzi': 'Ujenzi',
+    'duka_la_nguo_na_vito': 'Mavazi na Vito',
+    'duka_la_electroniki': 'Electroniki',
+    'duka_la_magari': 'Usafiri',
+    'duka_la_anga': 'Anga',
+    'shamba': 'Kilimo',
+    'zizi': 'Kilimo',
+    'kiwanda_cha_samaki': 'Kilimo',
+    'uchimbaji_mawe': 'Ujenzi',
+    'uchimbaji_mchanga': 'Ujenzi',
+    'uchimbaji_chuma': 'Madini',
+    'uchimbaji_almasi': 'Madini',
+    'uchimbaji_dhahabu': 'Madini',
+    'uchimbaji_silver': 'Madini',
+    'uchimbaji_ruby': 'Madini',
+    'uchimbaji_tanzanite': 'Madini',
+    'uchimbaji_shaba': 'Madini',
+    'kiwanda_cha_umeme': 'Nishati',
+    'kiwanda_cha_maji': 'Nishati',
+    'kiwanda_cha_mbao': 'Ujenzi',
+    'kiwanda_cha_saruji': 'Ujenzi',
+    'kiwanda_cha_matofali': 'Ujenzi',
+    'kiwanda_cha_chuma': 'Ujenzi',
+    'kiwanda_cha_sukari': 'Kilimo',
+    'mgahawa': 'Kilimo',
+    'kiwanda_cha_mashine': 'Ujenzi',
+    'ofisi_ya_leseni': 'Utafiti',
+    'kiwanda_cha_karatasi': 'Ujenzi',
+    'wizara_ya_madini': 'Utafiti',
+    'kiwanda_cha_vitambaa': 'Mavazi na Vito',
+    'kiwanda_cha_ngozi': 'Mavazi na Vito',
+    'kiwanda_cha_nguo': 'Mavazi na Vito',
+    'kiwanda_cha_saa': 'Mavazi na Vito',
+    'kiwanda_cha_vioo': 'Ujenzi',
+    'kiwanda_cha_chokaa': 'Ujenzi',
+    'kiwanda_cha_gundi': 'Ujenzi',
+    'sonara': 'Mavazi na Vito',
+    'uchimbaji_mafuta': 'Nishati',
+    'kiwanda_cha_disel': 'Nishati',
+    'kiwanda_cha_petrol': 'Nishati',
+    'kiwanda_cha_tv': 'Electroniki',
+    'kiwanda_cha_tablet': 'Electroniki',
+    'kiwanda_cha_smartphone': 'Electroniki',
+    'kiwanda_cha_laptop': 'Electroniki',
+    'kiwanda_cha_processor': 'Electroniki',
+    'kiwanda_cha_betri': 'Electroniki',
+    'kiwanda_cha_display': 'Electroniki',
+    'kiwanda_cha_motherboard': 'Electroniki',
+    'kiwanda_cha_vifaa_vya_ndani': 'Electroniki',
+    'kiwanda_cha_usanidi': 'Electroniki',
+    'kiwanda_cha_spare': 'Usafiri',
+    'kiwanda_cha_gari': 'Usafiri',
+    'kiwanda_cha_pikipiki': 'Usafiri',
+    'kiwanda_cha_ndege': 'Anga',
+    'kiwanda_cha_meli': 'Usafiri',
+    'kiwanda_cha_k_mashine': 'Anga',
+    'kiwanda_cha_anga': 'Anga',
+    'kiwanda_cha_roketi': 'Anga',
+    'utafiti_kilimo': 'Utafiti',
+    'utafiti_ujenzi': 'Utafiti',
+    'utafiti_nguo': 'Utafiti',
+    'utafiti_electroniki': 'Utafiti',
+    'utafiti_usafiri': 'Utafiti',
+    'utafiti_anga': 'Utafiti',
+};
+
+
 const calculateUpgradeCost = (baseCost: { name: string; quantity: number }[], level: number) => {
     return baseCost.map(cost => ({
         ...cost,

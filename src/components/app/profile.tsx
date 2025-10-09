@@ -37,6 +37,15 @@ import type { View } from '@/app/game';
 import { getPlayerTier, getRankTitle } from '@/lib/player-tiers';
 import { Badge } from '../ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { sectors } from '@/lib/building-data';
+
 
 const profileFormSchema = z.object({
   playerName: z
@@ -49,6 +58,7 @@ const profileFormSchema = z.object({
     }),
   avatarUrl: z.string().optional().or(z.literal('')),
   privateNotes: z.string().optional(),
+  sector: z.string().optional(),
 });
 
 // We omit the server-controlled fields from the ProfileData for the form
@@ -112,6 +122,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
         playerName: currentProfile.playerName || '',
         avatarUrl: currentProfile.avatarUrl || '',
         privateNotes: currentProfile.privateNotes || '',
+        sector: currentProfile.sector || '',
     },
   });
   
@@ -124,6 +135,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
         playerName: currentProfile.playerName,
         avatarUrl: currentProfile.avatarUrl,
         privateNotes: currentProfile.privateNotes,
+        sector: currentProfile.sector,
     });
   }, [currentProfile, form, isEditing]);
 
@@ -311,8 +323,40 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             </FormItem>
                             )}
                         />
+                        <FormField
+                          control={form.control}
+                          name="sector"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Sekta ya Uchumi</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!currentProfile.sector}>
+                                <FormControl>
+                                  <SelectTrigger className='bg-gray-700 border-gray-600'>
+                                    <SelectValue placeholder="Chagua sekta kuu ya kampuni yako" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {sectors.map(sector => (
+                                    <SelectItem key={sector} value={sector}>{sector}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                Chagua sekta kuu ya biashara yako. Huwezi kubadilisha baada ya kuchagua.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         </>
-                    ) : null}
+                    ) : (
+                        currentProfile.sector && (
+                            <div>
+                                <Label>Sekta ya Uchumi</Label>
+                                <p className='font-semibold text-lg'>{currentProfile.sector}</p>
+                            </div>
+                        )
+                    )}
                 
                 <div>
                     <div className='bg-gray-900/70 p-2 mb-2 rounded-t-md'>

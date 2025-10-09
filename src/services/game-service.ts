@@ -20,6 +20,7 @@ export type CompanyProfile = {
   isPublic: boolean;
   ownerUid: string;
   securityFund: number;
+  sector?: string;
 };
 
 // This is the private user data, stored under /users/{uid}
@@ -45,6 +46,7 @@ export type UserData = {
   lastSeen: number;
   lastPublicRead: Record<string, number>;
   companyProfile: CompanyProfile;
+  sector?: string;
 };
 
 // This is public-facing player data, stored under /players/{uid}
@@ -116,7 +118,9 @@ export const getInitialUserData = (uid: string, displayName: string | null, emai
       isPublic: false,
       ownerUid: uid,
       securityFund: 0,
+      sector: undefined,
     },
+    sector: undefined,
   };
 }
 

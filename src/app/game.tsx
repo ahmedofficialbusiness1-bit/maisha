@@ -13,7 +13,7 @@ import type { Recipe } from '@/lib/recipe-data';
 import { buildingData } from '@/lib/building-data';
 import { Chats, type ChatMetadata } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
-import { PlayerProfile, type ProfileData, type PlayerMetrics } from '@/components/app/profile';
+import { PlayerProfile, type ProfileData } from '@/components/app/profile';
 import { Leaderboard } from '@/components/app/leaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -388,6 +388,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             currentData.username = newName;
             currentData.avatarUrl = newAvatar;
             currentData.privateNotes = data.privateNotes || '';
+            currentData.sector = data.sector;
             
             // Ensure companyProfile exists before updating it
              if (!currentData.companyProfile) {
@@ -396,6 +397,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             }
             currentData.companyProfile.companyName = newName;
             currentData.companyProfile.logo = newAvatar || '';
+            currentData.companyProfile.sector = data.sector;
         }
         return currentData;
     }).then(() => {
@@ -1635,6 +1637,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
       status: gameState.status,
       lastSeen: new Date(gameState.lastSeen || Date.now()),
       role: role,
+      sector: gameState.sector,
   };
   
   const viewedProfileForDisplay: ProfileData | null = viewedProfileData ? {
@@ -1645,6 +1648,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         status: viewedProfileData.status,
         lastSeen: new Date(viewedProfileData.lastSeen || Date.now()),
         role: viewedProfileData.role,
+        sector: viewedProfileData.sector,
   } : null;
 
   const sortedPlayers = [...allPlayers].sort((a, b) => b.netWorth - a.netWorth);
@@ -1715,6 +1719,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                     stars={gameState.stars}
                     playerRank={currentPlayerRank}
                     isPresident={isPresident}
+                    playerSector={gameState.sector}
                     onBuild={handleBuild} 
                     onStartProduction={handleStartProduction} 
                     onStartSelling={handleStartSelling} 

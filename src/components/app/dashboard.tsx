@@ -26,7 +26,7 @@ import { Separator } from '../ui/separator';
 import { recipes } from '@/lib/recipe-data';
 import type { InventoryItem } from './inventory';
 import { cn } from '@/lib/utils';
-import { buildingData } from '@/lib/building-data';
+import { buildingData, buildingToSectorMap } from '@/lib/building-data';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
@@ -657,6 +657,7 @@ export interface DashboardProps {
     stars: number;
     playerRank: number;
     isPresident: boolean;
+    playerSector?: string;
     onBuild: (slotIndex: number, building: BuildingType) => void;
     onStartProduction: (slotIndex: number, recipe: Recipe, quantity: number, durationMs: number) => void;
     onStartSelling: (slotIndex: number, item: InventoryItem, quantity: number, price: number, durationMs: number) => void;
@@ -678,6 +679,7 @@ export function Dashboard({
     stars,
     playerRank,
     isPresident,
+    playerSector,
     onBuild, 
     onStartProduction, 
     onStartSelling, 
@@ -941,27 +943,20 @@ export function Dashboard({
   const canAffordBuild = hasEnoughMaterials(buildCosts);
 
   const buildingCategories = React.useMemo(() => {
-    return availableBuildings.reduce((acc, building) => {
-        const firstRecipe = recipes.find(r => r.buildingId === building.id);
-        let category = 'Other';
-        if (SHOP_BUILDING_IDS.includes(building.id)) {
-            category = 'Shops';
-        } else if (RESEARCH_BUILDING_IDS.includes(building.id)) {
-            category = 'Research';
-        } else if (firstRecipe) {
-            const product = encyclopediaData.find(p => p.name === firstRecipe.output.name);
-            category = product?.category || 'Production';
-        } else {
-             if (building.id.includes('uchimbaji')) category = 'Mining';
-             else if (building.id.includes('kiwanda')) category = 'Factories';
+    const buildingsBySector = availableBuildings.reduce((acc, building) => {
+        const sector = buildingToSectorMap[building.id] || 'Other';
+        if (!acc[sector]) {
+            acc[sector] = [];
         }
-        if (!acc[category]) {
-            acc[category] = [];
-        }
-        acc[category].push(building);
+        acc[sector].push(building);
         return acc;
     }, {} as Record<string, BuildingType[]>);
-  }, []);
+    
+    if (playerSector) {
+        return { [playerSector]: buildingsBySector[playerSector] || [] };
+    }
+    return buildingsBySector;
+  }, [playerSector]);
   
     const filteredBuildingCategories = React.useMemo(() => {
         if (!buildingSearch) return buildingCategories;
@@ -1185,6 +1180,15 @@ export function Dashboard({
                             className='pl-10 bg-gray-800 border-gray-600 h-9'
                         />
                     </div>
+                    { !playerSector && (
+                        <Alert variant="destructive" className="bg-yellow-900/40 border-yellow-500/50 text-yellow-300">
+                             <AlertTriangle className="h-4 w-4 !text-yellow-300" />
+                            <AlertTitle>Chagua Sekta Kwanza</AlertTitle>
+                            <AlertDescription>
+                                Nenda kwenye wasifu wako na uchague sekta ya uchumi ili kuona majengo husika.
+                            </AlertDescription>
+                        </Alert>
+                    )}
                     <div className='space-y-4'>
                         {Object.entries(filteredBuildingCategories).map(([category, buildings]) => (
                             <div key={category}>
@@ -1203,6 +1207,11 @@ export function Dashboard({
                                 </div>
                             </div>
                         ))}
+                         {Object.keys(filteredBuildingCategories).length === 0 && playerSector && (
+                             <div className="flex items-center justify-center h-48 text-gray-500">
+                                <p>Hakuna majengo yanayopatikana kwa utafutaji wako.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
                 )}
