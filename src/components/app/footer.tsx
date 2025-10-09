@@ -12,6 +12,7 @@ import {
   Trophy,
   Briefcase,
   Shield,
+  Crown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -83,7 +84,7 @@ export function AppFooter({ activeView, setView, unreadMessages, unreadContracts
     {
       view: 'office',
       label: 'Ofisi',
-      icon: <Briefcase className="h-5 w-5" />,
+      icon: <Crown className="h-5 w-5" />,
       adminOnly: false,
       presidentOnly: true,
     },
@@ -97,8 +98,8 @@ export function AppFooter({ activeView, setView, unreadMessages, unreadContracts
   ];
 
   const visibleNavItems = navItems.filter(item => {
-    if (item.adminOnly && !isAdmin) return false;
-    if (item.presidentOnly && !isPresident) return false;
+    if (item.adminOnly) return isAdmin;
+    if (item.presidentOnly) return isPresident || isAdmin;
     return true;
   });
 

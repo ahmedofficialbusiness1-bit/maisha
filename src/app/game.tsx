@@ -1816,7 +1816,6 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                   onAdminRemoveCandidate={onAdminRemoveCandidate}
                 />;
       case 'office':
-        // Placeholder for the "Ofisi" view
         return (
             <Card>
                 <CardHeader>
