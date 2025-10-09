@@ -369,6 +369,8 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   
     const newName = data.playerName;
     const newAvatar = data.avatarUrl;
+    const newSector = data.sector;
+
     const isNameTaken = allPlayers.some(player => 
         player.username.toLowerCase() === newName.toLowerCase() && player.uid !== gameState.uid
     );
@@ -388,7 +390,10 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             currentData.username = newName;
             currentData.avatarUrl = newAvatar;
             currentData.privateNotes = data.privateNotes || '';
-            currentData.sector = data.sector;
+            // Only set sector if it's not already set
+            if (!currentData.sector && newSector) {
+                currentData.sector = newSector;
+            }
             
             // Ensure companyProfile exists before updating it
              if (!currentData.companyProfile) {
@@ -397,7 +402,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             }
             currentData.companyProfile.companyName = newName;
             currentData.companyProfile.logo = newAvatar || '';
-            currentData.companyProfile.sector = data.sector;
+            currentData.companyProfile.sector = newSector;
         }
         return currentData;
     }).then(() => {
@@ -422,6 +427,35 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         toast({ variant: 'destructive', title: 'Error', description: 'Could not update profile.' });
     });
   }
+
+  const handleChangeSector = (newSector: string) => {
+    if (!userRef || !gameState) return;
+    const cost = 100;
+    if (gameState.stars < cost) {
+      toast({
+        variant: 'destructive',
+        title: 'Nyota Hazitoshi',
+        description: `Unahitaji nyota ${cost} kubadilisha sekta.`,
+      });
+      return;
+    }
+
+    runTransaction(userRef, (currentData) => {
+      if (currentData && currentData.stars >= cost) {
+        currentData.stars -= cost;
+        currentData.sector = newSector;
+        if (currentData.companyProfile) {
+          currentData.companyProfile.sector = newSector;
+        }
+      }
+      return currentData;
+    }).then(() => {
+      toast({ title: 'Sekta Imebadilishwa', description: `Sasa unashiriki katika sekta ya ${newSector}.` });
+    }).catch((error) => {
+      console.error("Sector change failed:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not change sector.' });
+    });
+  };
 
   const handleViewProfile = (playerId: string) => {
     if (playerId === user?.uid) {
@@ -1758,16 +1792,18 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             return <PlayerProfile 
                         currentProfile={viewedProfileForDisplay} 
                         metrics={getMetricsForProfile(viewedProfileData)}
-                        onSave={() => {}} 
+                        onSave={handleUpdateProfile} 
+                        onChangeSector={handleChangeSector}
                         isViewOnly={true}
                         onBack={handleBackFromProfileView}
                         viewerRole={gameState.role}
                         setView={setView}
                         onStartPrivateChat={handleStartPrivateChat}
                         isPresident={viewedProfileData?.uid === president?.uid}
+                        stars={gameState.stars}
                     />;
         }
-        return <PlayerProfile onSave={handleUpdateProfile} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} isPresident={isPresident} />;
+        return <PlayerProfile onSave={handleUpdateProfile} onChangeSector={handleChangeSector} currentProfile={currentProfile} metrics={getMetricsForProfile(gameState)} setView={setView} onStartPrivateChat={handleStartPrivateChat} isPresident={isPresident} stars={gameState.stars} />;
       case 'admin':
         return <AdminPanel
                   onViewProfile={handleViewProfile}
@@ -1831,3 +1867,4 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     
 
     
+

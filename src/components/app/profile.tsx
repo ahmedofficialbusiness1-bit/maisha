@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Textarea } from '../ui/textarea';
-import { Clipboard, Pencil, Upload, ArrowLeft, MessageSquare, Crown } from 'lucide-react';
+import { Clipboard, Pencil, Upload, ArrowLeft, MessageSquare, Crown, Star } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -45,6 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { sectors } from '@/lib/building-data';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 
 
 const profileFormSchema = z.object({
@@ -83,6 +84,7 @@ export type PlayerMetrics = {
 
 interface PlayerProfileProps {
   onSave: (data: ProfileDataForForm) => void;
+  onChangeSector: (newSector: string) => void;
   currentProfile: ProfileData;
   metrics: PlayerMetrics;
   isViewOnly?: boolean;
@@ -91,6 +93,7 @@ interface PlayerProfileProps {
   setView: (view: View) => void;
   onStartPrivateChat: (uid: string) => void;
   isPresident?: boolean;
+  stars: number;
 }
 
 function InfoItem({ label, value, smallText = false }: { label: string; value: React.ReactNode, smallText?: boolean }) {
@@ -112,9 +115,10 @@ function ValuationItem({ label, value }: { label: React.ReactNode; value: string
 }
 
 
-export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = false, onBack, viewerRole, setView, onStartPrivateChat, isPresident }: PlayerProfileProps) {
+export function PlayerProfile({ onSave, onChangeSector, currentProfile, metrics, isViewOnly = false, onBack, viewerRole, setView, onStartPrivateChat, isPresident, stars }: PlayerProfileProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const { toast } = useToast();
+  const [sectorToChange, setSectorToChange] = React.useState<string | null>(null);
 
   const form = useForm<ProfileDataForForm>({
     resolver: zodResolver(profileFormSchema),
@@ -169,6 +173,23 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
     onStartPrivateChat(currentProfile.uid);
   }
   
+  const handleSectorSelect = (newSector: string) => {
+    if (currentProfile.sector && newSector !== currentProfile.sector) {
+      setSectorToChange(newSector);
+    } else if (!currentProfile.sector) {
+      // If it's the first time, set it directly in the form
+      form.setValue('sector', newSector, { shouldDirty: true });
+    }
+  };
+
+  const confirmSectorChange = () => {
+    if (sectorToChange) {
+      onChangeSector(sectorToChange);
+    }
+    setSectorToChange(null);
+  };
+
+
   const isOnline = currentProfile.lastSeen && (Date.now() - new Date(currentProfile.lastSeen).getTime() < 5 * 60 * 1000);
   const lastSeenText = currentProfile.lastSeen 
     ? `was ${formatDistanceToNow(new Date(currentProfile.lastSeen), { addSuffix: true })}`
@@ -206,6 +227,7 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
   const displayRole = currentProfile.role === 'admin' ? 'Administrator' : isPresident ? 'President' : 'Mfanyabiashara';
 
   return (
+    <>
     <div className="flex flex-col gap-4 text-white">
       {isViewOnly && onBack && (
          <div className='flex justify-between items-center'>
@@ -323,13 +345,9 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                             </FormItem>
                             )}
                         />
-                        <FormField
-                          control={form.control}
-                          name="sector"
-                          render={({ field }) => (
-                            <FormItem>
+                         <FormItem>
                               <FormLabel>Sekta ya Uchumi</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!currentProfile.sector}>
+                              <Select onValueChange={handleSectorSelect} value={form.watch('sector') || ''}>
                                 <FormControl>
                                   <SelectTrigger className='bg-gray-700 border-gray-600'>
                                     <SelectValue placeholder="Chagua sekta kuu ya kampuni yako" />
@@ -342,12 +360,12 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
                                 </SelectContent>
                               </Select>
                               <FormDescription>
-                                Chagua sekta kuu ya biashara yako. Huwezi kubadilisha baada ya kuchagua.
+                                {currentProfile.sector 
+                                ? "Kubadilisha sekta kutagharimu nyota 100."
+                                : "Chagua sekta kuu ya biashara yako. Huwezi kubadilisha baada ya kuchagua bila gharama."}
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
-                          )}
-                        />
                         </>
                     ) : (
                         currentProfile.sector && (
@@ -453,6 +471,28 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
         </form>
       </Form>
     </div>
+    <AlertDialog open={!!sectorToChange} onOpenChange={(open) => !open && setSectorToChange(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Thibitisha Kubadilisha Sekta</AlertDialogTitle>
+            <AlertDialogDescription>
+              Una uhakika unataka kubadilisha sekta yako kuwa <span className="font-bold text-white">{sectorToChange}</span>? 
+              Kitendo hiki kitakugharimu <strong className="font-bold text-yellow-300 inline-flex items-center gap-1">100 <Star className="h-4 w-4" /></strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSectorToChange(null)}>Ghairi</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmSectorChange} 
+              disabled={stars < 100}
+              className={cn(stars >= 100 ? 'bg-blue-600 hover:bg-blue-700' : '')}
+            >
+              {stars < 100 ? 'Nyota Hazitoshi' : 'Thibitisha'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -463,3 +503,4 @@ export function PlayerProfile({ onSave, currentProfile, metrics, isViewOnly = fa
 
 
     
+
