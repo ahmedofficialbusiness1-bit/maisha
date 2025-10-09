@@ -700,7 +700,7 @@ export function TradeMarket({ playerListings, stockListings, bondListings, inven
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="font-bold text-lg">{votes[candidate.uid] || 0} Kura</p>
+                                                <p className="font-bold text-lg">{Object.values(votes[candidate.uid] || {}).length} Kura</p>
                                             </div>
                                         </div>
                                         <Button size="sm" className="w-full mt-4" onClick={() => onVote(candidate.uid)} disabled={currentUser.stars < 100}>
