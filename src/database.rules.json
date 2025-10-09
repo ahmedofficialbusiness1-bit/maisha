@@ -3,20 +3,16 @@
     "users": {
       "$uid": {
         ".read": "auth != null",
-        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || newData.child('payouts').exists())"
+        ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin' || newData.child('payouts').exists())"
       }
     },
     "contracts": {
-      "$contractId": {
-        ".read": "auth != null && (data.child('senderId').val() === auth.uid || data.child('receiverId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
-        ".write": "auth != null && ((newData.child('senderId').val() === auth.uid) || (data.child('receiverId').val() === auth.uid) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
-      }
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "market": {
-      "$itemId": {
-        ".read": "auth != null",
-        ".write": "auth != null && (newData.child('sellerUid').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
-      }
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "players": {
         ".read": "auth != null",
@@ -26,10 +22,8 @@
         }
     },
     "chat": {
-      "$chatRoomId": {
-        ".read": "auth != null && ($chatRoomId === 'general' || $chatRoomId === 'trade' || $chatRoomId === 'help' || $chatRoomId.contains(auth.uid))",
+        ".read": "auth != null",
         ".write": "auth != null"
-      }
     },
     "chat-metadata": {
         ".read": "auth != null",
