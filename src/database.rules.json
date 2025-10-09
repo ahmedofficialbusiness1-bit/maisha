@@ -2,51 +2,25 @@
   "rules": {
     "users": {
       "$uid": {
-        ".read": "auth != null",
-        ".write": "auth != null && (auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin' || newData.child('payouts').exists())"
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
     },
     "contracts": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "$contractId": {
+        ".read": "auth != null && (data.child('senderId').val() === auth.uid || data.child('receiverId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && ((newData.child('senderId').val() === auth.uid) || (data.child('receiverId').val() === auth.uid) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
     },
     "market": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "players": {
+      "$itemId": {
         ".read": "auth != null",
-        ".indexOn": ["netWorth", "username"],
-        "$uid": {
-            ".write": "auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin'"
-        }
-    },
-    "chat": {
-        ".read": "auth != null",
-        ".write": "auth != null"
-    },
-    "chat-metadata": {
-        ".read": "auth != null",
-        ".write": "auth != null"
-    },
-    "marketShares": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "election": {
-      ".read": "auth != null",
-      "state": {
-        ".write": "root.child('players').child(auth.uid).child('role').val() === 'admin'"
-      },
-      "presidentUid": {
-        ".write": "root.child('players').child(auth.uid).child('role').val() === 'admin'"
-      },
-      "candidates": {
-        ".write": "auth != null"
-      },
-      "votes": {
-        ".write": "auth != null"
+        ".write": "auth != null && (newData.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
+    },
+    "admin": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
     },
     ".read": "auth != null",
     ".write": "auth != null"
