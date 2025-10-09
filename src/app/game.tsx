@@ -1565,6 +1565,33 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
       });
   }, [user, gameState, electionRef, database, toast, userRef]);
 
+  const onAdminAppointPresident = React.useCallback((uid: string) => {
+    const updates: Record<string, any> = {};
+    updates[`/election/presidentUid`] = uid;
+    updates[`/users/${uid}/role`] = 'president';
+    updates[`/players/${uid}/role`] = 'president';
+    update(ref(database), updates);
+  }, [database]);
+
+  const onAdminRemovePresident = React.useCallback(() => {
+    if (president) {
+      const updates: Record<string, any> = {};
+      updates[`/election/presidentUid`] = null;
+      updates[`/users/${president.uid}/role`] = 'player';
+      updates[`/players/${president.uid}/role`] = 'player';
+      update(ref(database), updates);
+    }
+  }, [database, president]);
+
+  const onAdminManageElection = React.useCallback((state: 'open' | 'closed') => {
+    update(ref(database), { '/election/state': state });
+  }, [database]);
+
+  const onAdminRemoveCandidate = React.useCallback((candidateId: string) => {
+      const candidateRef = ref(database, `election/candidates/${candidateId}`);
+      remove(candidateRef);
+  }, [database]);
+
 
   if (userLoading || gameStateLoading || !allPlayers) {
     return (
@@ -1742,6 +1769,10 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                   president={president}
                   electionState={electionState}
                   candidates={candidates}
+                  onAdminAppointPresident={onAdminAppointPresident}
+                  onAdminRemovePresident={onAdminRemovePresident}
+                  onAdminManageElection={onAdminManageElection}
+                  onAdminRemoveCandidate={onAdminRemoveCandidate}
                 />;
       case 'office':
         // Placeholder for the "Ofisi" view

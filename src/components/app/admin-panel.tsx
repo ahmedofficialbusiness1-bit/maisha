@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { simulateCommodityPrice } from '@/ai/flows/commodity-price-simulation';
-import { Check, ChevronsUpDown, CircleDollarSign, Crown, Gift, Loader2, Star, Users, Wifi, WifiOff } from 'lucide-react';
+import { Check, ChevronsUpDown, CircleDollarSign, Crown, Gift, Loader2, Star, Users, Wifi, WifiOff, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -25,7 +25,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { getDatabase, ref, set, push, runTransaction, update, get } from 'firebase/database';
+import { getDatabase, ref, set, push, runTransaction, update, get, remove } from 'firebase/database';
 import type { Notification, Transaction } from '@/app/game';
 
 
@@ -55,6 +55,10 @@ interface AdminPanelProps {
     president: PlayerPublicData | null;
     electionState: 'open' | 'closed';
     candidates: any[];
+    onAdminAppointPresident: (uid: string) => void;
+    onAdminRemovePresident: () => void;
+    onAdminManageElection: (state: 'open' | 'closed') => void;
+    onAdminRemoveCandidate: (candidateId: string) => void;
 }
 
 function CommoditySimulator() {
@@ -735,37 +739,7 @@ const appointPresidentSchema = z.object({
     targetUid: z.string().min(1, 'UID is required'),
 })
 
-function PresidencyTools({ president, electionState, candidates }: Pick<AdminPanelProps, 'president' | 'electionState' | 'candidates'>) {
-    const database = getDatabase();
-    
-    const onAdminAppointPresident = (uid: string) => {
-        const updates: Record<string, any> = {};
-        updates[`/election/presidentUid`] = uid;
-        runTransaction(ref(database, `users/${uid}`), (userData) => {
-          if (userData) {
-              userData.role = 'president';
-          }
-          return userData;
-        });
-        update(ref(database), updates);
-    };
-
-    const onAdminRemovePresident = () => {
-        if(president) {
-            runTransaction(ref(database, `users/${president.uid}`), (userData) => {
-                if(userData) {
-                    userData.role = 'player';
-                }
-                return userData;
-            });
-        }
-        update(ref(database), { '/election/presidentUid': null });
-    };
-
-    const onAdminManageElection = (state: 'open' | 'closed') => {
-        update(ref(database), { '/election/state': state });
-    };
-
+function PresidencyTools({ president, electionState, candidates, onAdminAppointPresident, onAdminRemovePresident, onAdminManageElection, onAdminRemoveCandidate }: AdminPanelProps) {
     const form = useForm<z.infer<typeof appointPresidentSchema>>({
         resolver: zodResolver(appointPresidentSchema),
         defaultValues: { targetUid: '' }
@@ -828,14 +802,21 @@ function PresidencyTools({ president, electionState, candidates }: Pick<AdminPan
                     {candidates && candidates.length > 0 ? (
                         <div className="space-y-3">
                             {candidates.map((candidate: any) => (
-                                <div key={candidate.id} className="flex items-center gap-3 p-2 rounded-md bg-gray-900/50">
-                                    <Avatar className="h-10 w-10">
-                                        <AvatarImage src={candidate.avatar} alt={candidate.username} data-ai-hint="player avatar" />
-                                        <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="font-semibold">{candidate.username}</p>
-                                        <p className="text-xs italic text-gray-400">"{candidate.slogan}"</p>
+                                <div key={candidate.id} className="flex items-center justify-between gap-3 p-2 rounded-md bg-gray-900/50">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-10 w-10">
+                                            <AvatarImage src={candidate.avatar} alt={candidate.username} data-ai-hint="player avatar" />
+                                            <AvatarFallback>{candidate.username.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-semibold">{candidate.username}</p>
+                                            <p className="text-xs italic text-gray-400">"{candidate.slogan}"</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-400 hover:bg-red-500/10" onClick={() => onAdminRemoveCandidate(candidate.id)}>
+                                            <X className="h-4 w-4" />
+                                        </Button>
                                     </div>
                                 </div>
                             ))}
@@ -891,7 +872,7 @@ function PresidencyTools({ president, electionState, candidates }: Pick<AdminPan
     )
 }
 
-export function AdminPanel({ onViewProfile, president, electionState, candidates }: AdminPanelProps) {
+export function AdminPanel({ onViewProfile, president, electionState, candidates, onAdminAppointPresident, onAdminRemovePresident, onAdminManageElection, onAdminRemoveCandidate }: AdminPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -917,7 +898,15 @@ export function AdminPanel({ onViewProfile, president, electionState, candidates
              <GameTools />
           </TabsContent>
            <TabsContent value="presidency">
-             <PresidencyTools president={president} electionState={electionState} candidates={candidates}/>
+             <PresidencyTools 
+                president={president} 
+                electionState={electionState} 
+                candidates={candidates}
+                onAdminAppointPresident={onAdminAppointPresident}
+                onAdminRemovePresident={onAdminRemovePresident}
+                onAdminManageElection={onAdminManageElection}
+                onAdminRemoveCandidate={onAdminRemoveCandidate}
+              />
           </TabsContent>
         </Tabs>
 
