@@ -66,7 +66,7 @@ export function PresidentOfficePanel({ treasury, economy, officialPrices, nation
                 />
                  <StatCard 
                     title="Tenda Zilizo Wazi" 
-                    value={Object.values(nationalOrders).filter(o => o.status === 'open').length}
+                    value={Object.values(nationalOrders || {}).filter(o => o.status === 'open').length}
                     icon={Handshake}
                     description="Idadi ya tenda za taifa zinazosubiri wazabuni."
                     formatAsCurrency={false}
