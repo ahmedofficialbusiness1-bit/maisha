@@ -572,7 +572,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             read: false, 
             icon: 'construction' 
         };
-        currentData.notifications = { ...(currentData.notifications || {}), [notifRef.key!]: newNotification };
+        currentData.notifications = { ...(currentData.notifications || {}), [newNotification.id]: newNotification };
 
         return currentData;
     });
@@ -835,9 +835,9 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         });
 
         // Step 3: Add payment to seller's payout queue (System-Mediated)
-        const sellerUserRef = ref(database, `users/${listing.sellerUid}`);
-        const sellerPayoutsRef = push(ref(sellerUserRef, 'payouts'));
-        await set(sellerPayoutsRef, {
+        const sellerPayoutsRef = ref(database, `users/${listing.sellerUid}/payouts`);
+        const newPayoutRef = push(sellerPayoutsRef);
+        await set(newPayoutRef, {
             amount: totalCost,
             description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`,
             timestamp: Date.now()
@@ -1150,8 +1150,8 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
         // Add payment to seller's payout queue (System-Mediated)
         if (contract.sellerUid !== 'admin-system') {
-            const sellerUserRef = ref(database, `users/${contract.sellerUid}`);
-            const newPayoutRef = push(ref(sellerUserRef, 'payouts'));
+            const sellerPayoutsRef = ref(database, `users/${contract.sellerUid}/payouts`);
+            const newPayoutRef = push(sellerPayoutsRef);
             await set(newPayoutRef, {
                 amount: totalCost,
                 description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`,
@@ -1791,5 +1791,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     </div>
   );
 }
+
+    
 
     
