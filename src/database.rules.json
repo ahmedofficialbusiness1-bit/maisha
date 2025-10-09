@@ -1,26 +1,79 @@
+
 {
   "rules": {
     "users": {
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() in ['admin', 'president'])",
         ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
     },
     "contracts": {
       "$contractId": {
-        ".read": "auth != null && (data.child('senderId').val() === auth.uid || data.child('receiverId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
-        ".write": "auth != null && ((newData.child('senderId').val() === auth.uid) || (data.child('receiverId').val() === auth.uid) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        ".read": "auth != null",
+        ".write": "auth != null"
       }
     },
     "market": {
       "$itemId": {
         ".read": "auth != null",
-        ".write": "auth != null && (newData.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        ".write": "auth != null && (newData.child('sellerUid').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
     },
-    "admin": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
-      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+    "players": {
+      ".read": "auth != null",
+      ".indexOn": ["netWorth", "username"],
+      "$uid": {
+        ".write": "auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin'"
+      }
+    },
+    "chat": {
+      "$chatRoomId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "chat-metadata": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "marketShares": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "election": {
+      ".read": "auth != null",
+      "state": {
+        ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      },
+      "presidentUid": {
+        ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      },
+      "candidates": {
+        ".write": "auth != null"
+      },
+      "votes": {
+        ".write": "auth != null"
+      }
+    },
+    "economy": {
+      ".read": "auth != null",
+      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'"
+    },
+    "treasury": {
+      ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'",
+      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+    },
+    "officialPrices": {
+      ".read": "auth != null",
+      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'"
+    },
+    "subsidies": {
+      ".read": "auth != null",
+      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'"
+    },
+    "nationalOrders": {
+      ".read": "auth != null",
+      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'"
     },
     ".read": "auth != null",
     ".write": "auth != null"

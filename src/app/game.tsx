@@ -18,7 +18,7 @@ import { Leaderboard } from '@/components/app/leaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
-import { getInitialUserData, saveUserData, type EconomyData, type NationalOrder, type TreasuryData, type UserData } from '@/services/game-service';
+import { getInitialUserData, saveUserData, type EconomyData, type NationalOrder, type Subsidy, type TreasuryData, type UserData } from '@/services/game-service';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, update } from 'firebase/database';
@@ -105,6 +105,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   const [economy, setEconomy] = React.useState<EconomyData | null>(null);
   const [officialPrices, setOfficialPrices] = React.useState<Record<string, number>>({});
   const [nationalOrders, setNationalOrders] = React.useState<Record<string, NationalOrder>>({});
+  const [subsidies, setSubsidies] = React.useState<Record<string, Subsidy>>({});
   
   // Presidency state
   const [president, setPresident] = React.useState<PlayerPublicData | null>(null);
@@ -125,6 +126,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   const economyRef = React.useMemo(() => ref(database, 'economy'), [database]);
   const officialPricesRef = React.useMemo(() => ref(database, 'officialPrices'), [database]);
   const nationalOrdersRef = React.useMemo(() => ref(database, 'nationalOrders'), [database]);
+  const subsidiesRef = React.useMemo(() => ref(database, 'subsidies'), [database]);
 
 
   const handleSetView = React.useCallback((newView: View) => {
@@ -220,16 +222,18 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     React.useEffect(() => {
         const unsubTreasury = onValue(treasuryRef, (snap) => setTreasury(snap.val()));
         const unsubEconomy = onValue(economyRef, (snap) => setEconomy(snap.val()));
-        const unsubPrices = onValue(officialPricesRef, (snap) => setOfficialPrices(snap.val()));
-        const unsubOrders = onValue(nationalOrdersRef, (snap) => setNationalOrders(snap.val()));
+        const unsubPrices = onValue(officialPricesRef, (snap) => setOfficialPrices(snap.val() || {}));
+        const unsubOrders = onValue(nationalOrdersRef, (snap) => setNationalOrders(snap.val() || {}));
+        const unsubSubsidies = onValue(subsidiesRef, (snap) => setSubsidies(snap.val() || {}));
 
         return () => {
             unsubTreasury();
             unsubEconomy();
             unsubPrices();
             unsubOrders();
+            unsubSubsidies();
         };
-    }, [treasuryRef, economyRef, officialPricesRef, nationalOrdersRef]);
+    }, [treasuryRef, economyRef, officialPricesRef, nationalOrdersRef, subsidiesRef]);
 
 
   // Effect to fetch data for a viewed profile
@@ -1654,6 +1658,42 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
       remove(candidateRef);
   }, [database]);
 
+  // Government Panel Handlers
+  const handleSetTaxRate = (rate: number) => {
+    update(economyRef!, { taxRate: rate, updatedBy: user?.uid, lastChange: Date.now() });
+  };
+  const handleProposeSubsidy = (sector: string, amount: number) => {
+    const newSubsidyRef = push(subsidiesRef!);
+    const subsidy: Subsidy = {
+      sector,
+      amount,
+      distributed: false,
+      timestamp: Date.now(),
+      proposer: user!.uid,
+      approvedBy: null,
+      isApproved: false, // Requires admin approval
+    };
+    set(newSubsidyRef, subsidy);
+  };
+  const handleSetOfficialPrice = (item: string, price: number) => {
+    update(officialPricesRef!, { [item]: price });
+  };
+  const handleCreateNationalOrder = (item: string, quantity: number, reward: number) => {
+     const newOrderRef = push(nationalOrdersRef!);
+     const order: Omit<NationalOrder, 'orderId'> = {
+        product: item,
+        quantityRequired: quantity,
+        quantityDelivered: 0,
+        reward: reward,
+        status: 'open',
+        winner: null,
+        proposer: user!.uid,
+        approvedBy: null,
+        isApproved: false, // Requires admin approval
+     };
+     set(newOrderRef, order);
+  }
+
 
   if (userLoading || gameStateLoading || !allPlayers) {
     return (
@@ -1848,6 +1888,10 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                 economy={economy}
                 officialPrices={officialPrices}
                 nationalOrders={nationalOrders}
+                onSetTaxRate={handleSetTaxRate}
+                onProposeSubsidy={handleProposeSubsidy}
+                onSetOfficialPrice={handleSetOfficialPrice}
+                onCreateNationalOrder={handleCreateNationalOrder}
             />
         );
       default:
@@ -1889,4 +1933,5 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     
 
     
+
 
