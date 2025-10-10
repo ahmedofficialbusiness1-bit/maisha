@@ -2,6 +2,7 @@
 {
   "rules": {
     "users": {
+      ".indexOn": "sector",
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() in ['admin', 'president'])",
         ".write": "auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() in ['admin']"
