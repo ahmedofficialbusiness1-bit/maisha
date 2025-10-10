@@ -61,7 +61,7 @@
     },
     "treasury": {
       ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'",
-      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      ".write": "auth != null"
     },
     "officialPrices": {
       ".read": "auth != null",
