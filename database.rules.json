@@ -1,8 +1,9 @@
 {
   "rules": {
     "users": {
+      ".indexOn": "sector",
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
         ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
     },
@@ -60,7 +61,7 @@
     },
     "treasury": {
       ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'",
-      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      ".write": "auth != null"
     },
     "officialPrices": {
       ".read": "auth != null",
@@ -68,7 +69,7 @@
     },
     "subsidies": {
       ".read": "auth != null",
-      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'"
+      ".write": "auth != null"
     },
     "nationalOrders": {
       ".read": "auth != null",
