@@ -21,7 +21,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type EconomyData, type NationalOrder, type Subsidy, type TreasuryData, type UserData } from '@/services/game-service';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, update, type DatabaseReference } from 'firebase/database';
+import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, update, type DatabaseReference, query, orderByChild, equalTo } from 'firebase/database';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { recipes } from '@/lib/recipe-data';
 import { AdminPanel } from '@/components/app/admin-panel';
@@ -920,7 +920,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         const newPayoutRef = push(sellerPayoutsRef);
         await set(newPayoutRef, {
             amount: sellerPayout,
-            description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}. Tax: $${taxAmount.toFixed(2)}`,
+            description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username} (Tax: $${taxAmount.toFixed(2)})`,
             timestamp: Date.now()
         });
         
@@ -1249,7 +1249,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             const newPayoutRef = push(sellerPayoutsRef);
             await set(newPayoutRef, {
                 amount: sellerPayout,
-                description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}. Tax: $${taxAmount.toFixed(2)}`,
+                description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username} (Tax: $${taxAmount.toFixed(2)})`,
                 timestamp: Date.now()
             });
         }
@@ -1494,12 +1494,86 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         });
     }, 5000); // Process payouts every 5 seconds
 
+    const subsidyInterval = setInterval(() => {
+        if (!user || (gameState?.role !== 'admin' && gameState?.role !== 'president')) return;
+        
+        get(subsidiesRef).then(snapshot => {
+            const allSubsidies = snapshot.val();
+            if (!allSubsidies) return;
+
+            Object.keys(allSubsidies).forEach(async (subsidyId) => {
+                const subsidy = allSubsidies[subsidyId] as Subsidy & { subsidyId: string };
+                subsidy.subsidyId = subsidyId;
+
+                if (subsidy.isApproved && !subsidy.distributed) {
+                     // 1. Check if treasury has enough funds
+                    const treasurySnapshot = await get(treasuryRef);
+                    const currentTreasuryBalance = treasurySnapshot.val()?.balance || 0;
+                    if (currentTreasuryBalance < subsidy.amount) {
+                        // Optional: notify admin/president of insufficient funds
+                        return;
+                    }
+                    
+                    // 2. Find players in the sector
+                    const playersQuery = query(ref(database, 'users'), orderByChild('sector'), equalTo(subsidy.sector));
+                    const playersSnapshot = await get(playersQuery);
+                    
+                    if (playersSnapshot.exists()) {
+                        const playersData = playersSnapshot.val();
+                        const playerIds = Object.keys(playersData);
+                        const playerCount = playerIds.length;
+                        
+                        if (playerCount > 0) {
+                            const sharePerPlayer = subsidy.amount / playerCount;
+                            
+                            // 3. Deduct from treasury
+                            await runTransaction(treasuryRef, (treasury) => {
+                                if (treasury && treasury.balance >= subsidy.amount) {
+                                    treasury.balance -= subsidy.amount;
+                                    return treasury;
+                                }
+                                return; // Abort if not enough funds
+                            });
+
+                            // 4. Distribute to players
+                            for (const playerId of playerIds) {
+                                const playerRef = ref(database, `users/${playerId}`);
+                                runTransaction(playerRef, (playerData) => {
+                                    if (playerData) {
+                                        playerData.money += sharePerPlayer;
+                                        // Add notification and transaction for the player
+                                        const notifRef = push(ref(database, `users/${playerId}/notifications`));
+                                        playerData.notifications = {...playerData.notifications, [notifRef.key!]: { id: notifRef.key!, message: `You have received a government subsidy of $${sharePerPlayer.toFixed(2)} for the ${subsidy.sector} sector.`, timestamp: Date.now(), read: false, icon: 'dividend' } };
+                                        
+                                        const transRef = push(ref(database, `users/${playerId}/transactions`));
+                                        playerData.transactions = {...playerData.transactions, [transRef.key!]: { id: transRef.key!, type: 'income', amount: sharePerPlayer, description: `Ruzuku ya Serikali (${subsidy.sector})`, timestamp: Date.now() } };
+                                    }
+                                    return playerData;
+                                });
+                            }
+                            
+                             // 5. Mark as distributed
+                            const subsidyRef = ref(database, `subsidies/${subsidy.subsidyId}`);
+                            await update(subsidyRef, { distributed: true });
+                        } else {
+                             // No players in sector, mark as distributed to prevent re-tries
+                            const subsidyRef = ref(database, `subsidies/${subsidy.subsidyId}`);
+                            await update(subsidyRef, { distributed: true });
+                        }
+                    }
+                }
+            });
+        });
+
+    }, 15000); // Check for subsidies to distribute every 15 seconds
+
     return () => {
         clearInterval(activityInterval);
         clearInterval(dividendInterval);
         clearInterval(payoutInterval);
+        clearInterval(subsidyInterval);
     };
-  }, [userRef, gameState, handleDailyDividends, user, database, addTransaction, addNotification, economy, treasuryRef]);
+  }, [userRef, gameState, handleDailyDividends, user, database, addTransaction, addNotification, economy, treasuryRef, subsidiesRef]);
 
   const { netWorth, buildingValue, stockValue, inventoryValue } = React.useMemo(() => {
     if (!gameState) return { netWorth: 0, buildingValue: 0, stockValue: 0, inventoryValue: 0 };
@@ -2012,4 +2086,5 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
 
     
+
 
