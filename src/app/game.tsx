@@ -21,7 +21,7 @@ import { encyclopediaData } from '@/lib/encyclopedia-data';
 import { getInitialUserData, saveUserData, type EconomyData, type NationalOrder, type Subsidy, type TreasuryData, type UserData } from '@/services/game-service';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, update } from 'firebase/database';
+import { getDatabase, ref, onValue, set, get, push, remove, runTransaction, update, type DatabaseReference } from 'firebase/database';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { recipes } from '@/lib/recipe-data';
 import { AdminPanel } from '@/components/app/admin-panel';
@@ -907,9 +907,11 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
         // Add tax to treasury
         await runTransaction(treasuryRef, (currentTreasury) => {
-            if (currentTreasury) {
-                currentTreasury.balance += taxAmount;
+            if (!currentTreasury) {
+                return { balance: taxAmount, lastUpdated: Date.now() };
             }
+            currentTreasury.balance = (currentTreasury.balance || 0) + taxAmount;
+            currentTreasury.lastUpdated = Date.now();
             return currentTreasury;
         });
 
@@ -1235,9 +1237,11 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
             // Add tax to treasury
             await runTransaction(treasuryRef, (currentTreasury) => {
-                if (currentTreasury) {
-                    currentTreasury.balance += taxAmount;
+                if (!currentTreasury) {
+                    return { balance: taxAmount, lastUpdated: Date.now() };
                 }
+                currentTreasury.balance = (currentTreasury.balance || 0) + taxAmount;
+                currentTreasury.lastUpdated = Date.now();
                 return currentTreasury;
             });
             
@@ -1418,10 +1422,11 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
                         // Add tax to treasury
                         runTransaction(treasuryRef, (currentTreasury) => {
-                            if (currentTreasury) {
-                                currentTreasury.balance = (currentTreasury.balance || 0) + taxAmount;
-                                currentTreasury.lastUpdated = Date.now();
+                           if (!currentTreasury) {
+                                return { balance: taxAmount, lastUpdated: Date.now() };
                             }
+                            currentTreasury.balance = (currentTreasury.balance || 0) + taxAmount;
+                            currentTreasury.lastUpdated = Date.now();
                             return currentTreasury;
                         });
 
