@@ -1495,7 +1495,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     }, 5000); // Process payouts every 5 seconds
 
     const subsidyInterval = setInterval(() => {
-        if (!user || (gameState?.role !== 'admin' && gameState?.role !== 'president')) return;
+        if (!user || !subsidiesRef || !database || !treasuryRef) return;
         
         get(subsidiesRef).then(snapshot => {
             const allSubsidies = snapshot.val();
@@ -2086,5 +2086,6 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
 
     
+
 
 
