@@ -221,7 +221,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     // Listen for government/economy data changes
     React.useEffect(() => {
         const unsubTreasury = onValue(treasuryRef, (snap) => setTreasury(snap.val()));
-        const unsubEconomy = onValue(economyRef, (snap) => setEconomy(snap.val()));
+        const unsubEconomy = onValue(economyRef, (snap) => setEconomy(snap.val() || { taxRate: 0.05 }));
         const unsubPrices = onValue(officialPricesRef, (snap) => setOfficialPrices(snap.val() || {}));
         const unsubOrders = onValue(nationalOrdersRef, (snap) => setNationalOrders(snap.val() || {}));
         const unsubSubsidies = onValue(subsidiesRef, (snap) => setSubsidies(snap.val() || {}));
@@ -353,7 +353,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                 id: newNotifRef.key!,
                 message,
                 timestamp: Date.now(),
-                read: false,
+                read: boolean,
                 icon,
             };
             currentData.notifications = {...(currentData.notifications || {}), [newNotifRef.key!]: newNotification};
@@ -840,7 +840,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
 
   const handleBuyFromMarket = async (listing: PlayerListing, quantityToBuy: number) => {
-    if (!user || !gameState || !database) return;
+    if (!user || !gameState || !database || !economy || !treasuryRef) return;
     if (listing.sellerUid === user.uid) {
         toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot buy your own items.' });
         return;
@@ -900,11 +900,24 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             return currentData;
         });
 
-        // Step 3: Add payment to seller's payout queue (System-Mediated)
+        // Step 3: Handle Tax and Seller Payout
+        const taxRate = economy?.taxRate || 0;
+        const taxAmount = totalCost * taxRate;
+        const sellerPayout = totalCost - taxAmount;
+
+        // Add tax to treasury
+        await runTransaction(treasuryRef, (currentTreasury) => {
+            if (currentTreasury) {
+                currentTreasury.balance += taxAmount;
+            }
+            return currentTreasury;
+        });
+
+        // Add payout to seller's queue
         const sellerPayoutsRef = ref(database, `users/${listing.sellerUid}/payouts`);
         const newPayoutRef = push(sellerPayoutsRef);
         await set(newPayoutRef, {
-            amount: totalCost,
+            amount: sellerPayout,
             description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`,
             timestamp: Date.now()
         });
@@ -1166,7 +1179,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   }, [database, user, gameState, userRef, allPlayers, toast]);
 
   const handleAcceptContract = React.useCallback(async (contract: any) => {
-    if (!user || !gameState || !userRef || !database) return;
+    if (!user || !gameState || !userRef || !database || !economy || !treasuryRef) return;
 
     if (contract.sellerUid === user.uid) {
         toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot accept your own contract.' });
@@ -1214,12 +1227,24 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             return currentData;
         });
 
-        // Add payment to seller's payout queue (System-Mediated)
+        // Add payment to seller's payout queue (System-Mediated) and handle tax
         if (contract.sellerUid !== 'admin-system') {
+            const taxRate = economy?.taxRate || 0;
+            const taxAmount = totalCost * taxRate;
+            const sellerPayout = totalCost - taxAmount;
+
+            // Add tax to treasury
+            await runTransaction(treasuryRef, (currentTreasury) => {
+                if (currentTreasury) {
+                    currentTreasury.balance += taxAmount;
+                }
+                return currentTreasury;
+            });
+            
             const sellerPayoutsRef = ref(database, `users/${contract.sellerUid}/payouts`);
             const newPayoutRef = push(sellerPayoutsRef);
             await set(newPayoutRef, {
-                amount: totalCost,
+                amount: sellerPayout,
                 description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`,
                 timestamp: Date.now()
             });
@@ -1231,7 +1256,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         console.error("Contract acceptance failed:", error);
         toast({ variant: 'destructive', title: 'Contract Failed', description: error.message || 'The contract could not be completed.' });
     }
-  }, [database, user, gameState, userRef, toast]);
+  }, [database, user, gameState, userRef, toast, economy, treasuryRef]);
   
   const handleRejectContract = React.useCallback(async (contract: any) => {
     if (!user || !gameState || !userRef) return;
@@ -1334,7 +1359,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
   
   // Game loop for processing finished activities
   React.useEffect(() => {
-    if (!userRef || !gameState || !user) return;
+    if (!userRef || !gameState || !user || !economy || !treasuryRef) return;
     const activityInterval = setInterval(() => {
         runTransaction(userRef, (currentGameState: UserData | null) => {
             if (!currentGameState) return null;
@@ -1382,10 +1407,24 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                         newXP += quantity * 2;
                     } else if (slot.activity.type === 'sell') {
                         const { saleValue, quantity, recipeId: itemName } = slot.activity;
-                        const profit = saleValue * 0.95; // 5% tax
+                        
+                        const taxRate = economy?.taxRate || 0;
+                        const taxAmount = saleValue * taxRate;
+                        const profit = saleValue - taxAmount;
+
                         const transRefKey = push(ref(database, `users/${user.uid}/transactions`)).key!;
                         newTransactions[transRefKey] = { id: transRefKey, type: 'income', amount: profit, description: `Mauzo ya ${quantity}x ${itemName}`, timestamp: now };
                         newMoney += profit;
+
+                        // Add tax to treasury
+                        runTransaction(treasuryRef, (currentTreasury) => {
+                            if (currentTreasury) {
+                                currentTreasury.balance = (currentTreasury.balance || 0) + taxAmount;
+                                currentTreasury.lastUpdated = Date.now();
+                            }
+                            return currentTreasury;
+                        });
+
                         const notifRefKey = push(ref(database, `users/${user.uid}/notifications`)).key!;
                         newNotifications[notifRefKey] = { id: notifRefKey, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, timestamp: now, read: false, icon: 'sale' };
                         newXP += Math.floor(profit * 0.01);
@@ -1455,7 +1494,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         clearInterval(dividendInterval);
         clearInterval(payoutInterval);
     };
-  }, [userRef, gameState, handleDailyDividends, user, database, addTransaction, addNotification]);
+  }, [userRef, gameState, handleDailyDividends, user, database, addTransaction, addNotification, economy, treasuryRef]);
 
   const { netWorth, buildingValue, stockValue, inventoryValue } = React.useMemo(() => {
     if (!gameState) return { netWorth: 0, buildingValue: 0, stockValue: 0, inventoryValue: 0 };
@@ -1935,3 +1974,6 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     
 
 
+
+
+    
