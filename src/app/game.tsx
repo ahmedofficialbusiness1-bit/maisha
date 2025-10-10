@@ -918,7 +918,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         const newPayoutRef = push(sellerPayoutsRef);
         await set(newPayoutRef, {
             amount: sellerPayout,
-            description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}`,
+            description: `Sold ${quantityToBuy}x ${listing.commodity} to ${gameState.username}. Tax: $${taxAmount.toFixed(2)}`,
             timestamp: Date.now()
         });
         
@@ -1245,7 +1245,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
             const newPayoutRef = push(sellerPayoutsRef);
             await set(newPayoutRef, {
                 amount: sellerPayout,
-                description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}`,
+                description: `Contract sale: ${contract.quantity}x ${contract.commodity} to ${gameState.username}. Tax: $${taxAmount.toFixed(2)}`,
                 timestamp: Date.now()
             });
         }
@@ -1426,7 +1426,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                         });
 
                         const notifRefKey = push(ref(database, `users/${user.uid}/notifications`)).key!;
-                        newNotifications[notifRefKey] = { id: notifRefKey, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)}.`, timestamp: now, read: false, icon: 'sale' };
+                        newNotifications[notifRefKey] = { id: notifRefKey, message: `Umefanikiwa kuuza ${quantity}x ${itemName} kwa $${profit.toFixed(2)} (Kodi: $${taxAmount.toFixed(2)}).`, timestamp: now, read: false, icon: 'sale' };
                         newXP += Math.floor(profit * 0.01);
                     }
                     delete slot.activity;
@@ -1949,7 +1949,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         notifications={Object.values(gameState.notifications || {})} 
         onNotificationsRead={handleMarkNotificationsRead} 
         playerLevel={gameState.playerLevel} 
-        playerXP={gameState.playerXP} 
+        playerXP={gameState.playerXP}
         xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} 
         isAdmin={isAdmin} 
         isPresident={isPresident}
@@ -1982,3 +1982,4 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
 
     
+
