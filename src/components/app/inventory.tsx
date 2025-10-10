@@ -43,7 +43,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import type { PlayerStock } from '@/app/game';
-import type { CompanyProfile, UserData } from '@/services/game-service';
+import type { CompanyProfile, EconomyData, UserData } from '@/services/game-service';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import {
   AlertDialog,
@@ -56,6 +56,7 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
+import { DatabaseReference } from 'firebase/database';
 
 
 export type InventoryItem = {
@@ -81,6 +82,8 @@ interface InventoryProps {
   companyProfile: CompanyProfile;
   netWorth: number;
   playerMoney: number;
+  economy: EconomyData | null;
+  treasuryRef: DatabaseReference | null;
 }
 
 function ItemInventoryView({ inventoryItems, onPostToMarket, onCreateContract }: Pick<InventoryProps, 'inventoryItems' | 'onPostToMarket' | 'onCreateContract'>) {

@@ -1874,7 +1874,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                     selectedSlotIndex={selectedSlotIndex}
                  />;
       case 'inventory':
-        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} />;
+        return <Inventory inventoryItems={gameState.inventory || []} playerStocks={gameState.playerStocks || []} stockListings={companyData} contractListings={contractListings || []} onPostToMarket={handlePostToMarket} onCreateContract={handleCreateContract} onAcceptContract={handleAcceptContract} onRejectContract={handleRejectContract} onCancelContract={handleCancelContract} onSellStock={handleSellStock} onIssueShares={handleIssueShares} currentUserId={user.uid} currentUsername={gameState.username} companyProfile={gameState.companyProfile} netWorth={netWorth} playerMoney={gameState.money} economy={economy} treasuryRef={treasuryRef} />;
       case 'market':
         return <TradeMarket playerListings={playerListings} stockListings={stockListingsWithShares} bondListings={initialBondListings} inventory={gameState.inventory || []} onBuyStock={handleBuyStock} onBuyFromMarket={handleBuyFromMarket} playerName={gameState.username} marketShareListings={marketShareListings} onRunForPresidency={handleRunForPresidency} onVote={handleVote} president={president} candidates={candidates} electionState={electionState} votes={votes} currentUser={gameState} />;
       case 'encyclopedia':
@@ -1949,7 +1949,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         notifications={Object.values(gameState.notifications || {})} 
         onNotificationsRead={handleMarkNotificationsRead} 
         playerLevel={gameState.playerLevel} 
-        playerXP={gameState.playerXP} 
+        playerXP={playerXP} 
         xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} 
         isAdmin={isAdmin} 
         isPresident={isPresident}
