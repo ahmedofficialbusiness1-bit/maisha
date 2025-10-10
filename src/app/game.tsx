@@ -13,8 +13,8 @@ import type { Recipe } from '@/lib/recipe-data';
 import { buildingData } from '@/lib/building-data';
 import { Chats, type ChatMetadata } from '@/components/app/chats';
 import { Accounting, type Transaction } from '@/components/app/accounting';
-import { PlayerProfile, type ProfileData } from '@/components/app/profile';
-import { Leaderboard } from '@/components/app/leaderboard';
+import { PlayerProfile, type ProfileData, type ProfileDataForForm } from '@/components/app/profile';
+import { Leaderboard, type PlayerMetrics } from '@/components/app/leaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { encyclopediaData } from '@/lib/encyclopedia-data';
@@ -353,7 +353,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                 id: newNotifRef.key!,
                 message,
                 timestamp: Date.now(),
-                read: boolean,
+                read: false,
                 icon,
             };
             currentData.notifications = {...(currentData.notifications || {}), [newNotifRef.key!]: newNotification};
@@ -1949,7 +1949,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         notifications={Object.values(gameState.notifications || {})} 
         onNotificationsRead={handleMarkNotificationsRead} 
         playerLevel={gameState.playerLevel} 
-        playerXP={playerXP} 
+        playerXP={gameState.playerXP} 
         xpForNextLevel={getXpForNextLevel(gameState.playerLevel)} 
         isAdmin={isAdmin} 
         isPresident={isPresident}
@@ -1977,5 +1977,8 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
 
     
+
+    
+
 
     
