@@ -4,26 +4,22 @@
     "users": {
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() in ['admin', 'president'])",
-        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        ".write": "auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() in ['admin']"
       }
     },
     "contracts": {
-      "$contractId": {
-        ".read": "auth != null",
-        ".write": "auth != null"
-      }
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "market": {
-      "$itemId": {
-        ".read": "auth != null",
-        ".write": "auth != null && (newData.child('sellerUid').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
-      }
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "players": {
       ".read": "auth != null",
       ".indexOn": ["netWorth", "username"],
       "$uid": {
-        ".write": "auth.uid === $uid || root.child('players').child(auth.uid).child('role').val() === 'admin'"
+        ".write": "auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin'"
       }
     },
     "chat": {
@@ -57,23 +53,23 @@
     },
     "economy": {
       ".read": "auth != null",
-      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'"
+      ".write": "root.child('users').child(auth.uid).child('role').val() in ['admin', 'president']"
     },
     "treasury": {
-      ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'",
+      ".read": "root.child('users').child(auth.uid).child('role').val() in ['admin', 'president']",
       ".write": "auth != null"
     },
     "officialPrices": {
       ".read": "auth != null",
-      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'"
+      ".write": "root.child('users').child(auth.uid).child('role').val() in ['admin', 'president']"
     },
     "subsidies": {
       ".read": "auth != null",
-      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'"
+      ".write": "root.child('users').child(auth.uid).child('role').val() in ['admin', 'president']"
     },
     "nationalOrders": {
       ".read": "auth != null",
-      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'president'"
+      ".write": "root.child('users').child(auth.uid).child('role').val() in ['admin', 'president']"
     },
     ".read": "auth != null",
     ".write": "auth != null"

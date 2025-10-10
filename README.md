@@ -1,4 +1,3 @@
 git add .
-git commit -m "maboresho mapya"
-git push origin main
+git commit -m "maboresho mapya" 
 firebase deploy --only database

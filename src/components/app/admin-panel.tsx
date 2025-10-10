@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { simulateCommodityPrice } from '@/ai/flows/commodity-price-simulation';
-import { Check, ChevronsUpDown, CircleDollarSign, Crown, Gift, Loader2, Star, Users, Wifi, WifiOff, X } from 'lucide-react';
+import { Check, ChevronsUpDown, CircleDollarSign, Crown, Gift, Loader2, Star, Users, Wifi, WifiOff, X, ThumbsUp, ThumbsDown, Package, Handshake } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAllPlayers, type PlayerPublicData } from '@/firebase/database/use-all-players';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -27,6 +27,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { getDatabase, ref, set, push, runTransaction, update, get, remove } from 'firebase/database';
 import type { Notification, Transaction } from '@/app/game';
+import type { Subsidy, NationalOrder } from '@/services/game-service';
 
 
 const simulationFormSchema = z.object({
@@ -55,10 +56,16 @@ interface AdminPanelProps {
     president: PlayerPublicData | null;
     electionState: 'open' | 'closed';
     candidates: any[];
+    subsidies: Record<string, Subsidy>;
+    nationalOrders: Record<string, NationalOrder>;
     onAdminAppointPresident: (uid: string) => void;
     onAdminRemovePresident: () => void;
     onAdminManageElection: (state: 'open' | 'closed') => void;
     onAdminRemoveCandidate: (candidateId: string) => void;
+    onApproveSubsidy: (subsidyId: string) => void;
+    onRejectSubsidy: (subsidyId: string) => void;
+    onApproveOrder: (orderId: string) => void;
+    onRejectOrder: (orderId: string) => void;
 }
 
 function CommoditySimulator() {
@@ -739,7 +746,7 @@ const appointPresidentSchema = z.object({
     targetUid: z.string().min(1, 'UID is required'),
 })
 
-function PresidencyTools({ president, electionState, candidates, onAdminAppointPresident, onAdminRemovePresident, onAdminManageElection, onAdminRemoveCandidate }: AdminPanelProps) {
+function PresidencyTools({ president, electionState, candidates, onAdminAppointPresident, onAdminRemovePresident, onAdminManageElection, onAdminRemoveCandidate }: Omit<AdminPanelProps, 'subsidies' | 'nationalOrders' | 'onApproveSubsidy' | 'onRejectSubsidy' | 'onApproveOrder' | 'onRejectOrder'>) {
     const form = useForm<z.infer<typeof appointPresidentSchema>>({
         resolver: zodResolver(appointPresidentSchema),
         defaultValues: { targetUid: '' }
@@ -872,7 +879,87 @@ function PresidencyTools({ president, electionState, candidates, onAdminAppointP
     )
 }
 
-export function AdminPanel({ onViewProfile, president, electionState, candidates, onAdminAppointPresident, onAdminRemovePresident, onAdminManageElection, onAdminRemoveCandidate }: AdminPanelProps) {
+function ProposalsManager({ subsidies, nationalOrders, onApproveSubsidy, onRejectSubsidy, onApproveOrder, onRejectOrder, ...props }: AdminPanelProps) {
+    
+    const unapprovedSubsidies = Object.entries(subsidies || {}).filter(([id, sub]) => !sub.isApproved);
+    const unapprovedOrders = Object.entries(nationalOrders || {}).filter(([id, order]) => !order.isApproved);
+    const { players } = useAllPlayers();
+
+    const getProposerName = (uid: string) => {
+        return players?.find(p => p.uid === uid)?.username || 'Unknown';
+    }
+    
+    return (
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><CircleDollarSign /> Maombi ya Ruzuku</CardTitle>
+                    <CardDescription>Idhinisha au kataa ruzuku zilizopendekezwa na Rais.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ScrollArea className="h-96 pr-3">
+                        <div className="space-y-4">
+                            {unapprovedSubsidies.length > 0 ? unapprovedSubsidies.map(([id, subsidy]) => (
+                                <Card key={id} className="bg-gray-900/50 p-4">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="font-bold text-lg">${subsidy.amount.toLocaleString()} <span className="text-sm font-normal text-gray-400">for</span> {subsidy.sector}</p>
+                                            <p className="text-xs text-gray-400">Proposed by: {getProposerName(subsidy.proposer)}</p>
+                                        </div>
+                                        <p className="text-xs text-gray-500">{formatDistanceToNow(new Date(subsidy.timestamp), { addSuffix: true })}</p>
+                                    </div>
+                                    <div className="flex gap-2 mt-4">
+                                        <Button size="sm" className="w-full bg-green-600 hover:bg-green-700" onClick={() => onApproveSubsidy(id)}><ThumbsUp className="mr-2 h-4 w-4" /> Kubali</Button>
+                                        <Button size="sm" variant="destructive" className="w-full" onClick={() => onRejectSubsidy(id)}><ThumbsDown className="mr-2 h-4 w-4" /> Kataa</Button>
+                                    </div>
+                                </Card>
+                            )) : (
+                                <div className="flex items-center justify-center h-full text-gray-500">
+                                    <p>Hakuna maombi mapya ya ruzuku.</p>
+                                </div>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
+             <Card className="bg-gray-800/60 border-gray-700">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Handshake /> Maombi ya Tenda za Taifa</CardTitle>
+                    <CardDescription>Idhinisha au kataa tenda za taifa zilizopendekezwa.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <ScrollArea className="h-96 pr-3">
+                        <div className="space-y-4">
+                            {unapprovedOrders.length > 0 ? unapprovedOrders.map(([id, order]) => (
+                                <Card key={id} className="bg-gray-900/50 p-4">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="font-bold text-lg">{order.quantityRequired.toLocaleString()}x {order.product}</p>
+                                            <p className="text-sm text-green-400">Reward: ${order.reward.toLocaleString()}</p>
+                                            <p className="text-xs text-gray-400">Proposed by: {getProposerName(order.proposer)}</p>
+                                        </div>
+                                         <p className="text-xs text-gray-500">{order.orderId}</p>
+                                    </div>
+                                    <div className="flex gap-2 mt-4">
+                                        <Button size="sm" className="w-full bg-green-600 hover:bg-green-700" onClick={() => onApproveOrder(id)}><ThumbsUp className="mr-2 h-4 w-4" /> Kubali</Button>
+                                        <Button size="sm" variant="destructive" className="w-full" onClick={() => onRejectOrder(id)}><ThumbsDown className="mr-2 h-4 w-4" /> Kataa</Button>
+                                    </div>
+                                </Card>
+                            )) : (
+                                <div className="flex items-center justify-center h-full text-gray-500">
+                                    <p>Hakuna maombi mapya ya tenda.</p>
+                                </div>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+
+export function AdminPanel(props: AdminPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 text-white">
@@ -882,14 +969,15 @@ export function AdminPanel({ onViewProfile, president, electionState, candidates
       </div>
 
        <Tabs defaultValue="players" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-900/50">
+          <TabsList className="grid w-full grid-cols-5 bg-gray-900/50">
             <TabsTrigger value="players">Player Management</TabsTrigger>
             <TabsTrigger value="economy">Economy Tools</TabsTrigger>
             <TabsTrigger value="tools">Game Tools</TabsTrigger>
             <TabsTrigger value="presidency">Urais</TabsTrigger>
+            <TabsTrigger value="proposals">Maombi</TabsTrigger>
           </TabsList>
           <TabsContent value="players">
-            <PlayerManager onViewProfile={onViewProfile} />
+            <PlayerManager onViewProfile={props.onViewProfile} />
           </TabsContent>
           <TabsContent value="economy">
              <CommoditySimulator />
@@ -898,15 +986,10 @@ export function AdminPanel({ onViewProfile, president, electionState, candidates
              <GameTools />
           </TabsContent>
            <TabsContent value="presidency">
-             <PresidencyTools 
-                president={president} 
-                electionState={electionState} 
-                candidates={candidates}
-                onAdminAppointPresident={onAdminAppointPresident}
-                onAdminRemovePresident={onAdminRemovePresident}
-                onAdminManageElection={onAdminManageElection}
-                onAdminRemoveCandidate={onAdminRemoveCandidate}
-              />
+             <PresidencyTools {...props} />
+          </TabsContent>
+          <TabsContent value="proposals">
+            <ProposalsManager {...props} />
           </TabsContent>
         </Tabs>
 

@@ -1704,18 +1704,20 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
 
   // Government Panel Handlers
   const handleSetTaxRate = (rate: number) => {
-    update(economyRef!, { taxRate: rate, updatedBy: user?.uid, lastChange: Date.now() });
+    if (!user) return;
+    update(economyRef!, { taxRate: rate, updatedBy: user.uid, lastChange: Date.now() });
   };
   const handleProposeSubsidy = (sector: string, amount: number) => {
+    if (!user) return;
     const newSubsidyRef = push(subsidiesRef!);
-    const subsidy: Subsidy = {
+    const subsidy: Omit<Subsidy, 'subsidyId'> = {
       sector,
       amount,
       distributed: false,
       timestamp: Date.now(),
-      proposer: user!.uid,
+      proposer: user.uid,
       approvedBy: null,
-      isApproved: false, // Requires admin approval
+      isApproved: false,
     };
     set(newSubsidyRef, subsidy);
   };
@@ -1723,6 +1725,7 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
     update(officialPricesRef!, { [item]: price });
   };
   const handleCreateNationalOrder = (item: string, quantity: number, reward: number) => {
+     if (!user) return;
      const newOrderRef = push(nationalOrdersRef!);
      const order: Omit<NationalOrder, 'orderId'> = {
         product: item,
@@ -1731,11 +1734,27 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
         reward: reward,
         status: 'open',
         winner: null,
-        proposer: user!.uid,
+        proposer: user.uid,
         approvedBy: null,
-        isApproved: false, // Requires admin approval
+        isApproved: false,
      };
      set(newOrderRef, order);
+  }
+
+  // Admin Approval Handlers
+  const handleApproveSubsidy = (subsidyId: string) => {
+    if (!user) return;
+    update(ref(database, `subsidies/${subsidyId}`), { isApproved: true, approvedBy: user.uid });
+  }
+  const handleRejectSubsidy = (subsidyId: string) => {
+    remove(ref(database, `subsidies/${subsidyId}`));
+  }
+  const handleApproveOrder = (orderId: string) => {
+    if (!user) return;
+    update(ref(database, `nationalOrders/${orderId}`), { isApproved: true, approvedBy: user.uid });
+  }
+  const handleRejectOrder = (orderId: string) => {
+    remove(ref(database, `nationalOrders/${orderId}`));
   }
 
 
@@ -1920,10 +1939,16 @@ export function Game({ initialProfileViewId, forceAdminView = false }: { initial
                   president={president}
                   electionState={electionState}
                   candidates={candidates}
+                  subsidies={subsidies}
+                  nationalOrders={nationalOrders}
                   onAdminAppointPresident={onAdminAppointPresident}
                   onAdminRemovePresident={onAdminRemovePresident}
                   onAdminManageElection={onAdminManageElection}
                   onAdminRemoveCandidate={onAdminRemoveCandidate}
+                  onApproveSubsidy={handleApproveSubsidy}
+                  onRejectSubsidy={handleRejectSubsidy}
+                  onApproveOrder={handleApproveOrder}
+                  onRejectOrder={handleRejectOrder}
                 />;
       case 'office':
         return (
